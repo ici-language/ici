@@ -6,11 +6,12 @@
 #
 
 PORTNAME=	ici
-PORTVERSION=	4.0.x
+PORTVERSION=	4.1.1
 CATEGORIES=	lang
 MASTER_SITES=	http://www.zeta.org.au/~atrn/ici/distfiles/
 
 MAINTAINER=	atrn@zeta.org.au
+COMMENT=	An interpretive language with C's feel and high level data types
 
 MAKEFILE=	Makefile.bsd
 
@@ -18,8 +19,6 @@ MAN1=		ici.1 icifuncs.1 icioo.1 iciops.1 icire.1\
 		icistmt.1 icitypes.1
 
 MANCOMPRESSED=	yes
-
-USE_BZIP2=	yes
 
 ICIHDRS=	ici.h icistr-setup.h
 
