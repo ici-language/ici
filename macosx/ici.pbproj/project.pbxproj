@@ -17,6 +17,75 @@
 			settings = {
 			};
 		};
+		A12326E503E49A9000A80108 = {
+			children = (
+				A12326E603E49ABC00A80108,
+				A12326E703E49ABC00A80108,
+				A12326E803E49ABC00A80108,
+				A12326E903E49ABC00A80108,
+				A12326EA03E49ABC00A80108,
+				A12326EB03E49ABC00A80108,
+				A12326EC03E49ABC00A80108,
+			);
+			isa = PBXGroup;
+			name = "Manual Pages";
+			refType = 4;
+		};
+		A12326E603E49ABC00A80108 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = ici.1;
+			path = ../doc/man1/ici.1;
+			refType = 2;
+		};
+		A12326E703E49ABC00A80108 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = icifuncs.1;
+			path = ../doc/man1/icifuncs.1;
+			refType = 2;
+		};
+		A12326E803E49ABC00A80108 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = icioo.1;
+			path = ../doc/man1/icioo.1;
+			refType = 2;
+		};
+		A12326E903E49ABC00A80108 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = iciops.1;
+			path = ../doc/man1/iciops.1;
+			refType = 2;
+		};
+		A12326EA03E49ABC00A80108 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = icire.1;
+			path = ../doc/man1/icire.1;
+			refType = 2;
+		};
+		A12326EB03E49ABC00A80108 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = icistmt.1;
+			path = ../doc/man1/icistmt.1;
+			refType = 2;
+		};
+		A12326EC03E49ABC00A80108 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = icitypes.1;
+			path = ../doc/man1/icitypes.1;
+			refType = 2;
+		};
+		A12326F003E49C8D00A80108 = {
+			fileRef = A144410603DF255B00A80108;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		A12DB6C603E1C26100A80108 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
@@ -35,7 +104,7 @@
 				A144404203DF1ECD00A80108,
 			);
 			isa = PBXGroup;
-			name = main;
+			name = "Main program";
 			refType = 4;
 		};
 		A12DB6C903E1C2FC00A80108 = {
@@ -88,6 +157,7 @@
 			);
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
+				OTHER_CFLAGS = "-DNDEBUG";
 			};
 			isa = PBXBuildStyle;
 			name = Deployment;
@@ -437,8 +507,8 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = main.c;
-			path = /Users/andy/SourceCode/ici/4/ici/main.c;
-			refType = 0;
+			path = ../main.c;
+			refType = 2;
 		};
 		A144404303DF1ECD00A80108 = {
 			fileEncoding = 30;
@@ -640,22 +710,22 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = maketables.c;
-			path = /Users/andy/SourceCode/ici/4/ici/pcre/maketables.c;
-			refType = 0;
+			path = ../pcre/maketables.c;
+			refType = 2;
 		};
 		A144406103DF1EFF00A80108 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = pcre.c;
-			path = /Users/andy/SourceCode/ici/4/ici/pcre/pcre.c;
-			refType = 0;
+			path = ../pcre/pcre.c;
+			refType = 2;
 		};
 		A144406203DF1EFF00A80108 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = study.c;
-			path = /Users/andy/SourceCode/ici/4/ici/pcre/study.c;
-			refType = 0;
+			path = ../pcre/study.c;
+			refType = 2;
 		};
 		A144406303DF1F5B00A80108 = {
 			fileEncoding = 30;
@@ -899,15 +969,15 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = internal.h;
-			path = /Users/andy/SourceCode/ici/4/ici/pcre/internal.h;
-			refType = 0;
+			path = ../pcre/internal.h;
+			refType = 2;
 		};
 		A144408603DF1F7700A80108 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = pcre.h;
-			path = /Users/andy/SourceCode/ici/4/ici/pcre/pcre.h;
-			refType = 0;
+			path = ../pcre/pcre.h;
+			refType = 2;
 		};
 		A144408703DF1F9500A80108 = {
 			buildActionMask = 2147483647;
@@ -1049,7 +1119,6 @@
 				DYLIB_CURRENT_VERSION = 1;
 				INSTALL_PATH = /usr/local/lib;
 				LIBRARY_STYLE = STATIC;
-				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_LIBTOOL_FLAGS = "";
 				OTHER_REZFLAGS = "";
@@ -1496,7 +1565,6 @@
 			isa = PBXBuildFile;
 			settings = {
 				ATTRIBUTES = (
-					Public,
 				);
 			};
 		};
@@ -1720,10 +1788,9 @@
 				INSTALL_PATH = /usr/local/bin;
 				LIBRARY_SEARCH_PATHS = build;
 				OPTIMIZATION_CFLAGS = "-O2";
-				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "-lici4";
 				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ici4;
+				PRODUCT_NAME = ici;
 				REZ_EXECUTABLE = YES;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
@@ -1732,14 +1799,14 @@
 				A144410003DF221200A80108,
 			);
 			isa = PBXToolTarget;
-			name = ici4;
+			name = ici;
 			productInstallPath = /usr/local/bin;
 			productName = ici4;
 			productReference = A14440FD03DF21EB00A80108;
 		};
 		A14440FD03DF21EB00A80108 = {
 			isa = PBXExecutableFileReference;
-			path = ici4;
+			path = ici;
 			refType = 3;
 		};
 		A14440FF03DF220800A80108 = {
@@ -1763,7 +1830,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd ..\nICIPATH=. ./macosx/build/ici4 mk-ici-h.ici conf-osx.h";
+			shellScript = "cd ..\nICIPATH=. ./macosx/build/ici mk-ici-h.ici conf-osx.h";
 		};
 		A144410603DF255B00A80108 = {
 			fileEncoding = 30;
@@ -1874,9 +1941,10 @@
 				A1AF3B6903DF335500A80108,
 				A1AF3B6A03DF335500A80108,
 				A1AF3B6C03DF335500A80108,
+				A12326E503E49A9000A80108,
 			);
 			isa = PBXGroup;
-			name = Docs;
+			name = Documents;
 			refType = 4;
 		};
 		A1AF3B6803DF335500A80108 = {
@@ -1922,13 +1990,14 @@
 			refType = 2;
 		};
 		A1C1E01D03DF35AC00A80108 = {
-			buildActionMask = 2147483647;
-			dstPath = /usr/local/include/ici4;
+			buildActionMask = 8;
+			dstPath = /usr/local/include;
 			dstSubfolderSpec = 0;
 			files = (
+				A12326F003E49C8D00A80108,
 			);
 			isa = PBXCopyFilesBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
+			runOnlyForDeploymentPostprocessing = 1;
 		};
 	};
 	rootObject = A12FEAC503DF1DDB00A80108;
