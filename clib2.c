@@ -78,11 +78,11 @@ f_putenv(void)
     i = strlen(s) + 1;
     /*
      * Some implementations of putenv retain a pointer to the supplied string.
-     * To avoid the environment become corrupted when ICI collected the string
-     * passed, we allocate a bit of memory to copy it into. When then forget
-     * about this memory. It leaks. To try to mitigate this a bit, we check
-     * to see if the value is alread in the environment, and free the memory
-     * if it is.
+     * To avoid the environment becoming corrupted when ICI collects the
+     * string passed, we allocate a bit of memory to copy it into.  We then
+     * forget about this memory.  It leaks.  To try to mitigate this a bit, we
+     * check to see if the value is alread in the environment, and free the
+     * memory if it is.
      */
     if ((t = malloc(i)) == NULL)
     {

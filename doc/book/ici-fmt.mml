@@ -21,4 +21,5 @@
 <!DefineTag TableFootnote>
 <!DefineTag TableTitle>
 <!DefineTag TagIn4cm>
+<!DefineTag TagIn2cm>
 <!DefineTag CodeIn1cm>

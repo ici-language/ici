@@ -51,6 +51,7 @@ EXPORTS ici_grow_stack
 EXPORTS ici_growbuf
 EXPORTS ici_handle_method_check
 EXPORTS ici_handle_new
+EXPORTS ici_handle_probe
 EXPORTS ici_handle_type
 EXPORTS ici_hash_string
 EXPORTS ici_hash_unique
@@ -73,7 +74,6 @@ EXPORTS ici_nfree
 EXPORTS ici_objname
 EXPORTS ici_one DATA
 EXPORTS ici_os DATA
-EXPORTS ici_outermost_writeable_struct
 EXPORTS ici_parse_file
 EXPORTS ici_pcre
 EXPORTS ici_pcre_exec

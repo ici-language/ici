@@ -64,23 +64,69 @@ hash_handle(ici_obj_t *o)
          ^ ICI_PTR_HASH(handleof(o)->h_name);
 }
 
+static ici_handle_t ici_handle_proto = {{{TC_HANDLE, 0, 1, 0}, NULL}};
+
 /*
- * Return a handle object corresponding to the given address addr and
- * with the given super (which may be NULL). Note that handles are
- * intrinsically atomic. The returned object will have had its
- * reference count inceremented.
+ * Return a handle object corresponding to the given C data 'ptr', with the
+ * ICI type 'name' (which may be NULL), and with the given 'super' (which
+ * may be NULL).
+ *
+ * The returned handle will have had its reference count inceremented.
+ *
+ * ICI handle objects are generic wrapper/interface objects around some C data
+ * structure. They act, on the ICI side, as objects with the type 'name'.
+ * When you are passed a handle back from ICI code, you can check this name
+ * to prevent the ICI program from giving you some other data type's handle.
+ * (You can't make handles at the script level, so you are safe from all
+ * except other native code mimicing your type name.)
+ *
+ * Handles are intrinsicly atomic with respect to the 'ptr' and 'name'. So
+ * this function actually just finds the existing handle of the given data
+ * object if that handle already exists.
+ *
+ * Handle's will, of course, be garbage collected as usual.  If your C data is
+ * one-to-one with the handle, you should store a pointer to a free function
+ * for your data in the 'h_pre_free' field of the handle.  It will be called
+ * just before the gardbage collector frees the memory of the handle.
+ *
+ * If, on the other hand, your C data structure is the master structure and it
+ * might be freed by some other aspect of your code, you must consider that
+ * its handle object may still be referenced from ICI code.  You don't want
+ * to have it passed back to you and inadvertently try to access your freed
+ * data.  To prevent this you can set the H_CLOSED flag in the handle's object
+ * header when you free the C data (see 'ici_handle_probe()').  Note that you
+ * are reponsible to checking H_CLOSED when you are passed a handle.  Also,
+ * once you use this mechanism, you must *clear* the H_CLOSED field after a
+ * real new handle allocation (because you might be reusing the old
+ * memory, and this function might be returning to you a zombie handle).
+ *
+ * Handles can support assignment to fields "just like a struct" by
+ * the automatic creation of a private struct to store such values in upon
+ * first assignment. This mechanism is, by default, only enabled if you
+ * supply a non-NULL super. But you can enable it even with a NULL super
+ * by setting O_SUPER in the handle's object header at any time.
+ *
+ * Handles can be used as instances of a class.  Typically the class will have
+ * the methods that operate on the handle.  In this case you will pass the
+ * class in 'super'.  Instance variables will be supported by the automatic
+ * creation of the private struct to hold them (which allows the class to be
+ * extended in ICI with additional instance data that is not part of your C
+ * code).  However, note that these instance variables are not "magic".  Your
+ * C code does not notice them getting fetched or assigned to (to do that you
+ * should make your own ICI data type).
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 ici_handle_t *
 ici_handle_new(void *ptr, ici_str_t *name, ici_objwsup_t *super)
 {
     ici_handle_t        *h;
     ici_obj_t           **po;
-    static ici_handle_t proto = {{{TC_HANDLE, O_SUPER, 1, 0}, NULL}};
 
-    proto.h_ptr = ptr;
-    proto.h_name = name;
-    proto.o_head.o_super = super;
-    if ((h = handleof(atom_probe(objof(&proto), &po))) != NULL)
+    ici_handle_proto.h_ptr = ptr;
+    ici_handle_proto.h_name = name;
+    ici_handle_proto.o_head.o_super = super;
+    if ((h = handleof(atom_probe(objof(&ici_handle_proto), &po))) != NULL)
     {
         ici_incref(h);
         return h;
@@ -88,13 +134,38 @@ ici_handle_new(void *ptr, ici_str_t *name, ici_objwsup_t *super)
     ++ici_supress_collect;
     if ((h = ici_talloc(ici_handle_t)) == NULL)
         return NULL;
-    ICI_OBJ_SET_TFNZ(h, TC_HANDLE, O_SUPER | O_ATOM, 1, 0);
+    ICI_OBJ_SET_TFNZ(h, TC_HANDLE, (super != NULL ? O_SUPER : 0) | O_ATOM, 1, 0);
     h->h_ptr = ptr;
     h->h_name = name;
     h->o_head.o_super = super;
     ici_rego(h);
     --ici_supress_collect;
     ICI_STORE_ATOM_AND_COUNT(po, h);
+    return h;
+}
+
+/*
+ * If it exists, return a pointer to the handle corresponding to the C data
+ * structure 'ptr' with the ICI type 'name'.  If it doesn't exist, return
+ * NULL.  The handle (if returned) will have been increfed.
+ *
+ * This function can be used to probe to see if there is an ICI handle
+ * associated with your C data structure in existence, but avoids allocating
+ * it if does not exist already (as 'ici_handle_new()' would do).  This can be
+ * useful if you want to free your C data structure, and need to mark any ICI
+ * reference to the data by setting H_CLOSED in the handle's object header.
+ *
+ * This --func-- forms part of the --ici-api--.
+ */
+ici_handle_t *
+ici_handle_probe(void *ptr, ici_str_t *name)
+{
+    ici_handle_t        *h;
+
+    ici_handle_proto.h_ptr = ptr;
+    ici_handle_proto.h_name = name;
+    if ((h = handleof(ici_atom_probe(objof(&ici_handle_proto)))) != NULL)
+        ici_incref(h);
     return h;
 }
 
@@ -239,11 +310,32 @@ free_handle(ici_obj_t *o)
 }
 
 /*
- * Verify that a method on a handle has been invoked correctly. In particular,
- * that inst is not NULL and is a handle with the given name. If OK, if
- * h is non-NULL, the handle is stored through it. If p is non-NULL, the
- * associted pointer (h_ptr) is stored through it. Return 1 in error and
- * sets ici_error, else 0.
+ * Verify that a method on a handle has been invoked correctly.  In
+ * particular, that 'inst' is not NULL and is a handle with the given 'name'.
+ * If OK and 'h' is non-NULL, the handle is stored through it.  If 'p' is
+ * non-NULL, the associted pointer ('h_ptr') is stored through it.  Return 1
+ * on error and sets ici_error, else 0.
+ *
+ * For example, a typical method where the instance should be a handle
+ * of type 'XML_Parse' might look like this:
+ *
+ *  static int
+ *  ici_xml_SetBase(ici_obj_t *inst)
+ *  {
+ *      char                *s;
+ *      XML_Parser          p;
+ *
+ *      if (ici_handle_method_check(inst, ICIS(XML_Parser), NULL, &p))
+ *          return 1;
+ *      if (ici_typecheck("s", &s))
+ *          return 1;
+ *      if (!XML_SetBase(p, s))
+ *          return ici_xml_error(p);
+ *      return ici_null_ret();
+ *  }
+ *
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 int
 ici_handle_method_check(ici_obj_t *inst, ici_str_t *name, ici_handle_t **h, void **p)

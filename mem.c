@@ -108,6 +108,17 @@ fetch_mem(ici_obj_t *o, ici_obj_t *k)
     return o;
 }
 
+/*
+ * Return a new ICI mem object refering to the memory at address 'base'
+ * with length 'length', which is measured in units of 'accessz' bytes.
+ * 'accessz' must be either 1, 2 or 4. If 'free_func' is provided it
+ * will be called when the mem object is about to be freed with 'base'
+ * as an argument.
+ *
+ * Returns NULL on error, usual conventions.
+ *
+ * This --func-- forms part of the --ici-api--.
+ */
 ici_mem_t *
 ici_mem_new(void *base, size_t length, int accessz, void (*free_func)())
 {

@@ -50,27 +50,6 @@ new_binop(int op, int why)
     return o;
 }
 
-#ifdef  THINK
-int
-optimise_code(ici_array_t *a)
-{
-    for (e = a->a_base; (o = e) < a->a_top; ++e)
-    {
-        if
-        (
-            e[0] == objof(&o_namelvalue)
-            &&
-            isint(e[2])
-        )
-        {
-            e[0] = e[2];
-            e[2] = e[1];
-            e[1] = objof(&o_assignname);
-        }
-    }
-}
-#endif
-
 /*
  * Compile the expression into the code array, for the reason given.
  * Returns 1 on failure, 0 on success.

@@ -4,9 +4,11 @@
 #include <assert.h>
 
 /*
- * Return a float object corresponding to the given value v. Note that
- * floats are intrinsically atomic. The returned object will have had its
- * reference count inceremented.
+ * Return an ICI float object corresponding to the given value 'v'.  Note that
+ * floats are intrinsically atomic.  The returned object will have had its
+ * reference count inceremented. Returns NULL on error, usual conventions.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 ici_float_t *
 ici_float_new(double v)

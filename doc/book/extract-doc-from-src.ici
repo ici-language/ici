@@ -43,11 +43,9 @@ font_subs(s)
 }
 
 mmls := array();
-mml := strbuf();
-
 forall (file in files)
 {
-    if (file == "ici.h")
+    if (file ~ #\bici.h$#)
         continue;
     src := getfile(srcdir + "/" + file);
     if (src !~ #--ici-api--#)
@@ -67,6 +65,7 @@ forall (file in files)
      * end that comes along).
      */
     src = smash(src, #(^|\n)((?s)/\*.*?\*/)#, "\\0", "\\&", 1);
+    mml := strbuf();
     forall (text, texti in src)
     {
         if ((texti & 1) == 0)
@@ -102,7 +101,7 @@ forall (file in files)
             head = gsub(head, # #, "\\ ");
             head = gsub(head, #\n#, "<HardReturn>\n");
             head = gsub(head, #<HardReturn>\n$#, "\n"); /* But not at end. */
-            strcatf(mml, "<CodeIn1cm>\\ <bold>%s<nobold>\n", head);     
+            strcatf(mml, "<CodeIn1cm><bold>%s<nobold>\n", head);     
         }
         else if (text ~ #--struct--#)
         {
@@ -152,6 +151,31 @@ forall (file in files)
             head = gsub(head, #<HardReturn>\n$#, "\n"); /* But not at end. */
             strcatf(mml, "<CodeIn1cm>\\ <bold>%s<nobold>\n", head);     
         }
+        else if (text ~ #--variable--#)
+        {
+            push(mmls, mml);
+            mml := strbuf();
+            /*
+             * This is a variable. Pick up the trailing
+             * macro name (with args, if any). (?s) for dotall, .*? for
+             * non-greedy.
+             *
+             * We don't care what the following preprocesor line is (i.e.
+             * it could be an ifdef or a define) as lone as the name is
+             * the next thing.
+             */
+            name = src[texti + 1] ~~ #(?s)\b(\w+)\b *[=;]#;
+            head = (src[texti + 1] ~~ #(?s)(\S.*\b\w+)\b *[=;]#) + ";";
+            /*
+             * Extract its name and print a Heading2 with it, and its
+             * declaraction as code.
+             */
+            strcatf(mml, "<Heading2>%s%s\n", index(name, "C API variable"), name);
+            head = gsub(head, # #, "\\ ");
+            head = gsub(head, #\n#, "<HardReturn>\n");
+            head = gsub(head, #<HardReturn>\n$#, "\n"); /* But not at end. */
+            strcatf(mml, "<CodeIn1cm>\\ <bold>%s<nobold>\n", head);     
+        }
         strcatf(mml, "<Comment From %s>\n", file);
         /*
          * Strip the comment text down to its body. This is defined as
@@ -177,31 +201,47 @@ forall (file in files)
         tag = "";
         forall (para in paras)
         {
-            if (para ~ #^\S.{20}.*\n {21}#)
+            if
+            (
+                para ~ #^\S.* {3} *\S#
+                ||
+                para ~ #^\S.*:\n {3} *\S#
+            )
             {
                 /*
-                 * Hmm. Non-space start, first line at least out to column
-                 * 3+1+20 = 24, second line indented to column 3+21 = 24.
-                 * This looks like a tagged paragraph.
+                 * Hmm. First line not indented at all, but a big white-space
+                 * gap (3 or more space). Or, ends in a : and next line is
+                 * indented 3 or more.
                  */
                 if (para ~ #^.*:\n#)
-                    para = para ~~~ #^(.*):\n((?s).*)#;
+                {
+                    indent := nels(para ~~ #^.*:\n( +)\S#);
+                    subject = para ~~ #^(.*):#;
+                    para = para ~~ #^.*:\n((?s).*)$#;
+                }
                 else
-                    para = para ~~~ #^(.{21})((?s).*)#;
-                para[0] ~~= #(.*\S) *$#;
-                para[1] = font_subs(para[1]);
-                strcatf(mml, "<TagIn4cm><italic>%s<noitalic><Tab>%s", 
-                    para[0], para[1]);
-                tag = "TagIn4cm";
+                {
+                    indent := nels(para ~~ #^(\S.* {3} *)\S#);
+                    subject := interval(para, 0, indent);
+                    para = interval(para, indent);
+                }
+                subject = subject ~~ #((?s).*\S) *$#;
+                para = para ~~ #^ *((?s)\S.*\S) *$#;
+                if (indent > 17)
+                    tag = "TagIn4cm";
+                else
+                    tag = "TagIn2cm";
+                strcatf(mml, "<%s><italic>%s<noitalic><Tab>%s", 
+                    tag, subject, para);
             }
-            else if (para ~ #^ {21}# && tag == "TagIn4cm")
+            else if (para ~ #^ {3}# && tag ~ #TagIn.cm#)
             {
                 /*
-                 * Indented to column 3+21 = 24, and last paragraph was 
-                 * a tagged paragraph. This looks like a continuation.
+                 * Indented, and last paragraph was a tagged paragraph.
+                 * This looks like a continuation.
                  */
                 para = font_subs(para);
-                strcatf(mml, "<TagIn4cm><Tab>%s", para);
+                strcatf(mml, "<%s><Tab>%s", tag, para);
             }
             else if (para ~ #^\S#)
             {

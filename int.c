@@ -50,8 +50,14 @@ free_int(ici_obj_t *o)
 
 
 /*
- * Return the int object with the value v. The returned object has had
- * its ref count incremented.
+ * Return the int object with the value 'v'.  The returned object has had its
+ * ref count incremented.  Returns NULL on error, usual convention.  Note that
+ * ints are intrinsically atomic, so if the given integer already exists, it
+ * will just incref it and return it.
+ *
+ * Note, 0 and 1 are available directly as 'ici_zero' and 'ici_one'.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 ici_int_t *
 ici_int_new(long i)

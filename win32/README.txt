@@ -8,7 +8,6 @@ directories.
 Projects:
 
 ici4        Builds ici4.dll, which is the core language interpreter.
-            The Debug configuration makes ici4-d.dll.
 
 ici         Builds ici.exe, the Windows command-line utility.
 

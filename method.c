@@ -31,6 +31,15 @@ mark_method(ici_obj_t *o)
         + ici_mark(methodof(o)->m_callable);
 }
 
+/*
+ * Returns a new ICI method object that combines the given 'subject' object
+ * (typically a struct) with the given 'callable' object (typically a
+ * function).  A method is also a callable object.
+ *
+ * Returns NULL on error, usual conventions.
+ *
+ * This --func-- forms part of the --ici-api--.
+ */
 ici_method_t *
 ici_method_new(ici_obj_t *subject, ici_obj_t *callable)
 {

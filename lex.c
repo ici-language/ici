@@ -16,9 +16,12 @@ static int ungotten = 0;
 
 /*
  * Set this to non-zero to stop the recording of file and line number
- * information within source blocks. How it gets set is not addressed
- * here. Makes a parse speed improvement and saves memory. But you don't
- * get line numbers on diagnostics.
+ * information as code is parsed.  There is nothing in the interpreter core
+ * that sets this.  Setting this can both save memory and increase execution
+ * speed (slightly).  But diagnostics won't report line numbers and source
+ * line debugging operations won't work.
+ *
+ * This --variable-- forms part of the --ici-api--.
  */
 int     ici_dont_record_line_nums;
 

@@ -9,11 +9,12 @@
 #endif
 
 /*
- * ici_find_on_path - Search for the given file, with the optional extension,
- * on our path. name must point to a buffer of at least FILENAME_MAX chars
- * which will be overwritten with the full file name should it be found.
- * Returns 1 if the expansion was made, else 0, never errors. ext must be
- * less than 10 chars long and include any leading dot.
+ * Search for the given file called 'name', with the optional extension 'ext',
+ * on our path (that is, the current value of 'path' in the current scope).
+ * 'name' must point to a buffer of at least FILENAME_MAX chars which will be
+ * overwritten with the full file name should it be found.  'ext' must be less
+ * than 10 chars long and include any leading dot (or NULL if not required).
+ * Returns 1 if the expansion was made, else 0, never errors.
  */
 int
 ici_find_on_path(char name[FILENAME_MAX], char *ext)

@@ -14,11 +14,6 @@ General
 	Other sections of the interpreter should be fixed to avoid
 	using C-isms where they are not appropriate to ICI.
 
-	A load of example programs are required as is a general
-	tutorial document. This is probably one of the biggest
-	things that stops ICI being more popular (and the fact
-	previous versions couldn't do GUI style things).
-
 	Investigate use of automake/autoconf for configuring,
 	building, etc... This might mean a few changes to the
 	way headers etc... are included and how code is conditionally
@@ -67,14 +62,6 @@ Resurrect win stuff as an extension module and document.
 
 ---
 
-Make all the makefiles create ici.h
-
----
-
-Remove wrap.c from other Makefiles
-
----
-
 Put in general forall
 
 ---
@@ -88,11 +75,6 @@ Huh?
 
 ---
 
-Documentation on include() doesn't mention how it searches for
-the file on the current path.
-
----
-
 Document that on Windows fopen allows / as dir sep?
 
 ---
@@ -102,13 +84,7 @@ current scope.
 
 ---
 
-Documentation of interval() doesn't mention the case of -ve
-length.
-
----
-
 Doc of fetch() says *struct* but could be any. Also is->if.
-
 
 ---
 
@@ -129,15 +105,7 @@ Add getfile(fname) documentation.
 
 ---
 
-Add ptr - int operator to documentation.
-
----
-
 Make seek() documentation mention meaning of whence.
-
----
-
-Document path[] stuff.
 
 ---
 
@@ -146,14 +114,5 @@ General C function to get to hash of a C string (for external libs).
 ---
 
 Make arrays shrink during collection?
-
----
-
-Add ici_atom_probe to doc. And ici_interface_check.
-
----
-
-Document the special variables like argv and path properly at the
-same level as the functions.
 
 ---

@@ -71,67 +71,68 @@ extern int      fgetc();
 #endif
 
 /*
- * Marshall function argument in a call from ICI to C.  The argspec is a
- * character string.  Each character corresponds to an actual argument to the
- * ICI function which will (may) be assigned through the corresponding pointer
- * taken from the subsequent arguments.  Any detected type mismatches result
- * in a non-zero return.  If all types match, all assignments will be made and
- * zero will be returned.
+ * Marshall function arguments in a call from ICI to C.  This function may
+ * only be called from the implementation of an intrinsic function.
  *
- * The argspec key letters and their meaning are:
+ * 'types' is a character string.  Each character corresponds to an actual
+ * argument in the ICI side of the call.  Each is checked according to the
+ * particular letter, and possibly converted and/or assigned through a
+ * corresponing pointer to a C-side data item provided in the vargars argument
+ * list to this function.
  *
- * o                    Any ICI object is required in the actuals, the
- *                      corresponding pointer must be a pointer to an
- *                      '(ici_obj_t *)'; which will be set to the actual
- *                      argument.
+ * Any detected type mismatches result in a non-zero return.  If all types
+ * match, all assignments will be made and zero will be returned.
  *
- * h                    An ICI handle object, that has the name given by
- *                      the corresponding argument, is required. The next
- *                      argument is a pointer to store the '(handle_t *)'
- *                      through.
+ * The key letters that may be used in 'types', and their meaning, are:
  *
- * p                    An ICI ptr object is required in the actuals, then as
- *                      for o.
+ * o        Any ICI object is required in the ICI actuals, the corresponding
+ *          vararg must be a pointer to an '(ici_obj_t *)'; which will be set
+ *          to the actual argument.
  *
- * d                    An ICI struct object is required in the actuals, then
- *                      as for o.
+ * h        An ICI handle object.  The next available vararg must be an ICI
+ *          string object.  The corresponding ICI argument must be a handle
+ *          with that name.  The next (again) available vararg after that is a
+ *          pointer to store the '(ici_handle_t *)' through.
  *
- * a                    An ICI array object is required in the actuals, then
- *                      as for o.
+ * p        An ICI ptr object is required in the actuals, then as for 'o'.
  *
- * u                    An ICI file object is required in the actuals, then as
- *                      for o.
+ * d        An ICI struct object is required in the actuals, then as for 'o'.
  *
- * r                    An ICI regexp object is required in the actuals, then
- *                      as for o.
+ * a        An ICI array object is required in the actuals, then as for 'o'.
  *
- * m                    An ICI mem object is required in the actuals, then as
- *                      for o.
+ * u        An ICI file object is required in the actuals, then as for 'o'.
  *
- * i                    An ICI int object is required in the actuals, the
- *                      value of this int will be stored through the
- *                      corresponding pointer which must be a (long *).
+ * r        An ICI regexp object is required in the actuals, then as for 'o'.
  *
- * f                    An ICI float object is required in the actuals, the
- *                      value of this float will be stored through the
- *                      corresponding pointer which must be a (double *).
+ * m        An ICI mem object is required in the actuals, then as for 'o'.
  *
- * n                    An ICI float or int object is required in the actuals,
- *                      the value of this float or int will be stored through
- *                      the corresponding pointer which must be a (double *).
+ * i        An ICI int object is required in the actuals, the value of this
+ *          int will be stored through the corresponding pointer which must be
+ *          a '(long *)'.
  *
- * s                    An ICI string object is required in the actuals, the
- *                      corresponding pointer must be a (char **).  A pointer
- *                      to the raw characters of the string will be stored
- *                      through this (this will be '\0' terminated by virtue
- *                      of all ICI strings having a gratuitous '\0' just past
- *                      their real end).
+ * f        An ICI float object is required in the actuals, the value of this
+ *          float will be stored through the corresponding pointer which must
+ *          be a '(double *)'.
  *
- * -                    The acutal parameter at this position is skipped, but
- *                      it must be present.
+ * n        An ICI float or int object is required in the actuals, the value
+ *          of this float or int will be stored through the corresponding
+ *          pointer which must be a '(double *)'.
  *
- * *                    All remaining actual parametes are ignored (even if
- *                      there aren't any).
+ * s        An ICI string object is required in the actuals, the corresponding
+ *          pointer must be a (char **).  A pointer to the raw characters of
+ *          the string will be stored through this (this will be '\0'
+ *          terminated by virtue of all ICI strings having a gratuitous '\0'
+ *          just past their real end).  These characters can be assumed to
+ *          remain available until control is returned back to ICI because the
+ *          string is still on the ICI operand stack and can't be collected.
+ *          Once control has reurned to ICI, they could be collected at any
+ *          time.
+ *
+ * -        The acutal parameter at this position is skipped, but it must be
+ *          present.
+ *
+ * *        All remaining actual parametes are ignored (even if there aren't
+ *          any).
  *
  * The capitalisation of any of the alphabetic key letters above changes
  * their meaning.  The acutal must be an ICI ptr type.  The value this
@@ -288,7 +289,7 @@ fail:
  * correspond to actual arguments of the current ICI/C function.
  * Each of the characters in the retspec has the following meaning.
  *
- * o                    The actual ICI argument must be a ptr, the corresponding
+ * o        The actual ICI argument must be a ptr, the corresponding
  *                      pointer is assumed to be an (ici_obj_t **).  The
  *                      location indicated by the ptr object is updated with
  *                      the (ici_obj_t *).
@@ -556,7 +557,8 @@ ici_ret_no_decref(ici_obj_t *o)
 }
 
 /*
- * Use 'return ici_int_ret(n);' to return an integer from an intrinsic fuction.
+ * Use 'return ici_int_ret(ret);' to return an integer (i.e. a C long) from
+ * an intrinsic fuction.
  *
  * This function forms part of ICI's exernal API --ici-api-- --func--
  */
@@ -567,7 +569,10 @@ ici_int_ret(long ret)
 }
 
 /*
- * Use 'return ici_float_ret(n);' to return a float from an intrinsic fuction.
+ * Use 'return ici_float_ret(ret);' to return a float (i.e. a C double)
+ * from an intrinsic fuction. The double will be converted to an ICI
+ * float.
+ * 
  *
  * This function forms part of ICI's exernal API --ici-api-- --func--
  */
@@ -578,7 +583,8 @@ ici_float_ret(double ret)
 }
 
 /*
- * Use 'return ici_str_ret(n);' to return a string from an intrinsic fuction.
+ * Use 'return ici_str_ret(str);' to return a nul terminated string from
+ * an intrinsic fuction. The string will be converted into an ICI string.
  *
  * This function forms part of ICI's exernal API --ici-api-- --func--
  */
@@ -608,8 +614,12 @@ ici_need_path(void)
 }
 
 /*
- * Return the file object that is the current value of the "stdin"
- * name in the current scope. Else NULL, usual conventions.
+ * Return the ICI file object that is the current value of the 'stdin'
+ * name in the current scope. Else NULL, usual conventions. The file
+ * has not increfed (it is referenced from the current scope, until
+ * that assumption is broken, it is known to be uncollectable).
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 ici_file_t *
 ici_need_stdin(void)
@@ -626,10 +636,13 @@ ici_need_stdin(void)
 }
 
 /*
- * Return the file object that is the current value of the "stdout"
- * name in the current scope. Else NULL, usual conventions.
+ * Return the file object that is the current value of the 'stdout'
+ * name in the current scope. Else NULL, usual conventions.  The file
+ * has not increfed (it is referenced from the current scope, until
+ * that assumption is broken, it is known to be uncollectable).
+ *
+ * This --func-- forms part of the --ici-api--.
  */
-
 ici_file_t *
 ici_need_stdout(void)
 {
@@ -701,17 +714,18 @@ f_math()
 #endif
 
 /*
- * Stand-in function for core functions that are coded in ICI. The
- * real function is loaded on first call, and replaces this one, then
- * we transfer to it. On subsequent calls, this code is out of the picture.
+ * Stand-in function for core functions that are coded in ICI.  The real
+ * function is loaded on first call, and replaces this one, then we transfer
+ * to it.  On subsequent calls, this code is out of the picture.
  *
- * cf_arg1              The name (an ICI string) of the function to
- *                      be loaded and transfered to.
+ * cf_arg1              The name (an ICI string) of the function to be loaded
+ *                      and transfered to.
  *
  * cf_arg2              The name (an ICI string) of the core ICI extension
- *                      module that defines the function. (Eg "core1",
- *                      meaning the function is in "icicore1.ici". Only
- *                      "icicore.ici" is always parse. Others are on-demand.)
+ *                      module that defines the function.  (Eg "core1",
+ *                      meaning the function is in "ici4core1.ici".  Only
+ *                      "ici4core.ici" is always parsed.  Others are
+ *                      on-demand.)
  */
 static int
 f_coreici(ici_obj_t *s)

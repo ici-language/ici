@@ -11,6 +11,25 @@
 #include "profile.h"
 #endif
 
+/*
+ * An optional main entry point to the ICI interpreter.  'ici_main' handles a
+ * complete interpreter life-cycle based on the given arguments.  A command
+ * line ICI interpreter is expected to simply pass its given 'argc' and 'argv'
+ * on to 'ici_main' then return its return value.
+ *
+ * If ici_main fails (that is, returns non-zero) it will also set ici_error in
+ * the usual ICI manner.  However it will have already printed an error
+ * message on standard error, so no further action need be taken.
+ *
+ * 'ici_main' handles all calls to 'ici_init()' and 'ici_uninit()' within its
+ * scope.  A program calling 'ici_main' should *not* call 'ici_init()'.
+ *
+ * 'argc' and 'argv' are as standard for C 'main' functions.  For details on
+ * the interpretation of the arguments, see documentation on normal command
+ * line invocation of the ICI interpreter.
+ *
+ * This --func-- forms part of the --ici-api--.
+ */
 int
 ici_main(int argc, char *argv[])
 {
