@@ -1,3 +1,6 @@
+*   Corrected objname functions of func and handle. Both had
+    bugs that could cause crashes. (timl)
+
 *   Added the default location to the initialisation of path[]
     for UNIX-like systems. This is to cope with the case where
     the interpreter is being run from a directory that is not
@@ -23,7 +26,7 @@
 
 *   Makefile.bsd updated for ici4 and now installs required
     headers and builds ici.h.  doc/ici.pdf is now installed as
-    the the documentation. (andy)
+    the documentation. (andy)
 
 Changes in version 4.0.5
 

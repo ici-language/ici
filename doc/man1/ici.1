@@ -30,16 +30,21 @@ Statement forms and syntax.
 Expression operators.
 .TP 1i
 .B icifuncs
-Functions.
+Core language functions.
 .TP 1i
 .B icitypes
-Data types and their semantics.
+Core language data types and their semantics.
 .TP 1i
 .B icire
 Regular expressions.
 .TP 1i
 .B icioo
 Object oriented programming.
+.TP 1i
+.B iciex
+A summary of extension modules. Each extension module also
+has its own man page. These are a seperate installation from
+the language core.
 
 .PP
 The ICI language is reminiscent of C,
@@ -193,12 +198,12 @@ Initially equal to \fCnels(argv)\fP.
 The complete list of ici's reserved words is:
 .PP
 .nf
-        \fBNULL auto    break
-        case    continue        default
-        do      else    extern
-        for     forall  if
-        in      onerror return
-        static  switch  try
+        \fBNULL        auto        break
+        case        continue    default
+        do          else        extern
+        for         forall      if
+        in          onerror     return
+        static      switch      try
         while\fP
 .fi
 
@@ -213,11 +218,16 @@ of characters.
 These are the tokens that make up ici's set of operators:
 
 .nf
-        *       &       \(mi    +       !       ~       ++      \(mi\(mi        @       $
-        /       %       >>      <<      <       >       <=      >=      ==      !=
-        ~       !~      ~~      ~~~     &       ^       |       &&      ||      :
-        ?       =       +=      \(mi=   *=      /=      %=      >>=     <<=     &=
-        ^=      |=      ~~=     <=>     ,       .       \(mi>
+        *       &       \(mi       +       !
+        ~       ++      \(mi\(mi      @       ,
+        $       /       %       >>      <<
+        <       >       <=      >=      ==
+        !=      ~       !~      ~~      ~~~
+        &       ^       |       &&      ||
+        :       ?       =       +=      \(mi=
+        *=      /=      %=      >>=     <<=
+        &=      ^=      |=      ~~=     <=>
+        .       \(mi>
     
 Other tokens are:
 
@@ -526,19 +536,38 @@ A colon-separated (semi-colon on Windows) list of directories in
 which to look for modules.
 
 .SH FILES
-.B /usr/local/lib/ici/ici_init.ici
-Standard startup file.
+.TP 1i
+.B /usr/local
+Is the usual base of installation.
+.TP
+.B .../bin/ici
+The main ICI executable.
+.TP
+.B .../share/doc/ici4/ici.pdf
+The core language manual.
+.TP
+.B .../man/man1/ici*.1
+Man pages.
+.TP
+.B .../lib/ici4/
+The directory for extension modules.
+.TP
+.B .../include/ici.h
+ICI SDK include file.
+.TP
+.B .../lib/libici4.a
+ICI SDK library.
 
 .SH "SEE ALSO"
 icifuncs(1), icinet(1), icioo(1), iciops(1), icisyn(1), icitypes(1)
 .PP
-See the ICI website, http://www.zeta.org.au/~atrn/ici/
+See the ICI website, http://ici.sf.net
 .PP
 ICI source code is maintained at SourceForge, http://sf.net.
 Distributions are also available there.
 
 .SH AUTHOR
-Tim Long <tim.long@cisra.canon.com.au>
+Tim Long
 .PP
 .nf
 With the assistance of:
