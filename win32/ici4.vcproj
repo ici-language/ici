@@ -83,7 +83,7 @@
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="FALSE"
-				DebugInformationFormat="0"
+				DebugInformationFormat="3"
 				CompileAs="1"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
@@ -93,7 +93,7 @@
 				OutputFile="$(OutDir)/ici4.dll"
 				LinkIncremental="1"
 				ModuleDefinitionFile="..\ici.def"
-				GenerateDebugInformation="FALSE"
+				GenerateDebugInformation="TRUE"
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
