@@ -45,6 +45,9 @@
 
 int ici_get_last_win32_error(void);
 
+#define ICI_PATH_SEP    ';'
+#define ICI_DIR_SEP     '\\'
+#define ICI_DLL_EXT     ".dll"
 /*
  * End of ici.h export. --ici.h-end--
  */
@@ -58,8 +61,5 @@ int ici_get_last_win32_error(void);
 #define popen           _popen
 #define pclose          _pclose
 #define access          _access
-#define ICI_PATH_SEP    ';'
-#define ICI_DIR_SEP     '\\'
-#define ICI_DLL_EXT     ".dll"
 
 #endif /*ICI_CONF_H*/

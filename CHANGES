@@ -7,6 +7,15 @@
     Unix makefiles and passed as a macro when building, i.e. the
     directory PREFIX/lib/ici4 is added to path[]. (andy)
 
+*   Got everything building and working under Cygwin. (timl)
+
+*   Added ici_eval() to evaluate a variable name as the main
+    interpreter does it (with auto-loading). (timl)
+
+*   Added -e and -i options to ici34check.ici that make it
+    automatically apply all the safe changes to the source files.
+    (timl)
+
 *   Makefile.osx updated for ici4 and a ProjectBuilder project,
     macosx/ici.pbproj, added to build a static library and
     executable.  Threads are not enabled due to lack of a

@@ -65,6 +65,9 @@ if (error != "should not be effected")
     fail("wrong scope in setting error");
 }
 
-printf("cputime() = %f\n", cputime());
+try
+    printf("cputime() = %f\n", cputime());
+onerror
+    ;
 
 fail("deliberate failure");

@@ -22,6 +22,8 @@
 #        define CONFIG_FILE "conf-linux.h"
 #    elif defined(__bsd__)
 #        define CONFIG_FILE "conf-bsd.h"
+#    elif defined(__CYGWIN__)
+#        define CONFIG_FILE "conf-cygwin.h"
 #    endif
 #endif
 
