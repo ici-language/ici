@@ -79,7 +79,7 @@ ICIHDRS=\
 DOCS=\
 	doc/ici.pdf
 
-beforeinstall:
+beforeinstall: ici.h all-man
 	@echo '=========================================='
 	@echo 'Installing ici interpreter and manual page'
 	@echo '=========================================='
