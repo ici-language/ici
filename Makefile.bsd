@@ -7,7 +7,7 @@ PREFIX	?= /usr/local
 # Keep all symbol information please.  Used by bsd.prog.mk's install target
 STRIP	=
 BINDIR	= $(PREFIX)/bin
-OPTIM	= -O2
+OPTIM	=
 LDFLAGS = -g
 LDADD	= -lm
 DEFS	= -DCONFIG_FILE='"conf-bsd.h"' -DPREFIX='"$(PREFIX)"' -D_THREAD_SAFE -pthread
@@ -25,7 +25,7 @@ SRCS	= \
 	ptr.c refuncs.o regexp.c set.c\
 	sfile.c signals.c skt.c smash.c src.c sstring.c string.c\
 	struct.c syserr.c thread.c trace.c unary.c uninit.c \
-	wrap.c buf.c strtol.c idb.c idb2.c profile.c win32err.c
+	buf.c strtol.c idb.c idb2.c profile.c win32err.c
 
 PCRESRCS= \
 	pcre/study.c pcre/maketables.c pcre/pcre.c
