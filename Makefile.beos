@@ -43,7 +43,7 @@ OBJS	= \
 	compile.o conf.o control.o events.o exec.o \
 	exerror.o file.o findpath.o \
 	float.o forall.o \
-	func.o icimain.o init.o int.o \
+	func.o handle.o icimain.o init.o int.o \
 	lex.o load.o main.o \
 	mark.o mem.o method.o \
 	mkvar.o nptrs.o null.o \
@@ -51,7 +51,7 @@ OBJS	= \
 	ptr.o refuncs.o regexp.o set.o sfile.o \
 	signals.o skt.o smash.o src.o sstring.o string.o \
 	struct.o syserr.o \
-	trace.o unary.o uninit.o \
+	thread.o trace.o unary.o uninit.o \
 	wrap.o buf.o strtol.o \
 	idb.o idb2.o profile.o win32err.o
 

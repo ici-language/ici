@@ -70,7 +70,7 @@ FILES	= \
 	    compile.c conf.c control.c\
 	events.c exec.c exerror.c\
 	file.c findpath.c float.c forall.c func.c\
-	icimain.c idb.c idb2.c init.c int.c\
+	handle.c icimain.c idb.c idb2.c init.c int.c\
 	lex.c load.c load-beos.h load-w32.h\
 	main.c mark.c mem.c method.c mkvar.c\
 	nptrs.c null.c\
@@ -79,7 +79,7 @@ FILES	= \
 	refuncs.c regexp.c\
 	set.c sfile.c signals.c skt.c smash.c src.c sstring.c string.c\
 	    strtol.c struct.c syserr.c\
-	trace.c\
+	thread.c trace.c\
 	unary.c uninit.c\
 	win32err.c winmain.c wrap.c\
 	\

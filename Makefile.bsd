@@ -19,11 +19,11 @@ SRCS	= \
 	call.c catch.c cfunc.c cfunco.c clib.c clib2.c\
 	compile.c conf.c control.c events.c exec.c exerror.c file.c\
 	findpath.c float.c forall.c\
-	func.c icimain.c init.c int.c lex.c load.c main.c mark.c mem.c\
+	func.c handle.c icimain.c init.c int.c lex.c load.c main.c mark.c mem.c\
 	method.c mkvar.c nptrs.c null.c object.c oofuncs.c op.c parse.c pc.c\
 	ptr.c refuncs.o regexp.c set.c\
 	sfile.c signals.c skt.c smash.c src.c sstring.c string.c\
-	struct.c syserr.c trace.c unary.c uninit.c \
+	struct.c syserr.c thread.c trace.c unary.c uninit.c \
 	wrap.c buf.c strtol.c idb.c idb2.c profile.c win32err.c
 
 PCRESRCS= \

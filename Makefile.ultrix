@@ -32,8 +32,8 @@ OBJS	= \
 	$(LIB)(clib.o) $(LIB)(clib2.o) \
 	$(LIB)(compile.o) $(LIB)(conf.o) $(LIB)(control.o) $(LIB)(exec.o) \
 	$(LIB)(exerror.o) $(LIB)(file.o) $(LIB)(findpath.o) \
-	$(LIB)(float.o) $(LIB)(forall.o) \
-	$(LIB)(func.o) $(LIB)(icimain.o) $(LIB)(init.o) $(LIB)(int.o) \
+	$(LIB)(float.o) $(LIB)(forall.o) $(LIB)(func.o) \
+	$(LIB)(handle.o) $(LIB)(icimain.o) $(LIB)(init.o) $(LIB)(int.o) \
 	$(LIB)(lex.o) $(LIB)(load.o) $(LIB)(main.o) \
 	$(LIB)(mark.o) $(LIB)(mem.o)  $(LIB)(method.o)\
 	$(LIB)(mkvar.o) $(LIB)(nptrs.o) $(LIB)(null.o) \
@@ -44,7 +44,7 @@ OBJS	= \
 	$(LIB)(skt.o) $(LIB)(smash.o) \
 	$(LIB)(src.o) $(LIB)(sstring.o) $(LIB)(string.o) \
 	$(LIB)(struct.o) $(LIB)(syserr.o) \
-	$(LIB)(trace.o) $(LIB)(unary.o) $(LIB)(uninit.o) \
+	$(LIB)(thread.o) $(LIB)(trace.o) $(LIB)(unary.o) $(LIB)(uninit.o) \
 	$(LIB)(wrap.o) $(LIB)(buf.o) $(LIB)(strtol.o) \
 	$(LIB)(idb.o) $(LIB)(idb2.o)
 
