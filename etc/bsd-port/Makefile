@@ -6,7 +6,7 @@
 #
 
 PORTNAME=	ici
-PORTVERSION=	3.0.0
+PORTVERSION=	3.0.1
 CATEGORIES=	lang
 MASTER_SITES=	http://www.zeta.org.au/~atrn/ici/distfiles/
 
@@ -15,6 +15,8 @@ MAINTAINER=	atrn@zeta.org.au
 MAKEFILE=	Makefile.bsd
 MAN1=		ici3.1
 MANCOMPRESSED=	yes
+
+USE_BZIP2=	yes
 
 ICIHDRS= alloc.h array.h buf.h catch.h cfunc.c conf-bsd.h exec.h file.h float.h \
 	forall.h func.h fwd.h ici.h int.h mark.h mem.h method.h null.h object.h op.h \
