@@ -5,13 +5,16 @@
 #include "object.h"
 #endif
 
+/*
+ * The following portion of this file exports to ici.h. --ici.h-start--
+ */
 
 typedef struct profilecall profilecall_t;
 extern int ici_profile_active;
 void ici_profile_call(func_t *f);
 void ici_profile_return();
 void ici_profile_set_done_callback(void (*)(profilecall_t *));
-profilecall_t *new_profilecall(profilecall_t *called_by);
+profilecall_t *ici_profilecall_new(profilecall_t *called_by);
 
 
 /*
@@ -43,6 +46,9 @@ struct profilecall
  * pc_call_count    The number of times this function was called.
  */
 #define profilecallof(o)    ((profilecall_t *)o)
-#define isprofilecall(o)    (ici_typeof(o) == &profilecall_type)
+#define isprofilecall(o)    ((o)->o_tcode == TC_PROFILECALL)
+/*
+ * End of ici.h export. --ici.h-end--
+ */
 
 #endif /* ICI_PROFILE_H */

@@ -97,12 +97,16 @@
 #endif
 
 /*
- * An integer conversion of a pointer that throws away low bits (with
- * high coherence) to form a starting point for hash functions based
- * on pointer values.
+ * A hash function for pointers. This is used in a few places. Notably in the
+ * hash of object addresses for struct lookup. It is a balance between
+ * effectiveness, speed, and machine knowledge. It may or may not be right
+ * for a given machine, so we allow it to be defined in the configuration.
+ * But if it wasn't, this is what we use.
  */
-#define ICI_PTR_HASH_BITS(p)    ((unsigned long)(p) >> 6)
-
+#ifndef ICI_PTR_HASH
+#define ICI_PTR_HASH(p) (((unsigned long)(p) >> 12) * 31 ^ ((unsigned long)(p) >> 4) * 17)
+#endif
+ 
 #define nels(a)         (sizeof a / sizeof a[0])
 
 typedef struct array    array_t;
@@ -402,9 +406,13 @@ extern void     trace_pcall(object_t *);
  * End of ici.h export. --ici.h-end--
  */
 
+extern int              ici_natoms;
+extern void             ici_grow_atoms(ptrdiff_t newz);
+extern int              ici_supress_collect;
+
 #include "alloc.h"
 
-#if defined(WIN32) && !defined(NDEBUG)
+#if defined(_WIN32) && !defined(NDEBUG)
 #define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
 #endif

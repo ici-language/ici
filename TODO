@@ -28,8 +28,6 @@ General
 	Makefile, replace some variables and write out a Makefile
 	and conf.h file.
 
-	Some one needs to write a more comprehensive test suite.
-
 Modules
 
 	Native code modules need to be collectable. When a GC occurs
@@ -43,16 +41,6 @@ Modules
 	hierarchy directly in ICI rather than via the ICIPATH environment
 	variable.
 
-Future Changes
-
-	The sockets functions and the system calls are to be removed
-	from ICI proper and turned into autoloading modules. This
-	should in the next major version (2.2), whenever that occurs.
-	The sockets functions will become the ``net'' module and the
-	system calls form the basis of the ``sys'' module. In general
-	new functionality will be introduced using modules. The core
-	language will remain small.
-
 Trivial fixes
 
 	Add esc() function.
@@ -62,11 +50,6 @@ Trivial fixes
 	str = string(mem) ? Does that work?
 
 	How about ''...'' for strings without \'s?
-
----
-
-Fix it so reading from currentfile keeps track of line numbers
-in sync with the parse structure.
 
 ---
 
@@ -83,19 +66,11 @@ Update all the extension modules to ici4
 
 ---
 
-Tests required: build, smash
-
----
-
 Update dependencies under Windows.
 
 ---
 
 Mention the old form of smash in the documentation.
-
----
-
-Remove sockets from core and rely on net module.
 
 ---
 
@@ -127,7 +102,7 @@ Remove wrap.c from other Makefiles
 
 ---
 
-Put it general forall
+Put in general forall
 
 ---
 
@@ -194,4 +169,60 @@ Add ptr - int operator to documentation.
 ---
 
 Make seek() documentation mention meaning of whence.
+
+---
+
+Emphasis that you need this:xxx() in ICI as opposed to C++ xxx()
+
+---
+
+Document path[] stuff.
+
+---
+
+General C function to get to hash of a C string (for external libs).
+
+---
+
+Make arrays shrink during collection.
+
+---
+
+Add auto-increment initialisers to build.
+
+---
+
+Seperate out extension module docs?
+
+---
+
+Upgrade sys to ici4
+
+---
+
+The thread.result value is ambiguous for thread functions that return NULL.
+And using waitfor to wait for termination is a bit verbose. Add join()?
+
+---
+
+Special int count loop construct?
+
+    forall (n)
+
+	forall (i in n)
+
+	forall (i in first; limit; step)
+
+	forall (i in [first;] [limit] [;step])
+---
+
+Make sort() return the sorted array & document.
+
+---
+
+Add icinet.html and icisys.html to cvs.
+
+---
+
+
 

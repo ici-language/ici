@@ -91,5 +91,5 @@ try
 }
 onerror
 	;
-if (error != "bad thread")
+if (error !~ #bad thread#)
 	fail("failed to propogate error from thread");

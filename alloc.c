@@ -71,12 +71,10 @@ ici_talloc_work(int fi, size_t z)
     int                 cz;
     achunk_t            *c;
 
-#if ALLCOLLECT
-    collect();
-#else
+#if !ALLCOLLECT
     if ((ici_mem += z) > ici_mem_limit)
-        collect();
 #endif
+        collect();
 
 #if !ICI_ALLALLOC
     if (fi < nels(ici_flists))

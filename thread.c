@@ -268,6 +268,7 @@ ici_wakeup(object_t *o)
  * it.
  */
 static
+
 #ifdef ICI_USE_WIN32_THREADS
 long
 WINAPI /* Ensure correct Win32 calling convention. */
@@ -314,6 +315,11 @@ f_thread()
 
     if ((x = ici_new_exec()) == NULL)
         return 1;
+    /*
+     * Copy the most-recently-executed source marker to the new thread
+     * to give a useful indication for any errors during startup.
+     */
+    x->x_src = ici_exec->x_src;
     /*
      * Copy all the arguments to the operand stack of the new thread.
      */

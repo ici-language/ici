@@ -1945,8 +1945,18 @@ parse_module(file_t *f, objwsup_t *s)
 }
 
 /*
- * Parse the given file, module file name 'mname'.  Return 0 if ok, else -1,
- * usual conventions.  It closes the file (if all goes well).
+ * Parse a file as a new top-level module.  This function takes a generic
+ * file-like stream.  The specific stream is identified by 'file' and the
+ * stdio-like access functions required to read it are contained in the
+ * structure pointed to by 'ftype'.  A name for the module, for use in error
+ * messages, is supplied in 'mname' (typically the name of the file).
+ *
+ * This function can be used when the source of data to be parsed is not a
+ * real file, but some other source like a resource.
+ *
+ * The file is closed prior to a successful return, but not a failure.
+ *
+ * Return 0 if ok, else -1, usual conventions.
  */
 int
 parse_file(char *mname, char *file, ftype_t *ftype)

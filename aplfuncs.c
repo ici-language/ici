@@ -17,7 +17,7 @@ struct context
     object_t    **c_cstart;     /* First element of the content. */
     object_t    **c_climit;     /* Addr of 1st content we don't use. */
     object_t    **c_cnext;      /* Next content waiting to be used. */
-    int         c_cstep;        /* Direction to step c_cnect by, +/-1. */
+    int         c_cstep;        /* Direction to step c_cnext by, +/-1. */
 };
 
 

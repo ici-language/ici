@@ -30,8 +30,10 @@ f_eventloop()
             ici_enter(x);
             return ici_get_last_win32_error();
         }
+        ici_enter(x);
         TranslateMessage(&msg);
         DispatchMessage(&msg);
+        x = ici_leave();
     }
 }
 

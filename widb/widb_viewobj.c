@@ -1,8 +1,9 @@
 // ici_viewdata.cpp : implementation file
 //
-#include "fwd.h"
+#include <ici.h>
 #include <windows.h>
 #include "widb-priv.h"
+/*
 #include "object.h"
 #include "struct.h"
 #include "array.h"
@@ -19,6 +20,7 @@
 #ifndef NOPROFILE
 #include "profile.h"
 #endif
+*/
 #ifndef WIDB_H
     #include "widb.h"
 #endif
@@ -62,8 +64,6 @@ static LRESULT CALLBACK edit_string_wnd_proc
 );
 
 
-#ifndef NOPROFILE
-
 /*
  * Called by profile_done_callback() to add up the time taken in each function
  * and its children.
@@ -97,7 +97,7 @@ func_totals(struct_t *funcs, profilecall_t *pc)
             if (isnull(objof(tot_pc = profilecallof(ici_fetch(objof(funcs), f)))))
             {
                 /* No, create a new record. */
-                tot_pc = new_profilecall(NULL);
+                tot_pc = ici_profilecall_new(NULL);
                 _ASSERT(tot_pc != NULL);
 
                 /* Add it to the calling function. */
@@ -167,7 +167,7 @@ func_intrinsic_totals(profilecall_t *funcs, profilecall_t *pc)
             if (isnull(objof(tot_pc = profilecallof(ici_fetch(funcs->pc_calls, f)))))
             {
                 /* No, create a new record. */
-                tot_pc = new_profilecall(funcs);
+                tot_pc = ici_profilecall_new(funcs);
                 _ASSERT(tot_pc != NULL);
 
                 /* Add it to the calling function. */
@@ -234,7 +234,7 @@ profile_done_callback(profilecall_t *pc)
     name = objof(ici_str_new_nul_term("function intrinsic totals"));
     _ASSERT(name != NULL);
     /* Hold them in a profilecall_t so that they're sorted by pc_total */
-    intrinsic_totals = new_profilecall(NULL);
+    intrinsic_totals = ici_profilecall_new(NULL);
     _ASSERT(intrinsic_totals != NULL);
     VERIFY(!ici_assign(profile, name, objof(intrinsic_totals)));
     ici_decref(name);
@@ -279,8 +279,6 @@ WIDB_enable_profiling_display()
 {
     ici_profile_set_done_callback(profile_done_callback);
 }
-
-#endif
 
 
 /*
@@ -341,7 +339,7 @@ get_simple_value(object_t *o)
         if (strchr(retval, '.') == NULL && strchr(retval, 'e') == NULL)
             strcat(retval, ".0");
     }
-#ifndef NOPROFILE
+#if NOPROFILE
     else if (isprofilecall(o))
     {
         profilecall_t *pc = profilecallof(o);
@@ -438,10 +436,8 @@ add_item(HWND hDlg, HTREEITEM parent, object_t *o, int expand)
                    isarray(object_to_expand)
                    ||
                    isfunc(object_to_expand)
-#ifndef NOPROFILE
                    ||
                    isprofilecall(object_to_expand)
-#endif
                    ;
     insert.item.cChildren = has_children ? 1 : 0;
     insert.item.lParam = (LPARAM)o;
@@ -478,15 +474,11 @@ objcmp(void const *elem1, void const *elem2)
      * at the bottom, then profilecall_t's, then functions and then anything
      * else. */
     type1 = isstring(o1) ? 3
-#ifndef NOPROFILE
             : isprofilecall(o1) ? 2
-#endif
             : isfunc(o1) ? 1
             : 0;
     type2 = isstring(o2) ? 3
-#ifndef NOPROFILE
             : isprofilecall(o2) ? 2
-#endif
             : isfunc(o2) ? 1
             : 0;
     if (type1 != type2)
@@ -509,11 +501,9 @@ objcmp(void const *elem1, void const *elem2)
         /* Functions */
         return strcmp(objname(n1, o1), objname(n2, o2));
 
-#ifndef NOPROFILE
     case 2:
         /* profilecall_t */
         return profilecallof(o2)->pc_total - profilecallof(o1)->pc_total;
-#endif
 
     case 3:
         /* Strings. */
@@ -641,7 +631,6 @@ add_item_children(HWND hDlg, HTREEITEM parent, object_t *parent_o)
         add_item(hDlg, parent, element, FALSE);
         ici_decref(element);
     }
-#ifndef NOPROFILE
     else if (isprofilecall(parent_o))
     {
         // Profile data is display like a structure, but sorted according to
@@ -687,7 +676,6 @@ add_item_children(HWND hDlg, HTREEITEM parent, object_t *parent_o)
         }
         free(sorted);
     }
-#endif
 }
 
 

@@ -8,11 +8,11 @@ string-handling capabilities.
 The ICI language and source is not copyright in any way.
 
 The ici man pages are quite complete and reasonably lengthy.  There is
-also a technical document describing the language (ici.fm [FrameMaker],
-ici-a4.ps, ici-ltr.ps and ici.txt in the doc directory). The ICI Technical
-Description is copyrighted but may be used for any purpose as long as its
-copyright notice is retained. All other documents are in the public domain
-unless otherwise noted.
+also a technical document describing the language (ici.pdf in the
+doc directory). The ICI Technical Description is copyrighted
+but may be used for any purpose as long as its copyright notice
+is retained. All other documents are in the public domain unless
+otherwise noted.
 
 For instructions on building ICI see the file.......BUILDING.
 For information about what's new see the file.......CHANGES.

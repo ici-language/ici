@@ -87,9 +87,12 @@ ici_uninit(void)
     ici_reclaim();
     ici_reclaim();
 
-    /*
+#if 1 && !defined(NDEBUG)
+    ici_decref(&ici_vs);
+    ici_decref(&ici_os);
+    ici_decref(&ici_xs);
     ici_dump_refs();
-    */
+#endif
 
     /* Free the general purpose buffer. */
     ici_nfree(ici_buf, ici_bufz + 1);
@@ -105,7 +108,11 @@ ici_uninit(void)
     ici_drop_all_small_allocations();
     /*fprintf(stderr, "ici_mem = %ld, n = %d\n", ici_mem, ici_n_allocs);*/
 
-#if 1 && defined(WIN32) && !defined(NDEBUG)
+#if 1 && defined(_WIN32) && !defined(NDEBUG)
     _CrtDumpMemoryLeaks();
 #endif
+/*    {
+        extern long attempt, miss;
+        printf("%d/%d %f\n", miss, attempt, (float)miss/attempt);
+    }*/
 }

@@ -35,7 +35,7 @@ f_getenv(void)
     {
         if
         (
-#           if WIN32
+#           if _WIN32
                 /*
                  * Some versions of Windows (NT and 2000 at least)
                  * gratuitously change to case of some environment variables

@@ -35,6 +35,7 @@ struct exec
     array_t     *x_xs;
     array_t     *x_os;
     array_t     *x_vs;
+    src_t       *x_src;
     int         x_count;
     int         x_yield_count;
     array_t     *x_pc_closet;           /* See below. */
@@ -74,6 +75,12 @@ struct exec
  *                      names. Function calls cause this to grow deeper as
  *                      the new scope of the function being entered is pushed
  *                      on the stack.
+ *
+ * x_src                The most recently executed source line tag. These tags
+ *                      are placed in code arrays during compilation.  They
+ *                      are no-ops with respect to execution, but allow us to
+ *                      know where we are executing with respect to the
+ *                      original source.
  *
  * x_pc_closet          An array that shadows the execution stack. pc objects
  *                      exist only in a one-to-one relationship with a fixed

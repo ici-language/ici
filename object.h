@@ -37,8 +37,8 @@ struct type
     int         (*t_fetch_super)(object_t *, object_t *, object_t **, struct_t *);
     int         (*t_assign_base)(object_t *, object_t *, object_t *);
     object_t    *(*t_fetch_base)(object_t *, object_t *);
-    void        *t_reserved1;   /* MBZ. Probably forall generalisation. */
-    void        *t_reserved2;   /* Must be zero. */
+    object_t    *(*t_fetch_method)(object_t *, object_t *);
+    void        *t_reserved2;   /* MBZ. Probably forall generalisation. */
     void        *t_reserved3;   /* Must be zero. */
     void        *t_reserved4;   /* Must be zero. */
 };
@@ -170,6 +170,15 @@ struct type
  * t_ici_name   A string_t copy of the name. This is just a cached version
  *              so that typeof() doesn't keep re-computing the string.
  *
+ * t_fetch_method An optional alternative to the basic t_fetch() that will be
+ *              called (if supplied) when doing a fetch for the purpose of
+ *              forming a method. This is really only a hack to support COM
+ *              under Windows. COM allows remote objects to have properties,
+ *              like object.property, and methods, like object:method(). But
+ *              without this special hack, we can't tell if a fetch operation
+ *              is supposed to perform the COM get/set property operation, or
+ *              return a callable object for a future method call. Most
+ *              objects will leave this NULL.
  */
 
 /*
@@ -228,7 +237,7 @@ extern object_t         *ici_fetch(object_t *, object_t *);
 extern int              ici_assign(object_t *, object_t *, object_t *);
 #endif
 
-#define ici_atom_hash_index(h)  (ICI_PTR_HASH_BITS(h) & (atomsz - 1))
+#define ici_atom_hash_index(h)  ((h) & (atomsz - 1))
 
 
 /*
@@ -328,7 +337,7 @@ struct objwsup
 #define TC_STRUCT       13
 #define TC_SET          14
 
-#define TC_MAX_BINOP    14
+#define TC_MAX_BINOP    14 /* Max vof 15 dictated by PAIR (below). */
 
 #define TC_EXEC         15
 #define TC_FILE         16
@@ -339,10 +348,9 @@ struct objwsup
 #define TC_NULL         21
 #define TC_HANDLE       22
 #define TC_MEM          23
+#define TC_PROFILECALL  24
 
 #define TC_MAX_CORE     24
-
-/* Max value of 15 dictated by PAIR (below). */
 
 #define TRI(a,b,t)      (((((a) << 4) + b) << 6) + t_subtype(t))
 

@@ -1,11 +1,14 @@
-#include "fwd.h"
 #ifndef NODEBUGGING
-#include <windows.h>
-#include "widb-priv.h"
+/*#include "fwd.h"
 #include "set.h"
 #include "exec.h"
 #include "src.h"
 #include "str.h"
+*/
+#include <ici.h>
+#include <windows.h>
+#include "widb-priv.h"
+
 #include "widb_wnd.h"
 #include "widb_sources.h"
 #include "widb.h"
@@ -79,7 +82,7 @@ init_window()
     static HMENU menu;
     char const *window_class_name = "widb";
 
-    widb_hInst = GetModuleHandle("iciwidb.dll");
+    widb_hInst = GetModuleHandle("ici4widb.dll");
 
     /* If resources haven't been previously provided we assume they're in
      * the same modules as the executable. */

@@ -61,8 +61,8 @@ cmp_handle(object_t *o1, object_t *o2)
 static unsigned long
 hash_handle(object_t *o)
 {
-    return ICI_PTR_HASH_BITS(handleof(o)->h_ptr)
-        ^ (ICI_PTR_HASH_BITS(handleof(o)->h_name) >> 2)
+    return ICI_PTR_HASH(handleof(o)->h_ptr)
+        ^ (ICI_PTR_HASH(handleof(o)->h_name) >> 2)
         ^ (objof(o)->o_flags & H_CLOSED);
 }
 

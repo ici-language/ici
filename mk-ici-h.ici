@@ -21,6 +21,7 @@ incs := [array
     "op.h",
     "parse.h",
     "pc.h",
+    "profile.h",
     "ptr.h",
     "re.h",
     "set.h",

@@ -69,9 +69,9 @@ SectionEnd
 ;
 Section "Core Language"
 SetOutPath "$INSTDIR"
-File "ici.exe"
+File "/oname=ici.exe" "Win32_ici_Release\ici.exe"
+File "/oname=ici4.dll" "Win32_ici_Release\ici4.dll"
 File "iciw.exe"
-File "ici4.dll"
 SetOutPath "$INSTDIR\ici"
 File "ici4widb.dll"
 File "ici4core.ici"

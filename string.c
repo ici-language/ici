@@ -165,21 +165,47 @@ ici_hash_string(object_t *o)
     unsigned long       h;
     unsigned char       *p;
     unsigned char       *ep;
+    int                 leap;
 
     if (stringof(o)->s_hash)
         return stringof(o)->s_hash;
     p = stringof(o)->s_chars;
-    ep = p + stringof(o)->s_nchars;
-    h = STR_PRIME_0;
-    while ((ep - p) & 0x3)
-        h = *p++ + h * 31;
-    while (p < ep)
+    h = stringof(o)->s_nchars;
+    switch (h)
     {
-        h = *p++ + h * 17;
-        h = *p++ + h * 19;
-        h = *p++ + h * 23;
-        h = *p++ + h * 31;
+    case 4:
+            h ^= (*p++ <<  4) ^ (h >> 9);
+    case 3:
+            h ^= (*p++ <<  9) ^ (h << 4);
+    case 2:
+            h ^= (*p++ << 12) ^ (h >> 3);
+    case 1:
+            h ^= (*p++ <<  3) ^ (h << 7);
+            break;
+
+    case 0:
+            h = 0x5678A9B5;
+            break;
+
+    default:
+        ep = p + h - 4;
+        leap = 0;
+        do
+        {
+            h ^= (*p++ <<  4) ^ (h << 9);
+            h ^= (*p++ <<  9) ^ (h << 4);
+            h ^= (*p++ << 12) ^ (h >> 3);
+            h ^= (*p++ <<  3) ^ (h >> 7);
+            p += leap++;
+
+        } while (p < ep);
+
+        h ^= (*ep++     ) ^ (h << 9);
+        h ^= (*ep++ << 4) ^ (h << 4);
+        h ^= (*ep++ << 7) ^ (h >> 3);
+        h ^= (*ep++ << 9) ^ (h >> 7);
     }
+//printf("%8X %s\n", h, stringof(o)->s_chars);
     return stringof(o)->s_hash = h;
 }
 

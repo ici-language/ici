@@ -126,12 +126,12 @@ ici_op_return()
     static int          occasionally;
     object_t            *f;
 
-    x = ici_xs.a_top;
+    x = ici_xs.a_top - 1;
     while
     (
-        --x >= ici_xs.a_base
-        &&
         !ismark(*x)
+        &&
+        --x >= ici_xs.a_base
         &&
         !(iscatch(*x) && isnull(catchof(*x)->c_catcher))
     )

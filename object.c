@@ -6,6 +6,7 @@
 #include "float.h"
 #include "func.h"
 #include "pc.h"
+#include "profile.h"
 #include "primes.h"
 
 #include <limits.h>
@@ -55,6 +56,11 @@ type_t          *ici_types[ICI_MAX_TYPES] =
     &null_type,
     &ici_handle_type,
     &mem_type,
+#ifndef NOPROFILE
+    &profilecall_type,
+#else
+    NULL
+#endif
 };
 
 static int              ici_ntypes = TC_MAX_CORE + 1;
@@ -69,9 +75,9 @@ object_t        **objs_top;     /* Next unused element in list. */
 
 object_t        **atoms;        /* Hash table of atomic objects. */
 int             atomsz;         /* Number of slots in hash table. */
-static int      natoms;         /* Number of atomic objects. */
+int             ici_natoms;     /* Number of atomic objects. */
 
-static int      supress_collect;
+int             ici_supress_collect;
 
 /*
  * Format a human readable version of the object in 30 chars or less.
@@ -218,36 +224,67 @@ hash_unique(object_t *o)
  * power of 2.
  */
 static void
-grow_atoms(ptrdiff_t newz)
+ici_grow_atoms_core(ptrdiff_t newz)
 {
-    register object_t   **o;
+    register object_t   **po;
     register int        i;
     object_t            **olda;
     ptrdiff_t           oldz;
 
     assert(((newz - 1) & newz) == 0); /* Assert power of 2. */
     oldz = atomsz;
-    ++supress_collect;
-    o = (object_t **)ici_nalloc(newz * sizeof(object_t *));
-    --supress_collect;
-    if (o == NULL)
+    ++ici_supress_collect;
+    po = (object_t **)ici_nalloc(newz * sizeof(object_t *));
+    --ici_supress_collect;
+    if (po == NULL)
         return;
     atomsz = newz;
-    memset((char *)o, 0, newz * sizeof(object_t *));
-    natoms = 0;
+    memset((char *)po, 0, newz * sizeof(object_t *));
     olda = atoms;
-    atoms = o;
+    atoms = po;
     i = oldz;
     while (--i >= 0)
     {
-        if (olda[i] != NULL)
+        object_t    *o;
+
+        if ((o = olda[i]) != NULL)
         {
-            olda[i]->o_flags &= ~O_ATOM;
-            ici_atom(olda[i], 2);
+            for
+            (
+                po = &atoms[ici_atom_hash_index(hash(o))];
+                *po != NULL;
+                --po < atoms ? po = atoms + atomsz - 1 : NULL
+            )
+                ;
+            *po = o;
         }
     }
     ici_nfree(olda, oldz * sizeof(object_t *));
 }
+
+/*
+ * Grow the hash table of atoms to the given size, which *must* be a
+ * power of 2.
+ */
+void
+ici_grow_atoms(ptrdiff_t newz)
+{
+    /*
+     * If there are a lot of collectable atoms, it is better for performance
+     * to collect them than grow the atom pool. If we are getting close to the
+     * point where we would want to collect anyway, do it and exit early if
+     * we managed to reduce the usage of the atom pool alot.
+     */
+    if (ici_mem * 3 / 2 > ici_mem_limit)
+    {
+        collect();
+        if (ici_natoms * 8 < newz)
+            return;
+    }
+    ici_grow_atoms_core(newz);
+}
+
+
 
 /*
  * Return an object equal to the one given, but possibly shared by others.
@@ -291,22 +328,21 @@ ici_atom(object_t *o, int lone)
      */
     if (!lone)
     {
-        ++supress_collect;
+        ++ici_supress_collect;
         *po = copy(o);
-        --supress_collect;
+        --ici_supress_collect;
         if (*po == NULL)
             return o;
         o = *po;
     }
     *po = o;
     o->o_flags |= O_ATOM;
-    if (++natoms > atomsz / 2)
-        grow_atoms(atomsz * 2);
+    if (++ici_natoms > atomsz / 2)
+        ici_grow_atoms(atomsz * 2);
     if (!lone)
         ici_decref(o);
     return o;
 }
-
 /*
  * Probe the atom pool for an atomic form of o.  If found, return that
  * atomic form, else NULL.  Used by various new_*() routines.  These
@@ -396,7 +432,7 @@ unatom(object_t *o)
 
 delete:
     o->o_flags &= ~O_ATOM;
-    --natoms;
+    --ici_natoms;
     sl = ss;
     /*
      * Scan "forward" bubbling up entries which would rather be at our
@@ -474,7 +510,7 @@ collect(void)
     long                tc_counts[16];
     memset((char *)tc_counts, 0, sizeof tc_counts);
 #endif
-    if (supress_collect)
+    if (ici_supress_collect)
     {
         /*
          * There are some times when it is a bad idea to collect. Basicly
@@ -483,7 +519,7 @@ collect(void)
          */
         return;
     }
-    ++supress_collect;
+    ++ici_supress_collect;
 
     /*
      * Mark all objects which are referenced (and thus what they ref).
@@ -518,7 +554,7 @@ collect(void)
      * as adding one.  Use this to determine which is quicker; rebuilding
      * the atom pool or deleting dead ones.
      */
-    if (ndead_atoms > (natoms - ndead_atoms))
+    if (ndead_atoms > (ici_natoms - ndead_atoms))
     {
         /*
          * Rebuilding the atom pool is a better idea. Zap the dead
@@ -531,13 +567,15 @@ collect(void)
             if ((o = *a) != NULL && o->o_nrefs == 0 && (o->o_flags & O_MARK) == 0)
                 *a = NULL;
         }
-        natoms -= ndead_atoms;
+        ici_natoms -= ndead_atoms;
         /*
-         * Call grow_atoms() to reuild the atom pool. On entry it isn't
-         * a legal hash table, but grow_atoms() doesn't care. We make the
+         * Call ici_grow_atoms() to reuild the atom pool. On entry it isn't
+         * a legal hash table, but ici_grow_atoms() doesn't care. We make the
          * new one the same size as the old one. Should we?
          */
-        grow_atoms(atomsz);
+        if (ici_natoms * 4 > atomsz)
+            atomsz *= 4;
+        ici_grow_atoms_core(atomsz);
 
         for (a = b = objs; a < objs_top; ++a)
         {
@@ -574,7 +612,7 @@ collect(void)
         objs_top = b;
     }
 /*
-printf("mem=%ld vs. %ld, nobjects=%d, natoms=%d\n", mem, ici_mem, objs_top - objs, natoms);
+printf("mem=%ld vs. %ld, nobjects=%d, ici_natoms=%d\n", mem, ici_mem, objs_top - objs, ici_natoms);
 */
     /*
      * Set ici_mem_limit (which is the point at which to trigger a
@@ -603,23 +641,32 @@ printf("mem=%ld vs. %ld, nobjects=%d, natoms=%d\n", mem, ici_mem, objs_top - obj
         printf("\n");
     }
 #endif
-    --supress_collect;
+    --ici_supress_collect;
 }
 
+#ifndef NDDEBUG
 void
 ici_dump_refs(void)
 {
     object_t            **a;
     char                n[30];
+    int                 spoken;
 
+    spoken = 0;
     for (a = objs; a < objs_top; ++a)
     {
         if ((*a)->o_nrefs == 0)
             continue;
+        if (!spoken)
+        {
+            printf("The following ojects have spurious left-over reference counts...\n");
+            spoken = 1;
+        }
         printf("%d 0x%08X: %s\n", (*a)->o_nrefs, *a, objname(n, *a));
     }
 
 }
+#endif
 
 /*
  * Garbage collection triggered by other than our internal mechanmism.

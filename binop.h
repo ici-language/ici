@@ -757,9 +757,61 @@ usef:
         floatof(o)->f_value = f;
         goto useo;
     }
-    if ((o = objof(ici_float_new(f))) == NULL)
-        goto fail;
-    goto looseo;
+    /*
+     * The following in-line expansion of float creation replaces, and
+     * this should be equivalent to, this old code:
+     *
+     * if ((o = objof(ici_float_new(f))) == NULL)
+     *     goto fail;
+     * goto looseo;
+     */
+
+    /*
+     * In-line expansion of float creation.
+     */
+    {
+        register object_t       **po;
+        double                  v;
+        unsigned long           h;
+
+        /*
+         * If this assert fails, we should switch back to a an explicit call
+         * to hash_float().
+         */
+        assert(sizeof floatof(o)->f_value == 2 * sizeof(unsigned long));
+        v = f;
+        h = FLOAT_PRIME + ((unsigned long *)&v)[0] + ((unsigned long *)&v)[1] * 31;
+        h ^= (h >> 12) ^ (h >> 24);
+        for
+        (
+            po = &atoms[ici_atom_hash_index(h)];
+            (o = *po) != NULL;
+            --po < atoms ? po = atoms + atomsz - 1 : NULL
+        )
+        {
+            if (isfloat(o) && floatof(o)->f_value == f)
+                goto useo;
+        }
+        ++ici_supress_collect;
+        if ((o = objof(ici_talloc(float_t))) == NULL)
+        {
+            --ici_supress_collect;
+            goto fail;
+        }
+        o->o_tcode = TC_FLOAT;
+        assert(ici_typeof(o) == &float_type);
+        o->o_flags = O_ATOM;
+        o->o_nrefs = 1;
+        rego(o);
+        o->o_leafz = sizeof(float_t);
+        floatof(o)->f_value = f;
+        assert(h == hash(o));
+        --ici_supress_collect;
+        *po = o;
+        if (++ici_natoms > atomsz / 2)
+            ici_grow_atoms(atomsz * 2);
+        goto looseo;
+    }
 
 usei:
     if (can_temp)
@@ -785,7 +837,8 @@ usei:
         goto useo;
     }
     /*
-     * In-line expansion of atom_int() from object.c
+     * In-line expansion of atom_int() from object.c. Following that, and
+     * merged with it, is in-line atom creation.
      */
     if ((i & ~ICI_SMALL_INT_MASK) == 0)
     {
@@ -805,17 +858,25 @@ usei:
             if (isint(o) && intof(o)->i_value == i)
                 goto useo;
         }
+        ++ici_supress_collect;
+        if ((o = objof(ici_talloc(int_t))) == NULL)
+        {
+            --ici_supress_collect;
+            goto fail;
+        }
+        o->o_tcode = TC_INT;
+        assert(ici_typeof(o) == &int_type);
+        o->o_flags = O_ATOM;
+        o->o_nrefs = 1;
+        rego(o);
+        o->o_leafz = sizeof(int_t);
+        intof(o)->i_value = i;
+        --ici_supress_collect;
+        *po = o;
+        if (++ici_natoms > atomsz / 2)
+            ici_grow_atoms(atomsz * 2);
     }
-    if ((o = objof(ici_talloc(int_t))) == NULL)
-        goto fail;
-    o->o_tcode = TC_INT;
-    assert(ici_typeof(o) == &int_type);
-    o->o_flags = 0;
-    o->o_nrefs = 1;
-    rego(o);
-    o->o_leafz = sizeof(int_t);
-    intof(o)->i_value = i;
-    o = ici_atom(o, 1);
+
 looseo:
     ici_decref(o);
 useo:

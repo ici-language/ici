@@ -139,12 +139,16 @@ int ici_get_last_win32_error(void);
 #endif
 
 /*
- * An integer conversion of a pointer that throws away low bits (with
- * high coherence) to form a starting point for hash functions based
- * on pointer values.
+ * A hash function for pointers. This is used in a few places. Notably in the
+ * hash of object addresses for struct lookup. It is a balance between
+ * effectiveness, speed, and machine knowledge. It may or may not be right
+ * for a given machine, so we allow it to be defined in the configuration.
+ * But if it wasn't, this is what we use.
  */
-#define ICI_PTR_HASH_BITS(p)    ((unsigned long)(p) >> 6)
-
+#ifndef ICI_PTR_HASH
+#define ICI_PTR_HASH(p) (((unsigned long)(p) >> 12) * 31 ^ ((unsigned long)(p) >> 4) * 17)
+#endif
+ 
 #define nels(a)         (sizeof a / sizeof a[0])
 
 typedef struct array    array_t;
@@ -472,8 +476,8 @@ struct type
     int         (*t_fetch_super)(object_t *, object_t *, object_t **, struct_t *);
     int         (*t_assign_base)(object_t *, object_t *, object_t *);
     object_t    *(*t_fetch_base)(object_t *, object_t *);
-    void        *t_reserved1;   /* MBZ. Probably forall generalisation. */
-    void        *t_reserved2;   /* Must be zero. */
+    object_t    *(*t_fetch_method)(object_t *, object_t *);
+    void        *t_reserved2;   /* MBZ. Probably forall generalisation. */
     void        *t_reserved3;   /* Must be zero. */
     void        *t_reserved4;   /* Must be zero. */
 };
@@ -605,6 +609,15 @@ struct type
  * t_ici_name   A string_t copy of the name. This is just a cached version
  *              so that typeof() doesn't keep re-computing the string.
  *
+ * t_fetch_method An optional alternative to the basic t_fetch() that will be
+ *              called (if supplied) when doing a fetch for the purpose of
+ *              forming a method. This is really only a hack to support COM
+ *              under Windows. COM allows remote objects to have properties,
+ *              like object.property, and methods, like object:method(). But
+ *              without this special hack, we can't tell if a fetch operation
+ *              is supposed to perform the COM get/set property operation, or
+ *              return a callable object for a future method call. Most
+ *              objects will leave this NULL.
  */
 
 /*
@@ -663,7 +676,7 @@ extern object_t         *ici_fetch(object_t *, object_t *);
 extern int              ici_assign(object_t *, object_t *, object_t *);
 #endif
 
-#define ici_atom_hash_index(h)  (ICI_PTR_HASH_BITS(h) & (atomsz - 1))
+#define ici_atom_hash_index(h)  ((h) & (atomsz - 1))
 
 
 /*
@@ -763,7 +776,7 @@ struct objwsup
 #define TC_STRUCT       13
 #define TC_SET          14
 
-#define TC_MAX_BINOP    14
+#define TC_MAX_BINOP    14 /* Max vof 15 dictated by PAIR (below). */
 
 #define TC_EXEC         15
 #define TC_FILE         16
@@ -774,10 +787,9 @@ struct objwsup
 #define TC_NULL         21
 #define TC_HANDLE       22
 #define TC_MEM          23
+#define TC_PROFILECALL  24
 
 #define TC_MAX_CORE     24
-
-/* Max value of 15 dictated by PAIR (below). */
 
 #define TRI(a,b,t)      (((((a) << 4) + b) << 6) + t_subtype(t))
 
@@ -1326,6 +1338,48 @@ struct pc
 };
 #define pcof(o)         ((pc_t *)(o))
 #define ispc(o)         ((o)->o_tcode == TC_PC)
+
+/* From profile.h */
+
+
+typedef struct profilecall profilecall_t;
+extern int ici_profile_active;
+void ici_profile_call(func_t *f);
+void ici_profile_return();
+void ici_profile_set_done_callback(void (*)(profilecall_t *));
+profilecall_t *ici_profilecall_new(profilecall_t *called_by);
+
+
+/*
+ * Type used to store profiling call graph.
+ *
+ * One of these objects is created for each function called from within another
+ * of these.  If a function is called more than once from the same function
+ * then the object is reused.
+ */
+struct profilecall
+{
+    object_t        o_head;
+    profilecall_t   *pc_calledby;
+    struct_t        *pc_calls;
+    long            pc_total;
+    long            pc_laststart;
+    long            pc_call_count;
+};
+/*
+ * o_head           What makes it a good little polymorphic ICI object.
+ * pc_caller        The records for the function that called this function.
+ * pc_calls         Records for functions called by this function.
+ * pc_total         The total number of milliseconds spent in this call
+ *                  so far.
+ * pc_laststart     If this is currently being called then this is the
+ *                  time (in milliseconds since some fixed, but irrelevent,
+ *                  point) it started.  We use this at the time the call
+ *                  returns and add the difference to pc_total.
+ * pc_call_count    The number of times this function was called.
+ */
+#define profilecallof(o)    ((profilecall_t *)o)
+#define isprofilecall(o)    ((o)->o_tcode == TC_PROFILECALL)
 
 /* From ptr.h */
 

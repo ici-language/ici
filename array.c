@@ -540,7 +540,8 @@ hash_array(object_t *o)
         i += m;
         while (--m >= 0)
         {
-            h += ICI_PTR_HASH_BITS(*e++);
+            h += ICI_PTR_HASH(*e);
+            ++e;
             h >>= 1;
         }
     }

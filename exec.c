@@ -99,6 +99,7 @@ mark_exec(object_t *o)
        + (x->x_xs != NULL ? ici_mark(x->x_xs) : 0)
        + (x->x_os != NULL ? ici_mark(x->x_os) : 0)
        + (x->x_vs != NULL ? ici_mark(x->x_vs) : 0)
+       + ici_mark(x->x_src)
        + (x->x_pc_closet != NULL ? ici_mark(x->x_pc_closet) : 0)
        + (x->x_os_temp_cache != NULL ? ici_mark(x->x_os_temp_cache) : 0)
        + (x->x_waitfor != NULL ? ici_mark(x->x_waitfor) : 0)
@@ -176,6 +177,7 @@ exec_t *
 ici_new_exec(void)
 {
     exec_t              *x;
+    static src_t        default_src = {OBJ(TC_SRC), 0, NULL};
 
     if ((x = ici_talloc(exec_t)) ==  NULL)
         return NULL;
@@ -184,6 +186,7 @@ ici_new_exec(void)
     assert(ici_typeof(x) == &ici_exec_type);
     objof(x)->o_nrefs = 1;
     rego(x);
+    x->x_src = &default_src;
     if ((x->x_xs = ici_array_new(80)) == NULL)
         goto fail;
     ici_decref(x->x_xs);
@@ -304,19 +307,14 @@ object_t *
 ici_evaluate(object_t *code, int n_operands)
 {
     register object_t   *o;
-    src_t               *src;
     int                 flags;
     catch_t             frame;
-    static src_t        default_src = {OBJ(TC_SRC), 0, NULL};
 #define FETCH(s, k) \
                         isstring(objof(k)) \
                             && stringof(k)->s_struct == structof(s) \
                             && stringof(k)->s_vsver == ici_vsver \
                         ? stringof(k)->s_slot->sl_value \
                         : ici_fetch(s, k)
-
-    src = &default_src;
-    ici_incref(src);
 
     if (++ici_exec->x_n_engine_recurse > 50)
     {
@@ -433,21 +431,19 @@ ici_evaluate(object_t *code, int n_operands)
         switch (o->o_tcode)
         {
         case TC_SRC:
-            ici_decref(src);
-            src = srcof(o);
-            ici_incref(src);
+            ici_exec->x_src = srcof(o);
 #ifndef NODEBUGGING
             if (ici_debug_enabled)
-                ici_debug->idbg_src(srcof(o));
+                ici_debug->idbg_src(ici_exec->x_src);
 #endif
 #ifndef NOTRACE
             if (trace_yes && (trace_flags & TRACE_SRC))
             {
-                if (src->s_filename == NULL)
-                    fprintf(stderr, "%d\n", src->s_lineno);
+                if (ici_exec->x_src->s_filename == NULL)
+                    fprintf(stderr, "%d\n", ici_exec->x_src->s_lineno);
                 else
-                    fprintf(stderr, "%s:%d\n", src->s_filename->s_chars,
-                        src->s_lineno);
+                    fprintf(stderr, "%s:%d\n", ici_exec->x_src->s_filename->s_chars,
+                        ici_exec->x_src->s_lineno);
             }
 #endif
             goto stable_stacks_continue;
@@ -571,7 +567,6 @@ ici_evaluate(object_t *code, int n_operands)
                     o = objof(&o_null);
                 ici_incref(o);
                 ici_unwind();
-                ici_decref(src);
                 --ici_exec->x_n_engine_recurse;
                 return o;
             }
@@ -632,11 +627,13 @@ ici_evaluate(object_t *code, int n_operands)
                 {
                     method_t            *m;
                     object_t            *o1;
+                    object_t            *t;
                     char                n1[30];
 
                     flags = opof(o)->op_code;
                 do_colon:
                     o1 = o;
+                    t = ici_os.a_top[-2];
                     if (flags & OPC_COLON_CARET)
                     {
                         if ((o = FETCH(ici_vs.a_top[-1], SS(class))) == NULL)
@@ -648,17 +645,20 @@ ici_evaluate(object_t *code, int n_operands)
                             ici_error = buf;
                             goto fail;
                         }
-                        if (objwsupof(o)->o_super == NULL)
+                        if ((t = objof(objwsupof(o)->o_super)) == NULL)
                         {
                             ici_error = "class has no super class in :^ operation";
                             goto fail;
                         }
-                        if ((o = FETCH(objwsupof(o)->o_super, ici_os.a_top[-1])) == NULL)
+                    }
+                    if (ici_typeof(t)->t_fetch_method != NULL)
+                    {
+                        if ((*ici_typeof(t)->t_fetch_method)(t, ici_os.a_top[-1]) == NULL)
                             goto fail;
                     }
                     else
                     {
-                        if ((o = FETCH(ici_os.a_top[-2], ici_os.a_top[-1])) == NULL)
+                        if ((o = FETCH(t, ici_os.a_top[-1])) == NULL)
                             goto fail;
                     }
                     if ((flags & OPC_COLON_CALL) == 0)
@@ -819,11 +819,11 @@ ici_evaluate(object_t *code, int n_operands)
                     ici_debug->idbg_watch(ici_os.a_top[-3], ici_os.a_top[-2], ici_os.a_top[-1]);
                 if
                 (
-                    isstring(ici_os.a_top[-2])
-                    &&
                     stringof(ici_os.a_top[-2])->s_struct == structof(ici_os.a_top[-3])
                     &&
                     stringof(ici_os.a_top[-2])->s_vsver == ici_vsver
+                    &&
+                    isstring(ici_os.a_top[-2])
                     &&
                     (objof(ici_os.a_top[-2])->o_flags & S_LOOKASIDE_IS_ATOM) == 0
                 )
@@ -1139,7 +1139,7 @@ ici_evaluate(object_t *code, int n_operands)
                         if ((sl = find_raw_slot(structof(ici_os.a_top[-1]), objof(&o_mark)))->sl_key == NULL)
                         {
                             /*
-                             * No matching case, no default. Pop everything of and
+                             * No matching case, no default. Pop everything off and
                              * continue;
                              */
                             ici_os.a_top -= 3;
@@ -1234,11 +1234,16 @@ ici_evaluate(object_t *code, int n_operands)
 
         badfail:
 #ifndef NODEBUGGING
+            /*
+             * This is not such a useful place to hop into the debugger on
+             * error, because we have already unwound the stack. So the user's
+             * scope for debugging is very limited. But if it was earlier, we
+             * would be breaking on every type of error, even caught ones.
+             */
             if (ici_debug_enabled && !ici_debug_ign_err)
-                ici_debug->idbg_error(ici_error, src);
+                ici_debug->idbg_error(ici_error, ici_exec->x_src);
 #endif
-            expand_error(src->s_lineno, src->s_filename);
-            ici_decref(src);
+            expand_error(ici_exec->x_src->s_lineno, ici_exec->x_src->s_filename);
             --ici_exec->x_n_engine_recurse;
             return NULL;
         }

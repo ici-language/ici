@@ -42,8 +42,6 @@
 #include <mmsystem.h>
 #endif
 
-static int              prof_tcode;
-
 /*
  * Set to true by an ICI call to 'profile()'
  */
@@ -148,29 +146,26 @@ type_t profilecall_type =
  *  A new profilecall_t object.
  */
 profilecall_t *
-new_profilecall(profilecall_t *called_by)
+ici_profilecall_new(profilecall_t *called_by)
 {
     profilecall_t *pc;
 
-    if (prof_tcode == 0 && (prof_tcode = ici_register_type(&profilecall_type)) == 0)
-        return NULL;
-
-/*
- * We always explicitly create these buggers, they aren't atomic.
- *
- *    if ((g = atom_gob(gob)) != NULL)
- *    {
- *        ici_incref(g);
- *        return g;
- *    }
- */
+    /*
+     * We always explicitly create these buggers, they aren't atomic.
+     *
+     *    if ((g = atom_gob(gob)) != NULL)
+     *    {
+     *        ici_incref(g);
+     *        return g;
+     *    }
+     */
 
     /* Allocate storage for it. */
     if ((pc = ici_talloc(profilecall_t)) == NULL)
         return NULL;
 
     /* Fill in the bits common to all ICI objects. */
-    objof(pc)->o_tcode = prof_tcode;
+    objof(pc)->o_tcode = TC_PROFILECALL;
     assert(ici_typeof(pc) == &profilecall_type);
     objof(pc)->o_flags = 0;
     objof(pc)->o_nrefs = 1;
@@ -259,7 +254,7 @@ ici_profile_call(func_t *f)
     if (isnull(objof(pc = profilecallof(ici_fetch(prof_cur_call->pc_calls, f)))))
     {
         /* No, create a new record. */
-        pc = new_profilecall(prof_cur_call);
+        pc = ici_profilecall_new(prof_cur_call);
         assert(pc != NULL);
         ici_decref(pc);
 
@@ -330,7 +325,7 @@ ici_profile_return()
     if (prof_cur_call == NULL)
     {
         /* Yes, create the top-level profilecall object. */
-        prof_cur_call = new_profilecall(NULL);
+        prof_cur_call = ici_profilecall_new(NULL);
         prof_cur_call->pc_laststart = time_in_ms();
         #ifdef _WIN32
             timeBeginPeriod(1);

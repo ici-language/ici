@@ -7,7 +7,7 @@
 #include "null.h"
 #include "primes.h"
 
-#define SET_HASHINDEX(k, s) (ICI_PTR_HASH_BITS(k) & ((s)->s_nslots - 1))
+#define SET_HASHINDEX(k, s) (ICI_PTR_HASH(k) & ((s)->s_nslots - 1))
 
 /*
  * Find the set slot which does, or should, contain the key k.

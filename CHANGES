@@ -1,50 +1,69 @@
+*   Yet again changed various hash functions. In particular string,
+    float and pointer hashing for structs. (timl)
+
+*   Added a new function pointer, t_fetch_method, to the object
+    type structure. This is a bit of a hack. If it is non-NULL, it
+    is used in preference to the normal fetch when doing a fetch during
+    method creation. It is to help Windows COM support. It is not
+    used by any core types.
+
+*	Added Micrsoft Visual Studion build stuff in a new "win32"
+	directory. It contains a workspace and a bunch of projects to
+	build the ICI DLL, wappers, the Windows ICI debugger, and an
+	SDK installer (using NSIS - Nullsoft's free installer system).
+	(timl)
+
+*	Changed source line tracking. Now has a "most recently executed"
+	source tag in the exec structure. Bit quicker, and probaly
+	more reliable. (timl)
+
 *   Added many test cases. These were added by examining code
 	coverage, and adding test cases until all code that could
 	be reached by a script was reached. Some of the fixes to
 	problems revealed by this are detailed below. However there
-	were others not mentioned in detail here.
+	were others not mentioned in detail here. (timl)
 
 *	Added test/tst-misc.ici, test/tst-prof.ici and test/tst-types.ici
-	as part of test coverage upgrade.
+	as part of test coverage upgrade. (timl)
 
 *	Corrected failure to return NULL on empty gettokens in simple
-	2 arg string, string case.
+	2 arg string, string case. (timl)
 
 *	Corrected buffer overun when using large widths in printfs
-    (such as %1000d).
+    (such as %1000d). (timl)
 
-*	Added ptr - int support.
+*	Added ptr - int support. (timl)
 
 *	Corrected failure to detect modification of an atomic array
-	(in some circumstances).
+	(in some circumstances). (timl)
 
 *	Added special new printf format %a - 'any'. This accepts any
 	object and produces a short (up to 30 chars) human readable
-	interpretation of it.
+	interpretation of it. (timl)
 
 *	Disabled popen in Win32 until a working Win32 popen is written.
 	(Primitive popen() only works in console apps in Windows it
-	seems.)
+	seems.) (timl)
 
-*	Allowed getfile() to be give a file name as argument. It is
-    opened, read, and closed.
+*	Allowed getfile() to be given a file name as argument. It is
+    opened, read, and closed. (timl)
 
-*	Added tmpname() function (ala the C lib tmpnam() function).
+*	Added tmpname() function (ala the C lib tmpnam() function). (timl)
 
-*	Changes getenv/putenv handling (again) to overcome problems
-	when programs uninit() ICI, then exec something else, and
-	some bugs in Windows case matching.
+*	Changed getenv/putenv handling (again) to overcome problems
+	when programs ici_uninit(), then exec something else, and
+	some bugs in Windows case matching. (timl)
 
 *	Added protection against execessive recursive core engine
-	invocation (limit of 50 currently).
+	invocation (limit of 50 currently). (timl)
 
 *	Fixed a rare but long standing bug relating to an inopportune
 	collect while adding an atom to the atom pool. The symptom of
 	this was failure to find an atom to be removed from the atom
-	pool during collection (an assert in debug builds).
+	pool during collection (an assert in debug builds). (timl)
 
 *	Huge number of fixes in parse.c relating to refernce count
-	fixes in error cases.
+	fixes in error cases. (timl)
 
 Changes in version 4.0.0 (an alpha release)
 

@@ -1,11 +1,11 @@
 /*
  * This file manages open source files.
  */
-#include "fwd.h"
+#include <ici.h>
 #ifndef NODEBUGGING
 #include <windows.h>
 #include "widb-priv.h"
-#include "object.h"
+//#include "object.h"
 #include "widb_sources.h"
 #include "widb_wnd.h"
 #include "resource.h"

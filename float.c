@@ -74,6 +74,8 @@ hash_float(object_t *o)
      * We assume that the compiler will decide this constant expression
      * at compile time and not actually make a run-time decision about
      * which bit of code to run.
+     *
+     * WARNING: there is an in-line expansion of this in binop.h.
      */
     if (sizeof floatof(o)->f_value == 2 * sizeof(unsigned long))
     {
@@ -81,6 +83,7 @@ hash_float(object_t *o)
 
         p = (unsigned long *)&floatof(o)->f_value;
         h += p[0] + p[1] * 31;
+        h ^= (h >> 12) ^ (h >> 24);
     }
     else
     {

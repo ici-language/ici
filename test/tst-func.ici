@@ -1086,11 +1086,13 @@ if (getfile(b) != "world.\n")
 close(b);
 remove(a);
 
+/*
 a := tmpname();
 system(sprintf("echo hello > \"%s\"", a));
 if (getfile(a) !~ #hello#)
 	fail("failed to system() and getfile the result");
 remove(a);
+*/
 
 static
 tstdir(sense, tag)

@@ -1,19 +1,9 @@
-#include "fwd.h"
-#ifndef NODEBUGGING
+#include <ici.h>
 #include <windows.h>
 #include "widb_ici.h"
 #include "widb-priv.h"
-#include "object.h"
-#include "str.h"
-#include "fwd.h"
-#include "exec.h"
-#include "func.h"
-#include "src.h"
 #include "widb.h"
 #include "widb_wnd.h"
-#include "wrap.h"
-#include "struct.h"
-#include "ptr.h"
 
 
 /*
@@ -46,13 +36,14 @@ ici_debug_src(src_t *src)
     if (widb_step_over_depth <= 0)
     {
         // Remember the scope in case they want to look at the variables.
-        widb_scope = ici_vs.a_top[-1];
+        if (ici_vs.a_top == ici_vs.a_bot)
+            widb_scope = objof(&o_null);
+        else
+            widb_scope = ici_vs.a_top[-1];
         ici_incref(widb_scope);
-
         // Stop executing and show the debugger until the user opts to continue in
         // some way.
         ici_incref(src);
-        _ASSERT(src->s_filename != NULL);
         widb_debug(src);
         ici_decref(src);
 
@@ -197,7 +188,10 @@ ici_debug_error(char *err, src_t *src)
 
         case IDRETRY:
             // Remember the scope in case they want to look at the variables.
-            widb_scope = ici_vs.a_top[-1];
+            if (ici_vs.a_top == ici_vs.a_bot)
+                widb_scope = objof(&o_null);
+            else
+                widb_scope = ici_vs.a_top[-1];
             ici_incref(widb_scope);
 
             // Stop executing and show the debugger until the user opts to continue in
@@ -254,7 +248,7 @@ f_debug_break()
     // This will ensure that we stop at the very next line.
     widb_step_over_depth = -99999;
 
-    return null_ret();
+    return ici_null_ret();
 }
 
 
@@ -272,7 +266,7 @@ f_WIDB_view_object()
     if (ici_typecheck("o", &o))
         return 1;
     WIDB_view_object(o, NULL);
-    return null_ret();
+    return ici_null_ret();
 }
 
 
@@ -314,13 +308,10 @@ ici_widb_library_init() /* Was widb_ici_init() */
     ici_debug = &ici_debug_funcs;
     ici_debug_enabled = 1;
     /* To save users the effort of enabling profiling, we'll do it for them. */
-#ifndef NOPROFILE
     WIDB_enable_profiling_display();
-#endif
 
     /* Ensure that this module is uninitialised on exit. */
     ici_atexit(widb_ici_uninit, &wrap);
     return objof(s);
 }
 
-#endif

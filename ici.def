@@ -59,6 +59,7 @@ EXPORTS ici_func
 EXPORTS ici_func_type DATA
 EXPORTS ici_funcv
 EXPORTS ici_get_last_errno
+EXPORTS ici_get_last_win32_error
 EXPORTS ici_grow_stack
 EXPORTS ici_growbuf
 EXPORTS ici_handle_method_check
@@ -96,6 +97,8 @@ EXPORTS ici_os DATA
 EXPORTS ici_outermost_writeable_struct
 EXPORTS ici_pcre
 EXPORTS ici_pcre_exec
+EXPORTS ici_profile_set_done_callback
+EXPORTS ici_profilecall_new
 EXPORTS ici_ptr_new
 EXPORTS ici_reclaim
 EXPORTS ici_regexp_new

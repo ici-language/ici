@@ -10,6 +10,7 @@
 #include "pc.h"
 #include "primes.h"
 
+
 /*
  * Generation number of look-up look-asides.  All strings that hold a look-up
  * look-aside to shortcut struct lookups also record a generation number.
@@ -22,16 +23,9 @@
 long    ici_vsver   = 1;
 
 /*
- * Hash a pointer to get the initial position in a struct has table.  This is
- * probably something that needs to be optimised for each machine.  The code
- * here is, I guess, a reasonable compromise.
+ * Hash a pointer to get the initial position in a struct has table.
  */
-#define HASHINDEX(k, s) \
-    ( \
-        (((unsigned long)(k) >> 12) ^ ((unsigned long)(k) >> 4)) \
-        & \
-        ((s)->s_nslots - 1) \
-    )
+#define HASHINDEX(k, s)  (ICI_PTR_HASH(k) & ((s)->s_nslots - 1))
 
 /*
  * Find the struct slot which does, or should, contain the key k.  Does
