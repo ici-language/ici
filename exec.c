@@ -443,7 +443,12 @@ ici_evaluate(ici_obj_t *code, int n_operands)
         case TC_SRC:
             ici_exec->x_src = srcof(o);
             if (ici_debug_active)
+	    {
+		*ici_xs.a_top++ = o; /* Restore formal state. */
                 ici_debug->idbg_src(srcof(o));
+		--ici_xs.a_top;
+		continue;
+	    }
             goto stable_stacks_continue;
 
         case TC_PARSE:

@@ -388,6 +388,12 @@ compound_statement(ici_parse_t *p, ici_struct_t *sw)
         ici_error = "badly formed statement";
         goto fail;
     }
+    /*
+     *  Drop any trailing source marker.
+     */
+    if (a->a_top > a->a_bot && issrc(a->a_top[-1]))
+        --a->a_top;
+
     if (ici_stk_push_chk(a, 1))
         goto fail;
     *a->a_top++ = objof(&o_end);
@@ -2054,6 +2060,12 @@ statement(ici_parse_t *p, ici_array_t *a, ici_struct_t *sw, char *m, int endme)
     }
     if (endme)
     {
+	/*
+	 *  Drop any trailing source marker.
+	 */
+	if (a->a_top > a->a_bot && issrc(a->a_top[-1]))
+	    --a->a_top;
+
         if (ici_stk_push_chk(a, 1))
             return -1;
         *a->a_top++ = objof(&o_end);
@@ -2132,6 +2144,8 @@ ici_parse_file(char *mname, char *file, ici_ftype_t *ftype)
         goto fail;
 
     if ((a = objwsupof(ici_struct_new())) == NULL)
+        goto fail;
+    if (ici_assign(a, SS(_file_), f->f_name))
         goto fail;
     if ((a->o_super = s = objwsupof(ici_struct_new())) == NULL)
         goto fail;

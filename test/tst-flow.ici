@@ -153,7 +153,7 @@ onerror
 	;
 
 if (error == NULL || error !~ #excessive recursive#)
-	fail("wrong error from recursive undefined");
+	fail("wrong error from recursive undefined: " + error);
 
 error := NULL;
 try
