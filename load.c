@@ -380,18 +380,19 @@ push_os_path_elements(ici_array_t *a)
     char                *q;
     ici_str_t           *s;
     ici_obj_t           **e;
-    char                fname[MAX_PATH];
+    char		*path;
+    char                fname[FILENAME_MAX];
 
-    if ((path = getenv("PATH)) == NULL)
+    if ((path = getenv("PATH")) == NULL)
         return 0;
     for (p = path; *p != '\0'; p = *q == '\0' ? q : q + 1)
     {
         if ((q = strchr(p, ':')) == NULL)
             q = p + strlen(p);
-        if (q - 4 < p || memcmp(q - 4, "/bin:", 5) != 0 || q - p >= MAX_PATH - 10)
+        if (q - 4 < p || memcmp(q - 4, "/bin", 4) != 0 || q - p >= FILENAME_MAX - 10)
             continue;
-        memcpy(fname, p, q - p - 4);
-        strcpy(fname + q - p - 4, "/lib/ici4");
+        memcpy(fname, p, (q - p) - 4);
+        strcpy(fname + (q - p) - 4, "/lib/ici4");
         /*
          * Don't add inaccessable dirs...
          */
