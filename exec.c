@@ -1250,6 +1250,28 @@ ici_evaluate(ici_obj_t *code, int n_operands)
     }
 }
 
+/*
+ * Evaluate 'name' as if it was a variable in a script in the currently
+ * prevailing scope, and return its value. If the name is undefined, this
+ * will attempt to load extension modules in an attemot to get it defined.
+ *
+ * This is slightly different from fetching the name from the top element
+ * of the scope stack (i.e. 'ici_vs.a_top[-1]') because it will attempt to
+ * auto-load, and fail if the name is not defined.
+ *
+ * The returned object has had it's reference count incremented.
+ *
+ * Returns NULL on error, usual conventions.
+ *
+ * This --func-- forms part of the --ici-api--.
+ */
+ici_obj_t *
+ici_eval(ici_str_t *name)
+{
+    assert(isstring(objof(name)));
+    return ici_evaluate(objof(name), 0);
+}
+
 ici_type_t  ici_exec_type =
 {
     mark_exec,
@@ -1263,5 +1285,3 @@ ici_type_t  ici_exec_type =
 };
 
 ici_op_t    o_quote         = {OBJ(TC_OP), NULL, OP_QUOTE};
-
-

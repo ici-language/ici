@@ -121,6 +121,7 @@ ici_init(void)
     if (ici_call(SS(load), "o", SSO(core)))
         return 1;
 #endif
+
     return 0;
 }
 

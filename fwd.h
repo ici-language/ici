@@ -376,6 +376,7 @@ extern unsigned long    ici_crc(unsigned long, unsigned char const *, ptrdiff_t)
 extern int              ici_str_need_size(ici_str_t *, int);
 extern ici_str_t        *ici_str_buf_new(int);
 extern int              ici_parse(ici_file_t *, ici_objwsup_t *);
+extern ici_obj_t        *ici_eval(ici_str_t *);
 
 extern ici_exec_t       *ici_leave(void);
 extern void             ici_enter(ici_exec_t *);
