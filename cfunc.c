@@ -43,6 +43,7 @@
 
 #ifdef  BSD
 #include <sys/time.h>
+#include <sys/resource.h>
 #else
 #ifdef mips
 #include <bsd/sys/types.h>
@@ -1611,7 +1612,7 @@ f_sprintf()
             continue;
         }
 #ifdef  BAD_PRINTF_RETVAL
-        i = strlen(buf); /* BSD sprintf doesn't return usual value. */
+        i = strlen(buf); /* old BSD sprintf doesn't return usual value. */
 #endif
     }
     buf[i] = '\0';
@@ -2823,9 +2824,17 @@ f_cputime()
         return ici_get_last_win32_error();
     t = (user.dwLowDateTime + user.dwHighDateTime * 4294967296.0) / 1e7;
 
+#else
+# ifdef BSD
+	struct rusage rusage;
+
+	getrusage(RUSAGE_SELF, &rusage);
+	t = rusage.ru_utime.tv_sec + (rusage.ru_utime.tv_usec / 1.0e6);
+
 #else /* _WIN32 */
     ici_error = "cputime function not available on this platform";
     return 1;
+# endif
 #endif
     t -= base;
     if (NARGS() > 0 && isfloat(ARG(0)))
