@@ -56,7 +56,7 @@ forall (i in incs)
     t = getfile(f = fopen(i));
     close(f);
     bits = smash(t, #(?s)--ici.h-start--.*?\*/(.*?)(/\*[^/]*--ici.h-end--[^/]*\*/)#, "\\1");
-    printf("%s: %d\n", i, nels(bits));
+    /*printf("%s: %d\n", i, nels(bits));*/
     if (nels(bits) == 0)
         continue;
     push(icih, sprintf("\n/* From %s */\n", i));

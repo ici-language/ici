@@ -30,7 +30,7 @@ struct string
 
 /*
  * Macros to assist external modules in getting ICI strings. To use, make
- * an include file (say icistr.h) with your strings, and what you want to
+ * an include file called "icistr.h" with your strings, and what you want to
  * call them by, formatted like this:
  *
  *  ICI_STR(fred, "fred")

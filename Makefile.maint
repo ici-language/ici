@@ -1,5 +1,6 @@
 #
 # Machine independent source and distribution maintenance stuff.
+# (Actually, UNIX independent. Not much use on Windows.)
 #
 # These targets are used for creating releases,
 #
@@ -30,7 +31,7 @@
 #	version		Create the VERSION file with the current date.
 #
 
-RELEASE	= 2.1.4
+RELEASE	= 4.0.0
 
 FILES	= \
 	BUILDING CHANGES CREDITS README PLATFORM TODO VERSION\
@@ -53,7 +54,7 @@ FILES	= \
 	\
 	ici_init.ici icicore.ici icicore1.ici icicore2.ici icicore3.ici\
 	\
-	mk-ici-h.ici ici.h \
+	mk-ici-h.ici ici.h icistr-setup.h\
 	\
 	conf-bsd.h conf-hp.h conf-irix.h conf-linux.h conf-next.h\
 	conf-sample.h conf-sco.h conf-sol2.h conf-sun.h conf-ultrix.h\

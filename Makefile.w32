@@ -57,10 +57,22 @@ PCREOBJS=\
     study.obj maketables.obj pcre.obj
 
 WIDBSOURCES = \
-	widb/widb_ici.c widb/widb_sources.c widb/widb_viewobj.c \
-	widb/widb_wnd.c widb/widb.res
+    widb/widb_ici.c widb/widb_sources.c widb/widb_viewobj.c \
+    widb/widb_wnd.c widb/widb.res
+	
+SDKFILES = \
+    ici$(VER).dll icicore.ici icicore1.ici icicore2.ici icicore3.ici \
+    ici.exe wici.exe \
+    ici.h icistr-setup.h \
+    doc\ici.pdf \
+    ici$(VER)widb.dll
 
 all		: ici$(VER).dll ici.h ici.exe wici.exe ici$(VER)widb.dll
+
+sdk		: ici$(VER)-win32-sdk.zip
+
+ici$(VER)-win32-sdk.zip : $(SDKFILES)
+		zip -o $@ $(SDKFILES)
 
 ici$(VER).dll:	$(OBJS) $(PCREOBJS) ici.def
 		$(CC) $(LDFLAGS) -Fe$@ $(OBJS) $(PCREOBJS) $(LIBS) /link /DEBUG /DEBUGTYPE:BOTH /DLL /def:ici.def
@@ -97,160 +109,164 @@ pcre.obj	: pcre/pcre.c
 clean:
 		@-for %%f in ( $(OBJS) $(PCREOBJS) $(TARGET) *.ilk *.pdb ici$(VER).lib ici.exp ) do $(RM) %%f
 
+ici.h : conf-w32.h fwd.h object.h alloc.h buf.h catch.h \
+    cfunc.h array.h int.h float.h exec.h file.h forall.h func.h \
+    handle.h mark.h mem.h method.h null.h op.h parse.h pc.h \
+    ptr.h re.h set.h skt.h src.h str.h struct.h trace.h wrap.h
 
-alloc.o: fwd.h conf-linux.h
-alloc.o:  alloc.h
-aplfuncs.o: exec.h array.h object.h fwd.h conf-linux.h
-aplfuncs.o:   alloc.h int.h float.h
-aplfuncs.o: func.h cfunc.h str.h sstring.h struct.h buf.h null.h op.h
-arith.o: exec.h array.h object.h fwd.h conf-linux.h
-arith.o:  alloc.h int.h float.h op.h parse.h ptr.h str.h
-arith.o: sstring.h struct.h buf.h primes.h re.h pcre/pcre.h set.h
-array.o: ptr.h exec.h array.h object.h fwd.h conf-linux.h
-array.o:  alloc.h int.h float.h op.h buf.h primes.h
-buf.o: fwd.h conf-linux.h
-buf.o:  alloc.h buf.h
-call.o: buf.h exec.h array.h object.h fwd.h conf-linux.h
-call.o:  alloc.h int.h float.h func.h cfunc.h str.h
-call.o: sstring.h null.h op.h catch.h
-catch.o: exec.h array.h object.h fwd.h conf-linux.h
-catch.o:  alloc.h int.h float.h catch.h op.h func.h
-catch.o: cfunc.h
-cfunc.o: exec.h array.h object.h fwd.h conf-linux.h
-cfunc.o:  alloc.h int.h float.h func.h cfunc.h str.h
-cfunc.o: sstring.h struct.h set.h op.h ptr.h buf.h file.h re.h pcre/pcre.h
-cfunc.o: null.h parse.h mem.h 
-cfunco.o: cfunc.h exec.h array.h object.h fwd.h conf-linux.h
-cfunco.o:  alloc.h int.h float.h ptr.h struct.h op.h
-cfunco.o: pc.h str.h sstring.h catch.h buf.h mark.h null.h primes.h
-clib.o: file.h exec.h array.h object.h fwd.h conf-linux.h
-clib.o:  alloc.h int.h float.h func.h cfunc.h op.h str.h
-clib.o: sstring.h buf.h null.h re.h pcre/pcre.h skt.h 
-clib2.o: str.h sstring.h func.h cfunc.h
-compile.o: parse.h array.h object.h fwd.h conf-linux.h
-compile.o:  alloc.h op.h str.h sstring.h
-conf.o: fwd.h conf-linux.h
-conf.o:  alloc.h func.h cfunc.h
-control.o: exec.h array.h object.h fwd.h conf-linux.h
-control.o:  alloc.h int.h float.h op.h buf.h pc.h
-control.o: struct.h null.h forall.h catch.h
-events.o: fwd.h conf-linux.h
-events.o:  alloc.h
-exec.o: exec.h array.h object.h fwd.h conf-linux.h
-exec.o:  alloc.h int.h float.h op.h catch.h ptr.h func.h
-exec.o: cfunc.h str.h sstring.h buf.h pc.h struct.h set.h parse.h re.h
-exec.o: pcre/pcre.h src.h null.h forall.h primes.h 
-exec.o:   binop.h
-exerror.o: str.h sstring.h buf.h
-file.o: file.h primes.h
-findpath.o: fwd.h conf-linux.h
-findpath.o:   alloc.h
-float.o: float.h primes.h  
-forall.o: exec.h array.h object.h fwd.h conf-linux.h
-forall.o:  alloc.h int.h float.h struct.h set.h forall.h
-forall.o: str.h sstring.h buf.h
-func.o: func.h cfunc.h exec.h array.h object.h fwd.h conf-linux.h
-func.o:  alloc.h int.h float.h ptr.h struct.h op.h pc.h
-func.o: str.h sstring.h catch.h buf.h mark.h null.h primes.h
-handle.o: fwd.h conf-linux.h
-handle.o:  alloc.h object.h fwd.h handle.h
-icimain.o: ptr.h exec.h array.h object.h fwd.h conf-linux.h
-icimain.o:  alloc.h int.h float.h file.h str.h sstring.h
-icimain.o: struct.h buf.h wrap.h func.h cfunc.h
-idb.o: src.h exec.h array.h object.h fwd.h conf-linux.h
-idb.o:  alloc.h int.h float.h struct.h str.h sstring.h
-idb.o: func.h cfunc.h op.h buf.h file.h
-idb2.o: fwd.h conf-linux.h
-idb2.o:  alloc.h exec.h array.h object.h fwd.h int.h
-idb2.o: float.h
-init.o: func.h cfunc.h buf.h struct.h exec.h array.h object.h fwd.h
-init.o: conf-linux.h 
-init.o:  alloc.h int.h float.h str.h sstring.h
-init.o: pcre/pcre.h
-int.o: int.h primes.h
-lex.o: parse.h file.h buf.h src.h str.h sstring.h array.h object.h fwd.h
-lex.o: conf-linux.h 
-lex.o:  alloc.h
-load.o: exec.h array.h object.h fwd.h conf-linux.h
-load.o:  alloc.h int.h float.h str.h sstring.h struct.h
-load.o: file.h buf.h func.h cfunc.h 
-mark.o: mark.h
-mem.o: mem.h int.h buf.h primes.h
-method.o: method.h object.h fwd.h conf-linux.h
-method.o:  alloc.h exec.h array.h int.h float.h buf.h
-method.o: primes.h str.h sstring.h
-mkvar.o: exec.h array.h object.h fwd.h conf-linux.h
-mkvar.o:  alloc.h int.h float.h struct.h buf.h
-nptrs.o: fwd.h conf-linux.h
-nptrs.o:  alloc.h
-null.o: null.h
-object.o: exec.h array.h object.h fwd.h conf-linux.h
-object.o:  alloc.h int.h float.h buf.h str.h sstring.h
-object.o: func.h cfunc.h pc.h primes.h 
-oofuncs.o: exec.h array.h object.h fwd.h conf-linux.h
-oofuncs.o:  alloc.h int.h float.h func.h cfunc.h str.h
-oofuncs.o: sstring.h struct.h buf.h re.h pcre/pcre.h null.h op.h method.h
-op.o: op.h exec.h array.h object.h fwd.h conf-linux.h
-op.o:  alloc.h int.h float.h primes.h
-parse.o: parse.h func.h cfunc.h str.h sstring.h struct.h buf.h file.h op.h
-parse.o: exec.h array.h object.h fwd.h conf-linux.h
-parse.o:  alloc.h int.h float.h
-pc.o: exec.h array.h object.h fwd.h conf-linux.h
-pc.o:  alloc.h int.h float.h pc.h
-profile.o: fwd.h conf-linux.h
-profile.o:  alloc.h profile.h object.h fwd.h str.h
-profile.o: sstring.h func.h cfunc.h op.h exec.h array.h int.h float.h null.h
-profile.o: struct.h
-ptr.o: exec.h array.h object.h fwd.h conf-linux.h
-ptr.o:  alloc.h int.h float.h ptr.h struct.h op.h buf.h
-ptr.o: primes.h cfunc.h
-refuncs.o: exec.h array.h object.h fwd.h conf-linux.h
-refuncs.o:  alloc.h int.h float.h func.h cfunc.h str.h
-refuncs.o: sstring.h struct.h buf.h re.h pcre/pcre.h null.h op.h
-regexp.o: str.h sstring.h re.h pcre/pcre.h 
-regexp.o:  exec.h array.h object.h fwd.h conf-linux.h
-regexp.o:  alloc.h int.h float.h op.h buf.h primes.h
-regexp.o: pcre/internal.h  
-regexp.o: pcre/pcre.h
-set.o: object.h fwd.h conf-linux.h
-set.o:  alloc.h set.h op.h int.h buf.h null.h primes.h
-sfile.o: file.h
-signals.o: fwd.h conf-linux.h
-signals.o:  alloc.h exec.h array.h object.h fwd.h
-signals.o: int.h float.h op.h func.h cfunc.h method.h str.h sstring.h
-skt.o: fwd.h conf-linux.h
-skt.o:  alloc.h null.h skt.h primes.h
-skt.o: buf.h exec.h array.h object.h fwd.h int.h float.h op.h func.h
-skt.o: cfunc.h set.h struct.h str.h sstring.h file.h
-smash.o: fwd.h conf-linux.h
-smash.o:  alloc.h
-src.o: exec.h array.h object.h fwd.h conf-linux.h
-src.o:  alloc.h int.h float.h src.h
-sstring.o: fwd.h conf-linux.h
-sstring.o:  alloc.h str.h sstring.h
-string.o: str.h sstring.h struct.h exec.h array.h object.h fwd.h
-string.o: conf-linux.h 
-string.o:  alloc.h int.h float.h primes.h
-strtol.o: fwd.h conf-linux.h
-strtol.o:  alloc.h 
-struct.o: struct.h ptr.h exec.h array.h object.h fwd.h conf-linux.h
-struct.o:  alloc.h int.h float.h func.h cfunc.h op.h
-struct.o: buf.h str.h sstring.h pc.h primes.h
-syserr.o: fwd.h conf-linux.h
-syserr.o:  alloc.h
-thread.o: fwd.h conf-linux.h
-thread.o:  alloc.h exec.h array.h object.h fwd.h int.h
-thread.o: float.h cfunc.h op.h catch.h
-trace.o: func.h cfunc.h object.h fwd.h conf-linux.h
-trace.o:  alloc.h trace.h file.h set.h struct.h array.h
-trace.o: re.h pcre/pcre.h str.h sstring.h int.h float.h exec.h op.h
-unary.o: exec.h array.h object.h fwd.h conf-linux.h
-unary.o:  alloc.h int.h float.h op.h parse.h buf.h
-unary.o: null.h
-uninit.o: buf.h exec.h array.h object.h fwd.h conf-linux.h
-uninit.o:  alloc.h int.h float.h wrap.h
-win32err.o: fwd.h conf-linux.h
-win32err.o:   alloc.h buf.h
-winmain.o: fwd.h conf-linux.h
-winmain.o:  alloc.h
-wrap.o: wrap.h
+alloc.obj: fwd.h conf-linux.h
+alloc.obj:  alloc.h
+aplfuncs.obj: exec.h array.h object.h fwd.h conf-linux.h
+aplfuncs.obj:   alloc.h int.h float.h
+aplfuncs.obj: func.h cfunc.h str.h sstring.h struct.h buf.h null.h op.h
+arith.obj: exec.h array.h object.h fwd.h conf-linux.h
+arith.obj:  alloc.h int.h float.h op.h parse.h ptr.h str.h
+arith.obj: sstring.h struct.h buf.h primes.h re.h pcre/pcre.h set.h
+array.obj: ptr.h exec.h array.h object.h fwd.h conf-linux.h
+array.obj:  alloc.h int.h float.h op.h buf.h primes.h
+buf.obj: fwd.h conf-linux.h
+buf.obj:  alloc.h buf.h
+call.obj: buf.h exec.h array.h object.h fwd.h conf-linux.h
+call.obj:  alloc.h int.h float.h func.h cfunc.h str.h
+call.obj: sstring.h null.h op.h catch.h
+catch.obj: exec.h array.h object.h fwd.h conf-linux.h
+catch.obj:  alloc.h int.h float.h catch.h op.h func.h
+catch.obj: cfunc.h
+cfunc.obj: exec.h array.h object.h fwd.h conf-linux.h
+cfunc.obj:  alloc.h int.h float.h func.h cfunc.h str.h
+cfunc.obj: sstring.h struct.h set.h op.h ptr.h buf.h file.h re.h pcre/pcre.h
+cfunc.obj: null.h parse.h mem.h 
+cfunco.obj: cfunc.h exec.h array.h object.h fwd.h conf-linux.h
+cfunco.obj:  alloc.h int.h float.h ptr.h struct.h op.h
+cfunco.obj: pc.h str.h sstring.h catch.h buf.h mark.h null.h primes.h
+clib.obj: file.h exec.h array.h object.h fwd.h conf-linux.h
+clib.obj:  alloc.h int.h float.h func.h cfunc.h op.h str.h
+clib.obj: sstring.h buf.h null.h re.h pcre/pcre.h skt.h 
+clib2.obj: str.h sstring.h func.h cfunc.h
+compile.obj: parse.h array.h object.h fwd.h conf-linux.h
+compile.obj:  alloc.h op.h str.h sstring.h
+conf.obj: fwd.h conf-linux.h
+conf.obj:  alloc.h func.h cfunc.h
+control.obj: exec.h array.h object.h fwd.h conf-linux.h
+control.obj:  alloc.h int.h float.h op.h buf.h pc.h
+control.obj: struct.h null.h forall.h catch.h
+events.obj: fwd.h conf-linux.h
+events.obj:  alloc.h
+exec.obj: exec.h array.h object.h fwd.h conf-linux.h
+exec.obj:  alloc.h int.h float.h op.h catch.h ptr.h func.h
+exec.obj: cfunc.h str.h sstring.h buf.h pc.h struct.h set.h parse.h re.h
+exec.obj: pcre/pcre.h src.h null.h forall.h primes.h 
+exec.obj:   binop.h
+exerror.obj: str.h sstring.h buf.h
+file.obj: file.h primes.h
+findpath.obj: fwd.h conf-linux.h
+findpath.obj:   alloc.h
+float.obj: float.h primes.h  
+forall.obj: exec.h array.h object.h fwd.h conf-linux.h
+forall.obj:  alloc.h int.h float.h struct.h set.h forall.h
+forall.obj: str.h sstring.h buf.h
+func.obj: func.h cfunc.h exec.h array.h object.h fwd.h conf-linux.h
+func.obj:  alloc.h int.h float.h ptr.h struct.h op.h pc.h
+func.obj: str.h sstring.h catch.h buf.h mark.h null.h primes.h
+handle.obj: fwd.h conf-linux.h
+handle.obj:  alloc.h object.h fwd.h handle.h
+icimain.obj: ptr.h exec.h array.h object.h fwd.h conf-linux.h
+icimain.obj:  alloc.h int.h float.h file.h str.h sstring.h
+icimain.obj: struct.h buf.h wrap.h func.h cfunc.h
+idb.obj: src.h exec.h array.h object.h fwd.h conf-linux.h
+idb.obj:  alloc.h int.h float.h struct.h str.h sstring.h
+idb.obj: func.h cfunc.h op.h buf.h file.h
+idb2.obj: fwd.h conf-linux.h
+idb2.obj:  alloc.h exec.h array.h object.h fwd.h int.h
+idb2.obj: float.h
+init.obj: func.h cfunc.h buf.h struct.h exec.h array.h object.h fwd.h
+init.obj: conf-linux.h 
+init.obj:  alloc.h int.h float.h str.h sstring.h
+init.obj: pcre/pcre.h
+int.obj: int.h primes.h
+lex.obj: parse.h file.h buf.h src.h str.h sstring.h array.h object.h fwd.h
+lex.obj: conf-linux.h 
+lex.obj:  alloc.h
+load.obj: exec.h array.h object.h fwd.h conf-linux.h
+load.obj:  alloc.h int.h float.h str.h sstring.h struct.h
+load.obj: file.h buf.h func.h cfunc.h 
+mark.obj: mark.h
+mem.obj: mem.h int.h buf.h primes.h
+method.obj: method.h object.h fwd.h conf-linux.h
+method.obj:  alloc.h exec.h array.h int.h float.h buf.h
+method.obj: primes.h str.h sstring.h
+mkvar.obj: exec.h array.h object.h fwd.h conf-linux.h
+mkvar.obj:  alloc.h int.h float.h struct.h buf.h
+nptrs.obj: fwd.h conf-linux.h
+nptrs.obj:  alloc.h
+null.obj: null.h
+object.obj: exec.h array.h object.h fwd.h conf-linux.h
+object.obj:  alloc.h int.h float.h buf.h str.h sstring.h
+object.obj: func.h cfunc.h pc.h primes.h 
+oofuncs.obj: exec.h array.h object.h fwd.h conf-linux.h
+oofuncs.obj:  alloc.h int.h float.h func.h cfunc.h str.h
+oofuncs.obj: sstring.h struct.h buf.h re.h pcre/pcre.h null.h op.h method.h
+op.obj: op.h exec.h array.h object.h fwd.h conf-linux.h
+op.obj:  alloc.h int.h float.h primes.h
+parse.obj: parse.h func.h cfunc.h str.h sstring.h struct.h buf.h file.h op.h
+parse.obj: exec.h array.h object.h fwd.h conf-linux.h
+parse.obj:  alloc.h int.h float.h
+pc.obj: exec.h array.h object.h fwd.h conf-linux.h
+pc.obj:  alloc.h int.h float.h pc.h
+profile.obj: fwd.h conf-linux.h
+profile.obj:  alloc.h profile.h object.h fwd.h str.h
+profile.obj: sstring.h func.h cfunc.h op.h exec.h array.h int.h float.h null.h
+profile.obj: struct.h
+ptr.obj: exec.h array.h object.h fwd.h conf-linux.h
+ptr.obj:  alloc.h int.h float.h ptr.h struct.h op.h buf.h
+ptr.obj: primes.h cfunc.h
+refuncs.obj: exec.h array.h object.h fwd.h conf-linux.h
+refuncs.obj:  alloc.h int.h float.h func.h cfunc.h str.h
+refuncs.obj: sstring.h struct.h buf.h re.h pcre/pcre.h null.h op.h
+regexp.obj: str.h sstring.h re.h pcre/pcre.h 
+regexp.obj:  exec.h array.h object.h fwd.h conf-linux.h
+regexp.obj:  alloc.h int.h float.h op.h buf.h primes.h
+regexp.obj: pcre/internal.h  
+regexp.obj: pcre/pcre.h
+set.obj: object.h fwd.h conf-linux.h
+set.obj:  alloc.h set.h op.h int.h buf.h null.h primes.h
+sfile.obj: file.h
+signals.obj: fwd.h conf-linux.h
+signals.obj:  alloc.h exec.h array.h object.h fwd.h
+signals.obj: int.h float.h op.h func.h cfunc.h method.h str.h sstring.h
+skt.obj: fwd.h conf-linux.h
+skt.obj:  alloc.h null.h skt.h primes.h
+skt.obj: buf.h exec.h array.h object.h fwd.h int.h float.h op.h func.h
+skt.obj: cfunc.h set.h struct.h str.h sstring.h file.h
+smash.obj: fwd.h conf-linux.h
+smash.obj:  alloc.h
+src.obj: exec.h array.h object.h fwd.h conf-linux.h
+src.obj:  alloc.h int.h float.h src.h
+sstring.obj: fwd.h conf-linux.h
+sstring.obj:  alloc.h str.h sstring.h
+string.obj: str.h sstring.h struct.h exec.h array.h object.h fwd.h
+string.obj: conf-linux.h 
+string.obj:  alloc.h int.h float.h primes.h
+strtol.obj: fwd.h conf-linux.h
+strtol.obj:  alloc.h 
+struct.obj: struct.h ptr.h exec.h array.h object.h fwd.h conf-linux.h
+struct.obj:  alloc.h int.h float.h func.h cfunc.h op.h
+struct.obj: buf.h str.h sstring.h pc.h primes.h
+syserr.obj: fwd.h conf-linux.h
+syserr.obj:  alloc.h
+thread.obj: fwd.h conf-linux.h
+thread.obj:  alloc.h exec.h array.h object.h fwd.h int.h
+thread.obj: float.h cfunc.h op.h catch.h
+trace.obj: func.h cfunc.h object.h fwd.h conf-linux.h
+trace.obj:  alloc.h trace.h file.h set.h struct.h array.h
+trace.obj: re.h pcre/pcre.h str.h sstring.h int.h float.h exec.h op.h
+unary.obj: exec.h array.h object.h fwd.h conf-linux.h
+unary.obj:  alloc.h int.h float.h op.h parse.h buf.h
+unary.obj: null.h
+uninit.obj: buf.h exec.h array.h object.h fwd.h conf-linux.h
+uninit.obj:  alloc.h int.h float.h wrap.h
+win32err.obj: fwd.h conf-linux.h
+win32err.obj:   alloc.h buf.h
+winmain.obj: fwd.h conf-linux.h
+winmain.obj:  alloc.h
+wrap.obj: wrap.h
