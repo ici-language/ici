@@ -1,0 +1,210 @@
+.r icifnet.1
+.TH "icinet" "1"
+.SH NAME
+icinet \- ICI net extension module of sockets based networking
+.SH DESCRIPTION
+
+The sockets extension is available on systems that provide BSD-compatible
+sockets calls and for Win32 platforms. The extension allows ici programs
+to access network functions.  The sockets extension is generally
+compatible with the C sockets functions but uses types and calling
+semantics more akin to the ici environment.
+
+The sockets extension introduces a new type, socket, to hold socket
+objects. The new intrinsic function, socket, returns a socket object.
+
+\fINetwork Addresses\fP
+
+The sockets interfaces specifies IP network addresses using
+strings. Network addresses are of the form port@ host where the @host part
+is optional. The port may be specified as an integer number or a string
+which is looked up in the services database. If the port is a service
+name it may be in the form name/protocol with protocol being either tcp
+or udp.  The host portion of the address may be a domain name, an IP
+address in dotted decimal notation or one of the special addresses local
+("." - dot), any ("?") or all ("*"). If the host portion is omitted the
+default host depends on the context. See the descriptions of the connect
+and bind functions below.
+
+The following list summarises the sockets interface functions. Following
+this is a detailed description of each of them.
+
+        skt =   \fBsocket\fP(string)
+.sp 0.5
+        skt =   \fBlisten\fP(skt)
+.sp 0.5
+        skt =   \fBaccept\fP(skt)
+.sp 0.5
+        skt =   \fBconnect\fP(skt, string)
+.sp 0.5
+        skt =   \fBbind\fP(skt, string)
+.sp 0.5
+        struct =        \fBselect\fP([int,] set [, set [, set]])
+.sp 0.5
+        int =   \fBgetsockopt\fP(skt, string)
+.sp 0.5
+                \fBsetsockopt\fP(skt, string, int)
+.sp 0.5
+        string =        \fBdomainname\fP()
+.sp 0.5
+        string =        \fBhostname\fP()
+.sp 0.5
+        string =        \fBusername\fP([int])
+.sp 0.5
+        string =        \fBgetpeername\fP(skt)
+.sp 0.5
+        string =        \fBgetsockname\fP(skt)
+.sp 0.5
+                \fBsendto\fP(skt, string, string)
+.sp 0.5
+        struct =        \fBrecvfrom\fP(skt, int)
+.sp 0.5
+                \fBsend\fP(skt, string)
+.sp 0.5
+        string =        \fBrecv\fP(skt, int)
+.sp 0.5
+        int =   \fBgetportno\fP(skt)
+.sp 0.5
+        string =        \fBgethostbyname\fP(string)
+.sp 0.5
+        int =   \fBsktno\fP(skt)
+.sp 0.5
+        file =  \fBsktopen\fP(skt [, mode])
+.sp 0.5
+        array = \fBsocketpair\fP()
+.sp 0.5
+
+skt = \fBsocket\fP(string)
+
+Create and return a new socket object of the specified protocol. The
+string, the protocol, may be one of tcp or udp. For example:
+
+skt = \fBsocket\fP("tcp");
+
+skt = \fBaccept\fP(skt)
+
+Accept a connection to a TCP socket and return a new socket for that
+connection.
+
+skt = \fBlisten\fP(skt)
+
+Allow connections to a TCP socket. Returns the socket passed.
+
+skt = \fBconnect\fP(skt, address)
+
+Establish a TCP connection to the specified address or associate the
+address with as the destination for messages on a UDP socket. If the host
+portion of the address is not specified "." (dot) is used to connect to
+the local host. The original socket is returned.
+
+skt = \fBbind\fP(skt [, address|int])
+
+Associate a local address for the socket (TCP or UDP). If the address
+is not specified the system selects an unused local port number for the
+socket. If the host portion of the address is not specified "?" (any) is
+used. If the address is passed as an integer it specifies the port number
+to be bound, the host portion is "?". Bind returns the socket parameter.
+
+struct = \fBselect\fP([int,] set|NULL [, set|NULL [, set|NULL]])
+
+Check sockets for I/O readiness with optional timeout. Select may be
+passed up to three sets of sockets that are checked for readiness to
+perform I/O. The first set holds the sockets to test for input pending,
+the second set the sockets to test for output able and the third set the
+sockets to test for exceptional states. NULL may be passed in place of
+a set parameter to avoid passing empty sets. An integer may also appear
+in the parameter list. This integer specifies the number of milliseconds
+to wait for the sockets to become ready. If a zero timeout is passed the
+sockets are polled to test their state. If no timeout is passed the call
+blocks until at least one of the sockets is ready for I/O.
+
+The result of select is a struct containing three sets, of sockets,
+identified by the keys read, write and except.
+
+int = \fBgetsockopt\fP(skt, string, int)
+
+Retrieve the value of a socket option. A socket may have various
+attributes associated with it. These are accessed via the getsockopt
+and setsockopt functions. The attributes are identified using string
+keys from the following list:
+
+.nf
+        debug
+        reuseaddr
+        keepalive
+        dontroute
+        useloopback
+        linger
+        broadcast
+        oobinline
+        sndbuf
+        rcvbuf
+        type
+        error
+.fi
+
+\fBsetsockopt\fP(skt, string, int)
+
+Set a socket option (see getsockopt for option names) to the integer value.
+
+string = \fBdomainname\fP()
+
+Return the domain name of the current host.
+
+string = \fBhostname\fP()
+
+Return the name of the current host.
+
+string = \fBusername\fP([int])
+
+Return the name of the owner of the current process or if an integer,
+user number, is passed, of that user.
+
+string = \fBgetpeername\fP(skt)
+
+Return the address of the peer of a TCP socket.
+
+string = \fBgetsockname\fP(skt)
+
+Return the local address of a socket.
+
+\fBsendto\fP(skt, string, string)
+
+Send the data in the second parameter to the specified address.
+
+array = \fBsocketpair\fP()
+
+Returns an array containing a pair of connected sockets.
+
+struct = \fBrecvfrom\fP(skt, int)
+
+Receive a message on a socket and return a struct containing the data
+of the message, in string, and the source address of the data. The int
+parameter gives the maximum number of bytes to receive. The result is a
+struct with the keys msg and addr used to access the returned information.
+
+\fBsend\fP(skt, string)
+
+Send the content of the string on a socket.
+
+string = \fBrecv\fP(skt, int)
+
+Receive data from a socket and return it as a string. The int parameter
+fives the maximum size of message that will be received.
+
+int = \fBgetportno\fP(skt)
+
+Return the local port number assigned to a TCP or UDP socket.
+
+string = \fBgethostbyname\fP(string)
+
+Match a network address against the hosts database and return a hostname.
+
+int = \fBsktno\fP(skt)
+
+Return the file descriptor associated with a socket.
+
+file = \fBsktopen\fP(skt [, mode])
+
+Open a socket as a file, for input or output according to mode (see
+fopen). This function is not available on WIN32 platforms.

@@ -1,0 +1,1021 @@
+.r icifuncs.1
+.TH "icifuncs" "1"
+.SH NAME
+icifuncs \- ICI core language function
+.SH DESCRIPTION
+
+The following list summarises the standard functions.  Following this
+is a detailed description of each of them.
+
+        float = \fBacos\fP(number)
+.sp 0.5
+        mem =   \fBalloc\fP(int [, int])
+.sp 0.5
+        array = \fBarray\fP(any...)
+.sp 0.5
+        float = \fBasin\fP(number)
+.sp 0.5
+        any =   \fBassign\fP(struct, any, any)
+.sp 0.5
+        float = \fBatan\fP(number)
+.sp 0.5
+        float = \fBatan2\fP(number, number)
+.sp 0.5
+        any =   \fBcall\fP(func, array)
+.br
+        any =   \fBcall\fP(pointer, array)
+.sp 0.5
+        float = \fBceil\fP(number)
+.sp 0.5
+                \fBclose\fP(file)
+.sp 0.5
+        any =   \fBcopy\fP(any)
+.sp 0.5
+        float = \fBcos\fP(number)
+.sp 0.5
+        file =  \fBcurrentfile\fP()
+.sp 0.5
+                \fBdel\fP(struct, any)
+.sp 0.5
+        int =   \fBeq\fP(any, any)
+.sp 0.5
+        int =   \fBeof\fP(file)
+.sp 0.5
+                \fBexit\fP([int|string|NULL])
+.sp 0.5
+        float = \fBexp\fP(number)
+.sp 0.5
+        array = \fBexplode\fP(string)
+.sp 0.5
+                \fBfail\fP(string)
+.sp 0.5
+        any =   \fBfetch\fP(struct, any)
+.sp 0.5
+        float = \fBfloat\fP(any)
+.sp 0.5
+        float = \fBfloor\fP(number)
+.sp 0.5
+        int =   \fBflush\fP(file)
+.sp 0.5
+        float = \fBfmod\fP(number, number)
+.sp 0.5
+        file =  \fBfopen\fP(string [, string])
+.sp 0.5
+                \fBflush\fP([file])
+.sp 0.5
+        string =        \fBgetchar\fP([file])
+.sp 0.5
+        string =        \fBgetfile\fP([file])
+.sp 0.5
+        string =        \fBgetline\fP([file])
+.sp 0.5
+        string =        \fBgetenv\fP(string)
+.sp 0.5
+        string =        \fBgettoken\fP([file|string [,string]])
+.sp 0.5
+        array = \fBgettokens\fP([file|string [,string [,string [,string]]]])
+.sp 0.5
+        string =        \fBgsub\fP(string, regexp, string)
+.sp 0.5
+        string =        \fBimplode\fP(array)
+.sp 0.5
+        struct =        \fBinclude\fP(string [, struct])
+.sp 0.5
+        int =   \fBint\fP(any)
+.sp 0.5
+        string =        \fBinterval\fP(string, int [, int])
+.br
+        array = \fBinterval\fP(array, int [, int])
+.sp 0.5
+        int =   \fBisatom\fP(any)
+.sp 0.5
+        array = \fBkeys\fP(struct)
+.sp 0.5
+        float = \fBlog\fP(number)
+.sp 0.5
+        float = log10(number)
+.sp 0.5
+        mem =   \fBmem\fP(int, int [,int])
+.sp 0.5
+        file =  \fBmopen\fP(string [, string])
+.sp 0.5
+        int =   \fBnels\fP(any)
+.sp 0.5
+        int|float =     \fBnum\fP(string|int|float)
+.sp 0.5
+        struct =        \fBparse\fP(file|string [, struct])
+.sp 0.5
+        any =   \fBpop\fP(array)
+.sp 0.5
+        file =  \fBpopen\fP(string [, string])
+.sp 0.5
+        float = \fBpow\fP(number, number)
+.sp 0.5
+                \fBprintf\fP([file,] string [, any...])
+.sp 0.5
+        any =   \fBpush\fP(array, any)
+.sp 0.5
+                \fBput\fP(string)
+.sp 0.5
+                \fBputenv\fP(string [, string])
+.sp 0.5
+        int =   \fBrand\fP([int])
+.sp 0.5
+                \fBreclaim\fP()
+.sp 0.5
+        regexp =        \fBregexp\fP(string)
+.sp 0.5
+        regexp =        \fBregexpi\fP(string)
+.sp 0.5
+                \fBremove\fP(string)
+.sp 0.5
+        struct =        \fBscope\fP([struct])
+.sp 0.5
+        int =   \fBseek\fP(file, int, int)
+.sp 0.5
+        set =   \fBset\fP(any...)
+.sp 0.5
+        float = \fBsin\fP(number)
+.sp 0.5
+        int =   \fBsizeof\fP(any)
+.sp 0.5
+        array = \fBsmash\fP(string, string)
+.sp 0.5
+        file =  \fBsopen\fP(string [, string])
+.sp 0.5
+                \fBsort\fP(array, func)
+.sp 0.5
+        string =        \fBsprintf\fP(string [, any...])
+.sp 0.5
+        float = \fBsqrt\fP(number)
+.sp 0.5
+        string =        \fBstring\fP(any)
+.sp 0.5
+        struct =        \fBstruct\fP(any, any...)
+.sp 0.5
+        string =        \fBsub\fP(string, regexp, string)
+.sp 0.5
+        struct =        \fBsuper\fP(struct [, struct])
+.sp 0.5
+        int =   \fBsystem\fP(string)
+.sp 0.5
+        float = \fBtan\fP(number)
+.sp 0.5
+        string =        \fBtochar\fP(int)
+.sp 0.5
+        int =   \fBtoint\fP(string)
+.sp 0.5
+        any =   \fBtop\fP(array [, int])
+.sp 0.5
+        int =   \fBtrace\fP(string)
+.sp 0.5
+        string =        \fBtypeof\fP(any)
+.sp 0.5
+        array = \fBvstack\fP()
+.sp 0.5
+        file =  \fBwaitfor\fP(file...)
+.br
+        int =   \fBwaitfor\fP(int...)
+.br
+        float = \fBwaitfor\fP(float...)
+
+
+
+The following is an alphabetic listing of each of the standard functions.  
+
+angle = \fBacos\fP(x)
+
+Returns the arc cosine of x in the range 0 to pi.
+
+mem = \fBalloc\fP(nwords [, wordz])
+
+Returns a new mem object referring to nwords (an int) of newly allocated
+and cleared memory.  Each word is either 1, 2, or 4 bytes as specified
+by wordz  (an int, default 1).  Indexing of mem objects performs the
+obvious operations, and thus pointers work too.
+
+array = \fBarray\fP(any...)
+
+Returns an array formed from all the arguments. For example:
+
+\fCarray()\fR
+
+will return a new empty array; and
+
+\fCarray(1, 2, "a string")\fR
+
+will return a new array with three elements, 1, 2, and "the string".
+
+This is the run-time equivalent of the array literal. Thus the following
+two expressions are equivalent:
+
+\fC$array(1, 2, "a string")\fR
+
+\fC[array 1, 2, "a string"]\fR
+
+float = \fBasin\fP(x)
+
+Returns the arc sine of x  in the range -pi/2 to pi/2.
+
+value = \fBassign\fP(struct, key, value)
+
+Sets the element of struct identified by key to value, ignoring any
+super struct.  Returns value.
+
+angle = \fBatan\fP(x)
+
+Returns the arc tangent of x  in the range -pi/2 to pi/2.
+
+angle = \fBatan2\fP(y, x)
+
+Returns the angle from the origin to the rectangular coordinates x, y
+(floats) in the range -pi to pi.
+
+return = \fBcall\fP(func, args)
+.br
+return =\fBcall\fP(pointer, args)
+
+In the first form,
+this calls the function func with arguments taken from the array args.
+Returns the return value of the function.
+
+This is often used to pass on an unknown argument list.  For example:
+
+.nf
+\fCstatic
+db()
+{
+    auto vargs;
+
+    if (debug)
+        return call(printf, vargs);
+}\fR
+.fi
+
+new = \fBcopy\fP(old)
+
+Returns a copy of old.  If old is an intrinsically atomic type such as
+an int or string, the new will be the same object as the old.  But if
+old is an array, set, or struct, a copy will be returned.  The copy will
+be a new non-atomic object (even if old was atomic) which will contain
+exactly the same objects as old and will be equal to it (that is ==).
+If old is a struct with a super struct, new will have the same super
+(exactly the same super, not a copy of it).
+
+x = \fBcos\fP(angle)
+
+Returns the cosine of angle (a float interpreted in radians).
+
+file = \fBcurrentfile\fP()
+
+Returns the file associated with the innermost parsing context, or NULL
+if there is no module being parsed.
+
+This function can be used to include data in a program source file which
+is out-of-band with respect to the normal parse stream.  But to do this
+it is necessary to know up to what character in the file in question
+the parser has consumed.
+
+In general: after having parsed any simple statement the parser will have
+consumed up to and including the terminating semicolon, and no more.
+Also, after having parsed a compound statement the parser will have
+consumed up to and including the terminating close brace and no more.
+For example:
+
+.nf
+\fCstatic help = gettokens(currentfile(), "", "!")[0]
+
+;This is the text of the help message.
+It follows exactly after the ; because
+that is exactly up to where the parser
+will have consumed. We are using the
+gettokens() function (as described below)
+to read the text.
+!
+
+static otherVariable = "etc...";\fR
+.fi
+
+This function can also be used to parse the rest of a module within an
+error catcher.  For example:
+
+.nf
+\fCtry
+    parse(currentfile(), scope())
+onerror
+    printf("That didn't work, but never mind.\en");
+
+static this = that;
+etc();\fR
+.fi
+
+The functions  parse and scope are described below.
+
+\fBdel\fP(struct, key)
+
+Deletes the element of struct identified by key. Any super structs
+are ignored.  Returns NULL.  For example:
+
+.nf
+\fCstatic s = [struct a = 1, b = 2, c = 3];
+static v, k;
+
+forall (v, k in s)
+    printf("%s=%d\en", k, v);
+del(s, "b");
+printf("\en");
+forall (v, k in s)
+    printf("%s=%d\en", k, v);\fR
+.fi
+
+When run would produce (possibly in some other order):
+
+.nf
+\fCa=1
+c=3
+b=2
+
+a=1
+c=3\fR
+.fi
+
+int = \fBeof\fP([file])
+
+Returns non-zero if end of file has been read on file. If file is not
+given the current value of stdin in the current scope is used.
+
+\fBeq\fP(obj1, obj2)
+
+Returns 1 (one) if obj1 and obj2 are the same object, else 0 (zero).
+
+\fBexit\fP([string|int|NULL])
+
+Causes the interpreter to finish execution and exit. If no parameter or
+the empty string or NULL is passed, the exit status is zero. If an integer
+is passed that is the exit status. If a non-empty string is passed then
+that string is printed to the interpreter's standard error output and
+an exit status of one used.  This is implementation dependent and may
+be replaced by a more general exception mechanism.  Avoid.
+
+float = \fBexp\fP(x)
+
+Returns the exponential function of x.
+
+array = \fBexplode\fP(string)
+
+Returns an array containing each of the integer character codes of the
+characters in string.
+
+\fBfail\fP(string)
+
+Causes an error to be raised with the message string associated with
+it.  See the section of error handling in the try statement above.
+For example:
+
+.nf
+\fCif (qf > 255)
+    fail(sprintf("Q factor %d is too large", qf));\fR
+.fi
+
+value = \fBfetch\fP(struct, key)
+
+Returns the value from struct associated with key, ignoring any super
+structs. Returns NULL if the key is not an element of struct.
+
+value = \fBfloat\fP(x)
+
+Returns a floating point interpretation of x, or 0.0 if no reasonable
+interpretation exists. x should be an int, a float, or a string, else
+0.0 will be returned.
+
+file = \fBfopen\fP(name [, mode])
+
+Opens the named file for reading or writing according to mode and returns
+a file object that may be used to perform I/O on the file. Mode is the
+same as in C and is passed directly to the C library fopen function. If
+mode is not specified "r" is assumed.
+
+\fBfprintf\fP(file, fmt, args...)
+
+Formats a string based on fmt and args as per sprintf (below) and
+outputs the result to file.  See sprintf. \fIChanges to ici's printf have
+made fprintf redundant and it may be removed in future versions of the
+interpreter. Avoid.\fP
+
+string = \fBgetchar\fP([file])
+
+Reads a single character from file and returns it as a string. Returns
+NULL upon end of file. If file is not given the current value of stdin
+in the current scope is used.
+
+string = \fBgetfile\fP([file])
+
+Reads all remaining data from file and returns it as a string. Returns
+an empty string upon end of file. If file is not given the current value
+of stdin in the current scope is used.
+
+string = \fBgetline\fP([file])
+
+Reads a line of text from file and returns it as a string. Any end-of-line
+marker is removed.  Returns NULL upon end of file. If file is not given
+the current value of stdin in the current scope is used.
+
+string = \fBgettoken\fP([file [, seps]])
+
+Read a token (that is, a string) from file.
+
+Seps must be a string.  It is interpreted as a set of characters which
+do not from part of the token.  Any leading sequence of these characters
+is first skipped.  Then a sequence of characters not in seps is gathered
+until end of file or a character from seps is found.  This terminating
+character is not consumed.  The gathered string is returned, or NULL if
+end of file was encountered before any token was gathered.
+
+If file is not given the current value of stdin in the current scope
+is used.
+
+If seps is not given the string " \et\en" is assumed.
+
+array = \fBgettokens\fP([file [, seps [, terms [, delims]]]])
+
+Read tokens (that is, strings) from file.  The tokens are character
+sequences separated by seps and terminated by terms.  Returns an array
+of strings, NULL on end of file.
+
+If \fIseps\fP is a string, it is interpreted as a set of characters, any
+sequence of which will separate one token from the next.  In this case
+leading and trailing separators in the input stream are discarded.
+
+If \fIseps\fP is an integer it is interpreted as a character code.  Tokens are
+taken to be sequences of characters separated by exactly one of that
+character.
+
+Separators are not returned as tokens, they are consumed.
+Each separator separates two tokens.
+So empty-string tokens are returned when a sequence of
+more than on separator occurs.
+
+\fIterms\fP must be a string.  It is interpreted as a set of characters,
+any one of which will terminate the gathering of tokens.  The character
+which terminated the gathering will be consumed.
+
+\fIdelims\fP, if provided, must be a string.
+Each character in the string is accepted as a single-character
+token in its own right.
+Unlike separators, delimiters are returned as tokens.
+
+If \fIfile\fP is not given, the current value of stdin in the current scope
+will be used.
+
+If \fIseps\fP is not given, the string " \et" is assumed.
+
+If \fIterms\fP is not given, the string "\en" is assumed.
+
+If \fIdelims\fP is not given, the empty string "" is assumed.
+
+For example:
+
+.nf
+\fCforall (token in gettokens(currentfile()))
+    printf("<%s>", token)
+;   This    is my line    of data.
+printf("\en");\fR
+.fi
+
+when run will print:
+
+\fC<This><is><my><line><of><data.>\fR
+
+Whereas: 
+
+.nf
+\fCforall (token in gettokens(currentfile(), ':', "*"))
+        printf("<%s>", token)
+;:abc::def:ghi:*
+printf("\en");\fR
+.fi
+
+when run will print:
+
+\fC<><abc><><def><ghi><>\fR
+
+string = \fBgsub\fP(string, string|regexp, string)
+
+gsub performs text substitution using regular expressions. It takes
+the first parameter, matches it against the second parameter and then
+replaces the matched portion of the string with the third parameter. If
+the second parameter is a string it is converted to a regular expression
+as if the regexp function had been called. Gsub does the replacement
+multiple times to replace all occurrances of the pattern. It returns
+the new string formed by the replacement. If there is no match this
+is original string. The replacement string may contain the special
+sequence "\e&" which is replaced by the string that matched the regular
+expression. Parenthesized portions of the regular expression may be
+matched by using \e\fBn\fP where \fBn\fP is a decimal digit.
+
+string = \fBimplode\fP(array)
+
+Returns a string formed from the concatenation of elements of array.
+Integers in the array will be interpreted as character codes; strings in
+the array will be included in the concatenation directly.  Other types
+are ignored.
+
+struct = \fBinclude\fP(string [, scope])
+
+Parses the code contained in the file named by the string into the
+scope. If scope is not passed the current scope is used. Include always
+returns the scope into which the code was parsed. The file is opened
+by calling the current definition of the ici \fBfopen\fP() function so path
+searching can be implemented by overriding that function.
+
+value = \fBint\fP(any)
+
+Returns an integer interpretation of x, or 0 if no reasonable
+interpretation exists. x should be an int, a float, or a string, else
+0 will be returned.
+
+subpart = \fBinterval\fP(str_or_array, start [, length])
+
+Returns a sub-interval of str_or_array, which may be either a string or
+an array.
+
+If start (an integer) is positive the sub-interval starts at that offset
+(offset 0 is the first element).  If start is negative the sub-interval
+starts that many elements from the end of the string (offset -1 is the
+last element, -2 the second last etc).
+
+If length is absent, all the elements from the start are included in the
+interval.  Otherwise that many elements are included (or till the end,
+whichever is smaller).
+
+For example, the last character in a string can be accessed with:
+
+\fClast = interval(str, -1);\fR
+
+And the first three elements of an array with:
+
+\fCfirst3 = interval(ary, 0, 3);\fR
+
+\fBisatom\fP(any)
+
+Return 1 (one) if any is an atomic (read-only) object, else 0 (zero).
+Note that integers, floats and strings are always atomic.
+
+array = \fBkeys\fP(struct)
+
+Returns an array of all the keys from struct.  The order is not
+predictable, but is repeatable if no elements are added or deleted from
+the struct between calls and is the same order as taken by a forall loop.
+
+float = \fBlog\fP(x)
+
+Returns the natural logarithm of x (a float).
+
+float = \fBlog10\fP(x)
+
+Returns the log base 10 of x (a float).
+
+mem = \fBmem\fP(start, nwords [, wordz])
+
+Returns a memory object which refers to a particular area of memory
+in the ici interpreter's address space.  Note that this is a highly
+dangerous operation.  Many implementations will not include this function
+or restrict its use.  It is designed for diagnostics, embedded systems
+and controllers.  See the alloc function above.
+
+file = \fBmopen\fP(mem [, mode])
+
+Returns a file, which when read will fetch successive bytes from the
+given memory object.  The memory object must have an access size of one
+(see alloc and mem above). The file is read-only and the mode, if passed,
+must be one of "r" or "rb".
+
+int = \fBnels\fP(any)
+
+Returns the number of elements in any.  The exact meaning depends on
+the type of any.  If any is an:
+
+.TP 1i
+.B array
+the length of the array is returned; if it is a
+.TP 1i
+.B struct
+the number of key/value pairs is returned; if it is a
+.TP 1i
+.B set
+the number of elements is returned; if it is a
+.TP 1i
+.B string
+the number of characters is returned; and if it is a
+.TP 1i
+.B mem
+the number of words (either 1, 2 or 4 byte quantities) is returned;
+.TP 1i
+and if it is anything else, one is returned.
+
+.TP 0i
+number = \fBnum\fP(x)
+
+If x is an int or float, it is returned directly.  If x is a string it
+will be converted to an int or float depending on its appearance; applying
+octal and hex interpretations according to the normal ici source parsing
+conventions.  (That is, if it starts with a 0x it will be interpreted
+as a hex number, else if it starts with a 0 it will be interpreted as
+an octal number, else it will be interpreted as a decimal number.)
+
+If x can not be interpreted as a number the error %s is not a number
+is generated.
+
+scope = \fBparse\fP(source [, scope])
+
+Parses source in a new variable scope, or, if scope (a struct) is
+supplied, in that scope.  Source may either be a file or a string, and
+in either case it is the source of text for the parse.  If the parse is
+successful, the variables scope structure of the sub-module is returned.
+If an explicit scope was supplied this will be that structure.
+
+If scope is not supplied a new struct is created for the auto variables.
+This structure in turn is given a new structure as its super struct
+for the static variables.  Finally, this structure's super is set to
+the current static variables.  Thus the static variables of the current
+module form the externs of the sub-module.
+
+If scope is supplied it is used directly as the scope for the sub-module.
+Thus the base structure will be the struct for autos, its super will be
+the struct for statics etc.
+
+For example:
+
+
+.nf
+\fCstatic x = 123;
+parse("static x = 456;", scope());
+printf("x = %d\en", x);\fR
+.fi
+
+When run will print:
+
+\fCx = 456\fR
+
+Whereas:
+
+.nf
+\fCstatic x = 123;
+parse("static x = 456;");
+printf("x = %d\en", x);\fR
+.fi
+
+When run will print:
+
+\fCx = 123\fR
+
+Note that while the following will work:
+
+\fCparse(fopen("my-module.ici"));\fR
+
+It is preferable in a large program to use:
+
+.nf
+\fCparse(file = fopen("my-module.ici"));
+close(file);\fR
+.fi
+
+In the first case the file will eventually be closed by garbage
+collection, but exactly when this will happen is unpredictable. The
+underlying system may only allow a limited number of simultaneous open
+files.  Thus if the program continues to open files in this fashion a
+system limit may be reached before the unused files are garbage collected.
+
+any = \fBpop\fP(array)
+
+Returns the last element of array and reduces the length of array by one.
+If the array was empty to start with, NULL is returned.
+
+file = \fBpopen\fP(string, [flags])
+
+Executes a new process, specified as a shell command line as for the
+system function, and returns a file that either reads or writes to the
+standard input or output of the process according to mode. If mode is
+"r" the reading from the file reads from the standard output of the
+process. If mode is "w" writing to the file writes to the standard input
+of the process. If mode is not speicified it defaults to "r".
+
+float = \fBpow\fP(x, y)
+
+Returns x^y where both x and y are floats.
+
+\fBprintf\fP([file,] fmt, args...)
+
+Formats a string based on fmt and args as per sprintf (below) and
+outputs the result to the file or to the current value of the stdout
+variable in the current scope if the first parameter is not a file.
+The current stdout must be a file.  See sprintf.
+
+any = \fBpush\fP(array, any)
+
+Appends any to array, increasing its length in the process.  Returns any.
+
+\fBput\fP(string [, file])
+
+Outputs string to file. If file is not passed the current value of stdout
+in the current scope is used.
+
+int = \fBrand\fP([seed])
+
+Returns an pseudo random integer in the range 0..0x7FFF.  If seed (an int)
+is supplied the random number generator is first seeded with that number.
+The sequence is predictable based on a given seed.
+
+\fBreclaim\fP()
+
+Force a garbage collection to occur.
+(This should not be needed in normal operation.)
+
+re = \fBregexp\fP(string)
+
+Returns a compiled regular expression derived from string  This is the
+method of generating regular expressions at run-time, as opposed to
+the direct lexical form. For example, the following three expressions
+are similar:
+
+.nf
+\fCstr ~ #.*\e.c#
+str ~ regexp(".*\e\e.c");
+str ~ $regexp(".*\e\e.c");\fR
+.fi
+
+except that the middle form computes the regular expression each time it
+is executed.  Note that when a regular expression includes a # character
+the regexp function must be used, as the direct lexical form has no
+method of escaping a #.
+
+Note that regular expressions are intrinsically atomic.  Also note that
+non-equal strings may sometimes compile to the same regular expression.
+
+re = \fBregexpi\fP(string)
+
+Returns a compiled regular expression derived from string  that is
+case-insensitive. I.e., the regexp will match a string regardless of
+the case of alphabetic characters. Note that there is no literal form
+of regular expressions that has this property.
+
+\fBremove\fP(string)
+
+Deletes the file whose name is given in string.
+
+current = \fBscope\fP([replacement])
+
+Returns the current scope structure.  This is a struct whose base element
+holds the auto variables, the super of that hold the statics, the super
+of that holds the externs etc.  Note that this is a real reference to
+the current scope structure.  Changing, adding and deleting elements
+of these structures will affect the values and presence of variables in
+the current scope.
+
+If a replacement is given, that struct  replaces the current scope
+structure, with the obvious implications.  This should clearly be used
+with caution.  Replacing the current scope with a structure which has
+no reference to the standard functions also has the obvious effect.
+
+int = \fBseek\fP(file, int, int)
+
+Set the input/output position for a file and returns the new I/O position
+or -1 if an error ocurred. The arguments are the same as for the C
+library's fseek function. If the file object does not support setting
+the I/O position or the seek operation fails an error is raised.
+
+set = \fBset\fP(any...)
+
+Returns a set formed from all the arguments. For example:
+
+\fCset()\fR
+
+will return a new empty set; and
+
+\fCset(1, 2, "a string")\fR
+
+will return a new set with three elements, 1, 2, and "the string".
+
+This is the run-time equivalent of the set literal. Thus the following
+two expressions are equivalent:
+
+\fC$set(1, 2, "a string")\fR
+
+\fC[set 1, 2, "a string"]\fR
+
+x = \fBsin\fP(angle)
+
+Returns the sine of angle (a float interpreted in radians).
+
+int = \fBsizeof\fP(any)
+
+Sizeof is the old name of the nels function (described above).
+
+file = \fBsopen\fP(string [, mode])
+
+Returns a file, which when read will fetch successive characters from
+the given string. The file is read-only and the mode, if passed, must
+be one of "r" or "rb".
+
+Files are, in general, system dependent.  This is the only standard
+routine which opens a file.  But on systems that support byte stream
+files, the function fopen will be set to the most appropriate method of
+opening a file for general use. The interpretation of mode is largely
+system dependent, but the strings "r", "w", and "rw" should be used for
+read, write, and read-write file access respectively.
+
+\fBsort\fP(array, func)
+
+Sort the content of the array using the heap sort algorithm with func
+as the comparison function. The comparison function is called with
+two elements of the array as parameters, a and b. If a is equal to b
+the function should return zero. If a is less than b, -1, and if a is
+greater than b, 1.
+
+For example,
+
+.nf
+\fCstatic
+cmp(a, b)
+{
+    if (a == b)
+        return 0;
+    if (a < b)
+        return -1;
+    return 1;
+}
+
+static a = array(1, 3, 2);
+
+sort(a, cmp);\fR
+.fi
+
+
+string = \fBsprintf\fP(fmt, args...)
+
+Return a formatted string based on fmt (a string) and args.  Most of the
+usual % format escapes of ANSI C printf are supported.  In particular;
+the integer format letters diouxXc are supported, but if a float is
+provided it will be converted to an int.  The floating point format
+letters feEgG are supported, but if the argument is an int it will be
+converted to a float.  The string format letter, s is supported and
+requires a string.  Finally the % format to get a single % works.
+
+The flags, precision, and field width options are supported.  The indirect
+field width and precision options with * also work and the corresponding
+argument must be an int.
+
+For example:
+
+\fCsprintf("%08X <%4s> <%-4s>", 123, "ab", "cd")\fR
+
+will produce the string:
+
+\fC0000007B <  ab> <cd  >\fR
+
+and
+
+\fCsprintf("%0*X", 4, 123)\fR
+
+will produce the string:
+
+\fC007B\fR
+
+x = \fBsqrt\fP(float)
+
+Returns the square root of float.
+
+string = \fBstring\fP(any)
+
+Returns a short textual representation of any. If any is an int or float
+it is converted as if by a %d or %g format.  If it is a string it is
+returned directly.  Any other type will returns its type name surrounded
+by angle brackets, as in <struct>.
+
+struct = \fBstruct\fP([super,] key, value...)
+
+Returns a new structure.  This is the run-time equivalent of the struct
+literal.  If there are an odd number of arguments the first is used as
+the super of the new struct; it must be a struct.  The remaining pairs of
+arguments are treated as key and value pairs to initialise the structure
+with; they may be of any type.  For example:
+
+\fCstruct()\fR
+
+returns a new empty struct;
+
+\fCstruct(anotherStruct)\fR
+
+returns a new empty struct which has anotherStruct as its super;
+
+\fCstruct("a", 1, "b", 2)\fR
+
+returns a new struct which has two entries a and b with the values 1
+and 2; and
+
+\fCstruct(anotherStruct, "a", 1, "b", 2)\fR
+
+returns a new struct which has two entries a and b with the values 1
+and 2 and a super of anotherStruct.
+
+Note that the super of the new struct is set after the assignments of
+the new elements have been made. Thus the initial elements given as
+arguments will not affect values in any super struct.
+
+The following two expressions are equivalent:
+
+\fC$struct(anotherStruct, "a", 1, "b", 2)\fR
+
+\fC[struct:anotherStruct, a = 1, b = 2]\fR
+
+string = \fBsub\fP(string, string|regexp, string)
+
+sub() performs text substitution using regular expressions. It takes
+the first parameter, matches it against the second parameter and then
+replaces the matched portion of the string with the third parameter. If
+the second parameter is a string it is converted to a regular expression
+as if the regexp function had been called. Sub does the replacement once
+(unlike gsub). It returns the new string formed by the replacement. If
+there is no match this is original string. The replacement string may
+contain the special sequence "\e&" which is replaced by the string that
+matched the regular expression. Parenthesized portions of the regular
+expression may be matched by using \en where n is a decimal digit.
+
+current = \fBsuper\fP(struct [, replacement])
+
+Returns the current super struct of struct, and, if replacement is
+supplied, sets it to a new value.  If replacement is NULL any current
+super struct reference is cleared (that is, after this struct will have
+no super).
+
+x = \fBtan\fP(angle)
+
+Returns the tangent of angle (a float interpreted in radians).
+
+string = \fBtochar\fP(int)
+
+Returns a one character string made from the character code specified
+by int.
+
+
+int = \fBtoint\fP(string)
+
+Returns the character code of the first character of string.
+
+string = \fBtypeof\fP(any)
+
+Returns the type name (a string) of any.  See the section on types above
+for the possible type names.
+
+array = \fBvstack\fP()
+
+Returns a representation of the call stack of the current program at
+the time of the call. It can be used to perform stack tracebacks and
+related debugging operations. The result is an array of structures,
+each of which is a variable scope (see scope) structure of successively
+deeper nestings of the current function nesting.
+
+event = \fBwaitfor\fP(event...)
+
+Blocks (waits) until an event indicated by any of its arguments occurs,
+then returns that argument.  The interpretation of an event depends on
+the nature of each argument.  A file argument is triggered when input
+is available on the file. A float argument waits for that many seconds
+to expire, an int for that many millisecond (they then return 0, not the
+argument given). Other interpretations are implementation dependent. Where
+several events occur simultaneously, the first as listed in the arguments
+will be returned.
+
+Note that in some implementations some file types may always appear
+ready for input, despite the fact that they are not.
+
+.SS "Pointers"
+
+Pointers in ici work \fIbasically\fP like pointers in C \-
+but are implemented as objects in their own right.
+Pointers in ici are completely safe.
+
+An ici pointer consists of two parts,
+the object being pointed to,
+and a key to indicate the specific part of the object.
+
+Integers can be added to or subtracted from a pointer if
+the object is indexed by an integer
+(like an array or a string).
+
+.nf
+    \fCauto x = [array 1, "fred", 3];
+    auto    p = &x[0];
+    ++p;
+    printf("*p is a %s\n", typeof(*p));
+*p is a string
+
+    x = "Hello!";
+    p = &x[0];
+    printf("*p is %s\n", *p);
+*p is H
+    p += 5;
+    printf("*p is %s\n", *p);
+*p is !\fR
+.fi
+
