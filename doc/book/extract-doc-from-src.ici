@@ -1,0 +1,228 @@
+/*
+ * This script extracts and converts suitably marked comments from
+ * the source files given on the command line, into MML (FrameMaker
+ * Markup Language) ready for import into the FrameMaker based ICI
+ * documentation.
+ *
+ * The extracted comments are marked up with formatting commands
+ * based on their strict adherance to layout conventions. This
+ * script generally tries to avoid special markup tags in the source
+ * comments.
+ *
+ * Rules:
+ * * No tabs, only spaces.
+ */
+//widb.break();
+srcdir := "../..";
+files := dir(srcdir, #.*\.[chCH]#);
+
+static
+strcatf(str)
+{
+    auto vargs;
+    
+    return strcat(str, call(sprintf, vargs));
+}
+
+static
+index(entry, subtext)
+{
+    return sprintf("<Marker <MType 2> <MText `%s, %s'> >", entry, subtext);
+}
+
+mmls := array();
+mml := strbuf();
+
+forall (file in files)
+{
+    src := getfile(srcdir + "/" + file);
+    if (src !~ #--ici-api--#)
+    {
+        /*
+         * This is not strictly necessary, but skip early if there are
+         * no API comments in this file.
+         */
+        continue;
+    }
+    /*
+     * The following line should break up the file into slash-star
+     * comment that start on the start of line, and other stuff. Note
+     * the in-pattern setting of the DOTALL options with (?s) to allow
+     * matching of newlines in slash-star comments and the use of ? to
+     * minimise .* (i.e. make it non-greedy and match the first comment
+     * end that comes along).
+     */
+    src = smash(src, #(^|\n)((?s)/\*.*?\*/)#, "\\0", "\\&", 1);
+    forall (text, texti in src)
+    {
+        if ((texti & 1) == 0)
+        {
+            /*
+             * The even entries are source code. Skip.
+             */
+            continue;
+        }
+        if (text !~ #--ici-api--#)
+        {
+            /*
+             * This comment is not an ICI API comment, skip.
+             */
+            continue;
+        }
+        if (text ~ #--func--#)
+        {
+            push(mmls, mml);
+            mml := strbuf();
+            /*
+             * This is a comment on a function. Pick up the trailing
+             * function definition. (?s) for dotall, .*? for non-greedy.
+             */
+            head = src[texti + 1] ~~ #(?s)[ \n]*(.+?){#;
+            /*
+             * Extract its name and print a Heading2 with it, and its
+             * declaraction as code.
+             */
+            name = head ~~ #\n(\w*)#;
+            strcatf(mml, "<Heading2>%s%s\n", index(name, "C API function"), name);
+            head = sub(head, #\n#, " ");
+            head = gsub(head, # #, "\\ ");
+            head = gsub(head, #\n#, "<HardReturn>\n");
+            head = gsub(head, #<HardReturn>\n$#, "\n"); /* But not at end. */
+            strcatf(mml, "<CodeIn1cm>\\ <bold>%s<nobold>", head);     
+        }
+        else if (text ~ #--struct--#)
+        {
+            push(mmls, mml);
+            mml := strbuf();
+            /*
+             * This is a comment on a struct. Pick up the trailing
+             * structure definition. (?s) for dotall, .*? for non-greedy.
+             */
+            head = src[texti + 1] ~~ #(?s)[ \n]*(.+?\n})#;
+            /*
+             * Extract its name and print a Heading2 with it, and its
+             * declaraction as code.
+             */
+            name = head ~~ #(\w*)\n#;
+            strcatf(mml, "<Heading2>%s%s\n", index(name, "C API struct"), name);
+            head = gsub(head, # #, "\\ ");
+            head = gsub(head, #\n#, "<HardReturn>\n");
+            head = gsub(head, #<HardReturn>\n$#, "\n"); /* But not at end. */
+            strcatf(mml, "<CodeIn1cm>\\ <bold>%s<nobold>", head);     
+        }
+        else if (text ~ #--macro--#)
+        {
+            push(mmls, mml);
+            mml := strbuf();
+            /*
+             * This is a comment on a maco. Pick up the trailing
+             * macro name (with args, if any). (?s) for dotall, .*? for
+             * non-greedy.
+             */
+            name = src[texti + 1] ~~ #(?s)[ \n]*define *(.*?( |\([^)]*\)))#;
+            head = "#define " + name + "<HardSpace><HardSpace>...";
+            name = name ~~ #(\w+)#;
+            /*
+             * Extract its name and print a Heading2 with it, and its
+             * declaraction as code.
+             */
+            strcatf(mml, "<Heading2>%s%s\n", index(name, "C API maco"), name);
+            head = gsub(head, # #, "\\ ");
+            head = gsub(head, #\n#, "<HardReturn>\n");
+            head = gsub(head, #<HardReturn>\n$#, "\n"); /* But not at end. */
+            strcatf(mml, "<CodeIn1cm>\\ <bold>%s<nobold>", head);     
+        }
+        /*
+         * Strip the comment text down to its body. This is defined as
+         * the lines that start with space then a star, minus the space,
+         * the star, and any single following space. We also ignore
+         * trailing spaces on the line.
+         */
+        text = implode(smash(text, # +\* ?(.*?) *\n#, "\\1\n"));
+        /*
+         * Remove the api indicator line.
+         */
+        text = gsub(text, #.*--ici-api--.*\n#, "");
+        /*
+         * So dome character substitutions.
+         */
+        text = gsub(text, #<#, "\\<");
+        text = gsub(text, #>#, "\\>");
+        /*
+         * Break the text into paragraphs. (?s) to dot newlines, .*? to
+         * make non-greedy.
+         */
+        paras = smash(text, #((?s).*?\n)\n#, "\\1", 1);
+        tag = "";
+        forall (para in paras)
+        {
+            if (para ~ #^\S.{20}.*\n {21}#)
+            {
+                /*
+                 * Hmm. Non-space start, first line at least out to column
+                 * 3+1+20 = 24, second line indented to column 3+21 = 24.
+                 * This looks like a tagged paragraph.
+                 */
+                if (para ~ #^.*:\n#)
+                    para = para ~~~ #^(.*):\n((?s).*)#;
+                else
+                    para = para ~~~ #^(.{21})((?s).*)#;
+                para[0] ~~= #(.*\S) *$#;
+                para[1] = gsub(para[1], #'([^']+)'#, "<italic>\\1<noitalic>");
+                strcatf(mml, "<TagIn4cm><italic>%s<noitalic><Tab>%s", 
+                    para[0], para[1]);
+                tag = "TagIn4cm";
+            }
+            else if (para ~ #^ {21}# && tag == "TagIn4cm")
+            {
+                /*
+                 * Indented to column 3+21 = 24, and last paragraph was 
+                 * a tagged paragraph. This looks like a continuation.
+                 */
+                para = gsub(para, #'([^']+)'#, "<italic>\\1<noitalic>");
+                strcatf(mml, "<TagIn4cm><Tab>%s", para);
+            }
+            else if (para ~ #^\S#)
+            {
+                para = gsub(para, #'([^']+)'#, "<italic>\\1<noitalic>");
+                strcatf(mml, "<Body>%s", para);
+                tag = "Body";
+            }
+            else
+            {
+                /*
+                 * This must be pre-formatted text.
+                 */
+                if (tag != "CodeIn1cm")
+                {
+                    /*
+                     * First in a possible sequence. Work out the prevailing
+                     * indent.
+                     */
+                    indent := para ~~ #(^ *)#; 
+                }
+                para = gsub(para, regexp("(^|\\n)" + indent), "\\1");
+                para = gsub(para, # #, "\\ ");
+                para = gsub(para, #\n#, "<HardReturn>\n");
+                para = gsub(para, #<HardReturn>\n$#, "\n"); /* But not at end. */
+                if (tag == "CodeIn1cm")
+                    strcatf(mml, "<HardReturn><HardReturn>\n%s", para);
+                else
+                {
+                    /*
+                     * The space after the tag is to make the text line up
+                     * right. Why? I can't work it out. Maybe it's a bug
+                     * in FM. Maybe I just don't understand.
+                     */
+                    strcatf(mml, "<CodeIn1cm>\\ %s", para);
+                }
+                tag = "CodeIn1cm";
+            }
+        }
+    }
+}
+
+sort(mmls);
+f := fopen("ici-api.mml", "w");
+printf(f, "<MML>\n<Include \"ici-fmt.mml\">\n");
+put(implode(mmls), f);
