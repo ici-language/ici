@@ -225,9 +225,19 @@ call_func(object_t *o, object_t *subject)
          */
         while (fp < f->f_args->a_top && n > 0)
         {
-            if (assign(d, *fp++, *ap--))
-                goto fail;
-            --n;
+			assert(isstring(*fp));
+			if (stringof(*fp)->s_struct == d && stringof(*fp)->s_vsver == ici_vsver)
+			{
+				stringof(*fp)->s_slot->sl_value = *ap;
+			}
+			else
+			{
+				if (assign(d, *fp, *ap))
+					goto fail;
+            }
+			++fp;
+			--ap;
+			--n;
         }
     }
     va = NULL;

@@ -21,7 +21,7 @@
 #undef  NODIR           /* Directory reading function, dir(). */
 #define NOPASSWD        /* UNIX password file access */
 #undef  NODLOAD         /* Dynamic loading of native machine code modules. */
-#undef  NOSTARTUPFILE   /* Parse a standard file of ICI code at init time. */
+#define NOSTARTUPFILE   /* Parse a standard file of ICI code at init time. */
 #undef  NODEBUGGING     /* Debugger interface and functions */
 #undef  NOEVENTS        /* Event loop and associated processing. */
 #define NOPROFILE       /* Profiler, see profile.c. */
