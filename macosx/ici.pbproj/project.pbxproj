@@ -22,6 +22,7 @@
 				A144402103DF1E0D00A80108,
 				A144402203DF1E1300A80108,
 				A1676E0B03DF28DF00A80108,
+				A1AF3B6603DF332200A80108,
 				A144408D03DF1F9500A80108,
 			);
 			isa = PBXGroup;
@@ -908,7 +909,6 @@
 				A14440F003DF204E00A80108,
 				A14440F103DF204E00A80108,
 				A14440F203DF204E00A80108,
-				A144410803DF258900A80108,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1668,12 +1668,13 @@
 		};
 		A14440FC03DF21EB00A80108 = {
 			buildPhases = (
-				A1676E1003DF293A00A80108,
 				A14440F803DF21EB00A80108,
 				A14440F903DF21EB00A80108,
 				A14440FA03DF21EB00A80108,
 				A14440FB03DF21EB00A80108,
 				A144410503DF242100A80108,
+				A1676E1003DF293A00A80108,
+				A1C1E01D03DF35AC00A80108,
 			);
 			buildSettings = {
 				INSTALL_PATH = /usr/local/bin;
@@ -1730,15 +1731,6 @@
 			name = ici.h;
 			path = ../ici.h;
 			refType = 2;
-		};
-		A144410803DF258900A80108 = {
-			fileRef = A144410603DF255B00A80108;
-			isa = PBXBuildFile;
-			settings = {
-				ATTRIBUTES = (
-					Public,
-				);
-			};
 		};
 		A144410903DF25C500A80108 = {
 			buildPhases = (
@@ -1833,6 +1825,70 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
+		};
+		A1AF3B6603DF332200A80108 = {
+			children = (
+				A1AF3B6B03DF335500A80108,
+				A1AF3B6803DF335500A80108,
+				A1C1E01C03DF346E00A80108,
+				A1AF3B6903DF335500A80108,
+				A1AF3B6A03DF335500A80108,
+				A1AF3B6C03DF335500A80108,
+			);
+			isa = PBXGroup;
+			name = Docs;
+			refType = 4;
+		};
+		A1AF3B6803DF335500A80108 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = CHANGES;
+			path = ../CHANGES;
+			refType = 2;
+		};
+		A1AF3B6903DF335500A80108 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = CREDITS;
+			path = ../CREDITS;
+			refType = 2;
+		};
+		A1AF3B6A03DF335500A80108 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = PLATFORM;
+			path = ../PLATFORM;
+			refType = 2;
+		};
+		A1AF3B6B03DF335500A80108 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = README;
+			path = ../README;
+			refType = 2;
+		};
+		A1AF3B6C03DF335500A80108 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = TODO;
+			path = ../TODO;
+			refType = 2;
+		};
+		A1C1E01C03DF346E00A80108 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = building.html;
+			path = ../doc/building.html;
+			refType = 2;
+		};
+		A1C1E01D03DF35AC00A80108 = {
+			buildActionMask = 2147483647;
+			dstPath = /usr/local/include/ici4;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			isa = PBXCopyFilesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 	};
 	rootObject = A12FEAC503DF1DDB00A80108;
