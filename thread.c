@@ -6,10 +6,10 @@
 #include "op.h"
 #include "catch.h"
 
-#ifdef _WIN32
+#ifdef ICI_USE_WIN32_THREADS
 HANDLE                  ici_mutex;
 #endif
-#ifdef _THREAD_SAFE
+#ifdef ICI_USE_POSIX_THREADS
 pthread_mutex_t		ici_mutex;
 static pthread_mutex_t	n_active_threads_mutex;
 #endif
@@ -52,11 +52,11 @@ ici_leave(void)
         *x->x_os = ici_os;
         *x->x_xs = ici_xs;
         *x->x_vs = ici_vs;
-#ifdef _WIN32
+#ifdef ICI_USE_WIN32_THREADS
         InterlockedDecrement(&ici_n_active_threads);
         ReleaseMutex(ici_mutex);
 #else
-# ifdef _THREAD_SAFE
+# ifdef ICI_USE_POSIX_THREADS
 	pthread_mutex_lock(&n_active_threads_mutex);
 	--ici_n_active_threads;
 	pthread_mutex_unlock(&n_active_threads_mutex);
@@ -90,11 +90,11 @@ ici_enter(exec_t *x)
 {
     if (!x->x_critsect)
     {
-#ifdef _WIN32
+#ifdef ICI_USE_WIN32_THREADS
         InterlockedIncrement(&ici_n_active_threads);
         WaitForSingleObject(ici_mutex, INFINITE);
 #else
-# ifdef _THREAD_SAFE
+# ifdef ICI_USE_POSIX_THREADS
 	pthread_mutex_lock(&n_active_threads_mutex);
 	++ici_n_active_threads;
 	pthread_mutex_unlock(&n_active_threads_mutex);
@@ -148,15 +148,15 @@ ici_yield(void)
         *x->x_os = ici_os;
         *x->x_xs = ici_xs;
         *x->x_vs = ici_vs;
-#ifdef _WIN32
+#ifdef ICI_USE_WIN32_THREADS
         ReleaseMutex(ici_mutex);
         WaitForSingleObject(ici_mutex, INFINITE);
 #else
-# ifdef _THREAD_SAFE
+# ifdef ICI_USE_POSIX_THREADS
 	pthread_mutex_unlock(&ici_mutex);
-	pthread_yield();
+	/*pthread_yield();*/
 	if (pthread_mutex_lock(&ici_mutex) == -1)
-		perror("ici_mutex");
+	    perror("ici_mutex");
 # else
         /*
          * It is ok to do ici_yield in implementations with
@@ -202,7 +202,7 @@ ici_waitfor(object_t *o)
     ici_exec->x_waitfor = o;
     --ici_exec->x_critsect;
     x = ici_leave();
-#ifdef _WIN32
+#ifdef ICI_USE_WIN32_THREADS
     /*
      * At this point an ici_wakeup() may happen even before we get
      * into the wait. But it's OK because it doesn't matter if the
@@ -212,7 +212,7 @@ ici_waitfor(object_t *o)
     if (WaitForSingleObject(x->x_semaphore, INFINITE) == WAIT_FAILED)
         e = "wait failed";
 #else
-# ifdef _THREAD_SAFE
+# ifdef ICI_USE_POSIX_THREADS
     if (sem_wait(&x->x_semaphore) == -1)
 	    e = "wait failed";
 # else
@@ -243,10 +243,10 @@ ici_wakeup(object_t *o)
         if (x->x_waitfor == o)
         {
             x->x_waitfor = NULL;
-#ifdef _WIN32
+#ifdef ICI_USE_WIN32_THREADS
             ReleaseSemaphore(x->x_semaphore, 1, NULL);
 #else
-# ifdef _THREAD_SAFE
+# ifdef ICI_USE_POSIX_THREADS
 	    sem_post(&x->x_semaphore);
 # else
             /*
@@ -268,13 +268,13 @@ ici_wakeup(object_t *o)
  * it.
  */
 static
-#ifdef _WIN32
+#ifdef ICI_USE_WIN32_THREADS
 long
 WINAPI /* Ensure correct Win32 calling convention. */
 ici_thread_base(exec_t *x)
 {
 #endif
-#ifdef _THREAD_SAFE
+#ifdef ICI_USE_POSIX_THREADS
 void *
 ici_thread_base(void *arg)
 {
@@ -336,7 +336,7 @@ f_thread()
      * it's own reference.
      */
     incref(x);
-#ifdef _WIN32
+#ifdef ICI_USE_WIN32_THREADS
     {
         HANDLE          thread_h;
         unsigned long   thread_id;
@@ -351,7 +351,7 @@ f_thread()
         x->x_thread_handle = thread_h;
     }
 #else
-# ifdef _THREAD_SAFE
+# ifdef ICI_USE_POSIX_THREADS
     {
 	pthread_attr_t	thread_attr;
 
@@ -398,11 +398,11 @@ f_wakeup()
 int
 ici_init_thread_stuff(void)
 {
-#ifdef _WIN32
+#ifdef ICI_USE_WIN32_THREADS
     if ((ici_mutex = CreateMutex(NULL, 0, NULL)) == NULL)
         return ici_get_last_win32_error();
 #endif
-#ifdef _THREAD_SAFE
+#ifdef ICI_USE_POSIX_THREADS
     pthread_mutexattr_t	mutex_attr;
 
     if (pthread_mutexattr_init(&mutex_attr) == -1)

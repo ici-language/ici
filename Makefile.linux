@@ -12,10 +12,13 @@ LIB	= lib$(FLAVOUR).a
 CONFIG	= conf-$(FLAVOUR).h
 
 CC	= cc -pipe
-LIBS	= -lm -ltermcap -ldl
-OPTIM	= -O2
-#OPTIM	= -O3 -finline-functions -fexpensive-optimizations -fomit-frame-pointer\
-	  -mcpu=pentiumpro -march=pentiumpro -malign-double
+LIBS	= -lm -ltermcap -ldl -lpthread
+
+# For debugging...
+OPTIM	=
+# For releases
+#OPTIM	= -DNDEBUG -O3 -finline-functions -fexpensive-optimizations \
+	-fomit-frame-pointer -malign-double
 
 CFLAGS	= -g -Wall $(OPTIM) -DCONFIG_FILE='"$(CONFIG)"'  -DPREFIX='"$(PREFIX)"' -I.
 LDFLAGS	= -export-dynamic -g

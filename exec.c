@@ -120,13 +120,13 @@ free_exec(object_t *o)
         }
     }
     assert(x != NULL);
-#ifdef _WIN32
+#ifdef ICI_USE_WIN32_THREADS
     if (x->x_thread_handle != NULL)
         CloseHandle(x->x_thread_handle);
 #endif
-#ifdef _THREAD_SAFE
+#ifdef ICI_USE_POSIX_THREADS
     if (x->x_thread_handle != NULL)
-	    pthread_exit(NULL);
+        pthread_exit(NULL);
     (void)sem_destroy(&x->x_semaphore);
 #endif
     ici_tfree(o, exec_t);
@@ -199,18 +199,18 @@ ici_new_exec(void)
     if ((x->x_os_temp_cache = new_array(80)) == NULL)
         goto fail;
     decref(x->x_os_temp_cache);
-#ifdef _WIN32
+#ifdef ICI_USE_WIN32_THREADS
     if ((x->x_semaphore = CreateSemaphore(NULL, 0, 10000, NULL)) == NULL)
     {
         ici_get_last_win32_error();
         goto fail;
     }
 #endif
-#ifdef _THREAD_SAFE
+#ifdef ICI_USE_POSIX_THREADS
     if (sem_init(&x->x_semaphore, 0, 0) == -1)
     {
-	    syserr();
-	    goto fail;
+    syserr();
+    goto fail;
     }
 #endif
     x->x_state = XS_ACTIVE;

@@ -23,6 +23,10 @@
 #define NOPROFILE       /* Profiler, see profile.c. */
 #undef  NOSIGNALS       /* ICI level signal handling */
 
+#ifdef _THREAD_SAFE
+#define	ICI_USE_POSIX_THREADS
+#endif
+
 /*
  * Pre-3.0 FreeBSD uses a.out format objects that append a leading "_"
  * to symbol names. 3.0 and later are ELF that doesn't require this.

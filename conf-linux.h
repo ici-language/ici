@@ -19,6 +19,10 @@
 #define NOPROFILE       /* Profiler, see profile.c. */
 #undef  NOSIGNALS       /* ICI level signal handling */
 
+#define	ICI_USE_POSIX_THREADS
+#define pthread_mutexattr_settype pthread_mutexattr_setkind_np
+#define PTHREAD_MUTEX_RECURSIVE PTHREAD_MUTEX_RECURSIVE_NP
+
 /*
  * Mentioned in the version string.
  */
