@@ -351,6 +351,12 @@ ici_struct_unassign(struct_t *s, object_t *k)
              */
             *ss = *sl;
             ss = sl;
+            /*
+             * If we've moved a slot keyed by a string, that string's
+             * look-aside value may be wrong. Trash it.
+             */
+            if (isstring(ss->sl_key))
+                stringof(ss->sl_key)->s_vsver = 0;
         }
     }
     if (isstring(k))
