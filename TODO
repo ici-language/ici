@@ -130,3 +130,22 @@ Remove wrap.c from other Makefiles
 Put it general forall
 
 ---
+
+Hello there,
+
+        So what about this:
+
+$ ./ici.linux -e 'a = 1 ? 0 + 1 : 2;'
+1: ":" not followed by an identifier or "("
+
+        I posted report here couldn't remember how long ago, Tim told me
+        that this was "fixed and commited", though CVS@sourceforge
+        doesn't contains any fixes related to this issue...
+
+        Well, it is possible to workaround (using braces), but anyway :)
+
+        And, I couldn't figure out _where_ is the problem (well, actually
+        I could but fix is not trivial - if it would be regular bison/yacc
+        grammar it would be easy, but... may be I am not clever enough :)
+
+/Al

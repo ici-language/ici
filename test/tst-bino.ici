@@ -294,3 +294,7 @@ forall (binop in binops)
     }
     ++count;
 }
+
+a := 1 ? 0 + 1 : 2;
+if (a != 1)
+    fail("incorrect ? : result");

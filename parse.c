@@ -990,7 +990,7 @@ unary(parse_t *p, expr_t **ep, int exclude)
  * exclude              A binop token that would normally be allowed
  *                      but because of the context this expression is
  *                      being parsed in, must be excluded. This is used
- *                      to exclude commas from argument list and colons
+ *                      to exclude commas from argument lists and colons
  *                      from case labels and such like. The support is
  *                      not general. Only what is needed for comma and
  *                      colon.
@@ -1003,6 +1003,7 @@ expr(parse_t *p, expr_t **ep, int exclude)
     expr_t      *elimit;
     int         tp;
     int         r;
+    int         in_quest_colon;
 
     /*
      * This expression parser is neither state stack based nor recursive
@@ -1037,13 +1038,17 @@ expr(parse_t *p, expr_t **ep, int exclude)
          * Slide down the right hand side of the tree to find where this
          * operator binds.
          */
+        in_quest_colon = this == T_QUESTION;
         for
         (
             ep = ebase;
             (e = *ep) != elimit && tp < t_prec(e->e_what);
             ep = &e->e_arg[1]
         )
-            ;
+        {
+            if (e->e_what == T_QUESTION)
+                in_quest_colon = 1;
+        }
 
         /*
          * Allocate a new node and rebuild this bit with the new operator
@@ -1058,7 +1063,7 @@ expr(parse_t *p, expr_t **ep, int exclude)
         e->e_arg[0] = *ep;
         e->e_arg[1] = NULL;
         e->e_obj = NULL;
-        switch (unary(p, &e->e_arg[1], this == T_QUESTION ? T_COLON : exclude))
+        switch (unary(p, &e->e_arg[1], in_quest_colon ? T_COLON : exclude))
         {
         case 0:
             sprintf(buf, "\"expr %s\" %s %s",
