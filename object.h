@@ -73,10 +73,6 @@ struct type
  *              and that the free function might be asked to free a
  *              partially allocated object.
  *
- *              Simple object types which just have to free their data
- *              can use the existing function ici_free_simple() as their
- *              implementation of this function.
- *
  * t_cmp(o1, o2) Compare o1 and o2 and return 0 if they are the same, else
  *              non zero. This similarity is the basis for merging objects
  *              into single atomic objects and the implementation of the ==

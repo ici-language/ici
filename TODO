@@ -149,7 +149,7 @@ Make arrays shrink during collection?
 
 ---
 
-Upgrade sys to ici4
+Add ici_atom_probe to doc. And ici_interface_check.
 
 ---
 

@@ -1182,7 +1182,7 @@ if (getfile(b) != "Hello\nworld.\n")
 close(b);
 remove(c);
 
-if (getcwd() !~ #test#)
+if (getcwd() !~ #(?i)test#)
     fail("failed to get own dirname");
 
 if (typeof(getenv("PATH")) != "string")

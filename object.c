@@ -358,17 +358,14 @@ ici_atom(object_t *o, int lone)
         ici_decref(o);
     return o;
 }
+
 /*
- * Probe the atom pool for an atomic form of o.  If found, return that atomic
- * form, else NULL.  Used by various new_*() routines.  These routines
- * generally set up a dummy version of the object being made which is passed
- * to this probe.  If it finds a match, that is returned, thus avoiding the
- * allocation of an object that may be thrown away anyway.
+ * See comment on ici_atom_probe() below.
  *
  * The argument ppo, if given, and if this function returns NULL, will be
  * updated to point to the slot in the atom pool where this object belongs.
  * The caller may use this to store the new object in *provided* the atom pool
- * is not disturbed in the meantime, and is check for possible growth
+ * is not disturbed in the meantime, and is checked for possible growth
  * afterwards.  The macro ICI_STORE_ATOM_AND_COUNT() can be used for this.
  * Note that any call to collect() could disturb the atom pool.
  */
@@ -390,6 +387,19 @@ atom_probe(object_t *o, object_t ***ppo)
     if (ppo != NULL)
         *ppo = po;
     return NULL;
+}
+
+/*
+ * Probe the atom pool for an atomic form of o.  If found, return that atomic
+ * form, else NULL.  Used by various new_*() routines.  These routines
+ * generally set up a dummy version of the object being made which is passed
+ * to this probe.  If it finds a match, that is returned, thus avoiding the
+ * allocation of an object that may be thrown away anyway.
+ */
+object_t *
+ici_atom_probe(object_t *o)
+{
+    return atom_probe(o, NULL);
 }
 
 /*

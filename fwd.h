@@ -210,6 +210,7 @@ extern int              ici_exec_count;
 
 #define ici_null_ret()  ici_ret_no_decref(objof(&o_null))
 
+extern object_t *ici_atom_probe(object_t *o);
 extern object_t *ici_evaluate(object_t *, int);
 extern object_t *ici_copy_simple(object_t *);
 extern object_t *ici_fetch_fail(object_t *, object_t *);
@@ -233,7 +234,6 @@ extern int      ici_assign_fail(object_t *, object_t *, object_t *);
 extern file_t   *ici_sopen(char *, int, object_t *);
 extern unsigned long ici_hash_unique(object_t *);
 extern int      ici_cmp_unique(object_t *, object_t *);
-extern void     ici_free_simple(object_t *);
 extern int      ici_get_last_errno(char *, char *);
 extern int      ici_argcount(int);
 extern int      ici_argerror(int);
@@ -269,6 +269,7 @@ extern int      ici_main(int, char **);
 extern method_t *ici_method_new(object_t *, object_t *);
 extern ici_handle_t *ici_handle_new(void *, string_t *, objwsup_t *);
 extern int      ici_register_type(type_t *t);
+extern void     ici_rego_work(object_t *o);
 extern ptrdiff_t ici_array_nels(array_t *);
 extern int      ici_grow_stack(array_t *, ptrdiff_t);
 extern int      ici_fault_stack(array_t *, ptrdiff_t);

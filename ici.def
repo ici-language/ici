@@ -14,6 +14,7 @@ EXPORTS ici_assign_cfuncs
 EXPORTS ici_assign_fail
 EXPORTS ici_atexit
 EXPORTS ici_atom
+EXPORTS ici_atom_probe
 EXPORTS ici_buf DATA
 EXPORTS ici_bufz DATA
 EXPORTS ici_call
