@@ -78,10 +78,6 @@ ICIHDRS=\
 	ici.h\
 	icistr-setup.h
 
-PCREHDRS=\
-	pcre/internal.h\
-	pcre/pcre.h
-
 # Useful public documentation
 DOCS=\
 	doc/ici.pdf
@@ -102,8 +98,8 @@ afterinstall:
 	@echo '=========================================='
 	@echo 'Creating installation directories'
 	@echo '=========================================='
+	-mkdir -p $(PREFIX)/include/ici4
 	-mkdir -p $(PREFIX)/lib/ici4
-	-mkdir -p $(PREFIX)/include/ici4/pcre
 	-mkdir -p $(PREFIX)/share/doc/ici4
 	@echo '=========================================='
 	@echo 'Installing ici library'
@@ -120,7 +116,6 @@ afterinstall:
 	@echo 'Headers'
 	@echo '=========================================='
 	install -c -m 444 $(ICIHDRS) $(PREFIX)/include/ici4
-	install -c -m 444 $(PCREHDRS) $(PREFIX)/include/ici4/pcre
 	@echo '=========================================='
 	@echo 'Documentation'
 	@echo '=========================================='
