@@ -20,26 +20,16 @@ LIBS    = -lm -ltermcap -ldl -lpthread
 OPTIM  = -DNDEBUG -O3 -finline-functions -fexpensive-optimizations \
 	-fomit-frame-pointer -malign-double
 
-CFLAGS  = -g -Wall $(OPTIM) -DPREFIX='"$(PREFIX)"' -I.
+CFLAGS  = -g -Wall $(OPTIM) -I.
 LDFLAGS = -export-dynamic -g
 RANLIB  = ranlib
 RM      = rm -f
 
-#
-# For installing. $(PREFIX) is built into ICI as the default base
-# where it looks for extension modules. $(INSDIR) allows you to
-# install somewhere else (to test or make a binary distribution
-# that will ultimately be installed elsewhere).
-#
-#PREFIX  = /usr/local
-INSDIR  = $(PREFIX)
+#INSDIR  = /usr/local
 INSDIR  = /home/users/t/ti/timl/linux
 BINDIR  = $(INSDIR)/bin
 MANDIR  = $(INSDIR)/man/man1
 INSTALL = install -C
-
-.pref.ici:
-	sed "s|\$$PREFIX|$(PREFIX)|g" $< > $@
 
 #
 # The remainder of this makefile is pretty well generic...
@@ -68,7 +58,7 @@ PCREOBJS=\
 $(TARGET): $(LIB)
 	$(CC) $(LDFLAGS) -o $@ $(LIB) $(LIBS)
 
-all:    $(TARGET)
+all:    $(TARGET) ici.h
 
 .PRECIOUS: $(LIB)
 

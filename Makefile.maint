@@ -26,22 +26,21 @@
 #               doesn't include a directory path.
 #   tar-gz      As above and gzip it.
 #   cpio        Make a cpio archive of the distribution.
-#   cpio-B      As above but use big blocks.
 #   file-list   List the files in the distribution.
 #   version     Create the VERSION file with the current date.
 #
 
-RELEASE = 4.0.3
+RELEASE = 4.0.4
 
 FILES   = \
 	BUILDING CHANGES CREDITS README PLATFORM TODO VERSION\
 	\
-	doc/building.html\
 	doc/ici.pdf\
-	doc/ici-a4.ps doc/ici-ltr.ps doc/ici.pdf doc/ici.txt\
-	doc/ici.1 doc/ici.1.txt\
-	doc/switches.txt doc/ici-index.txt\
-	doc/fix-fm-html.ici doc/mk-index.ici doc/Makefile\
+	doc/building.html\
+	\
+	doc/man1/ici.1 doc/man1/icifuncs.1 doc/man1/icinet.1\
+	doc/man1/icioo.1 doc/man1/iciops.1 doc/man1/icie.1\
+	doc/man1/icistmt.1 doc/man1/icisys.1 doc/man1/icitypes.1\
 	\
 	Makefile.bsd Makefile.hp Makefile.irix Makefile.linux\
 	Makefile.maint Makefile.next Makefile.sco Makefile.sol2\
@@ -58,7 +57,7 @@ FILES   = \
 	ici_init.ici ici4core.ici ici4core1.ici ici4core2.ici ici4core3.ici\
 	ici34check.ici test-core.ici \
 	\
-	mk-ici-h.ici ici.h icistr-setup.h\
+	mk-ici-h.ici icistr-setup.h\
 	\
 	conf-bsd.h conf-hp.h conf-irix.h conf-linux.h conf-next.h\
 	conf-sample.h conf-sco.h conf-sol2.h conf-sun.h conf-ultrix.h\
@@ -142,12 +141,6 @@ tar-gz  : tar
 
 version :
 	{ echo -n $(RELEASE) ''; date; } > VERSION
-
-#
-# For cpio'ing directly onto a device...
-#
-cpio-B  :
-	@ls $(FILES) | cpio -ocB
 
 file-list:
 	@ls -1 $(FILES)

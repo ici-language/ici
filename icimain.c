@@ -218,17 +218,8 @@ ici_maind(int argc, char *argv[], int debugging)
                     ici_decref(f);
                     break;
 
-                case 'l':
-#ifdef  _WIN32
-                    fmt = "C:\\ICI\\LIB%s.ICI";
-#else
-                    fmt = PREFIX "/lib/ici4/%s.ici";
-#endif
-                    goto dofile;
-
                 case 'f':
                     fmt = "%s";
-                dofile:
                     if (argv[i][++j] != '\0')
                         s = &argv[i][j];
                     else if (++i >= argc)
