@@ -1,3 +1,7 @@
+*   Makefile.bsd updated for ici4 and now installs required
+    headers and builds ici.h.  doc/ici.pdf is now installed as
+    the the documentation. (andy)
+
 *   Added *lots* more API comments, which get extracted into
     the manual. (timl)
 
