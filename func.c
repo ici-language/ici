@@ -258,8 +258,7 @@ call_func(object_t *o, object_t *subject)
         decref(va);
 
     ici_xs.a_top[-1] = objof(&o_mark);
-    if (new_pc(f->f_code, ici_xs.a_top))
-        goto fail;
+    get_pc(f->f_code, ici_xs.a_top);
     ++ici_xs.a_top;
     *ici_vs.a_top++ = objof(d);
     decref(d);

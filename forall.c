@@ -1,5 +1,6 @@
 #define ICI_CORE
 #include "exec.h"
+#include "pc.h"
 #include "struct.h"
 #include "set.h"
 #include "forall.h"
@@ -197,8 +198,7 @@ exec_forall()
     return 1;
 
 next:
-    if (new_pc(arrayof(fa->fa_code), ici_xs.a_top))
-        return 1;
+    get_pc(arrayof(fa->fa_code), ici_xs.a_top);
     ++ici_xs.a_top;
     return 0;
 

@@ -37,7 +37,7 @@ struct exec
     array_t     *x_vs;
     int         x_count;
     int         x_yield_count;
-    array_t     *x_xs_pc_cache;         /* See below. */
+    array_t     *x_pc_closet;           /* See below. */
     array_t     *x_os_temp_cache;       /* See below. */
     exec_t      *x_next;
     int         x_critsect;
@@ -74,13 +74,11 @@ struct exec
  *                      the new scope of the function being entered is pushed
  *                      on the stack.
  *
- * x_xs_pc_cache        An array that shadows the execution stack. pc objects
+ * x_pc_closet          An array that shadows the execution stack. pc objects
  *                      exist only in a one-to-one relationship with a fixed
  *                      (for their life) position on the execution stack. This
- *                      cache holds pc objects that, if present at a
- *                      particular index equal to the corresponding execution
- *                      stack index, can be used to avoid a new allocation.
- *                      See new_pc() in pc.c.
+ *                      cache holds pc objects that are used wheneve we need
+ *                      a pc at that slot in the execution stack.
  *
  * x_os_temp_cache      An array of pseudo int/float objects that shadows the
  *                      operand stack. The objects in this array (apart

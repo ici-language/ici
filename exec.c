@@ -99,7 +99,7 @@ mark_exec(object_t *o)
        + (x->x_xs != NULL ? mark(x->x_xs) : 0)
        + (x->x_os != NULL ? mark(x->x_os) : 0)
        + (x->x_vs != NULL ? mark(x->x_vs) : 0)
-       + (x->x_xs_pc_cache != NULL ? mark(x->x_xs_pc_cache) : 0)
+       + (x->x_pc_closet != NULL ? mark(x->x_pc_closet) : 0)
        + (x->x_os_temp_cache != NULL ? mark(x->x_os_temp_cache) : 0)
        + (x->x_waitfor != NULL ? mark(x->x_waitfor) : 0)
        + (x->x_result != NULL ? mark(x->x_result) : 0);
@@ -193,9 +193,9 @@ ici_new_exec(void)
     if ((x->x_vs = new_array(80)) == NULL)
         goto fail;
     decref(x->x_vs);
-    if ((x->x_xs_pc_cache = new_array(80)) == NULL)
+    if ((x->x_pc_closet = new_array(80)) == NULL)
         goto fail;
-    decref(x->x_xs_pc_cache);
+    decref(x->x_pc_closet);
     if ((x->x_os_temp_cache = new_array(80)) == NULL)
         goto fail;
     decref(x->x_os_temp_cache);
@@ -222,6 +222,53 @@ ici_new_exec(void)
 fail:
     return NULL;
 }
+
+/*
+ * The main execution loop avoids continuous checks for available space
+ * on its three stacks (operand, execution, and scope) by knowing that
+ * no ordinary operation increase the stack depth by more than 3 levels
+ * at a time. Knowing this, every N times round the loop it checks that
+ * there is room for N * 3 objects.
+ */
+int
+ici_engine_stack_check(void)
+{
+    array_t             *pcs;
+    int                 depth;
+
+    if (ici_stk_push_chk(&ici_xs, 60))
+        return 1;
+    if (ici_stk_push_chk(&ici_os, 60))
+        return 1;
+    if (ici_stk_push_chk(&ici_vs, 60))
+        return 1;
+    pcs = ici_exec->x_pc_closet;
+    depth = (ici_xs.a_top - ici_xs.a_base) + 60;
+    if ((depth -= (pcs->a_top - pcs->a_base)) > 0)
+    {
+        if (ici_stk_push_chk(pcs, depth))
+            return 1;
+        while (pcs->a_top < pcs->a_limit)
+        {
+            if ((*pcs->a_top = objof(new_pc())) == NULL)
+                return 1;
+            ++pcs->a_top;
+        }
+    }
+    return 0;
+}
+
+void
+get_pc(array_t *code, object_t **xs)
+{
+    pc_t                *pc;
+
+    pc = pcof(*xs = ici_exec->x_pc_closet->a_base[xs - ici_xs.a_base]);
+    pc->pc_code = code;
+    pc->pc_next = code->a_base;
+}
+
+
 
 /*
  * Execute 'code' (any object, normally an array_t of code or a parse_t).
@@ -269,6 +316,8 @@ ici_evaluate(object_t *code, int n_operands)
                         ? stringof(k)->s_slot->sl_value \
                         : fetch(s, k)
 
+    if (ici_engine_stack_check())
+        goto fail;
     /*
      * This is pretty scary. An object on the C stack. But it should
      * be OK because it's only on the execution stack and there should be
@@ -288,14 +337,9 @@ ici_evaluate(object_t *code, int n_operands)
     *ici_xs.a_top++ = objof(&frame);
 
     if (isarray(code))
-    {
-        if (new_pc(arrayof(code), ici_xs.a_top))
-            return NULL;
-    }
+        get_pc(arrayof(code), ici_xs.a_top);
     else
-    {
         *ici_xs.a_top = code;
-    }
     ++ici_xs.a_top;
 
     /*
@@ -316,11 +360,7 @@ ici_evaluate(object_t *code, int n_operands)
              * Ensure that there is enough room on all stacks for at
              * least 20 more worst case operations.  See also f_call().
              */
-            if (ici_stk_push_chk(&ici_xs, 80))
-                goto fail;
-            if (ici_stk_push_chk(&ici_os, 80))
-                goto fail;
-            if (ici_stk_push_chk(&ici_vs, 80))
+            if (ici_engine_stack_check())
                 goto fail;
             ici_exec->x_count = 20;
             if (++ici_exec->x_yield_count > 10)
@@ -403,7 +443,7 @@ ici_evaluate(object_t *code, int n_operands)
             goto stable_stacks_continue;
 
         case TC_PARSE:
-            *ici_xs.a_top++ = o;
+            *ici_xs.a_top++ = o; /* Restore formal state. */
             if (parse_exec())
                 goto fail;
             continue;
@@ -853,8 +893,7 @@ ici_evaluate(object_t *code, int n_operands)
                     ici_os.a_top -= 2;
                     continue;
                 }
-                if (new_pc(arrayof(ici_os.a_top[-1]), ici_xs.a_top))
-                    goto fail;
+                get_pc(arrayof(ici_os.a_top[-1]), ici_xs.a_top);
                 ++ici_xs.a_top;
                 ici_os.a_top -= 2;
                 continue;
@@ -863,8 +902,7 @@ ici_evaluate(object_t *code, int n_operands)
                 /*
                  * bool obj1 obj2 => -
                  */
-                if (new_pc(arrayof(ici_os.a_top[-1 - !isfalse(ici_os.a_top[-3])]), ici_xs.a_top))
-                    goto fail;
+                get_pc(arrayof(ici_os.a_top[-1 - !isfalse(ici_os.a_top[-3])]), ici_xs.a_top);
                 ++ici_xs.a_top;
                 ici_os.a_top -= 3;
                 continue;
@@ -962,8 +1000,7 @@ ici_evaluate(object_t *code, int n_operands)
                  * array => - (os)
                  *       => pc (xs)
                  */
-                if (new_pc(arrayof(ici_os.a_top[-1]), ici_xs.a_top))
-                    goto fail;
+                get_pc(arrayof(ici_os.a_top[-1]), ici_xs.a_top);
                 ++ici_xs.a_top;
                 --ici_os.a_top;
                 continue;
@@ -980,8 +1017,7 @@ ici_evaluate(object_t *code, int n_operands)
                     if (*ici_xs.a_top == NULL)
                         goto fail;
                     ++ici_xs.a_top;
-                    if (new_pc(arrayof(ici_os.a_top[-1]), ici_xs.a_top))
-                        goto fail;
+                    get_pc(arrayof(ici_os.a_top[-1]), ici_xs.a_top);
                     ++ici_xs.a_top;
                     --ici_os.a_top;
                     ++ici_exec->x_critsect;
@@ -1033,8 +1069,7 @@ ici_evaluate(object_t *code, int n_operands)
                 decref(c);
                 goto badfail;
             }
-            if (new_pc(arrayof(c->c_catcher), ici_xs.a_top))
-                goto badfail;
+            get_pc(arrayof(c->c_catcher), ici_xs.a_top);
             ++ici_xs.a_top;
             decref(c);
             continue;

@@ -76,6 +76,8 @@ ici_init(void)
     rego(&ici_os);
     rego(&ici_xs);
     rego(&ici_vs);
+    if (ici_engine_stack_check())
+        return 1;
     *ici_vs.a_top++ = objof(scope);
     decref(scope);
     for (cfp = funcs; *cfp != NULL; ++cfp)

@@ -7,6 +7,7 @@
 #include "file.h"
 #include "op.h"
 #include "exec.h"
+#include "pc.h"
 
 /*
  * Some commonly used strings.
@@ -1841,11 +1842,7 @@ parse_exec(void)
         case 1:
             if (a->a_top == a->a_base)
                 continue;
-            if (new_pc(a, ici_xs.a_top))
-            {
-                decref(a);
-                return 1;
-            }
+            get_pc(a, ici_xs.a_top);
             ++ici_xs.a_top;
             decref(a);
             return 0;

@@ -20,8 +20,7 @@
 int
 ici_op_for()
 {
-    if (new_pc(arrayof(ici_os.a_top[-1]), ici_xs.a_top + 1))
-        return 1;
+    get_pc(arrayof(ici_os.a_top[-1]), ici_xs.a_top + 1);
     pcof(ici_xs.a_top[1])->pc_next += opof(ici_xs.a_top[-1])->op_code;
     ici_xs.a_top[-1] = ici_os.a_top[-1];
     *ici_xs.a_top++ = objof(&o_looper);
@@ -37,8 +36,7 @@ ici_op_for()
 int
 ici_op_looper()
 {
-    if (new_pc(arrayof(ici_xs.a_top[-2]), ici_xs.a_top))
-        return 1;
+    get_pc(arrayof(ici_xs.a_top[-2]), ici_xs.a_top);
     ++ici_xs.a_top;
     return 0;
 }
@@ -84,8 +82,7 @@ ici_op_andand()
          * Have to test next part of the condition.
          */
         --ici_xs.a_top;
-        if (new_pc(arrayof(ici_os.a_top[-1]), ici_xs.a_top))
-            return 1;
+        get_pc(arrayof(ici_os.a_top[-1]), ici_xs.a_top);
         ++ici_xs.a_top;
         ici_os.a_top -= 2;
         return 0;
@@ -129,8 +126,7 @@ ici_op_switch()
     }
     ici_xs.a_top[-1] = objof(&o_null);
     *ici_xs.a_top++ = objof(&o_switcher);
-    if (new_pc(arrayof(ici_os.a_top[-2]), ici_xs.a_top))
-        return 1;
+    get_pc(arrayof(ici_os.a_top[-2]), ici_xs.a_top);
     pcof(*ici_xs.a_top)->pc_next += intof(sl->sl_value)->i_value;
     ++ici_xs.a_top;
     ici_os.a_top -= 3;

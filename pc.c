@@ -10,7 +10,9 @@ static unsigned long
 mark_pc(object_t *o)
 {
     o->o_flags |= O_MARK;
-    return sizeof(pc_t) + mark(pcof(o)->pc_code);
+    if (pcof(o)->pc_code != NULL)
+        return sizeof(pc_t) + mark(pcof(o)->pc_code);
+    return sizeof(pc_t);
 }
 
 /*
@@ -25,13 +27,12 @@ mark_pc(object_t *o)
  *
  * NB: pc's come back ready-decref'ed.
  */
-int
-new_pc(array_t *c, object_t **xs)
+pc_t *
+new_pc(void)
 {
     pc_t                *pc;
-    int                 n;
 
-    assert(c->a_top[-1] == objof(&o_end) || c->a_top[-1] == objof(&o_rewind));
+/*    assert(c->a_top[-1] == objof(&o_end) || c->a_top[-1] == objof(&o_rewind));
     n = xs - ici_xs.a_base;
     if
     (
@@ -41,21 +42,22 @@ new_pc(array_t *c, object_t **xs)
     )
     {
         if (ici_stk_probe(ici_exec->x_xs_pc_cache, n))
-            return 1;
+            return 1;*/
         if ((pc = pcof(ici_talloc(pc_t))) == NULL)
-            return 1;
+            return NULL;
         objof(pc)->o_tcode = TC_PC;
         assert(ici_typeof(pc) == &pc_type);
         objof(pc)->o_flags = 0;
         objof(pc)->o_nrefs = 0;
+        pc->pc_code = NULL;
         rego(pc);
-        ici_exec->x_xs_pc_cache->a_base[n] = objof(pc);
+       /* ici_exec->x_xs_pc_cache->a_base[n] = objof(pc);
     }
     pc->pc_code = c;
     pc->pc_next = c->a_base;
     pc->pc_limit = c->a_top;
-    *xs = objof(pc);
-    return 0;
+    *xs = objof(pc);*/
+    return pc;
 }
 
 /*

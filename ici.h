@@ -328,7 +328,7 @@ extern int_t    *new_int(long);
 extern string_t *new_string(int);
 extern string_t *new_name(char *, int);
 extern op_t     *new_op(int (*)(), int, int);
-extern int      new_pc(array_t *, object_t **);
+extern pc_t     *new_pc(void);
 extern ptr_t    *new_ptr(object_t *, object_t *);
 extern src_t    *new_src(int, string_t *);
 extern regexp_t *new_regexp(string_t *, int);
@@ -427,6 +427,8 @@ extern object_t *ici_array_rpop(array_t *);
 extern object_t *ici_array_get(array_t *, ptrdiff_t);
 extern void     ici_invalidate_struct_lookaside(struct_t *);
 extern void     ici_drop_all_small_allocations(void);
+extern int      ici_engine_stack_check(void);
+extern void     get_pc(array_t *code, object_t **xs);
 
 extern exec_t   *ici_leave(void);
 extern void     ici_enter(exec_t *);
@@ -1301,7 +1303,6 @@ struct pc
     object_t    o_head;
     array_t     *pc_code;
     object_t    **pc_next;
-    object_t    **pc_limit;
 };
 #define pcof(o)         ((pc_t *)o)
 #define ispc(o)         ((o)->o_tcode == TC_PC)

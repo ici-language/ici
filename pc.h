@@ -13,7 +13,6 @@ struct pc
     object_t    o_head;
     array_t     *pc_code;
     object_t    **pc_next;
-    object_t    **pc_limit;
 };
 #define pcof(o)         ((pc_t *)o)
 #define ispc(o)         ((o)->o_tcode == TC_PC)

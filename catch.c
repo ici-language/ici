@@ -5,6 +5,7 @@
  * never escape to user visibility. See also catch.h.
  */
 #include "exec.h"
+#include "pc.h"
 #include "catch.h"
 #include "op.h"
 #include "func.h"
@@ -97,8 +98,7 @@ ici_op_onerror()
 {
     if ((ici_xs.a_top[-1] = objof(new_catch(ici_os.a_top[-1], ici_os.a_top - ici_os.a_base - 2, ici_vs.a_top - ici_vs.a_base, 0))) == NULL)
         return 1;
-    if (new_pc(arrayof(ici_os.a_top[-2]), ici_xs.a_top))
-        return 1;
+    get_pc(arrayof(ici_os.a_top[-2]), ici_xs.a_top);
     ++ici_xs.a_top;
     ici_os.a_top -= 2;
     return 0;
