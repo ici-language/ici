@@ -54,7 +54,7 @@ free_int(object_t *o)
  * its ref count incremented.
  */
 int_t *
-new_int(long v)
+ici_int_new(long v)
 {
     register int_t      *i;
 
@@ -63,12 +63,12 @@ new_int(long v)
      */
     if ((v & ~ICI_SMALL_INT_MASK) == 0 && (i = ici_small_ints[v]) != NULL)
     {
-        incref(i);
+        ici_incref(i);
         return i;
     }
     if ((i = atom_int(v)) != NULL)
     {
-        incref(i);
+        ici_incref(i);
         return i;
     }
     if ((i = ici_talloc(int_t)) == NULL)
@@ -80,7 +80,7 @@ new_int(long v)
     rego(i);
     objof(i)->o_leafz = sizeof(int_t);
     i->i_value = v;
-    return intof(atom(objof(i), 1));
+    return intof(ici_atom(objof(i), 1));
 }
 
 type_t  int_type =
@@ -90,7 +90,7 @@ type_t  int_type =
     hash_int,
     cmp_int,
     copy_simple,
-    assign_simple,
-    fetch_simple,
+    ici_assign_fail,
+    ici_fetch_fail,
     "int"
 };

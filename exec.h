@@ -133,4 +133,11 @@ struct debug
  * End of ici.h export. --ici.h-end--
  */
 
+#ifdef  NOTDEF
+#define get_pc(code, xs) \
+    (*(xs) = ici_exec->x_pc_closet->a_base[(xs) - ici_xs.a_base], \
+    pcof(*(xs))->pc_code = code, \
+    pcof(*(xs))->pc_next = pcof(*(xs))->pc_code->a_base)
+#endif
+
 #endif /* ICI_EXEC_H */

@@ -82,7 +82,7 @@ FILES	= \
 	    strtol.c struct.c syserr.c\
 	thread.c trace.c\
 	unary.c uninit.c\
-	win32err.c winmain.c wrap.c\
+	win32err.c winmain.c\
 	\
 	test/tst-all.ici\
 	test/tst-bino.ici\

@@ -61,7 +61,7 @@ OBJS    = \
     sstring.obj string.obj \
     struct.obj syserr.obj thread.obj \
     trace.obj unary.obj uninit.obj win32err.obj \
-    wrap.obj buf.obj strtol.obj \
+    buf.obj strtol.obj \
     idb.obj idb2.obj
 
 PCREOBJS=\

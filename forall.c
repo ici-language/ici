@@ -22,7 +22,7 @@ mark_forall(object_t *o)
     for (i = 0; i < nels(forallof(o)->fa_objs); ++i)
     {
         if (forallof(o)->fa_objs[i] != NULL)
-            mem += mark(forallof(o)->fa_objs[i]);
+            mem += ici_mark(forallof(o)->fa_objs[i]);
     }
     return mem;
 }
@@ -96,12 +96,12 @@ exec_forall()
                     continue;
                 if (fa->fa_vaggr != objof(&o_null))
                 {
-                    if (assign(fa->fa_vaggr, fa->fa_vkey, sl->sl_value))
+                    if (ici_assign(fa->fa_vaggr, fa->fa_vkey, sl->sl_value))
                         return 1;
                 }
                 if (fa->fa_kaggr != objof(&o_null))
                 {
-                    if (assign(fa->fa_kaggr, fa->fa_kkey, sl->sl_key))
+                    if (ici_assign(fa->fa_kaggr, fa->fa_kkey, sl->sl_key))
                         return 1;
                 }
                 goto next;
@@ -123,7 +123,7 @@ exec_forall()
                 {
                     if (fa->fa_vaggr != objof(&o_null))
                     {
-                        if (assign(fa->fa_vaggr, fa->fa_vkey, *sl))
+                        if (ici_assign(fa->fa_vaggr, fa->fa_vkey, *sl))
                             return 1;
                     }
                 }
@@ -131,10 +131,10 @@ exec_forall()
                 {
                     if (fa->fa_vaggr != objof(&o_null))
                     {
-                        if (assign(fa->fa_vaggr, fa->fa_vkey, o_one))
+                        if (ici_assign(fa->fa_vaggr, fa->fa_vkey, ici_one))
                             return 1;
                     }
-                    if (assign(fa->fa_kaggr, fa->fa_kkey, *sl))
+                    if (ici_assign(fa->fa_kaggr, fa->fa_kkey, *sl))
                         return 1;
                 }
                 goto next;
@@ -152,16 +152,16 @@ exec_forall()
                 goto fin;
             if (fa->fa_vaggr != objof(&o_null))
             {
-                if (assign(fa->fa_vaggr, fa->fa_vkey, ici_array_get(a, fa->fa_index)))
+                if (ici_assign(fa->fa_vaggr, fa->fa_vkey, ici_array_get(a, fa->fa_index)))
                     return 1;
             }
             if (fa->fa_kaggr != objof(&o_null))
             {
-                if ((i = new_int((long)fa->fa_index)) == NULL)
+                if ((i = ici_int_new((long)fa->fa_index)) == NULL)
                     return 1;
-                if (assign(fa->fa_kaggr, fa->fa_kkey, i))
+                if (ici_assign(fa->fa_kaggr, fa->fa_kkey, i))
                     return 1;
-                decref(i);
+                ici_decref(i);
             }
         }
         goto next;
@@ -176,19 +176,19 @@ exec_forall()
                 goto fin;
             if (fa->fa_vaggr != objof(&o_null))
             {
-                if ((s = new_name(&s->s_chars[fa->fa_index], 1)) == NULL)
+                if ((s = ici_str_new(&s->s_chars[fa->fa_index], 1)) == NULL)
                     return 1;
-                if (assign(fa->fa_vaggr, fa->fa_vkey, s))
+                if (ici_assign(fa->fa_vaggr, fa->fa_vkey, s))
                     return 1;
-                decref(s);
+                ici_decref(s);
             }
             if (fa->fa_kaggr != objof(&o_null))
             {
-                if ((i = new_int((long)fa->fa_index)) == NULL)
+                if ((i = ici_int_new((long)fa->fa_index)) == NULL)
                     return 1;
-                if (assign(fa->fa_kaggr, fa->fa_kkey, i))
+                if (ici_assign(fa->fa_kaggr, fa->fa_kkey, i))
                     return 1;
-                decref(i);
+                ici_decref(i);
             }
         }
         goto next;
@@ -214,7 +214,7 @@ type_t  forall_type =
     hash_unique,
     cmp_unique,
     copy_simple,
-    assign_simple,
-    fetch_simple,
+    ici_assign_fail,
+    ici_fetch_fail,
     "forall"
 };

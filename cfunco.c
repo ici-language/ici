@@ -46,7 +46,7 @@ static object_t *
 fetch_cfunc(object_t *o, object_t *k)
 {
     if (k == SSO(name))
-        return objof(get_cname(cfuncof(o)->cf_name));
+        return objof(ici_str_get_nul_term(cfuncof(o)->cf_name));
     return objof(&o_null);
 }
 
@@ -86,15 +86,15 @@ ici_assign_cfuncs(objwsup_t *s, cfunc_t *cf)
         }
         else
         {
-            if ((n = new_cname(cf->cf_name)) == NULL)
+            if ((n = ici_str_new_nul_term(cf->cf_name)) == NULL)
                 return 1;
         }
         if (assign_base(s, n, cf))
         {
-            decref(n);
+            ici_decref(n);
             return 1;
         }
-        decref(n);
+        ici_decref(n);
         ++cf;
     }
     return 0;
@@ -138,7 +138,7 @@ type_t  ici_cfunc_type =
     hash_unique,
     cmp_unique,
     copy_simple,
-    assign_simple,
+    ici_assign_fail,
     fetch_cfunc,
     "func",
     objname_cfunc,

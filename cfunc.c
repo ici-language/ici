@@ -69,9 +69,6 @@
 extern int      fgetc();
 #endif
 
-/* Cached references to objects. */
-static func_t   *sort_cmp_func;
-
 /*
  * Cleans up data structures allocated/referenced in this module.
  * Required for a clean shutdown.
@@ -79,11 +76,6 @@ static func_t   *sort_cmp_func;
 void
 uninit_cfunc(void)
 {
-    if (sort_cmp_func != NULL)
-    {
-        decref(sort_cmp_func);
-        sort_cmp_func = NULL;
-    }
 }
 
 /*
@@ -171,7 +163,7 @@ ici_typecheck(char *types, ...)
         {
             if (!isptr(*ap))
                 goto fail;
-            if ((o = fetch(*ap, objof(o_zero))) == NULL)
+            if ((o = ici_fetch(*ap, objof(ici_zero))) == NULL)
                 goto fail;
             tcode += 'a' - 'A';
         }
@@ -330,27 +322,27 @@ ici_retcheck(char *types, ...)
             break;
 
         case 'i':
-            if ((s = objof(new_int(*(long *)ptr))) == NULL)
+            if ((s = objof(ici_int_new(*(long *)ptr))) == NULL)
                 goto ret1;
-            if (assign(o, o_zero, s))
+            if (ici_assign(o, ici_zero, s))
                 goto ret1;
-            decref(s);
+            ici_decref(s);
             break;
 
         case 's':
-            if ((s = objof(new_cname(*(char **)ptr))) == NULL)
+            if ((s = objof(ici_str_new_nul_term(*(char **)ptr))) == NULL)
                 goto ret1;
-            if (assign(o, o_zero, s))
+            if (ici_assign(o, ici_zero, s))
                 goto ret1;
-            decref(s);
+            ici_decref(s);
             break;
 
         case 'f':
-            if ((s = objof(new_float(*(double *)ptr))) == NULL)
+            if ((s = objof(ici_float_new(*(double *)ptr))) == NULL)
                 goto ret1;
-            if (assign(o, o_zero, s))
+            if (ici_assign(o, ici_zero, s))
                 goto ret1;
-            decref(s);
+            ici_decref(s);
             break;
 
         case 'd':
@@ -447,9 +439,9 @@ ici_argcount(int n)
  * This is suitable for using as a return from an intrinsic function
  * as say:
  *
- *      return ici_ret_with_decref(objof(new_int(2)));
+ *      return ici_ret_with_decref(objof(ici_int_new(2)));
  *
- * (Although see int_ret() below.) If the object you wish to return does
+ * (Although see ici_int_ret() below.) If the object you wish to return does
  * not have an extra reference, use ici_ret_no_decref() (see below).
  */
 int
@@ -459,7 +451,7 @@ ici_ret_with_decref(object_t *o)
         return 1;
     ici_os.a_top -= NARGS() + 1;
     ici_os.a_top[-1] = o;
-    decref(o);
+    ici_decref(o);
     --ici_xs.a_top;
     return 0;
 }
@@ -487,30 +479,30 @@ ici_ret_no_decref(object_t *o)
 }
 
 /*
- * Use 'return int_ret(n);' to return an integer from an intrinsic fuction.
+ * Use 'return ici_int_ret(n);' to return an integer from an intrinsic fuction.
  */
 int
-int_ret(long ret)
+ici_int_ret(long ret)
 {
-    return ici_ret_with_decref(objof(new_int(ret)));
+    return ici_ret_with_decref(objof(ici_int_new(ret)));
 }
 
 /*
- * Use 'return float_ret(n);' to return a float from an intrinsic fuction.
+ * Use 'return ici_float_ret(n);' to return a float from an intrinsic fuction.
  */
 int
-float_ret(double ret)
+ici_float_ret(double ret)
 {
-    return ici_ret_with_decref(objof(new_float(ret)));
+    return ici_ret_with_decref(objof(ici_float_new(ret)));
 }
 
 /*
- * Use 'return str_ret(n);' to return a string from an intrinsic fuction.
+ * Use 'return ici_str_ret(n);' to return a string from an intrinsic fuction.
  */
 int
-str_ret(char *str)
+ici_str_ret(char *str)
 {
-    return ici_ret_with_decref(objof(new_cname(str)));
+    return ici_ret_with_decref(objof(ici_str_new_nul_term(str)));
 }
 
 /*
@@ -518,11 +510,11 @@ str_ret(char *str)
  * name in the current scope. Else NULL, usual conventions.
  */
 file_t *
-need_stdin()
+ici_need_stdin()
 {
     file_t              *f;
 
-    f = fileof(fetch(ici_vs.a_top[-1], SSO(_stdin)));
+    f = fileof(ici_fetch(ici_vs.a_top[-1], SSO(_stdin)));
     if (!isfile(f))
     {
         ici_error = "stdin is not a file";
@@ -532,11 +524,11 @@ need_stdin()
 }
 
 file_t *
-need_stdout()
+ici_need_stdout()
 {
     file_t              *f;
 
-    f = fileof(fetch(ici_vs.a_top[-1], SSO(_stdout)));
+    f = fileof(ici_fetch(ici_vs.a_top[-1], SSO(_stdout)));
     if (!isfile(f))
     {
         ici_error = "stdout is not a file";
@@ -584,6 +576,8 @@ f_math()
 {
     double      av[2];
     double      r;
+    char        n1[30];
+    char        n2[80];
 
     if (ici_typecheck((char *)CF_ARG2() + 2, &av[0], &av[1]))
         return 1;
@@ -591,10 +585,12 @@ f_math()
     r = (*(double (*)())CF_ARG1())(av[0], av[1]);
     if (errno != 0)
     {
-        ici_error = syserr();
-        return 1;
+        sprintf(n2, "%g", av[0]);
+        if (NARGS() == 2)
+            sprintf(n2 + strlen(n2), ", %g", av[1]);
+         return ici_get_last_errno(objname(n1, ici_os.a_top[-1]), n2);
     }
-    return float_ret(r);
+    return ici_float_ret(r);
 }
 #endif
 
@@ -627,7 +623,7 @@ f_coreici(object_t *s)
      * Fetch the real function from that module and verify it is callable.
      */
     f = fetch_base(c, (object_t *)CF_ARG1());
-    decref(c);
+    ici_decref(c);
     if (f == NULL)
         return 1;
     if (ici_typeof(f)->t_call == NULL)
@@ -642,7 +638,7 @@ f_coreici(object_t *s)
      * Over-write the definition of the function (which was us) with the
      * real function.
      */
-    if (assign(ici_vs.a_top[-1], (object_t *)CF_ARG1(), f))
+    if (ici_assign(ici_vs.a_top[-1], (object_t *)CF_ARG1(), f))
         return 1;
     /*
      * Replace us with the new callable object on the operand stack
@@ -673,13 +669,13 @@ f_struct()
         --nargs;
         --o;
     }
-    if ((s = new_struct()) == NULL)
+    if ((s = ici_struct_new()) == NULL)
         return 1;
     for (; nargs >= 2; nargs -= 2, o -= 2)
     {
-        if (assign(s, o[0], o[-1]))
+        if (ici_assign(s, o[0], o[-1]))
         {
-            decref(s);
+            ici_decref(s);
             return 1;
         }
     }
@@ -694,13 +690,13 @@ f_set()
     register set_t      *s;
     register object_t   **o;
 
-    if ((s = new_set()) == NULL)
+    if ((s = ici_set_new()) == NULL)
         return 1;
     for (nargs = NARGS(), o = ARGS(); nargs > 0; --nargs, --o)
     {
-        if (assign(s, *o, o_one))
+        if (ici_assign(s, *o, ici_one))
         {
-            decref(s);
+            ici_decref(s);
             return 1;
         }
     }
@@ -715,7 +711,7 @@ f_array()
     register object_t   **o;
 
     nargs = NARGS();
-    if ((a = new_array(nargs)) == NULL)
+    if ((a = ici_array_new(nargs)) == NULL)
         return 1;
     for (o = ARGS(); nargs > 0; --nargs)
         *a->a_top++ = *o--;
@@ -731,7 +727,7 @@ f_keys()
 
     if (ici_typecheck("d", &s))
         return 1;
-    if ((k = new_array(s->s_nels)) == NULL)
+    if ((k = ici_array_new(s->s_nels)) == NULL)
         return 1;
     for (sl = s->s_slots; sl < s->s_slots + s->s_nslots; ++sl)
     {
@@ -757,7 +753,7 @@ f_typeof()
     if (NARGS() != 1)
         return ici_argcount(1);
     if (ici_typeof(ARG(0))->t_ici_name == NULL)
-        ici_typeof(ARG(0))->t_ici_name = new_cname(ici_typeof(ARG(0))->t_name);
+        ici_typeof(ARG(0))->t_ici_name = ici_str_new_nul_term(ici_typeof(ARG(0))->t_name);
     return ici_ret_no_decref(objof(ici_typeof(ARG(0))->t_ici_name));
 }
 
@@ -782,7 +778,7 @@ f_nels()
         size = memof(o)->m_length;
     else
         size = 1;
-    return int_ret(size);
+    return ici_int_ret(size);
 }
 
 static int
@@ -802,7 +798,7 @@ f_int()
         v = (long)floatof(o)->f_value;
     else
         v = 0;
-    return int_ret(v);
+    return ici_int_ret(v);
 }
 
 static int
@@ -823,7 +819,7 @@ f_float()
         v = (double)intof(o)->i_value;
     else
         v = 0;
-    return float_ret(v);
+    return ici_float_ret(v);
 }
 
 static int
@@ -845,10 +841,10 @@ f_num()
     {
         i = ici_strtol(stringof(o)->s_chars, &s, 0);
         if (*s == '\0')
-            return int_ret(i);
+            return ici_int_ret(i);
         f = strtod(stringof(o)->s_chars, &s);
         if (*s == '\0')
-            return float_ret(f);
+            return ici_float_ret(f);
     }
     sprintf(buf, "%s is not a number", objname(n, o));
     ici_error = buf;
@@ -873,7 +869,7 @@ f_string()
         return ici_ret_no_decref(objof(regexpof(o)->r_pat));
     else
         sprintf(buf, "<%s>", ici_typeof(o)->t_name);
-    return str_ret(buf);
+    return ici_str_ret(buf);
 }
 
 static int
@@ -885,8 +881,8 @@ f_eq()
     if (ici_typecheck("oo", &o1, &o2))
         return 1;
     if (o1 == o2)
-        return ici_ret_no_decref(objof(o_one));
-    return ici_ret_no_decref(objof(o_zero));
+        return ici_ret_no_decref(objof(ici_one));
+    return ici_ret_no_decref(objof(ici_zero));
 }
 
 static int
@@ -975,21 +971,21 @@ f_parse()
     case 1:
         if (ici_typecheck("o", &o))
             return 1;
-        if ((a = new_struct()) == NULL)
+        if ((a = ici_struct_new()) == NULL)
             return 1;
-        if ((a->o_head.o_super = objwsupof(s = new_struct())) == NULL)
+        if ((a->o_head.o_super = objwsupof(s = ici_struct_new())) == NULL)
         {
-            decref(a);
+            ici_decref(a);
             return 1;
         }
-        decref(s);
+        ici_decref(s);
         s->o_head.o_super = objwsupof(ici_vs.a_top[-1])->o_super;
         break;
 
     default:
         if (ici_typecheck("od", &o, &a))
             return 1;
-        incref(a);
+        ici_incref(a);
         break;
     }
 
@@ -997,7 +993,7 @@ f_parse()
     {
         if ((f = ici_sopen(stringof(o)->s_chars, stringof(o)->s_nchars)) == NULL)
         {
-            decref(a);
+            ici_decref(a);
             return 1;
         }
         f->f_name = SS(empty_string);
@@ -1006,7 +1002,7 @@ f_parse()
         f = fileof(o);
     else
     {
-        decref(a);
+        ici_decref(a);
         return ici_argerror(0);
     }
 
@@ -1014,13 +1010,13 @@ f_parse()
         goto fail;
 
     if (isstring(o))
-        decref(f);
+        ici_decref(f);
     return ici_ret_with_decref(objof(a));
 
 fail:
     if (isstring(o))
-        decref(f);
-    decref(a);
+        ici_decref(f);
+    ici_decref(a);
     return 1;
 }
 
@@ -1076,7 +1072,7 @@ f_include()
 #endif
     rc = parse_module(f, objwsupof(a));
     ici_call("close", "o", f);
-    decref(f);
+    ici_decref(f);
     return rc < 0 ? 1 : ici_ret_no_decref(objof(a));
 }
 
@@ -1095,7 +1091,7 @@ f_call(void)
     if (NARGS() < 2)
         return ici_argcount(2);
     func = ARG(0);
-    incref(func);
+    ici_incref(func);
     nargso = NULL;
     base = &ARG(NARGS() - 1);
     if (isarray(*base))
@@ -1128,7 +1124,7 @@ f_call(void)
      */
     if (ici_stk_push_chk(&ici_os, naargs + 80))
         goto fail;
-    if ((nargso = new_int(nargs)) == NULL)
+    if ((nargso = ici_int_new(nargs)) == NULL)
         goto fail;
     /*
      * First move the arguments that we want to keep up to the stack
@@ -1146,9 +1142,9 @@ f_call(void)
      * Push the count of actual args and the target function.
      */
     ici_os.a_top[-2] = objof(nargso);
-    decref(nargso);
+    ici_decref(nargso);
     ici_os.a_top[-1] = func;
-    decref(func);
+    ici_decref(func);
     ici_xs.a_top[-1] = objof(&o_call);
     /*
      * Very special return. Drops back into the execution loop with
@@ -1157,9 +1153,9 @@ f_call(void)
     return 0;
 
 fail:
-    decref(func);
+    ici_decref(func);
     if (nargso != NULL)
-        decref(nargso);
+        ici_decref(nargso);
     return 1;
 }
 
@@ -1216,7 +1212,7 @@ f_exit()
     {
         return ici_argerror(0);
     }
-    wrapup();
+    ici_uninit();
     exit((int)status);
     /*NOTREACHED*/
 }
@@ -1235,7 +1231,7 @@ f_tochar()
     if (ici_typecheck("i", &i))
         return 1;
     buf[0] = (unsigned char)i;
-    return ici_ret_with_decref(objof(new_name(buf, 1)));
+    return ici_ret_with_decref(objof(ici_str_new(buf, 1)));
 }
 
 static int
@@ -1245,7 +1241,7 @@ f_toint()
 
     if (ici_typecheck("s", &s))
         return 1;
-    return int_ret((long)(s[0] & 0xFF));
+    return ici_int_ret((long)(s[0] & 0xFF));
 }
 
 static int
@@ -1260,10 +1256,10 @@ f_rand()
         srand(seed);
     }
 #ifdef ICI_RAND_IS_C_RAND
-    return int_ret(rand());
+    return ici_int_ret(rand());
 #else
     seed = seed * 1103515245 + 12345;
-    return int_ret((seed >> 16) & 0x7FFF);
+    return ici_int_ret((seed >> 16) & 0x7FFF);
 #endif
 }
 
@@ -1319,11 +1315,11 @@ f_interval()
 
     if (o->o_tcode == TC_STRING)
     {
-        return ici_ret_with_decref(objof(new_name(s->s_chars + start, (int)length)));
+        return ici_ret_with_decref(objof(ici_str_new(s->s_chars + start, (int)length)));
     }
     else
     {
-        if ((a1 = new_array(length)) == NULL)
+        if ((a1 = ici_array_new(length)) == NULL)
             return 1;
         ici_array_gather(a1->a_base, a, start, length);
         a1->a_top += length;
@@ -1341,16 +1337,16 @@ f_explode()
     if (ici_typecheck("s", &s))
         return 1;
     i = stringof(ARG(0))->s_nchars;
-    if ((x = new_array(i)) == NULL)
+    if ((x = ici_array_new(i)) == NULL)
         return 1;
     while (--i >= 0)
     {
-        if ((*x->a_top = objof(new_int(*s++ & 0xFFL))) == NULL)
+        if ((*x->a_top = objof(ici_int_new(*s++ & 0xFFL))) == NULL)
         {
-            decref(x);
+            ici_decref(x);
             return 1;
         }
-        decref(*x->a_top);
+        ici_decref(*x->a_top);
         ++x->a_top;
     }
     return ici_ret_with_decref(objof(x));
@@ -1398,7 +1394,7 @@ f_implode()
             break;
         }
     }
-    if ((s = stringof(atom(objof(s), 1))) == NULL)
+    if ((s = stringof(ici_atom(objof(s), 1))) == NULL)
         return 1;
     return ici_ret_with_decref(objof(s));
 }
@@ -1678,7 +1674,7 @@ f_sprintf()
     switch (which)
     {
     case 1: /* printf */
-        if ((file = need_stdout()) == NULL)
+        if ((file = ici_need_stdout()) == NULL)
             return 1;
     case 2: /* fprintf */
         if (objof(file)->o_flags & F_CLOSED)
@@ -1707,10 +1703,10 @@ f_sprintf()
             if (out_buf != small_buf)
                 ici_nfree(out_buf, i);
         }
-        return int_ret((long)i);
+        return ici_int_ret((long)i);
 
     default: /* sprintf */
-        return ici_ret_with_decref(objof(new_name(buf, i)));
+        return ici_ret_with_decref(objof(ici_str_new(buf, i)));
     }
 
 type:
@@ -1747,7 +1743,7 @@ f_del()
         return 1;
     if (isstruct(s))
     {
-        unassign_struct(structof(s), o);
+        ici_struct_unassign(structof(s), o);
     }
     else if (isset(s))
     {
@@ -1883,9 +1879,9 @@ f_isatom()
     if (ici_typecheck("o", &o))
         return 1;
     if (o->o_flags & O_ATOM)
-        return ici_ret_no_decref(objof(o_one));
+        return ici_ret_no_decref(objof(ici_one));
     else
-        return ici_ret_no_decref(objof(o_zero));
+        return ici_ret_no_decref(objof(ici_zero));
 }
 
 static int
@@ -1923,7 +1919,7 @@ f_alloc()
     if ((p = ici_alloc((size_t)length * accessz)) == NULL)
         return 1;
     memset(p, 0, (size_t)length * accessz);
-    return ici_ret_with_decref(objof(new_mem(p, (unsigned long)length, accessz, ici_free)));
+    return ici_ret_with_decref(objof(ici_mem_new(p, (unsigned long)length, accessz, ici_free)));
 }
 
 static int
@@ -1953,7 +1949,7 @@ f_mem()
     }
     else
         accessz = 1;
-    return ici_ret_with_decref(objof(new_mem((char *)base, (unsigned long)length, accessz, NULL)));
+    return ici_ret_with_decref(objof(ici_mem_new((char *)base, (unsigned long)length, accessz, NULL)));
 }
 
 static int
@@ -1986,7 +1982,7 @@ f_assign()
     }
     else
     {
-        if (assign(s, k, v))
+        if (ici_assign(s, k, v))
             return 1;
     }
     return ici_ret_no_decref(v);
@@ -2002,7 +1998,7 @@ f_fetch()
         return 1;
     if (hassuper(s))
         return ici_ret_no_decref(fetch_base(s, k));
-    return ici_ret_no_decref(fetch(s, k));
+    return ici_ret_no_decref(ici_fetch(s, k));
 }
 
 #ifndef NOWAITFOR
@@ -2022,7 +2018,7 @@ f_waitfor()
 #endif
 
     if (NARGS() == 0)
-        return ici_ret_no_decref(objof(o_zero));
+        return ici_ret_no_decref(objof(ici_zero));
     tv = NULL;
     nfds = 0;
     FD_ZERO(&readfds);
@@ -2081,7 +2077,7 @@ f_waitfor()
 
     case 0:
     ici_signals_blocking_syscall(0);
-        return ici_ret_no_decref(objof(o_zero));
+        return ici_ret_no_decref(objof(ici_zero));
     }
     ici_signals_blocking_syscall(0);
     for (nargs = NARGS(), e = ARGS(); nargs > 0; --nargs, --e)
@@ -2118,7 +2114,7 @@ f_gettoken()
     switch (NARGS())
     {
     case 0:
-        if ((f = need_stdin()) == NULL)
+        if ((f = ici_need_stdin()) == NULL)
             return 1;
         break;
 
@@ -2129,7 +2125,7 @@ f_gettoken()
         {
             if ((f = ici_sopen(stringof(f)->s_chars, stringof(f)->s_nchars)) == NULL)
                 return 1;
-            decref(f);
+            ici_decref(f);
         }
         else if (!isfile(objof(f)))
             return ici_argerror(0);
@@ -2142,7 +2138,7 @@ f_gettoken()
         {
             if ((f = ici_sopen(stringof(f)->s_chars, stringof(f)->s_nchars)) == NULL)
                 return 1;
-            decref(f);
+            ici_decref(f);
         }
         else if (!isfile(objof(f)))
             return ici_argerror(0);
@@ -2186,7 +2182,7 @@ f_gettoken()
 
     } while (i == nseps);
 
-    if ((s = new_name(buf, j)) == NULL)
+    if ((s = ici_str_new(buf, j)) == NULL)
         return 1;
     return ici_ret_with_decref(objof(s));
 }
@@ -2201,7 +2197,7 @@ fast_gettokens(char *str, char *delims)
     int         k       = 0;
     char        *cp     = str;
 
-    if ((a = new_array(0)) == NULL)
+    if ((a = ici_array_new(0)) == NULL)
         return NULL;
     while (*cp)
     {
@@ -2213,10 +2209,10 @@ fast_gettokens(char *str, char *delims)
             (
                 ici_stk_push_chk(a, 1)
                 ||
-                (*a->a_top = objof(new_name(cp, k))) == NULL
+                (*a->a_top = objof(ici_str_new(cp, k))) == NULL
             )
             {
-                decref(a);
+                ici_decref(a);
                 return NULL;
             }
             ++a->a_top;
@@ -2226,7 +2222,7 @@ fast_gettokens(char *str, char *delims)
         }
     }
     for (k = a->a_top - a->a_base - 1; k >= 0; k--)
-        decref(a->a_base[k]);
+        ici_decref(a->a_base[k]);
     return(a);
 }
 
@@ -2262,7 +2258,7 @@ f_gettokens()
     switch (NARGS())
     {
     case 0:
-        if ((f = need_stdin()) == NULL)
+        if ((f = ici_need_stdin()) == NULL)
             return 1;
         break;
 
@@ -2313,7 +2309,7 @@ f_gettokens()
         else
         {
             if (loose_it)
-                decref(f);
+                ici_decref(f);
             return ici_argerror(1);
         }
         if (NARGS() > 2)
@@ -2321,7 +2317,7 @@ f_gettokens()
             if (!isstring(ARG(2)))
             {
                 if (loose_it)
-                    decref(f);
+                    ici_decref(f);
                 return ici_argerror(2);
             }
             terms = (unsigned char *)stringof(ARG(2))->s_chars;
@@ -2331,7 +2327,7 @@ f_gettokens()
                 if (!isstring(ARG(3)))
                 {
                     if (loose_it)
-                        decref(f);
+                        ici_decref(f);
                     return ici_argerror(3);
                 }
                 delims = (unsigned char *)stringof(ARG(3))->s_chars;
@@ -2356,7 +2352,7 @@ f_gettokens()
 #define W_DELIM 4
 
     state = S_IDLE;
-    if ((a = new_array(0)) == NULL)
+    if ((a = ici_array_new(0)) == NULL)
         goto fail;
     for (;;)
     {
@@ -2402,10 +2398,10 @@ f_gettokens()
         {
         case (S_IDLE << 8) + W_EOF:
             if (loose_it)
-                decref(f);
+                ici_decref(f);
             if (a->a_top == a->a_base)
             {
-                decref(a);
+                ici_decref(a);
                 return null_ret();
             }
             return ici_ret_with_decref(objof(a));
@@ -2414,7 +2410,7 @@ f_gettokens()
             if (!hardsep)
             {
                 if (loose_it)
-                    decref(f);
+                    ici_decref(f);
                 return ici_ret_with_decref(objof(a));
             }
             j = 0;
@@ -2422,12 +2418,12 @@ f_gettokens()
         case (S_INTOK << 8) + W_TERM:
             if (ici_stk_push_chk(a, 1))
                 goto fail;
-            if ((s = new_name(buf, j)) == NULL)
+            if ((s = ici_str_new(buf, j)) == NULL)
                 goto fail;
             *a->a_top++ = objof(s);
             if (loose_it)
-                decref(f);
-            decref(s);
+                ici_decref(f);
+            ici_decref(s);
             return ici_ret_with_decref(objof(a));
 
         case (S_IDLE << 8) + W_SEP:
@@ -2437,10 +2433,10 @@ f_gettokens()
         case (S_INTOK << 8) + W_SEP:
             if (ici_stk_push_chk(a, 1))
                 goto fail;
-            if ((s = new_name(buf, j)) == NULL)
+            if ((s = ici_str_new(buf, j)) == NULL)
                 goto fail;
             *a->a_top++ = objof(s);
-            decref(s);
+            ici_decref(s);
             if (hardsep)
             {
                 j = 0;
@@ -2453,18 +2449,18 @@ f_gettokens()
         case (S_INTOK << 8) + W_DELIM:
             if (ici_stk_push_chk(a, 1))
                 goto fail;
-            if ((s = new_name(buf, j)) == NULL)
+            if ((s = ici_str_new(buf, j)) == NULL)
                 goto fail;
             *a->a_top++ = objof(s);
-            decref(s);
+            ici_decref(s);
         case (S_IDLE << 8) + W_DELIM:
             if (ici_stk_push_chk(a, 1))
                 goto fail;
             buf[0] = c;
-            if ((s = new_name(buf, 1)) == NULL)
+            if ((s = ici_str_new(buf, 1)) == NULL)
                 goto fail;
             *a->a_top++ = objof(s);
-            decref(s);
+            ici_decref(s);
             j = 0;
             state = S_IDLE;
             break;
@@ -2481,9 +2477,9 @@ f_gettokens()
 
 fail:
     if (loose_it)
-        decref(f);
+        ici_decref(f);
     if (a != NULL)
-        decref(a);
+        ici_decref(a);
     return 1;
 }
 
@@ -2538,33 +2534,12 @@ f_sort()
     case 1:
         if (ici_typecheck("a", &a))
             return 1;
-        if (sort_cmp_func == NULL)
+        f = ici_fetch(ici_vs.a_top[-1], SS(cmp));
+        if (ici_typeof(f)->t_call == NULL)
         {
-            static char         *code =
-                "auto _(a, b)"
-                "{"
-                " return a < b ? -1 : a > b;"
-                "}";
-            file_t              *file;
-
-            if ((file = ici_sopen(code, strlen(code))) == NULL)
-                return 1;
-            file->f_name = SS(empty_string);
-            if (parse_module(file, objwsupof(ici_vs.a_top[-1])) < 0)
-            {
-                decref(file);
-                return 1;
-            }
-            decref(file);
-            sort_cmp_func = funcof(fetch(structof(ici_vs.a_top[-1]), SS(_)));
-            if (objof(sort_cmp_func) == objof(&o_null))
-            {
-                ici_error = "unable to define default sort compare function";
-                return 1;
-            }
-            incref(sort_cmp_func);
+            ici_error = "no suitable cmp function in scope";
+            return 1;
         }
-        f = objof(sort_cmp_func);
         break;
 
     default:
@@ -2697,13 +2672,13 @@ f_abs()
     {
         if (intof(ARG(0))->i_value >= 0)
             return ici_ret_no_decref(ARG(0));
-        return int_ret(-intof(ARG(0))->i_value);
+        return ici_int_ret(-intof(ARG(0))->i_value);
     }
     else if (isfloat(ARG(0)))
     {
         if (floatof(ARG(0))->f_value >= 0)
             return ici_ret_no_decref(ARG(0));
-        return float_ret(-floatof(ARG(0))->f_value);
+        return ici_float_ret(-floatof(ARG(0))->f_value);
     }
     return ici_argerror(0);
 }
@@ -2728,7 +2703,7 @@ f_now()
 {
     if (!got_epoch_time)
         get_epoch_time();
-    return float_ret(difftime(time(NULL), epoch_time));
+    return ici_float_ret(difftime(time(NULL), epoch_time));
 }
 
 static int
@@ -2759,7 +2734,7 @@ f_calendar()
          */
         t = epoch_time + (time_t)floatof(ARG(0))->f_value;
         tm = localtime(&t);
-        if ((s = objwsupof(new_struct())) == NULL)
+        if ((s = objwsupof(ici_struct_new())) == NULL)
             return 1;
         if
         (
@@ -2774,7 +2749,7 @@ f_calendar()
             || ici_set_val(s, SS(isdst), 'i', (l = tm->tm_isdst, &l))
         )
         {
-            decref(s);
+            ici_decref(s);
             return 1;
         }
         return ici_ret_with_decref(objof(s));
@@ -2814,7 +2789,7 @@ f_calendar()
             ici_error = "unsuitable calendar time";
             return 1;
         }
-        return float_ret(difftime(t, epoch_time));
+        return ici_float_ret(difftime(t, epoch_time));
     }
     return ici_argerror(0);
 }
@@ -2898,7 +2873,7 @@ f_cputime()
     t -= base;
     if (NARGS() > 0 && isfloat(ARG(0)))
         base = floatof(ARG(0))->f_value + t;
-    return float_ret(t);
+    return ici_float_ret(t);
 }
 
 static int
@@ -2906,7 +2881,7 @@ f_version()
 {
     static string_t     *ver;
 
-    if (ver == NULL && (ver = new_cname(ici_version_string)) == NULL)
+    if (ver == NULL && (ver = ici_str_new_nul_term(ici_version_string)) == NULL)
         return 1;
     return ici_ret_no_decref(objof(ver));
 }

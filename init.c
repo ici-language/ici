@@ -6,8 +6,6 @@
 #include "str.h"
 #include "pcre/pcre.h"
 
-wrap_t  *wraps;
-
 extern cfunc_t  *funcs[];
 
 /*
@@ -54,22 +52,22 @@ ici_init(void)
     objs_top = objs;
     for (i = 0; i < nels(ici_small_ints); ++i)
     {
-        if ((ici_small_ints[i] = new_int(i)) == NULL)
+        if ((ici_small_ints[i] = ici_int_new(i)) == NULL)
             return -1;
     }
-    o_zero = ici_small_ints[0];
-    o_one = ici_small_ints[1];
+    ici_zero = ici_small_ints[0];
+    ici_one = ici_small_ints[1];
     if (ici_init_sstrings())
         return 1;
     pcre_free = ici_free;
     pcre_malloc = (void *(*)(size_t))ici_alloc;
     if (ici_init_thread_stuff())
         return 1;
-    if ((scope = new_struct()) == NULL)
+    if ((scope = ici_struct_new()) == NULL)
         return 1;
-    if ((scope->o_head.o_super = externs = objwsupof(new_struct())) == NULL)
+    if ((scope->o_head.o_super = externs = objwsupof(ici_struct_new())) == NULL)
         return 1;
-    decref(externs);
+    ici_decref(externs);
     if ((x = ici_new_exec()) == NULL)
         return 1;
     ici_enter(x);
@@ -79,7 +77,7 @@ ici_init(void)
     if (ici_engine_stack_check())
         return 1;
     *ici_vs.a_top++ = objof(scope);
-    decref(scope);
+    ici_decref(scope);
     for (cfp = funcs; *cfp != NULL; ++cfp)
     {
         if (ici_assign_cfuncs(scope->o_head.o_super, *cfp))

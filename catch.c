@@ -47,7 +47,7 @@ mark_catch(object_t *o)
     o->o_flags |= O_MARK;
     mem = sizeof(catch_t);
     if (catchof(o)->c_catcher != NULL)
-        mem += mark(catchof(o)->c_catcher);
+        mem += ici_mark(catchof(o)->c_catcher);
     return mem;
 }
 
@@ -111,8 +111,8 @@ type_t  ici_catch_type =
     hash_unique,
     cmp_unique,
     copy_simple,
-    assign_simple,
-    fetch_simple,
+    ici_assign_fail,
+    ici_fetch_fail,
     "catch"
 };
 

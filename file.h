@@ -31,7 +31,8 @@ struct file
 #define fileof(o)   ((file_t *)(o))
 #define isfile(o)   (objof(o)->o_tcode == TC_FILE)
 
-#define F_CLOSED    0x10
+#define F_CLOSED    0x10    /* File is closed. */
+#define F_NOCLOSE   0x20    /* Don't close on object free. */
 /*
  * End of ici.h export. --ici.h-end--
  */

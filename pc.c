@@ -11,7 +11,7 @@ mark_pc(object_t *o)
 {
     o->o_flags |= O_MARK;
     if (pcof(o)->pc_code != NULL)
-        return sizeof(pc_t) + mark(pcof(o)->pc_code);
+        return sizeof(pc_t) + ici_mark(pcof(o)->pc_code);
     return sizeof(pc_t);
 }
 
@@ -77,7 +77,7 @@ type_t  pc_type =
     hash_unique,
     cmp_unique,
     copy_simple,
-    assign_simple,
-    fetch_simple,
+    ici_assign_fail,
+    ici_fetch_fail,
     "pc"
 };

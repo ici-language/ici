@@ -4,6 +4,7 @@
 #include "int.h"
 #include "float.h"
 #include "buf.h"
+#include "file.h"
 
 /*
  * ici_set_val(scope, name, typespec, value)
@@ -36,24 +37,25 @@ ici_set_val(objwsup_t *s, string_t *name, int type, void *vp)
     switch (type)
     {
     case 'i':
-        o = objof(new_int(*(long *)vp));
+        o = objof(ici_int_new(*(long *)vp));
         break;
 
     case 'f':
-        o = objof(new_float(*(double *)vp));
+        o = objof(ici_float_new(*(double *)vp));
         break;
 
     case 's':
-        o = objof(new_cname((char *)vp));
+        o = objof(ici_str_new_nul_term((char *)vp));
         break;
 
     case 'u':
         o = objof(new_file((char *)vp, &stdio_ftype, name));
+        o->o_flags |= F_NOCLOSE;
         break;
 
     case 'o':
         o = (object_t *)vp;
-        incref(o); /* so can decref(o) below */
+        ici_incref(o); /* so can ici_decref(o) below */
         break;
 
     default:
@@ -64,7 +66,7 @@ ici_set_val(objwsup_t *s, string_t *name, int type, void *vp)
     if (o == NULL)
         return 1;
     i = assign_base(s, objof(name), o);
-    decref(o);
+    ici_decref(o);
     return i;
 }
 
@@ -96,9 +98,9 @@ ici_assign_float(object_t *o, object_t *k, double v)
 {
     float_t     *f;
 
-    if ((f = new_float(v)) == NULL)
+    if ((f = ici_float_new(v)) == NULL)
         return 1;
-    if (assign(o, k, objof(f)))
+    if (ici_assign(o, k, objof(f)))
         return 1;
     return 0;
 }
@@ -113,7 +115,7 @@ ici_fetch_num(object_t *o, object_t *k, double *vp)
 {
     object_t    *v;
 
-    if ((v = fetch(o, k)) == NULL)
+    if ((v = ici_fetch(o, k)) == NULL)
         return 1;
     if (isint(v))
         *vp = intof(v)->i_value;
@@ -134,7 +136,7 @@ ici_fetch_int(object_t *o, object_t *k, long *vp)
 {
     object_t    *v;
 
-    if ((v = fetch(o, k)) == NULL)
+    if ((v = ici_fetch(o, k)) == NULL)
         return 1;
     if (!isint(v))
         return ici_fetch_mismatch(o, k, v, "an int");
@@ -167,9 +169,9 @@ ici_cmkvar(objwsup_t *scope, char *name, int type, void *vp)
     string_t    *s;
     int         i;
 
-    if ((s = new_cname(name)) == NULL)
+    if ((s = ici_str_new_nul_term(name)) == NULL)
         return 1;
     i = ici_set_val(scope, s, type, vp);
-    decref(s);
+    ici_decref(s);
     return i;
 }

@@ -90,7 +90,7 @@ ici_op_andand()
     /*
      * Reduce the value to 0 or 1.
      */
-    ici_os.a_top[-2] = objof(c ? o_one : o_zero);
+    ici_os.a_top[-2] = objof(c ? ici_one : ici_zero);
     --ici_os.a_top;
     --ici_xs.a_top;
     return 0;

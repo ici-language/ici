@@ -27,12 +27,12 @@ static unsigned long
 mark_method(object_t *o)
 {
     o->o_flags |= O_MARK;
-    return mark(methodof(o)->m_subject)
-        + mark(methodof(o)->m_callable);
+    return ici_mark(methodof(o)->m_subject)
+        + ici_mark(methodof(o)->m_callable);
 }
 
 method_t *
-ici_new_method(object_t *subject, object_t *callable)
+ici_method_new(object_t *subject, object_t *callable)
 {
     register method_t   *m;
 
@@ -103,7 +103,7 @@ type_t  ici_method_type =
     hash_unique,
     cmp_unique,
     copy_simple,
-    assign_simple,
+    ici_assign_fail,
     fetch_method,
     "method",
     objname_method,

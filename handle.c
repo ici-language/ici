@@ -29,9 +29,9 @@ mark_handle(object_t *o)
     o->o_flags |= O_MARK;
     mem = sizeof(ici_handle_t);
     if (objwsupof(o)->o_super != NULL)
-        mem += mark(objwsupof(o)->o_super);
+        mem += ici_mark(objwsupof(o)->o_super);
     if (handleof(o)->h_name != NULL)
-        mem += mark(handleof(o)->h_name);
+        mem += ici_mark(handleof(o)->h_name);
     return mem;
 }
 
@@ -76,7 +76,7 @@ ici_new_handle(void *ptr, string_t *name, objwsup_t *super)
     proto.o_head.o_super = super;
     if ((h = handleof(atom_probe(objof(&proto)))) != NULL)
     {
-        incref(h);
+        ici_incref(h);
         return h;
     }
     if ((h = ici_talloc(ici_handle_t)) == NULL)
@@ -85,7 +85,7 @@ ici_new_handle(void *ptr, string_t *name, objwsup_t *super)
     rego(h);
     if (super == NULL && name == NULL)
         objof(h)->o_leafz = sizeof(ici_handle_t);
-    return handleof(atom(objof(h), 1));
+    return handleof(ici_atom(objof(h), 1));
 }
 
 /*
@@ -96,8 +96,8 @@ object_t *
 fetch_handle(object_t *o, object_t *k)
 {
     if (handleof(o)->o_head.o_super == NULL)
-        return fetch_simple(o, k);
-    return fetch(handleof(o)->o_head.o_super, k);
+        return ici_fetch_fail(o, k);
+    return ici_fetch(handleof(o)->o_head.o_super, k);
 }
 
 /*
@@ -125,8 +125,8 @@ static int
 assign_handle(object_t *o, object_t *k, object_t *v)
 {
     if (handleof(o)->o_head.o_super == NULL)
-        return assign_simple(o, k, v);
-    return assign(handleof(o)->o_head.o_super, k, v);
+        return ici_assign_fail(o, k, v);
+    return ici_assign(handleof(o)->o_head.o_super, k, v);
 }
 
 /*
@@ -174,6 +174,6 @@ type_t  ici_handle_type =
     NULL,
     assign_super_handle,
     fetch_super_handle,
-    assign_simple,
-    fetch_simple
+    ici_assign_fail,
+    ici_fetch_fail
 };

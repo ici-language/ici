@@ -40,7 +40,7 @@ struct string
  * Access them with either ICIS(fred) or ICISO(fred) which return
  * string_t* and object_t* pointers respectively. For example:
  *
- *  o = fetch(s, ICIS(fred));
+ *  o = ici_fetch(s, ICIS(fred));
  *
  * Next, in one of your source file, include the special include file
  * "icistr-setup.h". This will (a) declare pointers to the string objects,
@@ -53,8 +53,8 @@ struct string
 #define ICISO(name)             (objof(ICIS(name)))
 #define ICI_STR_NORM(name, str) extern string_t *ici_str_##name;
 #define ICI_STR_DECL(name, str) string_t *ici_str_##name;
-#define ICI_STR_MAKE(name, str) (ICIS(name) = new_cname(str)) == NULL ||
-#define ICI_STR_REL(name, str)  decref(ICIS(name));
+#define ICI_STR_MAKE(name, str) (ICIS(name) = ici_str_new_nul_term(str)) == NULL ||
+#define ICI_STR_REL(name, str)  ici_decref(ICIS(name));
 #define ICI_STR                 ICI_STR_NORM
 /*
  * End of ici.h export. --ici.h-end--
@@ -63,7 +63,7 @@ struct string
 #ifdef  ICI_CORE
 /*
  * A structure to hold static (ie, not allocated) strings. These can
- * only be used where the atom() operation is guaranteed to use the
+ * only be used where the ici_atom() operation is guaranteed to use the
  * string given, and never find an existing one already in the atom pool.
  * They are only used by the ICI core on first initialisation. They
  * are registered with the garbage collector because string reference

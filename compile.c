@@ -106,17 +106,17 @@ compile_expr(array_t *a, expr_t *e, int why)
             }
             if (compile_expr(a, e->e_arg[0], FOR_VALUE))
                 return 1;
-            if ((a1 = new_array(0)) == NULL)
+            if ((a1 = ici_array_new(0)) == NULL)
                 return 1;
             if (compile_expr(a1, e->e_arg[1]->e_arg[0], why) || ici_stk_push_chk(a1, 1))
             {
-                decref(a1);
+                ici_decref(a1);
                 return 1;
             }
             *a1->a_top++ = objof(&o_end);
-            if ((a2 = new_array(0)) == NULL)
+            if ((a2 = ici_array_new(0)) == NULL)
             {
-                decref(a1);
+                ici_decref(a1);
                 return 1;
             }
             if
@@ -128,16 +128,16 @@ compile_expr(array_t *a, expr_t *e, int why)
                 ici_stk_push_chk(a, 3)
             )
             {
-                decref(a1);
-                decref(a2);
+                ici_decref(a1);
+                ici_decref(a2);
                 return 1;
             }
             *a2->a_top++ = objof(&o_end);
             *a->a_top++ = objof(a1);
             *a->a_top++ = objof(a2);
             *a->a_top++ = objof(&o_ifelse);
-            decref(a1);
-            decref(a2);
+            ici_decref(a1);
+            ici_decref(a2);
             return 0;
         }
         if (e->e_what == T_LESSEQGRT)
@@ -150,7 +150,7 @@ compile_expr(array_t *a, expr_t *e, int why)
                 return 1;
             if ((*a->a_top = objof(new_op(NULL, OP_SWAP, NOTTEMP(why)))) == NULL)
                 return 1;
-            decref(*a->a_top);
+            ici_decref(*a->a_top);
             a->a_top++;
             return 0;
         }
@@ -171,7 +171,7 @@ compile_expr(array_t *a, expr_t *e, int why)
                     return 1;
                 if ((*a->a_top = objof(new_op(NULL, OP_ASSIGNLOCALVAR, NOTTEMP(why)))) == NULL)
                     return 1;
-                decref(*a->a_top);
+                ici_decref(*a->a_top);
                 a->a_top++;
                 return 0;
             }
@@ -183,7 +183,7 @@ compile_expr(array_t *a, expr_t *e, int why)
                     return 1;
                 if ((*a->a_top = objof(new_op(NULL, OP_ASSIGN_TO_NAME, NOTTEMP(why)))) == NULL)
                     return 1;
-                decref(*a->a_top);
+                ici_decref(*a->a_top);
                 ++a->a_top;
                 *a->a_top++ = e->e_arg[0]->e_obj;
                 return 0;
@@ -197,7 +197,7 @@ compile_expr(array_t *a, expr_t *e, int why)
             if ((*a->a_top = objof(new_op(NULL,
                 e->e_what == T_EQ ? OP_ASSIGN : OP_ASSIGNLOCAL, NOTTEMP(why)))) == NULL)
                 return 1;
-            decref(*a->a_top);
+            ici_decref(*a->a_top);
             a->a_top++;
             return 0;
         }
@@ -220,7 +220,7 @@ compile_expr(array_t *a, expr_t *e, int why)
             ++a->a_top;
             if ((*a->a_top = objof(new_op(NULL, OP_ASSIGN, NOTTEMP(why)))) == NULL)
                 return 1;
-            decref(*a->a_top);
+            ici_decref(*a->a_top);
             a->a_top++;
             return 0;
         }
@@ -232,7 +232,7 @@ compile_expr(array_t *a, expr_t *e, int why)
 
             if (compile_expr(a, e->e_arg[0], FOR_VALUE))
                 return 1;
-            if ((a1 = new_array(0)) == NULL)
+            if ((a1 = ici_array_new(0)) == NULL)
                 return 1;
             if
             (
@@ -243,12 +243,12 @@ compile_expr(array_t *a, expr_t *e, int why)
                 ici_stk_push_chk(a, 3)
             )
             {
-                decref(a1);
+                ici_decref(a1);
                 return 1;
             }
             *a1->a_top++ = objof(&o_end);
             *a->a_top++ = objof(a1);
-            decref(a1);
+            ici_decref(a1);
             *a->a_top++ = objof(e->e_what == T_ANDAND ? &o_andand : &o_barbar);
             if (why == FOR_EFFECT)
                 *a->a_top++ = objof(&o_pop);
@@ -289,7 +289,7 @@ compile_expr(array_t *a, expr_t *e, int why)
             {
                 array_t *a1;
 
-                if ((a1 = new_array(0)) == NULL)
+                if ((a1 = ici_array_new(0)) == NULL)
                     return 1;
                 if (why == FOR_TEMP)
                     why = FOR_VALUE;
@@ -300,16 +300,16 @@ compile_expr(array_t *a, expr_t *e, int why)
                     ici_stk_push_chk(a1, 1)
                 )
                 {
-                    decref(a1);
+                    ici_decref(a1);
                     return 1;
                 }
                 *a1->a_top++ = objof(&o_end);
                 if ((e->e_obj = ici_evaluate(objof(a1), 0)) == NULL)
                 {
-                    decref(a1);
+                    ici_decref(a1);
                     return 1;
                 }
-                decref(a1);
+                ici_decref(a1);
             }
             /* Fall through. */
         case T_INT:
@@ -351,13 +351,13 @@ compile_expr(array_t *a, expr_t *e, int why)
                 if (ici_stk_push_chk(a, 4))
                     return 1;
                 *a->a_top++ = objof(&o_dotrkeep);
-                *a->a_top++ = objof(o_one);
+                *a->a_top++ = objof(ici_one);
                 if ((*a->a_top = new_binop(e->e_what == T_PLUSPLUS ? T_PLUS : T_MINUS, FOR_VALUE)) == NULL)
                     return 1;
                 ++a->a_top;
                 if ((*a->a_top = objof(new_op(NULL, OP_ASSIGN, FOR_EFFECT))) == NULL)
                     return 1;
-                decref(*a->a_top);
+                ici_decref(*a->a_top);
                 a->a_top++;
             }
             else
@@ -371,13 +371,13 @@ compile_expr(array_t *a, expr_t *e, int why)
                 if (ici_stk_push_chk(a, 4))
                     return 1;
                 *a->a_top++ = objof(&o_dotkeep);
-                *a->a_top++ = objof(o_one);
+                *a->a_top++ = objof(ici_one);
                 if ((*a->a_top = new_binop(e->e_what == T_PLUSPLUS ? T_PLUS : T_MINUS, FOR_VALUE)) == NULL)
                     return 1;
                 ++a->a_top;
                 if ((*a->a_top = objof(new_op(NULL, OP_ASSIGN, NOTTEMP(why)))) == NULL)
                     return 1;
-                decref(*a->a_top);
+                ici_decref(*a->a_top);
                 a->a_top++;
                 return 0;
             }
@@ -390,7 +390,7 @@ compile_expr(array_t *a, expr_t *e, int why)
              */
             if (why == FOR_EFFECT)
                 return compile_expr(a, e->e_arg[0], FOR_EFFECT);
-            *a->a_top++ = objof(o_zero);
+            *a->a_top++ = objof(ici_zero);
             if (compile_expr(a, e->e_arg[0], NOTLV(why)))
                 return 1;
             if (ici_stk_push_chk(a, 1))
@@ -416,7 +416,7 @@ compile_expr(array_t *a, expr_t *e, int why)
                 return 1;
             if ((*a->a_top = objof(new_op(ici_op_unary, 0, t_subtype(e->e_what)))) == NULL)
                 return 1;
-            decref(*a->a_top);
+            ici_decref(*a->a_top);
             ++a->a_top;
             break;
 
@@ -429,7 +429,7 @@ compile_expr(array_t *a, expr_t *e, int why)
                 return 1;
             if ((*a->a_top = objof(new_op(NULL, OP_AT, 0))) == NULL)
                 return 1;
-            decref(*a->a_top);
+            ici_decref(*a->a_top);
             ++a->a_top;
             break;
 
@@ -496,7 +496,7 @@ compile_expr(array_t *a, expr_t *e, int why)
             );
             if (*a->a_top == NULL)
                 return 1;
-            decref(*a->a_top);
+            ici_decref(*a->a_top);
             a->a_top++;
             break;
 
@@ -557,9 +557,9 @@ compile_expr(array_t *a, expr_t *e, int why)
                 }
                 if (ici_stk_push_chk(a, 1))
                     return 1;
-                if ((*a->a_top = objof(new_int(nargs))) == NULL)
+                if ((*a->a_top = objof(ici_int_new(nargs))) == NULL)
                     return 1;
-                decref(*a->a_top);
+                ici_decref(*a->a_top);
                 ++a->a_top;
                 if
                 (
@@ -630,12 +630,12 @@ uninit_compile()
     {
         if (binops[i] != NULL)
         {
-            decref(binops[i]);
+            ici_decref(binops[i]);
             binops[i] = NULL;
         }
         if (binops_temps[i] != NULL)
         {
-            decref(binops_temps[i]);
+            ici_decref(binops_temps[i]);
             binops_temps[i] = NULL;
         }
     }

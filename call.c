@@ -65,9 +65,9 @@ ici_funcv(object_t *func_obj, char *types, va_list va)
             break;
 
         case 'i':
-            if ((ici_os.a_top[arg] = objof(new_int(va_arg(va, long)))) == NULL)
+            if ((ici_os.a_top[arg] = objof(ici_int_new(va_arg(va, long)))) == NULL)
                 goto fail;
-            decref(ici_os.a_top[arg]);
+            ici_decref(ici_os.a_top[arg]);
             break;
 
         case 'q':
@@ -76,15 +76,15 @@ ici_funcv(object_t *func_obj, char *types, va_list va)
             break;
 
         case 's':
-            if ((ici_os.a_top[arg] = objof(new_cname(va_arg(va, char *)))) == NULL)
+            if ((ici_os.a_top[arg] = objof(ici_str_new_nul_term(va_arg(va, char *)))) == NULL)
                 goto fail;
-            decref(ici_os.a_top[arg]);
+            ici_decref(ici_os.a_top[arg]);
             break;
 
         case 'f':
-            if ((ici_os.a_top[arg] = objof(new_float(va_arg(va, double)))) == NULL)
+            if ((ici_os.a_top[arg] = objof(ici_float_new(va_arg(va, double)))) == NULL)
                 goto fail;
-            decref(ici_os.a_top[arg]);
+            ici_decref(ici_os.a_top[arg]);
             break;
 
         default:
@@ -101,9 +101,9 @@ ici_funcv(object_t *func_obj, char *types, va_list va)
      * Push the number of actual args, followed by the function
      * itself onto the operand stack.
      */
-    if ((*ici_os.a_top = objof(new_int(nargs))) == NULL)
+    if ((*ici_os.a_top = objof(ici_int_new(nargs))) == NULL)
         goto fail;
-    decref(*ici_os.a_top);
+    ici_decref(*ici_os.a_top);
     ++ici_os.a_top;
     *ici_os.a_top++ = func_obj;
 
@@ -114,7 +114,7 @@ ici_funcv(object_t *func_obj, char *types, va_list va)
     switch (ret_type)
     {
     case '\0':
-        decref(ret_obj);
+        ici_decref(ret_obj);
         break;
 
     case 'o':
@@ -125,26 +125,26 @@ ici_funcv(object_t *func_obj, char *types, va_list va)
         if (!isint(ret_obj))
             goto typeclash;
         *(long *)ret_ptr = intof(ret_obj)->i_value;
-        decref(ret_obj);
+        ici_decref(ret_obj);
         break;
 
     case 'f':
         if (!isfloat(ret_obj))
             goto typeclash;
         *(double *)ret_ptr = floatof(ret_obj)->f_value;
-        decref(ret_obj);
+        ici_decref(ret_obj);
         break;
 
     case 's':
         if (!isstring(ret_obj))
             goto typeclash;
         *(char **)ret_ptr = stringof(ret_obj)->s_chars;
-        decref(ret_obj);
+        ici_decref(ret_obj);
         break;
 
     default:
     typeclash:
-        decref(ret_obj);
+        ici_decref(ret_obj);
         ici_error = "incorrect return type";
         goto fail;
     }
@@ -168,30 +168,30 @@ ici_callv(char *func_name, char *types, va_list va)
     name_obj = NULL;
     func_obj = NULL;
 
-    if ((name_obj = objof(new_cname(func_name))) == NULL)
+    if ((name_obj = objof(ici_str_new_nul_term(func_name))) == NULL)
         return ici_error;
     if (types[0] != '\0' && types[1] == '@')
     {
         va_list tmp;
         tmp = va;
         member_obj = va_arg(tmp, object_t *);
-        if ((func_obj = fetch(member_obj, name_obj)) == objof(&o_null))
+        if ((func_obj = ici_fetch(member_obj, name_obj)) == objof(&o_null))
         {
             sprintf(buf, "\"%s\" undefined in object", func_name);
             ici_error = buf;
-            decref(name_obj);
+            ici_decref(name_obj);
             return ici_error;
         }
         va_end(tmp);
     }
-    else if ((func_obj = fetch(ici_vs.a_top[-1], name_obj)) == objof(&o_null))
+    else if ((func_obj = ici_fetch(ici_vs.a_top[-1], name_obj)) == objof(&o_null))
     {
         sprintf(buf, "\"%s\" undefined", func_name);
         ici_error = buf;
-        decref(name_obj);
+        ici_decref(name_obj);
         return ici_error;
     }
-    decref(name_obj);
+    ici_decref(name_obj);
     name_obj = NULL;
     result = ici_funcv(func_obj, types, va);
     return result;
@@ -213,7 +213,7 @@ ici_callv(char *func_name, char *types, va_list va)
  *
  * When a string is returned it is a pointer to the character data of an
  * internal ICI string object. It will only remain valid until the next
- * call to any ICI function.  When an object is returned it has been incref'ed
+ * call to any ICI function.  When an object is returned it has been ici_incref'ed
  * (i.e. it is held against garbage collection).
  */
 char *
@@ -250,7 +250,7 @@ ici_func(object_t *func_obj, char *types, ...)
  *
  * When a string is returned it is a pointer to the character data of an
  * internal ICI string object. It will only remain valid until the next
- * call to any ICI function.  When an object is returned it has been incref'ed
+ * call to any ICI function.  When an object is returned it has been ici_incref'ed
  * (i.e. it is held against garbage collection).
  */
 char *
@@ -265,29 +265,29 @@ ici_call(char *func_name, char *types, ...)
     name_obj = NULL;
     func_obj = NULL;
 
-    if ((name_obj = objof(new_cname(func_name))) == NULL)
+    if ((name_obj = objof(ici_str_new_nul_term(func_name))) == NULL)
         return ici_error;
     if (types[0] != '\0' && types[1] == '@')
     {
         va_start(va, types);
         member_obj = va_arg(va, object_t *);
-        if ((func_obj = fetch(member_obj, name_obj)) == objof(&o_null))
+        if ((func_obj = ici_fetch(member_obj, name_obj)) == objof(&o_null))
         {
             sprintf(buf, "\"%s\" undefined in object", func_name);
             ici_error = buf;
-            decref(name_obj);
+            ici_decref(name_obj);
             return ici_error;
         }
     }
-    else if ((func_obj = fetch(ici_vs.a_top[-1], name_obj)) == objof(&o_null))
+    else if ((func_obj = ici_fetch(ici_vs.a_top[-1], name_obj)) == objof(&o_null))
     {
         sprintf(buf, "\"%s\" undefined", func_name);
         ici_error = buf;
-        decref(name_obj);
+        ici_decref(name_obj);
         return ici_error;
     }
     va_start(va, types);
-    decref(name_obj);
+    ici_decref(name_obj);
     name_obj = NULL;
     result = ici_funcv(func_obj, types, va);
     va_end(va);

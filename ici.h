@@ -186,8 +186,8 @@ extern DLI object_t     **objs_top;
 extern DLI object_t     **objs_limit;
 extern DLI object_t     **atoms;
 extern DLI int          atomsz;
-extern DLI int_t        *o_zero;
-extern DLI int_t        *o_one;
+extern DLI int_t        *ici_zero;
+extern DLI int_t        *ici_one;
 extern DLI char         *ici_error;
 extern DLI exec_t       *ici_execs;
 extern DLI exec_t       *ici_exec;
@@ -299,40 +299,40 @@ extern char     **ssmash(char *, char *);
 extern char     *ici_binop_name(int);
 extern object_t *ici_evaluate(object_t *, int);
 extern object_t *copy_simple(object_t *);
-extern object_t *fetch_simple(object_t *, object_t *);
+extern object_t *ici_fetch_fail(object_t *, object_t *);
 extern slot_t   *find_slot(struct_t **, object_t *);
 extern slot_t   *find_raw_slot(struct_t *, object_t *);
 extern object_t *get_token(file_t *);
 extern object_t *get_value(struct_t *, object_t *);
-extern object_t *atom(object_t *, int);
+extern object_t *ici_atom(object_t *, int);
 extern object_t *atom_probe(object_t *);
 extern int_t    *atom_int(long);
 extern int      parse_exec(void);
 extern int      parse_module(file_t *, objwsup_t *);
 extern int      parse_file(char *, char *, ftype_t *);
 extern parse_t  *new_parse(file_t *);
-extern array_t  *new_array(ptrdiff_t);
-extern mem_t    *new_mem(void *, size_t, int, void (*)());
+extern array_t  *ici_array_new(ptrdiff_t);
+extern mem_t    *ici_mem_new(void *, size_t, int, void (*)());
 extern catch_t  *new_catch(object_t *, int, int, int);
-extern string_t *new_cname(char *);
-extern string_t *get_cname(char *);
+extern string_t *ici_str_new_nul_term(char *);
+extern string_t *ici_str_get_nul_term(char *);
 extern int      need_string(string_t **, char *);
 extern unsigned long    ici_hash_string(object_t *);
-extern set_t    *new_set(void);
-extern struct_t *new_struct(void);
+extern set_t    *ici_set_new(void);
+extern struct_t *ici_struct_new(void);
 extern exec_t   *new_exec(void);
-extern float_t  *new_float(double);
+extern float_t  *ici_float_new(double);
 extern file_t   *new_file(char *, ftype_t *, string_t *);
 extern func_t   *new_func(void);
-extern int_t    *new_int(long);
+extern int_t    *ici_int_new(long);
 extern string_t *new_string(int);
-extern string_t *new_name(char *, int);
+extern string_t *ici_str_new(char *, int);
 extern op_t     *new_op(int (*)(), int, int);
 extern pc_t     *new_pc(void);
-extern ptr_t    *new_ptr(object_t *, object_t *);
+extern ptr_t    *ici_ptr_new(object_t *, object_t *);
 extern src_t    *new_src(int, string_t *);
-extern regexp_t *new_regexp(string_t *, int);
-extern int      assign_simple(object_t *, object_t *, object_t *);
+extern regexp_t *ici_regexp_new(string_t *, int);
+extern int      ici_assign_fail(object_t *, object_t *, object_t *);
 extern file_t   *ici_sopen(char *, int);
 extern catch_t  *ici_unwind(void);
 extern void     collect(void);
@@ -358,21 +358,20 @@ extern int      ici_op_mkptr(void);
 extern int      ici_op_openptr(void);
 extern int      ici_op_fetch(void);
 extern int      ici_op_unary(void);
-extern char     *syserr(void);
+extern int      ici_get_last_errno(char *, char *);
 extern int      ici_argcount(int);
 extern int      ici_argerror(int);
 extern array_t  *mk_strarray(char **);
-extern void     unassign_struct(struct_t *, object_t *);
+extern void     ici_struct_unassign(struct_t *, object_t *);
 extern int      unassign_set(set_t *, object_t *);
 extern void     grow_objs(object_t *);
 extern char     *objname(char *, object_t *);
 extern void     expand_error(int, string_t *);
 extern int      lex(parse_t *, array_t *);
 extern struct_t *statics_struct(struct_t *, struct_t *);
-extern void     wrapup(void);
 extern int      f_close(file_t *f);
 extern int      ici_ret_with_decref(object_t *);
-extern int      int_ret(long);
+extern int      ici_int_ret(long);
 extern int      ici_ret_no_decref(object_t *);
 extern void     uninit_cfunc(void);
 extern int      ici_typecheck(char *, ...);
@@ -387,13 +386,13 @@ extern int      exec_forall(void);
 extern exec_t   *ici_new_exec(void);
 extern int      compile_expr(array_t *, expr_t *, int);
 extern void     uninit_compile(void);
-extern file_t   *need_stdin(void);
-extern file_t   *need_stdout(void);
+extern file_t   *ici_need_stdin(void);
+extern file_t   *ici_need_stdout(void);
 extern int      set_issubset(set_t *, set_t *);
 extern int      set_ispropersubset(set_t *, set_t *);
 extern void     ici_reclaim(void);
-extern int      str_ret(char *);
-extern int      float_ret(double);
+extern int      ici_str_ret(char *);
+extern int      ici_float_ret(double);
 extern char     *ici_func(object_t *, char *, ...);
 extern char     *ici_funcv(object_t *, char *, va_list);
 extern char     *ici_call(char *, char *, ...);
@@ -410,7 +409,7 @@ extern int      ici_assign_cfuncs(objwsup_t *, cfunc_t *);
 extern int      def_cfuncs(cfunc_t *);
 extern int      ici_main(int, char **);
 extern int      ici_init_sstrings(void);
-extern method_t *ici_new_method(object_t *, object_t *);
+extern method_t *ici_method_new(object_t *, object_t *);
 extern int      ici_get_foreign_source_code(parse_t *, array_t *, int, int, int, int, int, unsigned long *);
 extern ici_handle_t *ici_new_handle(void *, string_t *, objwsup_t *);
 extern int      ici_register_type(type_t *t);
@@ -427,6 +426,7 @@ extern void     ici_invalidate_struct_lookaside(struct_t *);
 extern void     ici_drop_all_small_allocations(void);
 extern int      ici_engine_stack_check(void);
 extern void     get_pc(array_t *code, object_t **xs);
+extern void     ici_atexit(void (*)(void), wrap_t *);
 
 extern exec_t   *ici_leave(void);
 extern void     ici_enter(exec_t *);
@@ -533,7 +533,7 @@ struct type
  *              it can create). This is used in the marking phase of
  *              garbage collection.
  *
- *              The macro mark() calls the t_mark function of the object
+ *              The macro ici_mark() calls the t_mark function of the object
  *              (based on object type) if the O_MARK flag of the object
  *              is clear, else it returns 0. This is the usual interface
  *              to an object's mark function.
@@ -575,7 +575,7 @@ struct type
  * t_copy(o)    Returns a copy of the given object. This is the basis for
  *              the implementation of the copy() function. On failure, NULL
  *              is returned and error is set. The returned object has been
- *              incref'ed. The returned object should cmp() as being equal,
+ *              ici_incref'ed. The returned object should cmp() as being equal,
  *              but be a distinct object for object which are not
  *              intrinsically atomic.
  *
@@ -601,7 +601,7 @@ struct type
  * t_assign(o, k, v) Assign to key k of the object o the value v. Return
  *              1 on error, else 0.
  *
- *              The existing function assign_simple() may be used both as
+ *              The existing function ici_assign_fail() may be used both as
  *              the implementation of this function for object types which
  *              do not support any assignment, and as a simple method of
  *              generating an error for particular assignments which break
@@ -616,7 +616,7 @@ struct type
  * t_fetch(o, k) Fetch the value of key k of the object o. Return NULL on
  *              error.
  *
- *              The existing function fetch_simple() may be used both as
+ *              The existing function ici_fetch_fail() may be used both as
  *              the implementation of this function for object types which
  *              do not support any assignment, and as a simple method of
  *              generating an error for particular fetches which break
@@ -646,7 +646,7 @@ struct type
  * Macros to perform the operation on the object.
  */
 /*
- * mark()
+ * ici_mark()
  *
  * The recursive traversal of all objects performed by marking is particularly
  * expensive. So we take pains to cut short function calls wherever possible.
@@ -654,22 +654,22 @@ struct type
  * doesn't reference any other objects and is of small (ie o_leafz) size.
  */
 #if 1
-#define mark(o)         ((objof(o)->o_flags & O_MARK) == 0 \
+#define ici_mark(o)         ((objof(o)->o_flags & O_MARK) == 0 \
                             ? (objof(o)->o_leafz != 0 \
                                 ? (objof(o)->o_flags |= O_MARK, objof(o)->o_leafz) \
                                 : (*ici_typeof(o)->t_mark)(objof(o))) \
                             : 0L)
 #else
-#define mark(o)         ((objof(o)->o_flags & O_MARK) == 0 \
+#define ici_mark(o)         ((objof(o)->o_flags & O_MARK) == 0 \
                             ? (*ici_typeof(o)->t_mark)(objof(o)) \
                             : 0L)
 #endif
 #define freeo(o)        ((*ici_typeof(o)->t_free)(objof(o)))
 #define hash(o)         ((*ici_typeof(o)->t_hash)(objof(o)))
 #define cmp(o1,o2)      ((*ici_typeof(o1)->t_cmp)(objof(o1), objof(o2)))
-#define fetch(o,k)      ((*ici_typeof(o)->t_fetch)(objof(o), objof(k)))
+#define ici_fetch(o,k)      ((*ici_typeof(o)->t_fetch)(objof(o), objof(k)))
 #define copy(o)         ((*ici_typeof(o)->t_copy)(objof(o)))
-#define assign(o,k,v)   ((*ici_typeof(o)->t_assign)(objof(o), objof(k), objof(v)))
+#define ici_assign(o,k,v)   ((*ici_typeof(o)->t_assign)(objof(o), objof(k), objof(v)))
 #define assign_super(o,k,v,b) ((*ici_typeof(o)->t_assign_super)(objof(o), objof(k), objof(v), b))
 #define fetch_super(o,k,v,b) ((*ici_typeof(o)->t_fetch_super)(objof(o), objof(k), v, b))
 #define assign_base(o,k,v) ((*ici_typeof(o)->t_assign_base)(objof(o), objof(k), objof(v)))
@@ -689,13 +689,13 @@ struct type
 /*
  * Functions to performs operations on the object.
  */
-extern unsigned long    mark(object_t *);
+extern unsigned long    ici_mark(object_t *);
 extern void             freeo(object_t *);
 extern unsigned long    hash(object_t *);
 extern int              cmp(object_t *, object_t *);
 extern object_t         *copy(object_t *);
-extern object_t         *fetch(object_t *, object_t *);
-extern int              assign(object_t *, object_t *, object_t *);
+extern object_t         *ici_fetch(object_t *, object_t *);
+extern int              ici_assign(object_t *, object_t *, object_t *);
 extern void             rego(object_t *);
 #endif
 
@@ -707,17 +707,17 @@ extern void             rego(object_t *);
  * not other objects) are invisible to the garbage collector.  These refs
  * must be accounted for if there is a possibility of garbage collection.
  * Note that most routines that make objects (new_*(), copy() etc...)
- * return objects with 1 ref.  The caller is expected to decref() it when
+ * return objects with 1 ref.  The caller is expected to ici_decref() it when
  * they attach it into wherever it is going.
  */
 #ifndef BUGHUNT
-#define incref(o)       (++objof(o)->o_nrefs)
-#define decref(o)       (--objof(o)->o_nrefs)
+#define ici_incref(o)       (++objof(o)->o_nrefs)
+#define ici_decref(o)       (--objof(o)->o_nrefs)
 #else
 void bughunt_incref(object_t *o);
 void bughunt_decref(object_t *o);
-#define incref(o) bughunt_incref(objof(o))
-#define decref(o) bughunt_decref(objof(o))
+#define ici_incref(o) bughunt_incref(objof(o))
+#define ici_decref(o) bughunt_decref(objof(o))
 #endif
 
 /*
@@ -814,7 +814,7 @@ struct objwsup
 
 #define TRI(a,b,t)      (((((a) << 4) + b) << 6) + t_subtype(t))
 
-#define isfalse(o)      ((o) == objof(o_zero) || (o) == objof(&o_null))
+#define isfalse(o)      ((o) == objof(ici_zero) || (o) == objof(&o_null))
 
 
 /* From alloc.h */
@@ -1140,7 +1140,8 @@ struct file
 #define fileof(o)   ((file_t *)(o))
 #define isfile(o)   (objof(o)->o_tcode == TC_FILE)
 
-#define F_CLOSED    0x10
+#define F_CLOSED    0x10    /* File is closed. */
+#define F_NOCLOSE   0x20    /* Don't close on object free. */
 
 /* From forall.h */
 
@@ -1409,7 +1410,7 @@ struct string
  * Access them with either ICIS(fred) or ICISO(fred) which return
  * string_t* and object_t* pointers respectively. For example:
  *
- *  o = fetch(s, ICIS(fred));
+ *  o = ici_fetch(s, ICIS(fred));
  *
  * Next, in one of your source file, include the special include file
  * "icistr-setup.h". This will (a) declare pointers to the string objects,
@@ -1422,8 +1423,8 @@ struct string
 #define ICISO(name)             (objof(ICIS(name)))
 #define ICI_STR_NORM(name, str) extern string_t *ici_str_##name;
 #define ICI_STR_DECL(name, str) string_t *ici_str_##name;
-#define ICI_STR_MAKE(name, str) (ICIS(name) = new_cname(str)) == NULL ||
-#define ICI_STR_REL(name, str)  decref(ICIS(name));
+#define ICI_STR_MAKE(name, str) (ICIS(name) = ici_str_new_nul_term(str)) == NULL ||
+#define ICI_STR_REL(name, str)  ici_decref(ICIS(name));
 #define ICI_STR                 ICI_STR_NORM
 
 /* From struct.h */
@@ -1468,10 +1469,9 @@ extern int trace_flags;
 struct wrap
 {
     wrap_t      *w_next;
-    int         (*w_func)();
+    void        (*w_func)(void);
 };
 
-extern DLI wrap_t       *wraps;
 
 #ifdef __cplusplus
 }

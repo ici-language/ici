@@ -52,8 +52,8 @@ array_t         ici_xs;
 array_t         ici_os;
 array_t         ici_vs;
 
-int_t           *o_zero;
-int_t           *o_one;
+int_t           *ici_zero;
+int_t           *ici_one;
 
 /*
  * Set this to non-zero to cause an "aborted" failure even when the ICI
@@ -96,13 +96,13 @@ mark_exec(object_t *o)
     o->o_flags |= O_MARK;
     x = execof(o);
     return sizeof(exec_t)
-       + (x->x_xs != NULL ? mark(x->x_xs) : 0)
-       + (x->x_os != NULL ? mark(x->x_os) : 0)
-       + (x->x_vs != NULL ? mark(x->x_vs) : 0)
-       + (x->x_pc_closet != NULL ? mark(x->x_pc_closet) : 0)
-       + (x->x_os_temp_cache != NULL ? mark(x->x_os_temp_cache) : 0)
-       + (x->x_waitfor != NULL ? mark(x->x_waitfor) : 0)
-       + (x->x_result != NULL ? mark(x->x_result) : 0);
+       + (x->x_xs != NULL ? ici_mark(x->x_xs) : 0)
+       + (x->x_os != NULL ? ici_mark(x->x_os) : 0)
+       + (x->x_vs != NULL ? ici_mark(x->x_vs) : 0)
+       + (x->x_pc_closet != NULL ? ici_mark(x->x_pc_closet) : 0)
+       + (x->x_os_temp_cache != NULL ? ici_mark(x->x_os_temp_cache) : 0)
+       + (x->x_waitfor != NULL ? ici_mark(x->x_waitfor) : 0)
+       + (x->x_result != NULL ? ici_mark(x->x_result) : 0);
 }
 
 static void
@@ -184,21 +184,21 @@ ici_new_exec(void)
     assert(ici_typeof(x) == &ici_exec_type);
     objof(x)->o_nrefs = 1;
     rego(x);
-    if ((x->x_xs = new_array(80)) == NULL)
+    if ((x->x_xs = ici_array_new(80)) == NULL)
         goto fail;
-    decref(x->x_xs);
-    if ((x->x_os = new_array(80)) == NULL)
+    ici_decref(x->x_xs);
+    if ((x->x_os = ici_array_new(80)) == NULL)
         goto fail;
-    decref(x->x_os);
-    if ((x->x_vs = new_array(80)) == NULL)
+    ici_decref(x->x_os);
+    if ((x->x_vs = ici_array_new(80)) == NULL)
         goto fail;
-    decref(x->x_vs);
-    if ((x->x_pc_closet = new_array(80)) == NULL)
+    ici_decref(x->x_vs);
+    if ((x->x_pc_closet = ici_array_new(80)) == NULL)
         goto fail;
-    decref(x->x_pc_closet);
-    if ((x->x_os_temp_cache = new_array(80)) == NULL)
+    ici_decref(x->x_pc_closet);
+    if ((x->x_os_temp_cache = ici_array_new(80)) == NULL)
         goto fail;
-    decref(x->x_os_temp_cache);
+    ici_decref(x->x_os_temp_cache);
 #ifdef ICI_USE_WIN32_THREADS
     if ((x->x_semaphore = CreateSemaphore(NULL, 0, 10000, NULL)) == NULL)
     {
@@ -209,7 +209,7 @@ ici_new_exec(void)
 #ifdef ICI_USE_POSIX_THREADS
     if (sem_init(&x->x_semaphore, 0, 0) == -1)
     {
-        syserr();
+        ici_get_last_errno();
         goto fail;
     }
 #endif
@@ -268,15 +268,13 @@ get_pc(array_t *code, object_t **xs)
     pc->pc_next = code->a_base;
 }
 
-
-
 /*
  * Execute 'code' (any object, normally an array_t of code or a parse_t).
  * The execution procedes on top of the current stacks (execution, operand
  * and variable). This call to evaluate will return when the execution
  * stack again returns to the level it was when entered. It then returns
  * the object left on the operand stack, or &o_null if there wasn't one.
- * The returned object is incref()ed.  Returns NULL on error, usual
+ * The returned object is ici_incref()ed.  Returns NULL on error, usual
  * conventions (i.e. 'error' points to the error message).
  *
  * n_operands is the number of objects on the operand stack that are
@@ -314,7 +312,7 @@ ici_evaluate(object_t *code, int n_operands)
                             && stringof(k)->s_struct == structof(s) \
                             && stringof(k)->s_vsver == ici_vsver \
                         ? stringof(k)->s_slot->sl_value \
-                        : fetch(s, k)
+                        : ici_fetch(s, k)
 
     if (ici_engine_stack_check())
         goto fail;
@@ -346,7 +344,7 @@ ici_evaluate(object_t *code, int n_operands)
      * The execution loop.
      */
     src = &default_src;
-    incref(src);
+    ici_incref(src);
     for (;;)
     {
         if (--ici_exec->x_count == 0)
@@ -424,9 +422,9 @@ ici_evaluate(object_t *code, int n_operands)
         switch (o->o_tcode)
         {
         case TC_SRC:
-            decref(src);
+            ici_decref(src);
             src = srcof(o);
-            incref(src);
+            ici_incref(src);
 #ifndef NODEBUGGING
             if (ici_debug_enabled)
                 ici_debug->idbg_src(srcof(o));
@@ -504,7 +502,7 @@ ici_evaluate(object_t *code, int n_operands)
                      * Try to load a library of that name and repeat
                      * the lookup before deciding it is undefined.
                      */
-                    if ((f = fetch(ici_vs.a_top[-1], SSO(load))) == objof(&o_null))
+                    if ((f = ici_fetch(ici_vs.a_top[-1], SSO(load))) == objof(&o_null))
                         goto undefined;
                     *ici_xs.a_top++ = o; /* Temp restore formal state. */
                     if (ici_func(f, "o", o) != NULL)
@@ -559,9 +557,9 @@ ici_evaluate(object_t *code, int n_operands)
                     o = ici_os.a_top[-1];
                 else
                     o = objof(&o_null);
-                incref(o);
+                ici_incref(o);
                 ici_unwind();
-                decref(src);
+                ici_decref(src);
                 return o;
             }
             if (o->o_flags & CF_CRIT_SECT)
@@ -652,7 +650,7 @@ ici_evaluate(object_t *code, int n_operands)
                     }
                     if ((flags & OPC_COLON_CALL) == 0)
                     {
-                        if ((m = ici_new_method(ici_os.a_top[-2], o)) == NULL)
+                        if ((m = ici_method_new(ici_os.a_top[-2], o)) == NULL)
                             goto fail;
                         --ici_os.a_top;
                         ici_os.a_top[-1] = objof(m);
@@ -666,7 +664,7 @@ ici_evaluate(object_t *code, int n_operands)
                     --ici_os.a_top;
                     ici_os.a_top[-1] = o;  /* The callable object. */
                     o = o1;
-                    incref(o);
+                    ici_incref(o);
                     goto do_call;
                 }
 
@@ -681,7 +679,7 @@ ici_evaluate(object_t *code, int n_operands)
                     sprintf(buf, "attempt to call %s", objname(n1, ici_os.a_top[-1]));
                     ici_error = buf;
                     if (o != NULL)
-                        decref(o);
+                        ici_decref(o);
                     goto fail;
                 }
                 if (ici_debug_enabled)
@@ -689,11 +687,11 @@ ici_evaluate(object_t *code, int n_operands)
                 if ((*ici_typeof(ici_os.a_top[-1])->t_call)(ici_os.a_top[-1], o))
                 {
                     if (o != NULL)
-                        decref(o);
+                        ici_decref(o);
                     goto fail;
                 }
                 if (o != NULL)
-                    decref(o);
+                    ici_decref(o);
 #if 0
                 if (ici_debug_enabled)
                     ici_debug->idbg_fnresult(ici_os.a_top[-1]);
@@ -712,7 +710,7 @@ ici_evaluate(object_t *code, int n_operands)
                 /*
                  * obj => obj (os)
                  */
-                ici_os.a_top[-1] = atom(ici_os.a_top[-1], 0);
+                ici_os.a_top[-1] = ici_atom(ici_os.a_top[-1], 0);
                 goto stable_stacks_continue;
 
             case OP_NAMELVALUE:
@@ -819,7 +817,7 @@ ici_evaluate(object_t *code, int n_operands)
                     stringof(ici_os.a_top[-2])->s_slot->sl_value = ici_os.a_top[-1];
                     goto assign_finish;
                 }
-                if (assign(ici_os.a_top[-3], ici_os.a_top[-2], ici_os.a_top[-1]))
+                if (ici_assign(ici_os.a_top[-3], ici_os.a_top[-2], ici_os.a_top[-1]))
                     goto fail;
                 goto assign_finish;
 
@@ -838,7 +836,7 @@ ici_evaluate(object_t *code, int n_operands)
                 }
                 else
                 {
-                    if (assign(ici_os.a_top[-3], ici_os.a_top[-2], ici_os.a_top[-1]))
+                    if (ici_assign(ici_os.a_top[-3], ici_os.a_top[-2], ici_os.a_top[-1]))
                         goto fail;
                 }
             assign_finish:
@@ -869,22 +867,22 @@ ici_evaluate(object_t *code, int n_operands)
                     register object_t   *v1;
                     register object_t   *v2;
 
-                    if ((v1 = fetch(ici_os.a_top[-4], ici_os.a_top[-3])) == NULL)
+                    if ((v1 = ici_fetch(ici_os.a_top[-4], ici_os.a_top[-3])) == NULL)
                         goto fail;
-                    if ((v2 = fetch(ici_os.a_top[-2], ici_os.a_top[-1])) == NULL)
+                    if ((v2 = ici_fetch(ici_os.a_top[-2], ici_os.a_top[-1])) == NULL)
                         goto fail;
-                    incref(v2);
-                    if (assign(ici_os.a_top[-2], ici_os.a_top[-1], v1))
+                    ici_incref(v2);
+                    if (ici_assign(ici_os.a_top[-2], ici_os.a_top[-1], v1))
                     {
-                        decref(v2);
+                        ici_decref(v2);
                         goto fail;
                     }
-                    if (assign(ici_os.a_top[-4], ici_os.a_top[-3], v2))
+                    if (ici_assign(ici_os.a_top[-4], ici_os.a_top[-3], v2))
                     {
-                        decref(v2);
+                        ici_decref(v2);
                         goto fail;
                     }
-                    decref(v2);
+                    ici_decref(v2);
                     switch (opof(o)->op_code)
                     {
                     case FOR_EFFECT:
@@ -967,7 +965,10 @@ ici_evaluate(object_t *code, int n_operands)
                         if (iscatch(s[-1]))
                         {
                             if (s[-1]->o_flags & CF_CRIT_SECT)
+                            {
                                 --ici_exec->x_critsect;
+                                ici_exec->x_count = 1;
+                            }
                             else if (s[-1]->o_flags & CF_EVAL_BASE)
                                 break;
                         }
@@ -1078,19 +1079,20 @@ ici_evaluate(object_t *code, int n_operands)
                 if (objof(c)->o_flags & CF_CRIT_SECT)
                 {
                     --ici_exec->x_critsect;
+                    ici_exec->x_count = 1;
                     continue;
                 }
                 break;
             }
-            incref(c);
+            ici_incref(c);
             if (ici_set_val(objwsupof(ici_vs.a_top[-1]), SS(error), 's', ici_error))
             {
-                decref(c);
+                ici_decref(c);
                 goto badfail;
             }
             get_pc(arrayof(c->c_catcher), ici_xs.a_top);
             ++ici_xs.a_top;
-            decref(c);
+            ici_decref(c);
             continue;
 
         badfail:
@@ -1099,7 +1101,7 @@ ici_evaluate(object_t *code, int n_operands)
                 ici_debug->idbg_error(ici_error, src);
 #endif
             expand_error(src->s_lineno, src->s_filename);
-            decref(src);
+            ici_decref(src);
             return NULL;
         }
 
@@ -1115,7 +1117,7 @@ type_t  ici_exec_type =
     hash_unique,
     cmp_unique,
     copy_simple,
-    assign_simple,
+    ici_assign_fail,
     fetch_exec,
     "exec"
 };

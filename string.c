@@ -43,7 +43,7 @@ new_string(int nchars)
  * when a C string is needed.
  */
 string_t *
-new_name(char *p, int nchars)
+ici_str_new(char *p, int nchars)
 {
     string_t            *s;
     size_t              az;
@@ -63,7 +63,7 @@ new_name(char *p, int nchars)
         proto.s.s_hash = 0;
         if ((s = stringof(atom_probe(objof(&proto.s)))) != NULL)
         {
-            incref(s);
+            ici_incref(s);
             return s;
         }
         az = STR_ALLOCZ(nchars);
@@ -72,7 +72,7 @@ new_name(char *p, int nchars)
         memcpy((char *)s, (char *)&proto.s, az);
         rego(s);
         objof(s)->o_leafz = az;
-        return stringof(atom(objof(s), 1));
+        return stringof(ici_atom(objof(s), 1));
     }
     if ((s = (string_t *)ici_nalloc(STR_ALLOCZ(nchars))) == NULL)
         return NULL;
@@ -90,30 +90,30 @@ new_name(char *p, int nchars)
     memcpy(s->s_chars, p, nchars);
     s->s_chars[nchars] = '\0';
     s->s_hash = 0;
-    return stringof(atom(objof(s), 1));
+    return stringof(ici_atom(objof(s), 1));
 }
 
 string_t *
-new_cname(char *p)
+ici_str_new_nul_term(char *p)
 {
     register string_t   *s;
 
-    if ((s = new_name(p, strlen(p))) == NULL)
+    if ((s = ici_str_new(p, strlen(p))) == NULL)
         return NULL;
     return s;
 }
 
 /*
- * Same as new_cname(), except the result is decref.
+ * Same as ici_str_new_nul_term(), except the result is decref.
  */
 string_t *
-get_cname(char *p)
+ici_str_get_nul_term(char *p)
 {
     string_t    *s;
 
-    if ((s = new_name(p, strlen(p))) == NULL)
+    if ((s = ici_str_new(p, strlen(p))) == NULL)
         return NULL;
-    decref(s);
+    ici_decref(s);
     return s;
 }
 
@@ -122,7 +122,7 @@ need_string(string_t **p, char *s)
 {
     if (*p != NULL)
         return 0;
-    return (*p = new_cname(s)) == NULL;
+    return (*p = ici_str_new_nul_term(s)) == NULL;
 }
 
 /*
@@ -201,13 +201,13 @@ fetch_string(object_t *o, object_t *k)
     register int        i;
 
     if (!isint(k))
-        return fetch_simple(o, k);
+        return ici_fetch_fail(o, k);
     if ((i = (int)intof(k)->i_value) < 0 || i >= stringof(o)->s_nchars)
-        k = objof(new_name("", 0));
+        k = objof(ici_str_new("", 0));
     else
-        k = objof(new_name(&stringof(o)->s_chars[i], 1));
+        k = objof(ici_str_new(&stringof(o)->s_chars[i], 1));
     if (k != NULL)
-        decref(k);
+        ici_decref(k);
     return k;
 }
 
@@ -218,7 +218,7 @@ type_t  string_type =
     ici_hash_string,
     cmp_string,
     copy_simple,
-    assign_simple,
+    ici_assign_fail,
     fetch_string,
     "string"
 };

@@ -198,8 +198,8 @@ type_t  socket_type =
     hash_socket,
     cmp_socket,
     copy_simple,
-    assign_simple,
-    fetch_simple,
+    ici_assign_fail,
+    ici_fetch_fail,
     "socket"
 };
 
@@ -236,7 +236,7 @@ new_socket(SOCKET fd)
 
     if ((s = atom_skt(fd)) != NULL)
     {
-        incref(s);
+        ici_incref(s);
         return s;
     }
     if ((s = ici_talloc(skt_t)) == NULL)
@@ -248,7 +248,7 @@ new_socket(SOCKET fd)
     s->s_skt = fd;
     s->s_closed = 0;
     rego(s);
-    return sktof(atom(objof(s), 1));
+    return sktof(ici_atom(objof(s), 1));
 }
 
 static int
@@ -276,17 +276,17 @@ static int need_strings = 1;
 static int
 define_strings(void)
 {
-    if ((string_n = new_cname("n")) == NULL)
+    if ((string_n = ici_str_new_nul_term("n")) == NULL)
         return 1;
-    if ((string_read = new_cname("read")) == NULL)
+    if ((string_read = ici_str_new_nul_term("read")) == NULL)
         return 1;
-    if ((string_write = new_cname("write")) == NULL)
+    if ((string_write = ici_str_new_nul_term("write")) == NULL)
         return 1;
-    if ((string_except = new_cname("except")) == NULL)
+    if ((string_except = ici_str_new_nul_term("except")) == NULL)
         return 1;
-    if ((string_msg = new_cname("msg")) == NULL)
+    if ((string_msg = ici_str_new_nul_term("msg")) == NULL)
         return 1;
-    if ((string_addr = new_cname("addr")) == NULL)
+    if ((string_addr = ici_str_new_nul_term("addr")) == NULL)
         return 1;
     return need_strings = 0;
 }
@@ -405,21 +405,6 @@ struct sockaddr_in *addr;
 }
 
 /*
- * Error return utility. Formats the exception string with the
- * the message followed by the system error message and returns
- * 1 for use in error returns.
- */
-static int
-serr(msg)
-char *msg;
-{
-    sprintf(buf, "%s: %s", msg, syserr());
-    ici_error = buf;
-    errno = 0;
-    return 1;
-}
-
-/*
  * Create a socket with a certain protocol (currently TCP or UDP)
  * and return its descriptor. Raises exception if the protocol
  * is unknown or the socket cannot be created.
@@ -456,7 +441,7 @@ f_socket(void)
         return 1;
     }
     if ((fd = socket(PF_INET, type, 0)) == -1)
-        return serr("socket");
+        return ici_get_last_errno("socket", NULL);
     if ((skt = new_socket(fd)) == NULL)
     {
         closesocket(fd);
@@ -508,7 +493,7 @@ f_listen(void)
         return 1;
     }
     if (listen(skt->s_skt, (int)backlog) == -1)
-        return serr("listen");
+        return ici_get_last_errno("listen", NULL);
     return ici_ret_no_decref(objof(skt));
 }
 
@@ -537,7 +522,7 @@ f_accept(void)
     if (isclosed(skt))
         return 1;
     if ((fd = accept(skt->s_skt, NULL, NULL)) == -1)
-        return serr("accept");
+        return ici_get_last_errno("accept", NULL);
     return ici_ret_with_decref(objof(new_socket(fd)));
 }
 
@@ -581,7 +566,7 @@ f_connect(void)
     if (isclosed(skt))
         return 1;
     if (connect(skt->s_skt, (struct sockaddr *)&sockaddr, sizeof sockaddr) == -1)
-        return serr("connect");
+        return ici_get_last_errno("connect", NULL);
     return ici_ret_no_decref(objof(skt));
 }
 
@@ -637,7 +622,7 @@ f_bind(void)
     if (isclosed(skt))
         return 1;
     if (bind(skt->s_skt, (struct sockaddr *)&sockaddr, sizeof sockaddr) == -1)
-        return serr("bind");
+        return ici_get_last_errno("bind", NULL);
     return ici_ret_no_decref(objof(skt));
 }
 
@@ -664,7 +649,7 @@ select_add_result
     int         i;
     slot_t      *sl;
 
-    if ((rset = new_set()) == NULL)
+    if ((rset = ici_set_new()) == NULL)
         return 1;
     if (set != NULL)
     {
@@ -678,20 +663,20 @@ select_add_result
             if (FD_ISSET(fd, fds))
             {
                 --*n;
-                if (assign(rset, sktof(sl->sl_key), o_one))
+                if (ici_assign(rset, sktof(sl->sl_key), ici_one))
                 {
                     goto fail;
                 }
             }
         }
     }
-    if (assign(result, key, rset))
+    if (ici_assign(result, key, rset))
         goto fail;
-    decref(rset);
+    ici_decref(rset);
     return 0;
 
 fail:
-    decref(rset);
+    ici_decref(rset);
     return 1;
 }
 
@@ -843,7 +828,7 @@ f_select(void)
         tv->tv_usec = (timeout % 1000) * 1000;
     }
     if ((n = select(dtabsize + 1, rfds, wfds, efds, tv)) < 0)
-        return serr("select");
+        return ici_get_last_errno("select", NULL);
 #if 0
     if (n == 0)
     {
@@ -851,20 +836,20 @@ f_select(void)
         return 1;
     }
 #endif
-    if ((result = new_struct()) == NULL)
+    if ((result = ici_struct_new()) == NULL)
         return 1;
     /* Add in count */
     {
         int_t   *nobj;
 
-        if ((nobj = new_int(n)) == NULL)
+        if ((nobj = ici_int_new(n)) == NULL)
             goto fail;
-        if (assign(result, string_n, nobj))
+        if (ici_assign(result, string_n, nobj))
         {
-            decref(nobj);
+            ici_decref(nobj);
             goto fail;
         }
-        decref(nobj);
+        ici_decref(nobj);
     }
     if (select_add_result(result, string_read, rset, rfds, &n))
         goto fail;
@@ -875,7 +860,7 @@ f_select(void)
     return ici_ret_with_decref(objof(result));
 
 fail:
-    decref(objof(result));
+    ici_decref(objof(result));
     return 1;
 }
 
@@ -916,7 +901,7 @@ f_sendto(void)
         sizeof sockaddr
     );
     if (n < 0)
-        return serr("sendto");
+        return ici_get_last_errno("sendto", NULL);
     if (n != msg->s_nchars)
     {
         ici_error = "short write";
@@ -976,47 +961,47 @@ f_recvfrom(void)
     if ((nb = recvfrom(skt->s_skt, msg, len, 0, (struct sockaddr *)&addr, &addrsz)) == -1)
     {
         ici_nfree(msg, len+1);
-        return serr("recv");
+        return ici_get_last_errno("recv", NULL);
     }
     if (nb == 0)
     {
         ici_nfree(msg, len+1);
         return null_ret();
     }
-    if ((result = new_struct()) == NULL)
+    if ((result = ici_struct_new()) == NULL)
     {
         ici_nfree(msg, len+1);
         return 1;
     }
-    if ((s = new_name(msg, nb)) == NULL)
+    if ((s = ici_str_new(msg, nb)) == NULL)
     {
         ici_nfree(msg, len+1);
         return 1;
     }
     ici_nfree(msg, len+1);
     msg = NULL;
-    if (assign(result, string_msg, s))
+    if (ici_assign(result, string_msg, s))
     {
-        decref(s);
+        ici_decref(s);
         goto fail;
     }
-    decref(s);
-    if ((s = new_cname(unparse_addr(&addr))) == NULL)
+    ici_decref(s);
+    if ((s = ici_str_new_nul_term(unparse_addr(&addr))) == NULL)
     {
         goto fail;
     }
-    if (assign(result, string_addr, s))
+    if (ici_assign(result, string_addr, s))
     {
-        decref(s);
+        ici_decref(s);
         goto fail;
     }
-    decref(s);
+    ici_decref(s);
     return ici_ret_with_decref(objof(result));
 
 fail:
     if (msg != NULL)
         ici_nfree(msg, len+1);
-    decref(result);
+    ici_decref(result);
     return 1;
 }
 
@@ -1076,14 +1061,14 @@ f_recv(void)
     if ((nb = recv(skt->s_skt, msg, len, 0)) == -1)
     {
         ici_nfree(msg, len+1);
-        return serr("recv");
+        return ici_get_last_errno("recv", NULL);
     }
     if (nb == 0)
     {
         ici_nfree(msg, len+1);
         return null_ret();
     }
-    if ((s = new_name(msg, nb)) == NULL)
+    if ((s = ici_str_new(msg, nb)) == NULL)
         return 1;
     ici_nfree(msg, len+1);
     return ici_ret_with_decref(objof(s));
@@ -1221,7 +1206,7 @@ f_getsockopt(void)
     if (isclosed(skt))
         return 1;
     if (getsockopt(skt->s_skt, optlevel, o, optval, &optlen) == -1)
-        return serr("getsockopt");
+        return ici_get_last_errno("getsockopt", NULL);
     if (o == SO_LINGER)
         intvar = linger.l_onoff ? linger.l_linger : -1;
     else
@@ -1237,7 +1222,7 @@ f_getsockopt(void)
             intvar = !!intvar;
         }
     }
-    return int_ret(intvar);
+    return ici_int_ret(intvar);
 
 bad:
     sprintf(buf, "bad socket option \"%s\"", opt);
@@ -1326,7 +1311,7 @@ f_setsockopt(void)
     if (isclosed(skt))
         return 1;
     if (setsockopt(skt->s_skt, optlevel, optcode, optval, optlen) == -1)
-        return serr("setsockopt");
+        return ici_get_last_errno("setsockopt", NULL);
     return ici_ret_no_decref(objof(skt));
 
 bad:
@@ -1348,10 +1333,10 @@ f_hostname(void)
     {
         char name_buf[MAXHOSTNAMELEN];
         if (gethostname(name_buf, sizeof name_buf) == -1)
-            return serr("gethostname");
-        if ((hostname = new_cname(name_buf)) == NULL)
+        return ici_get_last_errno("gethostname", NULL);
+        if ((hostname = ici_str_new_nul_term(name_buf)) == NULL)
             return 1;
-        incref(hostname);
+        ici_incref(hostname);
     }
     return ici_ret_no_decref((object_t *)stringof(hostname));
 }
@@ -1393,7 +1378,7 @@ f_username(void)
     }
     s = pwent->pw_name;
 #endif
-    return ici_ret_no_decref((object_t *)new_cname(s));
+    return ici_ret_no_decref((object_t *)ici_str_new_nul_term(s));
 }
 
 /*
@@ -1413,8 +1398,8 @@ f_getpeername(void)
     if (isclosed(skt))
         return 1;
     if (getpeername(skt->s_skt, (struct sockaddr *)&addr, &len) == -1)
-        return serr("getpeername");
-    return str_ret(unparse_addr(&addr));
+        return ici_get_last_errno("getpeername", NULL);
+    return ici_str_ret(unparse_addr(&addr));
 }
 
 /*
@@ -1434,8 +1419,8 @@ f_getsockname(void)
     if (isclosed(skt))
         return 1;
     if (getsockname(skt->s_skt, (struct sockaddr *)&addr, &len) == -1)
-        return serr("getsockname");
-    return str_ret(unparse_addr(&addr));
+        return ici_get_last_errno("getsockname", NULL);
+    return ici_str_ret(unparse_addr(&addr));
 }
 
 /*
@@ -1455,8 +1440,8 @@ f_getportno(void)
     if (isclosed(skt))
         return 1;
     if (getsockname(skt->s_skt, (struct sockaddr *)&addr, &len) == -1)
-        return serr("getsockname");
-    return int_ret(addr.sin_port);
+        return ici_get_last_errno("getsockname", NULL);
+    return ici_int_ret(addr.sin_port);
 }
 
 /*
@@ -1481,7 +1466,7 @@ f_gethostbyname(void)
         return 1;
     }
     memcpy(&addr, *hostent->h_addr_list, sizeof addr);
-    return str_ret(inet_ntoa(addr));
+    return ici_str_ret(inet_ntoa(addr));
 }
 
 /*
@@ -1518,7 +1503,7 @@ f_gethostbyaddr(void)
         ici_error = "unknown host";
         return 1;
     }
-    return str_ret((char *)hostent->h_name);
+    return ici_str_ret((char *)hostent->h_name);
 }
 
 /*
@@ -1535,7 +1520,7 @@ f_sktno(void)
         return ici_argerror(0);
     if (isclosed(skt))
         return 1;
-    return int_ret((long)skt->s_skt);
+    return ici_int_ret((long)skt->s_skt);
 }
 
 /*
@@ -1637,7 +1622,7 @@ skt_flush(skt_file_t *sf)
 static int
 skt_fclose(skt_file_t *sf)
 {
-    decref(sf->sf_socket);
+    ici_decref(sf->sf_socket);
     ici_tfree(sf, skt_file_t);
     return 0;
 }
@@ -1699,7 +1684,7 @@ skt_open(skt_t *s, char *mode)
         sf->sf_pbchar = EOF;
         sf->sf_bufp = sf->sf_buf;
         sf->sf_nbuf = 0;
-        incref(s);
+        ici_incref(s);
         switch (*mode)
         {
         case 'r':
@@ -1778,24 +1763,24 @@ f_socketpair(void)
 
     INITWINSOCK();
     if (socketpair(AF_UNIX, SOCK_STREAM, 0, sv) == -1)
-        return serr("socketpair");
-    if ((a = new_array(2)) == NULL)
+        return ici_get_last_errno("socketpair", NULL);
+    if ((a = ici_array_new(2)) == NULL)
         goto fail1;
     if ((s = new_socket(sv[0])) == NULL)
     {
-        decref(a);
+        ici_decref(a);
         goto fail1;
     }
     *a->a_top++ = objof(s);
-    decref(s);
+    ici_decref(s);
     if ((s = new_socket(sv[1])) == NULL)
     {
         close(sv[1]);
-        decref(a);
+        ici_decref(a);
         goto fail;
     }
     *a->a_top++ = objof(s);
-    decref(s);
+    ici_decref(s);
     return ici_ret_with_decref(objof(a));
 
 fail1:

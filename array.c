@@ -380,7 +380,7 @@ ici_array_get(array_t *a, ptrdiff_t i)
  * ref count 1. Returns NULL on failure, usual conventions.
  */
 array_t *
-new_array(ptrdiff_t n)
+ici_array_new(ptrdiff_t n)
 {
     register array_t    *a;
 
@@ -426,14 +426,14 @@ mark_array(object_t *o)
     if (arrayof(o)->a_bot <= arrayof(o)->a_top)
     {
         for (e = arrayof(o)->a_bot; e < arrayof(o)->a_top; ++e)
-            mem += mark(*e);
+            mem += ici_mark(*e);
     }
     else
     {
         for (e = arrayof(o)->a_base; e < arrayof(o)->a_top; ++e)
-            mem += mark(*e);
+            mem += ici_mark(*e);
         for (e = arrayof(o)->a_bot; e < arrayof(o)->a_limit; ++e)
-            mem += mark(*e);
+            mem += ici_mark(*e);
     }
     return mem;
 }
@@ -497,7 +497,7 @@ copy_array(object_t *o)
     ptrdiff_t           n;
 
     n = ici_array_nels(arrayof(o));
-    if ((na = new_array(n)) == NULL)
+    if ((na = ici_array_new(n)) == NULL)
         return NULL;
     ici_array_gather(na->a_top, arrayof(o), 0, n);
     na->a_top += n;
@@ -547,7 +547,7 @@ assign_array(object_t *o, object_t *k, object_t *v)
     object_t    **e;
 
     if (!isint(k))
-        return assign_simple(o, k, v);
+        return ici_assign_fail(o, k, v);
     i = intof(k)->i_value;
     if (i < 0)
     {
@@ -571,7 +571,7 @@ static object_t *
 fetch_array(object_t *o, object_t *k)
 {
     if (!isint(k))
-        return fetch_simple(o, k);
+        return ici_fetch_fail(o, k);
     return ici_array_get(arrayof(o), intof(k)->i_value);
 }
 
@@ -583,12 +583,12 @@ ici_op_mklvalue()
 {
     array_t     *a;
 
-    if ((a = new_array(1)) == NULL)
+    if ((a = ici_array_new(1)) == NULL)
         return 1;
     *a->a_top++ = ici_os.a_top[-1];
     ici_os.a_top[-1] = objof(a);
-    *ici_os.a_top++ = objof(o_zero);
-    decref(a);
+    *ici_os.a_top++ = objof(ici_zero);
+    ici_decref(a);
     --ici_xs.a_top;
     return 0;
 }

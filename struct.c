@@ -61,9 +61,9 @@ mark_struct(object_t *o)
             )
             {
                 if (sl->sl_key != NULL)
-                    mem += mark(sl->sl_key);
+                    mem += ici_mark(sl->sl_key);
                 if (sl->sl_value != NULL)
-                    mem += mark(sl->sl_value);
+                    mem += ici_mark(sl->sl_value);
             }
         }
 
@@ -91,7 +91,7 @@ free_struct(object_t *o)
 }
 
 struct_t *
-new_struct(void)
+ici_struct_new(void)
 {
     register struct_t   *s;
 
@@ -241,7 +241,7 @@ copy_struct(object_t *o)
     return objof(ns);
 
 fail:
-    decref(ns);
+    ici_decref(ns);
     return NULL;
 }
 
@@ -277,7 +277,7 @@ grow_struct(struct_t *s)
  * Remove the key from the structure, ignoring super-structs.
  */
 void
-unassign_struct(struct_t *s, object_t *k)
+ici_struct_unassign(struct_t *s, object_t *k)
 {
     register slot_t     *sl;
     register slot_t     *ss;

@@ -25,7 +25,7 @@
  *
  * Andy Newman <atrn@zeta.org.au>
  */
-#define	ICI_CORE
+#define ICI_CORE
 #include "fwd.h"
 
 #ifndef NOSIGNALS
@@ -99,15 +99,15 @@ call_signal_handler(object_t *func, int signo)
 
     if (ici_stk_push_chk(&ici_os, 3 + 80)) /* see comment in ici/call.c */
         return 1;
-    if ((isigno = new_int(signo)) == NULL)
+    if ((isigno = ici_int_new(signo)) == NULL)
         return 1;
     *ici_os.a_top++ = objof(isigno);
-    decref(isigno);
-    *ici_os.a_top++ = objof(o_one); /* One argument. */
+    ici_decref(isigno);
+    *ici_os.a_top++ = objof(ici_one); /* One argument. */
     *ici_os.a_top++ = func;
     if ((ret_obj = ici_evaluate(objof(&o_call), 3)) == NULL)
         goto fail;
-    decref(ret_obj);
+    ici_decref(ret_obj);
     return 0;
 
 fail:
@@ -407,7 +407,7 @@ f_signal(void)
     else if (isfunc(handlero) || ismethod(handlero))
     {
     signal_handler[signo_to_index(signo)] = handlero;
-    incref(handlero);
+    ici_incref(handlero);
     handler = ici_signal_handler;
     }
     else
@@ -461,7 +461,7 @@ f_signam(void)
     ici_error = "invalid signal number";
     return 1;
     }
-    return str_ret(nam);
+    return ici_str_ret(nam);
 }
 
 

@@ -60,7 +60,7 @@ assign_proto(struct_t *s, struct_t *d)
     if (!isstruct(proto))
         return 0;
     for (sl = proto->s_slots; sl - proto->s_slots < proto->s_nslots; ++sl)
-        if (sl->sl_key != NULL && assign(d, sl->sl_key, sl->sl_value))
+        if (sl->sl_key != NULL && ici_assign(d, sl->sl_key, sl->sl_value))
             return 1;
     return 0;
 }
@@ -76,7 +76,7 @@ m_new(object_t *o)
 
     if (ici_method_check(o, 0))
         return 1;
-    if ((s = new_struct()) == NULL)
+    if ((s = ici_struct_new()) == NULL)
         return 1;
     s->o_head.o_super = objwsupof(o);
 #ifndef NOCLASSPROTO
@@ -98,9 +98,9 @@ m_isa(object_t *o)
     for (s = objwsupof(o); s != NULL; s = s->o_super)
     {
         if (objof(s) == class)
-            return ici_ret_no_decref(objof(o_one));
+            return ici_ret_no_decref(objof(ici_one));
     }
-    return ici_ret_no_decref(objof(o_zero));
+    return ici_ret_no_decref(objof(ici_zero));
 }
 
 static int
@@ -113,11 +113,11 @@ m_respondsto(object_t *o)
         return 1;
     if (ici_typecheck("o", &classname))
         return 1;
-    if ((v = fetch(o, classname)) == NULL)
+    if ((v = ici_fetch(o, classname)) == NULL)
         return 1;
     if (ismethod(v) || isfunc(v))
-        return ici_ret_no_decref(objof(o_one));
-    return ici_ret_no_decref(objof(o_zero));
+        return ici_ret_no_decref(objof(ici_one));
+    return ici_ret_no_decref(objof(ici_zero));
 }
 
 cfunc_t ici_oo_funcs[] =

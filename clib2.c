@@ -27,7 +27,7 @@ ici_init_environ(void)
     extern char **environ;
     char        **p;
 
-    if ((ici_environ = new_struct()) == NULL)
+    if ((ici_environ = ici_struct_new()) == NULL)
         return 1;
     for (p = environ; *p != NULL; ++p)
     {
@@ -37,26 +37,26 @@ ici_init_environ(void)
 
         if ((t = strchr(*p, '=')) == NULL)
             continue; /* Ignore "broken" entries */
-        if ((k = new_name(*p, t - *p)) == NULL)
+        if ((k = ici_str_new(*p, t - *p)) == NULL)
             goto fail;
-        if ((v = new_cname(*p)) == NULL)
+        if ((v = ici_str_new_nul_term(*p)) == NULL)
         {
-            decref(k);
+            ici_decref(k);
             goto fail;
         }
-        if (assign(ici_environ, k, v))
+        if (ici_assign(ici_environ, k, v))
         {
-            decref(v);
-            decref(k);
+            ici_decref(v);
+            ici_decref(k);
             goto fail;
         }
-        decref(v);
-        decref(k);
+        ici_decref(v);
+        ici_decref(k);
     }
     return 0;
 
 fail:
-    decref(ici_environ);
+    ici_decref(ici_environ);
     return 1;
 }
 
@@ -74,15 +74,15 @@ f_getenv(void)
         return 1;
     if (!isstring(n))
         return ici_argerror(0);
-    if ((n = fetch(ici_environ, n)) != objof(&o_null))
+    if ((n = ici_fetch(ici_environ, n)) != objof(&o_null))
     {
         char    *p;
 
         if ((p = strchr(stringof(n)->s_chars, '=')) == NULL)
             p = "";
-        if ((n = objof(new_cname(p+1))) == NULL)
+        if ((n = objof(ici_str_new_nul_term(p+1))) == NULL)
             return 1;
-        decref(n); /* Because we use ici_ret_no_decref() below */
+        ici_decref(n); /* Because we use ici_ret_no_decref() below */
     }
     return ici_ret_no_decref(n);
 }
@@ -108,14 +108,14 @@ f_putenv(void)
         ici_error = "putenv() argument not in form ``name=value''";
         return 1;
     }
-    if ((n = new_name(s->s_chars, t - s->s_chars)) == NULL)
+    if ((n = ici_str_new(s->s_chars, t - s->s_chars)) == NULL)
         return 1;
-    if (assign(ici_environ, n, s))
+    if (ici_assign(ici_environ, n, s))
     {
-        decref(n);
+        ici_decref(n);
         return 1;
     }
-    decref(n);
+    ici_decref(n);
     putenv(s->s_chars);
     return null_ret();
 }

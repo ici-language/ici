@@ -39,13 +39,13 @@ mark_func(object_t *o)
     o->o_flags |= O_MARK;
     mem = sizeof(func_t);
     if (funcof(o)->f_code != NULL)
-        mem += mark(objof(funcof(o)->f_code));
+        mem += ici_mark(objof(funcof(o)->f_code));
     if (funcof(o)->f_args != NULL)
-        mem += mark(objof(funcof(o)->f_args));
+        mem += ici_mark(objof(funcof(o)->f_args));
     if (funcof(o)->f_autos != NULL)
-        mem += mark(objof(funcof(o)->f_autos));
+        mem += ici_mark(objof(funcof(o)->f_autos));
     if (funcof(o)->f_name != NULL)
-        mem += mark(objof(funcof(o)->f_name));
+        mem += ici_mark(objof(funcof(o)->f_name));
     return mem;
 }
 
@@ -228,7 +228,7 @@ call_func(object_t *o, object_t *subject)
             }
             else
             {
-                if (assign(d, *fp, *ap))
+                if (ici_assign(d, *fp, *ap))
                     goto fail;
             }
             ++fp;
@@ -243,7 +243,7 @@ call_func(object_t *o, object_t *subject)
         &&
         (sl = find_raw_slot(d, SSO(vargs))) != NULL
         &&
-        (va = new_array(n)) != NULL
+        (va = ici_array_new(n)) != NULL
     )
     {
         /*
@@ -255,19 +255,19 @@ call_func(object_t *o, object_t *subject)
         sl->sl_value = objof(va);
     }
     if (va != NULL)
-        decref(va);
+        ici_decref(va);
 
     ici_xs.a_top[-1] = objof(&o_mark);
     get_pc(f->f_code, ici_xs.a_top);
     ++ici_xs.a_top;
     *ici_vs.a_top++ = objof(d);
-    decref(d);
+    ici_decref(d);
     ici_os.a_top -= NARGS() + 2;
     return 0;
 
 fail:
     if (d != NULL)
-        decref(d);
+        ici_decref(d);
     return 1;
 }
 
@@ -278,7 +278,7 @@ type_t  ici_func_type =
     hash_func,
     cmp_func,
     copy_simple,
-    assign_simple,
+    ici_assign_fail,
     fetch_func,
     "func",
     objname_func,

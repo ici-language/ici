@@ -68,7 +68,7 @@ f_debug(void)
             return 1;
         ici_debug_enabled = v;
     }
-    return int_ret(t);
+    return ici_int_ret(t);
 }
 
 cfunc_t ici_debug_cfuncs[] =

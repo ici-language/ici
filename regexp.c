@@ -22,14 +22,14 @@ int     re_bra[(NSUBEXP + 1) * 3];
 int     re_nbra;
 
 regexp_t *
-new_regexp(string_t *s, int flags)
+ici_regexp_new(string_t *s, int flags)
 {
     regexp_t    *r;
     pcre        *re;
     pcre_extra  *rex = NULL;
     int         errofs;
 
-    /* Special test for possible failure of new_cname() in lex.c */
+    /* Special test for possible failure of ici_str_new_nul_term() in lex.c */
     if (s == NULL)
         return NULL;
     re = pcre_compile(s->s_chars, flags, (const char **)&ici_error, &errofs, NULL);
@@ -58,9 +58,9 @@ new_regexp(string_t *s, int flags)
         ici_tfree(r, regexp_t);    /* Okay, prior to rego() */
         goto fail;
     }
-    decref(r->r_pat);
+    ici_decref(r->r_pat);
     rego(r);
-    return regexpof(atom(objof(r), 1));
+    return regexpof(ici_atom(objof(r), 1));
 
 fail:
     if (rex != NULL)
@@ -78,7 +78,7 @@ static unsigned long
 mark_regexp(object_t *o)
 {
     o->o_flags |= O_MARK;
-    return sizeof(regexp_t) + mark(regexpof(o)->r_pat) + ((real_pcre *)regexpof(o)->r_re)->size;
+    return sizeof(regexp_t) + ici_mark(regexpof(o)->r_pat) + ((real_pcre *)regexpof(o)->r_re)->size;
 }
 
 /*
@@ -124,9 +124,9 @@ fetch_regexp(object_t *o, object_t *k)
     {
         int     options;
         pcre_info(regexpof(o)->r_re, &options, NULL);
-        return objof(new_int(options));
+        return objof(ici_int_new(options));
     }
-    return fetch_simple(o, k);
+    return ici_fetch_fail(o, k);
 }
 
 /*
@@ -158,7 +158,7 @@ type_t  regexp_type =
     hash_regexp,
     cmp_regexp,
     copy_simple,
-    assign_simple,
+    ici_assign_fail,
     fetch_regexp,
     "regexp"
 };

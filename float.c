@@ -9,7 +9,7 @@
  * reference count inceremented.
  */
 float_t *
-new_float(v)
+ici_float_new(v)
 double  v;
 {
     register float_t    *f;
@@ -18,7 +18,7 @@ double  v;
     proto.f_value = v;
     if ((f = floatof(atom_probe(objof(&proto)))) != NULL)
     {
-        incref(f);
+        ici_incref(f);
         return f;
     }
     if ((f = ici_talloc(float_t)) == NULL)
@@ -26,7 +26,7 @@ double  v;
     *f = proto;
     rego(f);
     objof(f)->o_leafz = sizeof(float_t);
-    return floatof(atom(objof(f), 1));
+    return floatof(ici_atom(objof(f), 1));
 }
 
 /*
@@ -102,7 +102,7 @@ type_t  float_type =
     hash_float,
     cmp_float,
     copy_simple,
-    assign_simple,
-    fetch_simple,
+    ici_assign_fail,
+    ici_fetch_fail,
     "float"
 };

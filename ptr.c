@@ -16,7 +16,7 @@ static unsigned long
 mark_ptr(object_t *o)
 {
     o->o_flags |= O_MARK;
-    return sizeof(ptr_t) + mark(ptrof(o)->p_aggr) + mark(ptrof(o)->p_key);
+    return sizeof(ptr_t) + ici_mark(ptrof(o)->p_aggr) + ici_mark(ptrof(o)->p_key);
 }
 
 /*
@@ -53,17 +53,17 @@ hash_ptr(object_t *o)
 static object_t *
 fetch_ptr(object_t *o, object_t *k)
 {
-    if (k == objof(o_zero))
-        return fetch(ptrof(o)->p_aggr, ptrof(o)->p_key);
+    if (k == objof(ici_zero))
+        return ici_fetch(ptrof(o)->p_aggr, ptrof(o)->p_key);
     if (!isint(k) || !isint(ptrof(o)->p_key))
-        return fetch_simple(o, k);
-    if (ptrof(o)->p_key == objof(o_zero))
-        incref(k);
-    else if ((k = objof(new_int(intof(k)->i_value + intof(ptrof(o)->p_key)->i_value)))
+        return ici_fetch_fail(o, k);
+    if (ptrof(o)->p_key == objof(ici_zero))
+        ici_incref(k);
+    else if ((k = objof(ici_int_new(intof(k)->i_value + intof(ptrof(o)->p_key)->i_value)))
             == NULL)
         return NULL;
-    o = fetch(ptrof(o)->p_aggr, k);
-    decref(k);
+    o = ici_fetch(ptrof(o)->p_aggr, k);
+    ici_decref(k);
     return o;
 }
 
@@ -76,21 +76,21 @@ fetch_ptr(object_t *o, object_t *k)
 static int
 assign_ptr(object_t *o, object_t *k, object_t *v)
 {
-    if (k == objof(o_zero))
-        return assign(ptrof(o)->p_aggr, ptrof(o)->p_key, v);
+    if (k == objof(ici_zero))
+        return ici_assign(ptrof(o)->p_aggr, ptrof(o)->p_key, v);
     if (!isint(k) || !isint(ptrof(o)->p_key))
-        return assign_simple(o, k, v);
-    if (ptrof(o)->p_key == objof(o_zero))
-        incref(k);
-    else if ((k = objof(new_int(intof(k)->i_value + intof(ptrof(o)->p_key)->i_value)))
+        return ici_assign_fail(o, k, v);
+    if (ptrof(o)->p_key == objof(ici_zero))
+        ici_incref(k);
+    else if ((k = objof(ici_int_new(intof(k)->i_value + intof(ptrof(o)->p_key)->i_value)))
             == NULL)
         return 1;
-    if (assign(ptrof(o)->p_aggr, k, v))
+    if (ici_assign(ptrof(o)->p_aggr, k, v))
     {
-        decref(k);
+        ici_decref(k);
         return 1;
     }
-    decref(k);
+    ici_decref(k);
     return 0;
 }
 
@@ -99,7 +99,7 @@ call_ptr(object_t *o, object_t *subject)
 {
     object_t    *f;
 
-    f = fetch(ptrof(o)->p_aggr, ptrof(o)->p_key);
+    f = ici_fetch(ptrof(o)->p_aggr, ptrof(o)->p_key);
     if (ici_typeof(f)->t_call == NULL)
     {
         char    n1[30];
@@ -113,9 +113,9 @@ call_ptr(object_t *o, object_t *subject)
      * push on the new object being called.
      */
     ici_os.a_top[-2] = ptrof(o)->p_aggr;
-    if ((ici_os.a_top[-1] = objof(new_int(NARGS() + 1))) == NULL)
+    if ((ici_os.a_top[-1] = objof(ici_int_new(NARGS() + 1))) == NULL)
         return 1;
-    decref(ici_os.a_top[-1]);
+    ici_decref(ici_os.a_top[-1]);
     if (ici_stk_push_chk(&ici_os, 1))
         return 1;
     *ici_os.a_top++ = f;
@@ -128,7 +128,7 @@ call_ptr(object_t *o, object_t *subject)
 }
 
 ptr_t *
-new_ptr(object_t *a, object_t *k)
+ici_ptr_new(object_t *a, object_t *k)
 {
     register ptr_t      *p;
 
@@ -141,7 +141,7 @@ new_ptr(object_t *a, object_t *k)
     rego(p);
     p->p_aggr = a;
     p->p_key = k;
-    return ptrof(atom(objof(p), 1));
+    return ptrof(ici_atom(objof(p), 1));
 }
 
 /*
@@ -162,10 +162,10 @@ ici_op_mkptr()
 {
     register object_t   *o;
 
-    if ((o = objof(new_ptr(ici_os.a_top[-2], ici_os.a_top[-1]))) == NULL)
+    if ((o = objof(ici_ptr_new(ici_os.a_top[-2], ici_os.a_top[-1]))) == NULL)
         return 1;
     ici_os.a_top[-2] = o;
-    decref(o);
+    ici_decref(o);
     --ici_os.a_top;
     --ici_xs.a_top;
     return 0;
@@ -208,7 +208,7 @@ ici_op_fetch()
         ici_error = buf;
         return 1;
     }
-    if ((o = fetch(p->p_aggr, p->p_key)) == NULL)
+    if ((o = ici_fetch(p->p_aggr, p->p_key)) == NULL)
         return 1;
     ici_os.a_top[-1] = o;
     --ici_xs.a_top;

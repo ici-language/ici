@@ -59,7 +59,7 @@ new_op(int (*func)(), int ecode, int code)
     proto.op_ecode = ecode;
     if ((o = opof(atom_probe(objof(&proto)))) != NULL)
     {
-        incref(o);
+        ici_incref(o);
         return o;
     }
     if ((o = ici_talloc(op_t)) == NULL)
@@ -68,7 +68,7 @@ new_op(int (*func)(), int ecode, int code)
     assert(ici_typeof(o) == &op_type);
     rego(o);
     objof(o)->o_leafz = sizeof(op_t);
-    return opof(atom(objof(o), 1));
+    return opof(ici_atom(objof(o), 1));
 }
 
 type_t  op_type =
@@ -78,7 +78,7 @@ type_t  op_type =
     hash_op,
     cmp_op,
     copy_simple,
-    assign_simple,
-    fetch_simple,
+    ici_assign_fail,
+    ici_fetch_fail,
     "op"
 };

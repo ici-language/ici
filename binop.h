@@ -365,7 +365,7 @@
         {
             o = objof
                 (
-                    new_name
+                    ici_str_new
                     (
                         stringof(o1)->s_chars + re_bra[2],
                         re_bra[3] - re_bra[2]
@@ -396,7 +396,7 @@
             o = objof(&o_null);
             goto useo;
         }
-        if ((o = objof(new_array(re_nbra))) == NULL)
+        if ((o = objof(ici_array_new(re_nbra))) == NULL)
             goto fail;
         for (i = 1; i < re_nbra; ++i)
         {
@@ -414,7 +414,7 @@
                     =
                     objof
                     (
-                        new_name
+                        ici_str_new
                         (
                             stringof(o1)->s_chars + re_bra[i*2],
                             re_bra[(i * 2) + 1 ] - re_bra[i * 2]
@@ -427,7 +427,7 @@
             {
                 goto fail;
             }
-            decref(*arrayof(o)->a_top);
+            ici_decref(*arrayof(o)->a_top);
             ++arrayof(o)->a_top;
         }
         goto looseo;
@@ -447,12 +447,12 @@
         {
             object_t    *i;
 
-            if ((i = objof(new_int(intof(ptrof(o0)->p_key)->i_value
+            if ((i = objof(ici_int_new(intof(ptrof(o0)->p_key)->i_value
                     + intof(o1)->i_value))) == NULL)
                 goto fail;
-            if ((o = objof(new_ptr(ptrof(o0)->p_aggr, i))) == NULL)
+            if ((o = objof(ici_ptr_new(ptrof(o0)->p_aggr, i))) == NULL)
                 goto fail;
-            decref(i);
+            ici_decref(i);
         }
         goto looseo;
 
@@ -473,7 +473,7 @@
             stringof(o1)->s_chars,
             stringof(o1)->s_nchars + 1
         );
-        o = atom(o, 1);
+        o = ici_atom(o, 1);
         goto looseo;
 
     case TRI(TC_ARRAY, TC_ARRAY, T_PLUS):
@@ -485,7 +485,7 @@
 
             z0 = ici_array_nels(arrayof(o0));
             z1 = ici_array_nels(arrayof(o1));
-            if ((a = new_array(z0 + z1)) == NULL)
+            if ((a = ici_array_new(z0 + z1)) == NULL)
                 goto fail;
             ici_array_gather(a->a_top, arrayof(o0), 0, z0);
             a->a_top += z0;
@@ -509,9 +509,9 @@
             {
                 if (sl->sl_key == NULL)
                     continue;
-                if (assign(s, sl->sl_key, sl->sl_value))
+                if (ici_assign(s, sl->sl_key, sl->sl_value))
                 {
-                    decref(s);
+                    ici_decref(s);
                     goto fail;
                 }
             }
@@ -533,9 +533,9 @@
             {
                 if (*sl == NULL)
                     continue;
-                if (assign(s, *sl, o_one))
+                if (ici_assign(s, *sl, ici_one))
                 {
-                    decref(s);
+                    ici_decref(s);
                     goto fail;
                 }
             }
@@ -557,9 +557,9 @@
             {
                 if (*sl == NULL)
                     continue;
-                if (assign(s, *sl, &o_null))
+                if (ici_assign(s, *sl, &o_null))
                 {
-                    decref(s);
+                    ici_decref(s);
                     goto fail;
                 }
             }
@@ -574,7 +574,7 @@
             register object_t   **sl;
             register int        i;
 
-            if ((s = new_set()) == NULL)
+            if ((s = ici_set_new()) == NULL)
                 goto fail;
             sl = setof(o0)->s_slots;
             for (i = 0; i < setof(o0)->s_nslots; ++i, ++sl)
@@ -583,12 +583,12 @@
                     continue;
                 if
                 (
-                    fetch(o1, *sl) != objof(&o_null)
+                    ici_fetch(o1, *sl) != objof(&o_null)
                     &&
-                    assign(s, *sl, o_one)
+                    ici_assign(s, *sl, ici_one)
                 )
                 {
-                    decref(s);
+                    ici_decref(s);
                     goto fail;
                 }
             }
@@ -597,26 +597,26 @@
         goto looseo;
 
     case TRI(TC_SET, TC_SET, T_GRTEQ):
-        o = set_issubset(setof(o1), setof(o0)) ? objof(o_one) : objof(o_zero);
+        o = set_issubset(setof(o1), setof(o0)) ? objof(ici_one) : objof(ici_zero);
         goto useo;
 
     case TRI(TC_SET, TC_SET, T_LESSEQ):
-        o = set_issubset(setof(o0), setof(o1)) ? objof(o_one) : objof(o_zero);
+        o = set_issubset(setof(o0), setof(o1)) ? objof(ici_one) : objof(ici_zero);
         goto useo;
 
     case TRI(TC_SET, TC_SET, T_GRT):
-        o = set_ispropersubset(setof(o1), setof(o0)) ? objof(o_one) : objof(o_zero);
+        o = set_ispropersubset(setof(o1), setof(o0)) ? objof(ici_one) : objof(ici_zero);
         goto useo;
 
     case TRI(TC_SET, TC_SET, T_LESS):
-        o = set_ispropersubset(setof(o0), setof(o1)) ? objof(o_one) : objof(o_zero);
+        o = set_ispropersubset(setof(o0), setof(o1)) ? objof(ici_one) : objof(ici_zero);
         goto useo;
 
     case TRI(TC_PTR, TC_PTR, T_MINUS):
     case TRI(TC_PTR, TC_PTR, T_MINUSEQ):
         if (!isint(ptrof(o1)->p_key) || !isint(ptrof(o0)->p_key))
             goto mismatch;
-        if ((o = objof(new_int(intof(ptrof(o0)->p_key)->i_value
+        if ((o = objof(ici_int_new(intof(ptrof(o0)->p_key)->i_value
               - intof(ptrof(o1)->p_key)->i_value))) == NULL)
               goto fail;
         goto looseo;
@@ -709,11 +709,11 @@
     }
 
 use0:
-    ici_os.a_top[-2] = objof(o_zero);
+    ici_os.a_top[-2] = objof(ici_zero);
     goto done;
 
 use1:
-    ici_os.a_top[-2] = objof(o_one);
+    ici_os.a_top[-2] = objof(ici_one);
     goto done;
 
 usef:
@@ -739,7 +739,7 @@ usef:
         floatof(o)->f_value = f;
         goto useo;
     }
-    if ((o = objof(new_float(f))) == NULL)
+    if ((o = objof(ici_float_new(f))) == NULL)
         goto fail;
     goto looseo;
 
@@ -797,9 +797,9 @@ usei:
     rego(o);
     o->o_leafz = sizeof(int_t);
     intof(o)->i_value = i;
-    o = atom(o, 1);
+    o = ici_atom(o, 1);
 looseo:
-    decref(o);
+    ici_decref(o);
 useo:
     ici_os.a_top[-2] = o;
 done:

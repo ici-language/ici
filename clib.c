@@ -122,7 +122,7 @@ f_getchar()
     }
     else
     {
-        if ((f = need_stdin()) == NULL)
+        if ((f = ici_need_stdin()) == NULL)
             return 1;
     }
     ici_signals_blocking_syscall(1);
@@ -137,7 +137,7 @@ f_getchar()
         return null_ret();
     }
     buf[0] = c;
-    return ici_ret_with_decref(objof(new_name(buf, 1)));
+    return ici_ret_with_decref(objof(ici_str_new(buf, 1)));
 }
 
 static int
@@ -161,7 +161,7 @@ f_getline()
     }
     else
     {
-        if ((f = need_stdin()) == NULL)
+        if ((f = ici_need_stdin()) == NULL)
             return 1;
     }
     get = f->f_type->ft_getch;
@@ -187,7 +187,7 @@ f_getline()
             clearerr(stdin);
         return null_ret();
     }
-    str = new_name(buf, i);
+    str = ici_str_new(buf, i);
     free(buf);
     if (str == NULL)
         return 1;
@@ -222,7 +222,7 @@ f_getfile()
     }
     else
     {
-        if ((f = need_stdin()) == NULL)
+        if ((f = ici_need_stdin()) == NULL)
             return 1;
     }
     get = f->f_type->ft_getch;
@@ -241,7 +241,7 @@ f_getfile()
     ici_signals_blocking_syscall(0);
     if (buf == NULL)
         goto nomem;
-    str = new_name(buf, i);
+    str = ici_str_new(buf, i);
     free(buf);
     if (str == NULL)
         return 1;
@@ -268,7 +268,7 @@ f_put()
     {
         if (ici_typecheck("s", &s))
             return 1;
-        if ((f = need_stdout()) == NULL)
+        if ((f = ici_need_stdout()) == NULL)
             return 1;
     }
     x = ici_leave();
@@ -300,7 +300,7 @@ f_fflush()
     }
     else
     {
-        if ((f = need_stdout()) == NULL)
+        if ((f = ici_need_stdout()) == NULL)
             return 1;
     }
     x = ici_leave();
@@ -352,6 +352,7 @@ f_fopen()
     file_t      *f;
     FILE        *stream;
     exec_t      *x;
+    int         i;
 
     mode = "r";
     if (ici_typecheck(NARGS() > 1 ? "ss" : "s", &name, &mode))
@@ -359,12 +360,10 @@ f_fopen()
     x = ici_leave();
     if ((stream = fopen(name, mode)) == NULL)
     {
+        i = errno;
         ici_enter(x);
-        if (ici_chkbuf(strlen(name) + 50))
-            return 1;
-        sprintf(buf, "could not open \"%s\" (%s)", name, syserr());
-        ici_error = buf;
-        return 1;
+        errno = i;
+        return ici_get_last_errno("open", name);
     }
     ici_enter(x);
     if ((f = new_file((char *)stream, &stdio_ftype, stringof(ARG(0)))) == NULL)
@@ -396,7 +395,7 @@ f_fseek()
     }
     if ((offset = (*f->f_type->ft_seek)(f->f_file, offset, (int)whence)) == -1)
         return 1;
-    return int_ret(offset);
+    return ici_int_ret(offset);
 }
 
 #ifndef NOPIPES
@@ -408,6 +407,7 @@ f_popen()
     file_t      *f;
     FILE        *stream;
     exec_t      *x;
+    int         i;
     extern int  pclose();
 
     mode = "r";
@@ -416,12 +416,10 @@ f_popen()
     x = ici_leave();
     if ((stream = popen(name, mode)) == NULL)
     {
+        i = errno;
         ici_enter(x);
-        if (ici_chkbuf(strlen(name) + 40))
-            return 1;
-        sprintf(buf, "could not popen \"%s\" (%s)", name, syserr());
-        ici_error = buf;
-        return 1;
+        errno = i;
+        return ici_get_last_errno("popen", name);
     }
     ici_enter(x);
     if ((f = new_file((char *)stream, &ici_popen_ftype, stringof(ARG(0)))) == NULL)
@@ -446,7 +444,7 @@ f_system()
     x = ici_leave();
     result = system(cmd);
     ici_enter(x);
-    return int_ret(result);
+    return ici_int_ret(result);
 }
 #endif
 
@@ -487,11 +485,11 @@ f_eof()
     }
     else
     {
-        if ((f = need_stdin()) == NULL)
+        if ((f = ici_need_stdin()) == NULL)
             return 1;
     }
     x = ici_leave();
-    r = int_ret((long)(*f->f_type->ft_eof)(f->f_file));
+    r = ici_int_ret((long)(*f->f_type->ft_eof)(f->f_file));
     ici_enter(x);
     return r;
 }
@@ -504,13 +502,7 @@ f_remove(void)
     if (ici_typecheck("s", &s))
         return 1;
     if (remove(s) != 0)
-    {
-        if (ici_chkbuf(strlen(s) + 80))
-            return 1;
-        sprintf(buf, "could not remove \"%s\" (%s)", s, syserr());
-        ici_error = buf;
-        return 1;
-    }
+        return ici_get_last_errno("remove", s);
     return null_ret();
 }
 
@@ -703,17 +695,11 @@ f_dir(void)
             return 1;
         }
     }
-    if ((a = new_array(0)) == NULL)
+    if ((a = ici_array_new(0)) == NULL)
         return 1;
     if ((dir = opendir(path)) == NULL)
     {
-        if (ici_chkbuf(strlen(path) + 32))
-            ici_error = syserr();
-        else
-        {
-            sprintf(buf, "%s: %s", path, syserr());
-            ici_error = buf;
-        }
+        ici_get_last_errno("open directory", path);
         goto fail;
     }
     while ((dirent = readdir(dir)) != NULL)
@@ -743,13 +729,7 @@ f_dir(void)
 #ifndef _WIN32
         if (lstat(abspath, &statbuf) == -1)
         {
-            if (ici_chkbuf(strlen(abspath) + 32))
-                ici_error = syserr();
-            else
-            {
-                sprintf(buf, "%s: %s", abspath, syserr());
-                ici_error = buf;
-            }
+            ici_get_last_errno("get stats on", abspath);
             closedir(dir);
             goto fail;
         }
@@ -770,18 +750,18 @@ f_dir(void)
         {
             if
             (
-                (s = new_cname(dirent->d_name)) == NULL
+                (s = ici_str_new_nul_term(dirent->d_name)) == NULL
                 ||
                 ici_stk_push_chk(a, 1)
             )
             {
                 if (s != NULL)
-                    decref(s);
+                    ici_decref(s);
                 closedir(dir);
                 goto fail;
             }
             *a->a_top++ = objof(s);
-            decref(s);
+            ici_decref(s);
         }
     }
     closedir(dir);
@@ -792,7 +772,7 @@ f_dir(void)
 #undef  OTHERS
 
 fail:
-    decref(a);
+    ici_decref(a);
     return 1;
 }
 #endif  /* NODIR */
@@ -807,11 +787,8 @@ sys_ret(ret)
 int     ret;
 {
     if (ret < 0)
-    {
-        ici_error = syserr();
-        return 1;
-    }
-    return int_ret((long)ret);
+        return ici_get_last_errno(NULL, NULL);
+    return ici_int_ret((long)ret);
 }
 
 /*
@@ -851,7 +828,7 @@ f_getcwd(void)
 
     if (getcwd(buf, sizeof buf) == NULL)
         return sys_ret(-1);
-    return str_ret(buf);
+    return ici_str_ret(buf);
 }
 
 cfunc_t clib_cfuncs[] =

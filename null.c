@@ -19,8 +19,8 @@ type_t  null_type =
     hash_unique,
     cmp_unique,
     copy_simple,
-    assign_simple,
-    fetch_simple,
+    ici_assign_fail,
+    ici_fetch_fail,
     "NULL"
 };
 

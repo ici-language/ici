@@ -23,7 +23,7 @@ struct context
 
 /*
  * Build a data structure according to the given dimensions and content.
- * The returned object has been incref()ed.
+ * The returned object has been ici_incref()ed.
  *
  * r is a pointer through which to store the resulting object.
  * dnext is a pointer to the dimension of interest to this call.
@@ -45,7 +45,7 @@ buildxx(object_t **r, object_t **dnext, struct context *c)
          * with the supplied option.
          */
         *r = *c->c_cnext;
-        incref(*r);
+        ici_incref(*r);
         c->c_cnext += c->c_cstep;
         switch (c->c_option)
         {
@@ -79,17 +79,17 @@ buildxx(object_t **r, object_t **dnext, struct context *c)
          * recursively fill it based on the next dimension or content.
          */
         n = intof(*dnext)->i_value;
-        if ((a = new_array(n)) == NULL)
+        if ((a = ici_array_new(n)) == NULL)
             return 1;
         for (i = 0; i < n; ++i)
         {
             if (buildxx(a->a_top, dnext + c->c_dstep, c))
             {
-                decref(a);
+                ici_decref(a);
                 return 1;
             }
             ++a->a_top;
-            decref(a->a_top[-1]);
+            ici_decref(a->a_top[-1]);
         }
         *r = objof(a);
     }
@@ -106,21 +106,21 @@ buildxx(object_t **r, object_t **dnext, struct context *c)
          * with the next dimension or content.
          */
         a = arrayof(*dnext);
-        if ((s = new_struct()) == NULL)
+        if ((s = ici_struct_new()) == NULL)
             return 1;
         for (e = ici_astart(a); e < ici_alimit(a); e = ici_anext(a, e))
         {
             if (buildxx(&o, dnext + c->c_dstep, c))
             {
-                decref(s);
+                ici_decref(s);
                 return 1;
             }
-            if (assign(s, *e, o))
+            if (ici_assign(s, *e, o))
             {
-                decref(s);
+                ici_decref(s);
                 return 1;
             }
-            decref(o);
+            ici_decref(o);
         }
         *r = objof(s);
     }

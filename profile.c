@@ -106,9 +106,9 @@ mark_profilecall(object_t *o)
     pf = profilecallof(o);
     return sizeof(profilecall_t)
            +
-           mark(objof(pf->pc_calls))
+           ici_mark(objof(pf->pc_calls))
            +
-           (pf->pc_calledby == NULL ? 0 : mark(objof(pf->pc_calledby)));
+           (pf->pc_calledby == NULL ? 0 : ici_mark(objof(pf->pc_calledby)));
 }
 
 /*
@@ -134,8 +134,8 @@ type_t profilecall_type =
     hash_unique,
     cmp_unique,
     copy_simple,
-    assign_simple,
-    fetch_simple,
+    ici_assign_fail,
+    ici_fetch_fail,
     "profile call"
 };
 
@@ -160,7 +160,7 @@ new_profilecall(profilecall_t *called_by)
  *
  *    if ((g = atom_gob(gob)) != NULL)
  *    {
- *        incref(g);
+ *        ici_incref(g);
  *        return g;
  *    }
  */
@@ -177,13 +177,13 @@ new_profilecall(profilecall_t *called_by)
 
     /* Fill in profilecall specific bits. */
     pc->pc_calledby = called_by;
-    pc->pc_calls = new_struct();
+    pc->pc_calls = ici_struct_new();
     if (pc->pc_calls == NULL)
     {
         ici_tfree(pc, profilecall_t);
         return NULL;
     }
-    decref(pc->pc_calls);
+    ici_decref(pc->pc_calls);
     pc->pc_total = 0;
     pc->pc_laststart = 0;
     pc->pc_call_count = 0;
@@ -256,15 +256,15 @@ ici_profile_call(func_t *f)
 
     /* Has this function been called from the current function before? */
     assert(prof_cur_call != NULL);
-    if (isnull(objof(pc = profilecallof(fetch(prof_cur_call->pc_calls, f)))))
+    if (isnull(objof(pc = profilecallof(ici_fetch(prof_cur_call->pc_calls, f)))))
     {
         /* No, create a new record. */
         pc = new_profilecall(prof_cur_call);
         assert(pc != NULL);
-        decref(pc);
+        ici_decref(pc);
 
         /* Add it to the calling function. */
-        assign(prof_cur_call->pc_calls, f, objof(pc));
+        ici_assign(prof_cur_call->pc_calls, f, objof(pc));
     }
 
     /* Switch context to the new function and remember when we entered it. */
@@ -370,7 +370,7 @@ ici_profile_return()
             }
 
             /* No more profiling. */
-            decref(prof_cur_call);
+            ici_decref(prof_cur_call);
             prof_cur_call = NULL;
             ici_profile_active = 0;
         }

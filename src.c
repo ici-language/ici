@@ -14,7 +14,7 @@ mark_src(object_t *o)
     o->o_flags |= O_MARK;
     mem = sizeof(src_t);
     if (srcof(o)->s_filename != NULL)
-        mem += mark(srcof(o)->s_filename);
+        mem += ici_mark(srcof(o)->s_filename);
     return mem;
 }
 
@@ -52,7 +52,7 @@ type_t  src_type =
     hash_unique,
     cmp_unique,
     copy_simple,
-    assign_simple,
-    fetch_simple,
+    ici_assign_fail,
+    ici_fetch_fail,
     "src"
 };

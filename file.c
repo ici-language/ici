@@ -32,7 +32,7 @@ hash_file(object_t *o)
 static void
 free_file(object_t *o)
 {
-    if (!(o->o_flags & F_CLOSED))
+    if (!(o->o_flags & (F_CLOSED|F_NOCLOSE)))
         f_close(fileof(o));
     ici_tfree(o, file_t);
 }
@@ -55,14 +55,14 @@ new_file(char *fp, ftype_t *ftype, string_t *name)
     proto.f_name = name;
     if ((f = fileof(atom_probe(objof(&proto)))) != NULL)
     {
-        incref(f);
+        ici_incref(f);
         return f;
     }
     if ((f = ici_talloc(file_t)) == NULL)
         return NULL;
     *f = proto;
     rego(f);
-    return fileof(atom(objof(f), 1));
+    return fileof(ici_atom(objof(f), 1));
 }
 
 int
@@ -89,7 +89,7 @@ mark_file(object_t *o)
     o->o_flags |= O_MARK;
     mem = sizeof(file_t);
     if (fileof(o)->f_name != NULL)
-        mem += mark(objof(fileof(o)->f_name));
+        mem += ici_mark(objof(fileof(o)->f_name));
     return mem;
 }
 
@@ -100,7 +100,7 @@ type_t  file_type =
     hash_file,
     cmp_file,
     copy_simple,
-    assign_simple,
-    fetch_simple,
+    ici_assign_fail,
+    ici_fetch_fail,
     "file"
 };

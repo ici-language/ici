@@ -50,7 +50,7 @@ mark_set(object_t *o)
     )
     {
         if (*e != NULL)
-            mem += mark(*e);
+            mem += ici_mark(*e);
     }
     return mem;
 }
@@ -68,7 +68,7 @@ free_set(object_t *o)
 }
 
 set_t *
-new_set()
+ici_set_new()
 {
     register set_t      *s;
 
@@ -168,7 +168,7 @@ copy_set(object_t *o)
     return objof(ns);
 
 fail:
-    decref(ns);
+    ici_decref(ns);
     return NULL;
 }
 
@@ -296,7 +296,7 @@ assign_set(object_t *o, object_t *k, object_t *v)
 static object_t *
 fetch_set(object_t *o, object_t *k)
 {
-    return *find_set_slot(setof(o), k) == NULL ? objof(&o_null) : objof(o_one);
+    return *find_set_slot(setof(o), k) == NULL ? objof(&o_null) : objof(ici_one);
 }
 
 type_t  set_type =

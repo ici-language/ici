@@ -76,7 +76,7 @@ get(parse_t *p, array_t *a)
         {
             if ((*a->a_top = objof(new_src(p->p_lineno, p->p_file->f_name))) != NULL)
             {
-                decref(*a->a_top);
+                ici_decref(*a->a_top);
                 ++a->a_top;
             }
         }
@@ -458,13 +458,13 @@ lex(parse_t *p, array_t *a)
         }
         buf[i] = '\0';
         /* XXX Recognise regexp option suffixes a la Perl? */
-        regexp_str = new_cname(buf);
-        if ((p->p_got.t_obj = objof(new_regexp(regexp_str, 0))) == NULL)
+        regexp_str = ici_str_new_nul_term(buf);
+        if ((p->p_got.t_obj = objof(ici_regexp_new(regexp_str, 0))) == NULL)
         {
-            decref(regexp_str);
+            ici_decref(regexp_str);
             goto fail;
         }
-        decref(regexp_str);
+        ici_decref(regexp_str);
         t = T_REGEXP;
         break;
     }
@@ -572,7 +572,7 @@ lex(parse_t *p, array_t *a)
                 ici_error = "newline in \"...\"";
                 goto fail;
             }
-            if ((p->p_got.t_obj = objof(new_name(buf, i))) == NULL)
+            if ((p->p_got.t_obj = objof(ici_str_new(buf, i))) == NULL)
                 goto fail;
         }
         break;
@@ -688,7 +688,7 @@ lex(parse_t *p, array_t *a)
 #endif
             break;
         }
-        if ((p->p_got.t_obj = objof(new_cname(buf))) == NULL)
+        if ((p->p_got.t_obj = objof(ici_str_new_nul_term(buf))) == NULL)
             goto fail;
         t = T_NAME;
         break;

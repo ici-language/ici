@@ -53,7 +53,7 @@ struct type
  *              it can create). This is used in the marking phase of
  *              garbage collection.
  *
- *              The macro mark() calls the t_mark function of the object
+ *              The macro ici_mark() calls the t_mark function of the object
  *              (based on object type) if the O_MARK flag of the object
  *              is clear, else it returns 0. This is the usual interface
  *              to an object's mark function.
@@ -95,7 +95,7 @@ struct type
  * t_copy(o)    Returns a copy of the given object. This is the basis for
  *              the implementation of the copy() function. On failure, NULL
  *              is returned and error is set. The returned object has been
- *              incref'ed. The returned object should cmp() as being equal,
+ *              ici_incref'ed. The returned object should cmp() as being equal,
  *              but be a distinct object for object which are not
  *              intrinsically atomic.
  *
@@ -121,7 +121,7 @@ struct type
  * t_assign(o, k, v) Assign to key k of the object o the value v. Return
  *              1 on error, else 0.
  *
- *              The existing function assign_simple() may be used both as
+ *              The existing function ici_assign_fail() may be used both as
  *              the implementation of this function for object types which
  *              do not support any assignment, and as a simple method of
  *              generating an error for particular assignments which break
@@ -136,7 +136,7 @@ struct type
  * t_fetch(o, k) Fetch the value of key k of the object o. Return NULL on
  *              error.
  *
- *              The existing function fetch_simple() may be used both as
+ *              The existing function ici_fetch_fail() may be used both as
  *              the implementation of this function for object types which
  *              do not support any assignment, and as a simple method of
  *              generating an error for particular fetches which break
@@ -166,7 +166,7 @@ struct type
  * Macros to perform the operation on the object.
  */
 /*
- * mark()
+ * ici_mark()
  *
  * The recursive traversal of all objects performed by marking is particularly
  * expensive. So we take pains to cut short function calls wherever possible.
@@ -174,22 +174,22 @@ struct type
  * doesn't reference any other objects and is of small (ie o_leafz) size.
  */
 #if 1
-#define mark(o)         ((objof(o)->o_flags & O_MARK) == 0 \
+#define ici_mark(o)         ((objof(o)->o_flags & O_MARK) == 0 \
                             ? (objof(o)->o_leafz != 0 \
                                 ? (objof(o)->o_flags |= O_MARK, objof(o)->o_leafz) \
                                 : (*ici_typeof(o)->t_mark)(objof(o))) \
                             : 0L)
 #else
-#define mark(o)         ((objof(o)->o_flags & O_MARK) == 0 \
+#define ici_mark(o)         ((objof(o)->o_flags & O_MARK) == 0 \
                             ? (*ici_typeof(o)->t_mark)(objof(o)) \
                             : 0L)
 #endif
 #define freeo(o)        ((*ici_typeof(o)->t_free)(objof(o)))
 #define hash(o)         ((*ici_typeof(o)->t_hash)(objof(o)))
 #define cmp(o1,o2)      ((*ici_typeof(o1)->t_cmp)(objof(o1), objof(o2)))
-#define fetch(o,k)      ((*ici_typeof(o)->t_fetch)(objof(o), objof(k)))
+#define ici_fetch(o,k)      ((*ici_typeof(o)->t_fetch)(objof(o), objof(k)))
 #define copy(o)         ((*ici_typeof(o)->t_copy)(objof(o)))
-#define assign(o,k,v)   ((*ici_typeof(o)->t_assign)(objof(o), objof(k), objof(v)))
+#define ici_assign(o,k,v)   ((*ici_typeof(o)->t_assign)(objof(o), objof(k), objof(v)))
 #define assign_super(o,k,v,b) ((*ici_typeof(o)->t_assign_super)(objof(o), objof(k), objof(v), b))
 #define fetch_super(o,k,v,b) ((*ici_typeof(o)->t_fetch_super)(objof(o), objof(k), v, b))
 #define assign_base(o,k,v) ((*ici_typeof(o)->t_assign_base)(objof(o), objof(k), objof(v)))
@@ -209,13 +209,13 @@ struct type
 /*
  * Functions to performs operations on the object.
  */
-extern unsigned long    mark(object_t *);
+extern unsigned long    ici_mark(object_t *);
 extern void             freeo(object_t *);
 extern unsigned long    hash(object_t *);
 extern int              cmp(object_t *, object_t *);
 extern object_t         *copy(object_t *);
-extern object_t         *fetch(object_t *, object_t *);
-extern int              assign(object_t *, object_t *, object_t *);
+extern object_t         *ici_fetch(object_t *, object_t *);
+extern int              ici_assign(object_t *, object_t *, object_t *);
 extern void             rego(object_t *);
 #endif
 
@@ -227,17 +227,17 @@ extern void             rego(object_t *);
  * not other objects) are invisible to the garbage collector.  These refs
  * must be accounted for if there is a possibility of garbage collection.
  * Note that most routines that make objects (new_*(), copy() etc...)
- * return objects with 1 ref.  The caller is expected to decref() it when
+ * return objects with 1 ref.  The caller is expected to ici_decref() it when
  * they attach it into wherever it is going.
  */
 #ifndef BUGHUNT
-#define incref(o)       (++objof(o)->o_nrefs)
-#define decref(o)       (--objof(o)->o_nrefs)
+#define ici_incref(o)       (++objof(o)->o_nrefs)
+#define ici_decref(o)       (--objof(o)->o_nrefs)
 #else
 void bughunt_incref(object_t *o);
 void bughunt_decref(object_t *o);
-#define incref(o) bughunt_incref(objof(o))
-#define decref(o) bughunt_decref(objof(o))
+#define ici_incref(o) bughunt_incref(objof(o))
+#define ici_decref(o) bughunt_decref(objof(o))
 #endif
 
 /*
@@ -334,7 +334,7 @@ struct objwsup
 
 #define TRI(a,b,t)      (((((a) << 4) + b) << 6) + t_subtype(t))
 
-#define isfalse(o)      ((o) == objof(o_zero) || (o) == objof(&o_null))
+#define isfalse(o)      ((o) == objof(ici_zero) || (o) == objof(&o_null))
 
 /*
  * End of ici.h export. --ici.h-end--

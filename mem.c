@@ -50,7 +50,7 @@ assign_mem(object_t *o, object_t *k, object_t *v)
     register long       i;
 
     if (!isint(k) || !isint(v))
-        return assign_simple(o, k, v);
+        return ici_assign_fail(o, k, v);
     i = intof(k)->i_value;
     if (i < 0 || i >= (long)memof(o)->m_length)
     {
@@ -85,7 +85,7 @@ fetch_mem(object_t *o, object_t *k)
     long        i;
 
     if (!isint(k))
-        return fetch_simple(o, k);
+        return ici_fetch_fail(o, k);
     i = intof(k)->i_value;
     if (i < 0 || i >= (long)memof(o)->m_length)
         return objof(&o_null);
@@ -103,13 +103,13 @@ fetch_mem(object_t *o, object_t *k)
         i = ((long *)memof(o)->m_base)[i];
         break;
     }
-    o = objof(new_int(i));
-    decref(o);
+    o = objof(ici_int_new(i));
+    ici_decref(o);
     return o;
 }
 
 mem_t *
-new_mem(void *base, size_t length, int accessz, void (*free_func)())
+ici_mem_new(void *base, size_t length, int accessz, void (*free_func)())
 {
     register mem_t      *m;
 
@@ -124,7 +124,7 @@ new_mem(void *base, size_t length, int accessz, void (*free_func)())
     m->m_length = length;
     m->m_accessz = accessz;
     m->m_free = free_func;
-    return memof(atom(objof(m), 1));
+    return memof(ici_atom(objof(m), 1));
 }
 
 /*

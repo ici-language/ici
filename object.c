@@ -132,7 +132,7 @@ free_simple(object_t *o)
 object_t *
 copy_simple(object_t *o)
 {
-    incref(o);
+    ici_incref(o);
     return o;
 }
 
@@ -146,7 +146,7 @@ copy_simple(object_t *o)
  * is illegal.
  */
 int
-assign_simple(object_t *o, object_t *k, object_t *v)
+ici_assign_fail(object_t *o, object_t *k, object_t *v)
 {
     char        n1[30];
     char        n2[30];
@@ -170,7 +170,7 @@ assign_simple(object_t *o, object_t *k, object_t *v)
  * is illegal.
  */
 object_t *
-fetch_simple(object_t *o, object_t *k)
+ici_fetch_fail(object_t *o, object_t *k)
 {
     char        n1[30];
     char        n2[30];
@@ -230,7 +230,7 @@ grow_atoms(ptrdiff_t newz)
         if (olda[i] != NULL)
         {
             olda[i]->o_flags &= ~O_ATOM;
-            atom(olda[i], 1);
+            ici_atom(olda[i], 1);
         }
     }
     ici_nfree(olda, oldz * sizeof(object_t *));
@@ -247,7 +247,7 @@ grow_atoms(ptrdiff_t newz)
  * to the object being returned.
  */
 object_t *
-atom(object_t *o, int lone)
+ici_atom(object_t *o, int lone)
 {
     object_t    **po;
 
@@ -285,7 +285,7 @@ atom(object_t *o, int lone)
     if (++natoms > atomsz / 2)
         grow_atoms(atomsz * 2);
     if (!lone)
-        decref(o);
+        ici_decref(o);
     return o;
 }
 
@@ -422,7 +422,7 @@ object_t        *o;
  * collected.  They must be explicitly lost before they are subject
  * to garbage collection.  But of course all code must be careful not
  * to hang on to "found" objects where they are not accessible, or they
- * will be collected.  You can incref() them if you want.  All "held" objects
+ * will be collected.  You can ici_incref() them if you want.  All "held" objects
  * will cause all objects referenced from them to be marked (ie, not
  * collected), as long as they are registered on either the global object
  * list or in the atom pool.  Thus statically declared objects which
@@ -449,7 +449,7 @@ collect(void)
     for (a = objs; a < objs_top; ++a)
     {
         if ((*a)->o_nrefs != 0)
-            mem += mark(*a);
+            mem += ici_mark(*a);
     }
 
     /*
@@ -603,7 +603,7 @@ bughunt_decref(object_t *o)
  */
 
 unsigned long
-mark(object_t *o)
+ici_mark(object_t *o)
 {
     if (o->o_flags & O_MARK)
         return 0L;
@@ -635,13 +635,13 @@ copy(object_t *o)
 }
 
 object_t *
-fetch(object_t *o, object_t *k)
+ici_fetch(object_t *o, object_t *k)
 {
     return (*ici_typeof(o)->t_fetch)(o, k);
 }
 
 int
-assign(object_t *o, object_t *k, object_t *v)
+ici_assign(object_t *o, object_t *k, object_t *v)
 {
     return (*ici_typeof(o)->t_assign)(o, k, v);
 }

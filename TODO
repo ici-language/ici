@@ -123,3 +123,10 @@ Make all the makefiles create ici.h
 
 ---
 
+Remove wrap.c from other Makefiles
+
+---
+
+Put it general forall
+
+---

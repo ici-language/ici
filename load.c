@@ -31,7 +31,7 @@ ici_get_dll_path(void)
     char        *path;
 
     if ((path = getenv("ICIPATH")) == NULL)
-        path = ".:" PREFIX "/lib/ici3";
+        path = ".:" PREFIX "/lib/ici";
     return path ;
 }
 
@@ -46,8 +46,8 @@ ici_get_dll_path(void)
 # endif
 #endif
 
-static const char   dll_prefix[] = "ici4";
-static const char   ici_prefix[] = "ici";
+static const char   ici_prefix[] = "ici4";
+static const char   old_prefix[] = "ici3";
 
 /*
  * any = load(string)
@@ -122,7 +122,7 @@ f_load(void)
      * First of all we consider the case of a dynamically loaded native
      * machine code.
      */
-    strcpy(fname, dll_prefix);
+    strcpy(fname, ici_prefix);
     strcat(fname, name->s_chars);
 
     if (ici_find_on_path(path, fname, ICI_DLL_EXT))
@@ -181,7 +181,7 @@ f_load(void)
             return -1;
         }
         result = o;
-        if (assign(outer, name, o))
+        if (ici_assign(outer, name, o))
             goto fail;
         if (!isstruct(o))
             return ici_ret_with_decref(o);
@@ -192,37 +192,36 @@ f_load(void)
     strcpy(fname, ici_prefix);
     strcat(fname, name->s_chars);
     if (ici_find_on_path(path, fname, ".ici"))
+        goto got_file;
+    strcpy(fname, old_prefix);
+    strcat(fname, name->s_chars);
+    if (ici_find_on_path(path, fname, ".ici"))
     {
+    got_file:
         /*
          * We have a file .../iciX.ici, open the file, make new statics
          * and autos, assign the statics into the extern scope under
          * the given name, then parse the new module.
          */
         if ((stream = fopen(fname, "r")) == NULL)
-        {
-            if (ici_chkbuf(strlen(fname) + 50))
-                return 1;
-            sprintf(buf, "could not open \"%s\" (%s)", fname, syserr());
-            ici_error = buf;
-            return 1;
-        }
-        if ((file = new_file((char *)stream, &stdio_ftype, new_cname(fname))) == NULL)
+            return ici_get_last_errno("open", fname);
+        if ((file = new_file((char *)stream, &stdio_ftype, ici_str_new_nul_term(fname))) == NULL)
         {
             fclose(stream);
             goto fail;
         }
-        if ((autos = new_struct()) == NULL)
+        if ((autos = ici_struct_new()) == NULL)
             goto fail;
-        if ((statics = new_struct()) == NULL)
+        if ((statics = ici_struct_new()) == NULL)
             goto fail;
         autos->o_head.o_super = objwsupof(statics);
-        decref(statics);
+        ici_decref(statics);
         if (externs == NULL)
         {
-            if ((externs = new_struct()) == NULL)
+            if ((externs = ici_struct_new()) == NULL)
                 goto fail;
             result = objof(externs);
-            if (assign(outer, name, externs))
+            if (ici_assign(outer, name, externs))
                 goto fail;
         }
         statics->o_head.o_super = objwsupof(externs);
@@ -230,8 +229,8 @@ f_load(void)
         if (parse_module(file, objwsupof(autos)) < 0)
             goto fail;
         f_close(file);
-        decref(autos);
-        decref(file);
+        ici_decref(autos);
+        ici_decref(file);
     }
     if (result == NULL)
     {
@@ -239,7 +238,7 @@ f_load(void)
             return 1;
         sprintf(buf, "\"%s\" undefined and could not find %s%s%s or %s%s.ici ",
             name->s_chars,
-            dll_prefix,
+            ici_prefix,
             name->s_chars,
             ICI_DLL_EXT,
             ici_prefix,
@@ -251,11 +250,11 @@ f_load(void)
 
 fail:
     if (file != NULL)
-        decref(file);
+        ici_decref(file);
     if (autos != NULL)
-        decref(autos);
+        ici_decref(autos);
     if (result != NULL)
-        decref(result);
+        ici_decref(result);
     return 1;
 }
 

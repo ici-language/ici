@@ -36,7 +36,7 @@ f_trace()
     char **wds;
     char *str;
     if (NARGS() == 0)
-        return int_ret((long)trace_yes);
+        return ici_int_ret((long)trace_yes);
     if (ici_typecheck("s", &str))
         return ici_argerror(0);
     wds = smash(str, ' ');
@@ -101,7 +101,7 @@ f_trace()
     if (reset)
         trace_flags = flags;
     ici_free((char *)wds);
-    return int_ret(trace_yes);
+    return ici_int_ret(trace_yes);
 }
 
 cfunc_t trace_cfuncs[] =

@@ -20,7 +20,7 @@ ici_init_sstrings(void)
 {
     if
     (
-#define SSTRING(name, str) atom(SSO(name), 1) == SSO(name) &&
+#define SSTRING(name, str) ici_atom(SSO(name), 1) == SSO(name) &&
 #include "sstring.h"
 #undef SSTRING
         1

@@ -46,9 +46,9 @@ ici_leave(void)
          * Restore the copies of our stack arrays that are cached
          * in static locations back to the execution context.
          */
-        decref(&ici_os);
-        decref(&ici_xs);
-        decref(&ici_vs);
+        ici_decref(&ici_os);
+        ici_decref(&ici_xs);
+        ici_decref(&ici_vs);
         *x->x_os = ici_os;
         *x->x_xs = ici_xs;
         *x->x_vs = ici_vs;
@@ -124,9 +124,9 @@ ici_enter(exec_t *x)
         x->x_os->a_base = NULL;
         x->x_xs->a_base = NULL;
         x->x_vs->a_base = NULL;
-        incref(&ici_os);
-        incref(&ici_xs);
-        incref(&ici_vs);
+        ici_incref(&ici_os);
+        ici_incref(&ici_xs);
+        ici_incref(&ici_vs);
     }
 }
 
@@ -142,9 +142,9 @@ ici_yield(void)
     x = ici_exec;
     if (ici_n_active_threads > 1 && x->x_critsect == 0)
     {
-        decref(&ici_os);
-        decref(&ici_xs);
-        decref(&ici_vs);
+        ici_decref(&ici_os);
+        ici_decref(&ici_xs);
+        ici_decref(&ici_vs);
         *x->x_os = ici_os;
         *x->x_xs = ici_xs;
         *x->x_vs = ici_vs;
@@ -180,9 +180,9 @@ ici_yield(void)
         x->x_os->a_base = NULL;
         x->x_xs->a_base = NULL;
         x->x_vs->a_base = NULL;
-        incref(&ici_os);
-        incref(&ici_xs);
-        incref(&ici_vs);
+        ici_incref(&ici_os);
+        ici_incref(&ici_xs);
+        ici_incref(&ici_vs);
     }
 }
 
@@ -286,16 +286,16 @@ ici_thread_base(void *arg)
     n_ops = ici_os.a_top - ici_os.a_base;
     if ((x->x_result = ici_evaluate(objof(&o_call), n_ops)) == NULL)
     {
-        x->x_result = objof(get_cname(ici_error));
+        x->x_result = objof(ici_str_get_nul_term(ici_error));
         x->x_state = XS_FAILED;
     }
     else
     {
-        decref(x->x_result);
+        ici_decref(x->x_result);
         x->x_state = XS_RETURNED;
     }
     ici_wakeup(objof(x));
-    decref(x);
+    ici_decref(x);
     (void)ici_leave();
     return 0;
 }
@@ -326,16 +326,16 @@ f_thread()
      * Now push the number of actuals and the object to call on the
      * new operand stack.
      */
-    if ((*x->x_os->a_top = objof(new_int(NARGS() - 1))) == NULL)
+    if ((*x->x_os->a_top = objof(ici_int_new(NARGS() - 1))) == NULL)
         goto fail;
-    decref(*x->x_os->a_top);
+    ici_decref(*x->x_os->a_top);
     ++x->x_os->a_top;
     *x->x_os->a_top++ = ARG(0);
     /*
-     * Create the native machine thread. We incref x to give the new thread
+     * Create the native machine thread. We ici_incref x to give the new thread
      * it's own reference.
      */
-    incref(x);
+    ici_incref(x);
 #ifdef ICI_USE_WIN32_THREADS
     {
         HANDLE          thread_h;
@@ -345,7 +345,7 @@ f_thread()
         if (thread_h == NULL)
         {
             ici_get_last_win32_error();
-            decref(x); /* The ref the thread was going to own. */
+            ici_decref(x); /* The ref the thread was going to own. */
             goto fail;
         }
         x->x_thread_handle = thread_h;
@@ -359,8 +359,8 @@ f_thread()
         pthread_attr_setschedpolicy(&thread_attr, SCHED_RR);
         if (pthread_create(&x->x_thread_handle, NULL, ici_thread_base, x) == -1)
         {
-            syserr();
-            decref(x);
+            ici_get_last_errno("create thread", NULL);
+            ici_decref(x);
             goto fail;
         }
         pthread_detach(x->x_thread_handle);
@@ -374,7 +374,7 @@ f_thread()
     return ici_ret_with_decref(objof(x));
 
 fail:
-    decref(x);
+    ici_decref(x);
     return 1;
 }
 
@@ -405,20 +405,19 @@ ici_init_thread_stuff(void)
 
     if (pthread_mutexattr_init(&mutex_attr) == -1)
     {
-        perror("pthread_mutexattr_init");
-        syserr();
+        ici_get_last_errno("mutex", NULL);
         return 1;
     }
     pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE);
     if (pthread_mutex_init(&ici_mutex, &mutex_attr) == -1)
     {
-        syserr();
+        ici_get_last_errno("mutex", NULL);
         pthread_mutexattr_destroy(&mutex_attr);
         return 1;
     }
     if (pthread_mutex_init(&n_active_threads_mutex, &mutex_attr) == -1)
     {
-        syserr();
+        ici_get_last_errno("mutex", NULL);
         pthread_mutexattr_destroy(&mutex_attr);
         (void)pthread_mutex_destroy(&ici_mutex);
         return 1;

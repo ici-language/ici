@@ -41,7 +41,7 @@ f_regexp()
      }
     if (CF_ARG2() != NULL)
         opts |= PCRE_CASELESS;
-    return ici_ret_with_decref(objof(new_regexp(stringof(ARG(0)), opts)));
+    return ici_ret_with_decref(objof(ici_regexp_new(stringof(ARG(0)), opts)));
 }
 
 /*
@@ -163,7 +163,7 @@ do_smash
     string_t    *ns;
     int         size;
 
-    if ((a = new_array(0)) == NULL)
+    if ((a = ici_array_new(0)) == NULL)
         goto fail;
     for (s = str->s_chars, se = s + str->s_nchars; ; s = END(0))
     {
@@ -199,10 +199,10 @@ do_smash
             if ((ns = new_string(size)) == NULL)
                 goto fail;
             do_repl(s, repls[-i]->s_chars, repls[-i]->s_nchars, ns->s_chars);
-            if ((ns = stringof(atom(objof(ns), 1))) == NULL)
+            if ((ns = stringof(ici_atom(objof(ns), 1))) == NULL)
                 goto fail;
             *a->a_top++ = objof(ns);
-            decref(ns);
+            ici_decref(ns);
         }
     }
     if (include_remainder && s != se)
@@ -213,16 +213,16 @@ do_smash
          */
         if (ici_stk_push_chk(a, 1))
             goto fail;
-        if ((ns = new_name(s, se - s)) == NULL)
+        if ((ns = ici_str_new(s, se - s)) == NULL)
             goto fail;
         *a->a_top++ = objof(ns);
-        decref(ns);
+        ici_decref(ns);
     }
     return a;
 
 fail:
     if (a != NULL)
-        decref(a);
+        ici_decref(a);
     return NULL;
 }
 
@@ -386,7 +386,7 @@ do_sub(string_t *str, regexp_t *re, char *repl, int *ofs)
     len = (stringof(str)->s_chars + stringof(str)->s_nchars) - END(0) + 1;
     memcpy(d, END(0), len);
     d[len] = '\0';
-    rc = new_cname(dst);
+    rc = ici_str_new_nul_term(dst);
     ici_free(dst);
     if (rc == NULL)
         return (string_t *)-1;
@@ -417,21 +417,21 @@ f_sub()
         re = regexpof(o);
     else if (!isstring(o))
         return ici_argerror(1);
-    else if ((re = new_regexp(stringof(o), 0)) == NULL)
+    else if ((re = ici_regexp_new(stringof(o), 0)) == NULL)
         return 1;
     if ((rc = do_sub(stringof(str), re, repl, &ofs)) == NULL)
         rc = stringof(str);
     else if (rc == (string_t*)-1)
     {
         if (regexpof(o) != re)
-            decref(re);
+            ici_decref(re);
         return 1;
     }
     else
-        decref(rc);
+        ici_decref(rc);
 
     if (regexpof(o) != re)
-        decref(re);
+        ici_decref(re);
 
     return ici_ret_no_decref(objof(rc));
 }
@@ -465,7 +465,7 @@ f_gsub()
     {
         if (!isstring(ARG(1)))
             return ici_argerror(1);
-        if ((re = new_regexp(stringof(ARG(1)), 0)) == NULL)
+        if ((re = ici_regexp_new(stringof(ARG(1)), 0)) == NULL)
             return 1;
     }
     else
@@ -484,18 +484,18 @@ f_gsub()
         memcpy(s, stringof(*p)->s_chars, stringof(*p)->s_nchars);
         s += stringof(*p)->s_nchars;
     }
-    if ((ns = stringof(atom(objof(ns), 1))) == NULL)
+    if ((ns = stringof(ici_atom(objof(ns), 1))) == NULL)
         goto fail;
-    decref(a);
+    ici_decref(a);
     if (!isregexp(ARG(1)))
-        decref(re);
+        ici_decref(re);
     return ici_ret_with_decref(objof(ns));
 
 fail:
     if (a != NULL)
-        decref(a);
+        ici_decref(a);
     if (!isregexp(ARG(1)))
-        decref(re);
+        ici_decref(re);
     return 1;
 }
 
@@ -525,11 +525,11 @@ f_old_smash()
         strs = ssmash(s, delim);
     if (strs == NULL)
         return 1;
-    if ((sa = new_array(nptrs(strs))) == NULL)
+    if ((sa = ici_array_new(nptrs(strs))) == NULL)
         goto fail;
     for (p = strs; *p != NULL; ++p)
     {
-        if ((*sa->a_top = objof(get_cname(*p))) == NULL)
+        if ((*sa->a_top = objof(ici_str_get_nul_term(*p))) == NULL)
             goto fail;
         ++sa->a_top;
     }
@@ -538,7 +538,7 @@ f_old_smash()
 
 fail:
     if (sa != NULL)
-        decref(sa);
+        ici_decref(sa);
     ici_free((char *)strs);
     return 1;
 }
@@ -575,7 +575,7 @@ f_smash()
     {
         if (default_re == NULL)
         {
-            if ((default_re = new_regexp(SS(sloshn), 0)) == NULL)
+            if ((default_re = ici_regexp_new(SS(sloshn), 0)) == NULL)
                 return 1;
         }
         re = default_re;

@@ -40,7 +40,7 @@ ici_maind(int argc, char *argv[], int debugging)
      * ie, arguments which are passed into the ICI code.  Stash these in
      * the array av.  NB: must be in sync with the second pass below.
      */
-    if ((av = new_array(1)) == NULL)
+    if ((av = ici_array_new(1)) == NULL)
         goto fail;
     *av->a_top++ = objof(&o_null); /* Leave room for argv[0]. */
     arg0 = NULL;
@@ -54,7 +54,7 @@ ici_maind(int argc, char *argv[], int debugging)
         {
             if (ici_stk_push_chk(av, 1))
                 goto fail;
-            if ((*av->a_top = objof(get_cname(argv[i]))) == NULL)
+            if ((*av->a_top = objof(ici_str_get_nul_term(argv[i]))) == NULL)
                 goto fail;
             ++av->a_top;
         }
@@ -83,7 +83,7 @@ ici_maind(int argc, char *argv[], int debugging)
                             goto usage;
                         else
                             s = argv[i];
-                        if ((av->a_base[0] = objof(get_cname(s))) == NULL)
+                        if ((av->a_base[0] = objof(ici_str_get_nul_term(s))) == NULL)
                             goto fail;
                         break;
 
@@ -92,7 +92,7 @@ ici_maind(int argc, char *argv[], int debugging)
                         {
                             if (ici_stk_push_chk(av, 1))
                                 goto fail;
-                            if ((*av->a_top = objof(get_cname(argv[i])))==NULL)
+                            if ((*av->a_top = objof(ici_str_get_nul_term(argv[i])))==NULL)
                                 goto fail;
                             ++av->a_top;
                         }
@@ -132,7 +132,7 @@ ici_maind(int argc, char *argv[], int debugging)
             {
                 if (ici_stk_push_chk(av, 1))
                     goto fail;
-                if ((*av->a_top = objof(get_cname(argv[i]))) == NULL)
+                if ((*av->a_top = objof(ici_str_get_nul_term(argv[i]))) == NULL)
                     goto fail;
                 ++av->a_top;
             }
@@ -142,7 +142,7 @@ ici_maind(int argc, char *argv[], int debugging)
     {
         if (arg0 == NULL)
             arg0 = argv[0];
-        if ((av->a_base[0] = objof(get_cname(arg0))) == NULL)
+        if ((av->a_base[0] = objof(ici_str_get_nul_term(arg0))) == NULL)
             goto fail;
     }
     else
@@ -214,7 +214,7 @@ ici_maind(int argc, char *argv[], int debugging)
                     f->f_name = SS(empty_string);
                     if (parse_module(f, objwsupof(ici_vs.a_top[-1])) < 0)
                         goto fail;
-                    decref(f);
+                    ici_decref(f);
                     break;
 
                 case 'l':
@@ -276,7 +276,7 @@ ici_maind(int argc, char *argv[], int debugging)
 
 /*
  * For tracking down object leaks...
-incref(fetch(ici_vs.a_top[-1], SS(_stdout));
+ici_incref(ici_fetch(ici_vs.a_top[-1], SS(_stdout));
 ici_vs.a_top = ici_vs.a_base;
 ici_os.a_top = ici_os.a_base;
 ici_xs.a_top = ici_xs.a_base;
@@ -284,20 +284,19 @@ ICI_reclaim();
 ICI_reclaim();
 pause();
 */
-    wrapup();
+    ici_uninit();
     return 0;
 
 usage:
     fprintf(stderr, "usage:\t%s [-s] [-f file] [-e prog] [-digit] [-m name] [--] args...\n", argv[0]);
     fprintf(stderr, "\t%s file args...\n", argv[0]);
-    wrapup();
+    ici_uninit();
     ici_error = "invalid command line arguments";
     return 1;
 
 fail:
-    s = ici_error;
-    wrapup();
     fflush(stdout);
-    fprintf(stderr, "%s\n", s);
+    fprintf(stderr, "%s\n", ici_error);
+    ici_uninit();
     return 1;
 }
