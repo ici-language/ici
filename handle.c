@@ -17,10 +17,10 @@ objname_handle(ici_obj_t *o, char p[ICI_OBJNAMEZ])
         strcpy(p, "handle");
     else
     {
-        if (stringof(o)->s_nchars > 26)
-            sprintf(p, "%.26s...", stringof(o)->s_chars);
+        if (handleof(o)->h_name->s_nchars > ICI_OBJNAMEZ - 1)
+            sprintf(p, "%.*s...", ICI_OBJNAMEZ - 4, handleof(o)->h_name->s_chars);
         else
-            sprintf(p, "%s", stringof(o)->s_chars);
+            sprintf(p, "%s", handleof(o)->h_name->s_chars);
     }
 }
 

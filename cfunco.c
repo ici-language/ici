@@ -24,7 +24,7 @@ objname_cfunc(ici_obj_t *o, char p[ICI_OBJNAMEZ])
     if (strlen(n) > ICI_OBJNAMEZ - 2 - 1)
         sprintf(p, "%.*s...()", ICI_OBJNAMEZ - 6, n);
     else
-        sprintf(p, "%.*s()", ICI_OBJNAMEZ - 3, n);
+        sprintf(p, "%s()", n);
 }
 
 /*
