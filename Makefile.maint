@@ -30,7 +30,7 @@
 #   version     Create the VERSION file with the current date.
 #
 
-RELEASE = 4.1.0
+RELEASE = 4.1.1
 
 FILES   = \
 	BUILDING CHANGES CREDITS README PLATFORM TODO VERSION\
@@ -53,6 +53,10 @@ FILES   = \
 	win32/ici4-sdk-install.nsi win32/ici-v4-install.nsi\
 	win32/ici4install.mak win32/icisdk.mak\
 	win32/prof.bat win32/README.txt\
+	\
+	macosx/dlfcn.h macosx/dlfcn_simple.c\
+	macosx/ici.pbproj\
+	macosx/semaphore.c macosx/semaphore.h\
 	\
 	ici_init.ici ici4core.ici ici4core1.ici ici4core2.ici ici4core3.ici\
 	ici34check.ici test-core.ici \
@@ -125,6 +129,14 @@ dist    :
 
 dist-gz : dist
 	gzip -9 ../ici-$(RELEASE).tar
+
+full-dist:
+	(\
+	  d=`pwd`;\
+	  d=`basename $$d`;\
+	  cd ..;\
+	  tar --exclude CVS -cvf ici-$(RELEASE).tar $$d\
+	)
 
 cpio    :
 	ls $(FILES) |  cpio -oc > ici-$(RELEASE).cpio
