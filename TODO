@@ -14,15 +14,6 @@ General
 	Other sections of the interpreter should be fixed to avoid
 	using C-isms where they are not appropriate to ICI.
 
-	Investigate use of automake/autoconf for configuring,
-	building, etc... This might mean a few changes to the
-	way headers etc... are included and how code is conditionally
-	compiled. I don't know if it's the easist way to go. The
-	system specific files aren't too bad. If needed a simple
-	configure script could be written to grab the system's
-	Makefile, replace some variables and write out a Makefile
-	and conf.h file.
-
 Modules
 
 	Native code modules need to be collectable. When a GC occurs
@@ -69,8 +60,5 @@ intrinsic functions properly.
 ---
 
 Todo before 4.1 release:
-* Add ici_assign_super and ici_fetch_super to public interface.
-* Put --help and/or /? help into ici.exe.
-* Make ici without arguments give usage message.
 * Either update man pages, or flag them out-of-date.
 * Add at least minimal help to extension modules and make simultaneous release.

@@ -1,5 +1,13 @@
 Changes in version 4.1.0 (a beta release) <- ###Planned, not done yet###
 
+*   Upgraded the usage message and added -h/-? help. (timl)
+
+*   Allowed '/' to introduced arguments as well as '-' on Windows.
+    (timl)
+
+*   Added ici_fetch_super() and ici_assign_super() macros to the
+    public interface. (timl)
+
 *   Added support for an optional 'base' argument to int() and
     num(). (timl)
 

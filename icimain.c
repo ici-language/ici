@@ -41,6 +41,7 @@ ici_main(int argc, char *argv[])
     ici_array_t         *av;
     FILE                *stream;
     ici_file_t          *f;
+    int                 help = 0;
 
 #   ifndef NDEBUG
         /*
@@ -64,7 +65,17 @@ ici_main(int argc, char *argv[])
         goto fail;
     *av->a_top++ = objof(&o_null); /* Leave room for argv[0]. */
     arg0 = NULL;
-    if (argc > 1 && argv[1][0] != '-')
+    if (argc <= 1)
+        goto usage;
+    if
+    (
+        argc > 1
+        &&
+        argv[1][0] != '-'
+#       ifdef WIN32
+            && argv[1][0] != '/'
+#       endif
+    )
     {
         /*
          * Usage1: ici file [args...]
@@ -86,7 +97,13 @@ ici_main(int argc, char *argv[])
          */
         for (i = 1; i < argc; ++i)
         {
-            if (argv[i][0] == '-')
+            if
+            (
+                argv[i][0] == '-'
+#               ifdef WIN32
+                    || argv[i][0] == '/'
+#               endif
+            )
             {
                 for (j = 1; argv[i][j] != '\0'; ++j)
                 {
@@ -129,19 +146,13 @@ ici_main(int argc, char *argv[])
                             arg0 = argv[i];
                         break;
 
-                    case 'w':
-                        if (argv[i][++j] != '\0')
-                            s = &argv[i][j];
-                        else if (++i >= argc)
-                            goto usage;
-                        else
-                            s = argv[i];
-                        break;
-
                     case '0': case '1': case '2': case '3': case '4':
                     case '5': case '6': case '7': case '8': case '9':
                         continue;
 
+                    case 'h':
+                    case '?':
+                        help = 1;
                     default:
                         goto usage;
                     }
@@ -187,7 +198,15 @@ ici_main(int argc, char *argv[])
     /*
      * Pass two over the arguments; actually parse the modules.
      */
-    if (argc > 1 && argv[1][0] != '-')
+    if
+    (
+        argc > 1
+        &&
+        argv[1][0] != '-'
+#       ifdef WIN32
+            && argv[1][0] != '/'
+#       endif
+    )
     {
         if ((stream = fopen(argv[1], "r")) == NULL)
         {
@@ -202,7 +221,13 @@ ici_main(int argc, char *argv[])
     {
         for (i = 1; i < argc; ++i)
         {
-            if (argv[i][0] != '-')
+            if
+            (
+                argv[i][0] != '-'
+#               ifdef WIN32
+                    && argv[i][0] != '/'
+#               endif
+            )
                 continue;
             if (argv[i][1] == '\0')
             {
@@ -277,9 +302,6 @@ ici_main(int argc, char *argv[])
                     if (ici_parse_file(arg0, (char *)stream, &ici_stdio_ftype))
                         goto fail;
                     continue;
-
-                case 's':
-                    break;
                 }
                 break;
             }
@@ -296,11 +318,40 @@ ici_main(int argc, char *argv[])
     return 0;
 
 usage:
-    fprintf(stderr, "usage:\t%s [-s] [-f file] [-e prog] [-digit] [-m name] [--] args...\n", argv[0]);
-    fprintf(stderr, "\t%s file args...\n", argv[0]);
+    fprintf(stderr, "usage1: %s file args...\n", argv[0]);
+    fprintf(stderr, "usage2: %s [-f file] [-] [-e prog] [-#] [-l mod] [-m name] [--] args...\n", argv[0]);
+    fprintf(stderr, "usage3: %s [-h | -? | -v]\n", argv[0]);
+    if (!help)
+    {
+        fprintf(stderr, "The -h switch will show details.\n");
+    }
+    else
+    {
+        fprintf(stderr, "\n");
+        fprintf(stderr, "usage1:\n");
+        fprintf(stderr, " Makes the ICI argv from file and args, then parses (i.e. executes) the file.\n");
+        fprintf(stderr, "\n");
+        fprintf(stderr, "usage2:\n");
+        fprintf(stderr, " Makes the ICI argv from the otherwise unused arguments, then processes the\n");
+        fprintf(stderr, " following options in order. Repeats are allowed.\n");
+        fprintf(stderr, " -f file  Parses the ICI code in file.\n");
+        fprintf(stderr, " -        Parses ICI code from standard input.\n");
+        fprintf(stderr, " -e prog  Parses the text 'prog' directly.\n");
+        fprintf(stderr, " -#       Parses from the file descriptor #.\n");
+        fprintf(stderr, " -l mod   Loads the module 'mod' as if by load().\n");
+        fprintf(stderr, " -m name  Sets the ICI argv[0] to name.\n");
+        fprintf(stderr, " --       Place following arguments in the ICI argv without interpretation.\n");
+        fprintf(stderr, " args...  Otherwise unused arguments are placed in the ICI argv.\n");
+        fprintf(stderr, "\n");
+        fprintf(stderr, "usage3:\n");
+        fprintf(stderr, " -h | -?  Prints this help message then exits.\n");
+        fprintf(stderr, " -v       Prints the version string then exits.\n");
+        fprintf(stderr, "\n");
+        fprintf(stderr, "See 'The ICI Programming Language' (ici.pdf from ici.sf.net).\n");
+    }
     ici_uninit();
     ici_error = "invalid command line arguments";
-    return 1;
+    return !help;
 
 fail:
     fflush(stdout);
