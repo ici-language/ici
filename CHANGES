@@ -1,5 +1,22 @@
 Changes in version 4.1.0 (a beta release) <- ###Planned, not done yet###
 
+*   Changed icistr-setup.h and related macros in str.h (exported
+    to ici.h) to avoid duplicate symbols in modules.  The
+    init_ici_str() function is now made static to limit its
+    scope to the file(s) that includes it. The ICIS et al
+    macros in str.h (and exported to ici.h) now include an
+    the value of an ICI_MODULE_NAME macro within the symbol
+    names.  This allows correct module loading on Mac OS X
+    where the dynamic linker disallows duplicate symbols in
+    loaded modules (bundles)  The only impact for other platforms
+    should be the potential for not sharing static string objects
+    between modules that define the same strings. (andy)
+
+*   Mac OS X module loading now uses bundles instead of the
+    incorrect dynamic library usage.  The file extension for
+    modules has changed to match this change, it was ".dylib"
+    but is now ".bundle". (andy)
+
 *   Upgraded the usage message and added -h/-? help. (timl)
 
 *   Allowed '/' to introduced arguments as well as '-' on Windows.
