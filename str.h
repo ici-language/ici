@@ -42,23 +42,9 @@ struct string
  *
  *  o = fetch(s, ICIS(fred));
  *
- * Next, in a source file, write:
- *
- *  #undef  ICI_STR
- *  #define ICI_STR ICI_STR_DECL
- *  #include "icistr.h"
- *
- *  int
- *  init_ici_str(void)
- *  {
- *  #undef  ICI_STR
- *  #define ICI_STR ICI_STR_MAKE
- *      return
- *  #include "icistr.h"
- *      0;
- *  }
- *  #undef  ICI_STR
- *  #define ICI_STR ICI_STR_NORM
+ * Next, in one of your source file, include the special include file
+ * "icistr-setup.h". This will (a) declare pointers to the string objects,
+ * and (b) define a function (init_ici_str()) that initialises those pointers.
  *
  * Finally, call init_ici_str() at startup. It returns 1 on error, usual
  * conventions.
