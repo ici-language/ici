@@ -736,7 +736,7 @@ printf("mem=%ld vs. %ld, nobjects=%d, ici_natoms=%d\n", mem, ici_mem, objs_top -
     --ici_supress_collect;
 }
 
-#ifndef NDDEBUG
+#ifndef NDEBUG
 void
 ici_dump_refs(void)
 {
