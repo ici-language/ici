@@ -196,7 +196,14 @@ ici_module_new(ici_cfunc_t *cf)
 static int
 call_cfunc(ici_obj_t *o, ici_obj_t *subject)
 {
-    if (ici_debug_active || ici_profile_active)
+    if
+    (
+	ici_debug_active
+#ifndef NOPROFILE
+	||
+	ici_profile_active
+#endif	
+    )
     {
         ici_obj_t       **xt;
         int             result;
@@ -213,8 +220,10 @@ call_cfunc(ici_obj_t *o, ici_obj_t *subject)
         result = (*cfuncof(o)->cf_cfunc)(subject);
         if (xt != ici_xs.a_top)
             return result;
+#ifndef NOPROFILE
         if (ici_profile_active)
             ici_profile_return();
+#endif
         if (ici_debug_active)
             ici_debug->idbg_fnresult(ici_os.a_top[-1]);
         return result;
