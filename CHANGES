@@ -11,6 +11,13 @@ Changes in version 4.1.0 (a beta release) <- ###Planned, not done yet###
 *   Added support for an optional 'base' argument to int() and
     num(). (timl)
 
+*   Corrected some problems in float hashing, in particular when
+    0.0 and -0.0 hash to different values but (until now) appeared
+    to be equal. Also addressed some more subtle C issues. (timl)
+
+*   Corrected a problem in interval() with a 0 start and no length
+    argument. (timl)
+
 *   Added support in handles to allow fetch, assign and method
     invocation. This has two interfaces, one cooked where the key
     is first converted to an integer ID, the other raw. One, or the
@@ -21,8 +28,8 @@ Changes in version 4.1.0 (a beta release) <- ###Planned, not done yet###
     the function pointers h_member_intf and h_generic_intf.
     See documentation. (timl)
 
-*   Added 'ici_parse_fname' function to parse a named file
-    directly (because it's such a common case). (timl)
+*   Added 'ici_parse_fname' function to the API to parse a named
+    file directly (because it's such a common case). (timl)
 
 *   Added user-parsed literals and support functions. User-parsed
     literals allow things like:
@@ -32,7 +39,9 @@ Changes in version 4.1.0 (a beta release) <- ###Planned, not done yet###
     to be defined for things other than the built-in ones. The
     stuff... can be any syntax, built variously from low level
     character data, from standard ICI tokens, or from full ICI
-    expressions.
+    expressions. For example, the bignum extension now allows:
+
+        x = [bignum 1000000000000];
     
     The mechanism works by getting a parser function by evaluating
     the ident (if it is callable, it is the function, else ident.parser
