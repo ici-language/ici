@@ -1,4 +1,7 @@
-Changes in version 4.1.0 (a beta release)
+Changes in version 4.1.0 (a beta release) <- ###Planned, not done yet###
+
+*   Added support for an optional 'base' argument to int() and
+    num(). (timl)
 
 *   Added support in handles to allow fetch, assign and method
     invocation. This has two interfaces, one cooked where the key
@@ -192,7 +195,7 @@ Changes in version 4.0.1 (an alpha release)
     method creation. It is to help Windows COM support. It is not
     used by any core types.
 
-*   Added Micrsoft Visual Studion build stuff in a new "win32"
+*   Added Micrsoft Visual Studio build stuff in a new "win32"
     directory. It contains a workspace and a bunch of projects to
     build the ICI DLL, wappers, the Windows ICI debugger, and an
     SDK installer (using NSIS - Nullsoft's free installer system).
