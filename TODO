@@ -59,8 +59,12 @@ intrinsic functions properly.
 
 ---
 
-Make the -e option and a ';' if no trailing ';' or }
-(or allow EOF to terminate statements).
+Have some easy way of convering an array to a set and a set to an
+array.
+
+array = keys(set) should work.
+
+setof(array) ?
 
 ---
 
