@@ -2,6 +2,7 @@ EXPORTS ici_aborted DATA
 EXPORTS ici_alloc
 EXPORTS ici_argcount
 EXPORTS ici_argerror
+EXPORTS ici_array_find_slot
 EXPORTS ici_array_get
 EXPORTS ici_array_nels
 EXPORTS ici_array_new
@@ -27,6 +28,7 @@ EXPORTS ici_debug DATA
 EXPORTS ici_debug_enabled DATA
 EXPORTS ici_debug_ignore_errors
 EXPORTS ici_debug_respect_errors
+EXPORTS ici_def_cfuncs
 EXPORTS ici_dont_record_line_nums DATA
 EXPORTS ici_enter
 EXPORTS ici_error DATA
