@@ -3126,6 +3126,7 @@ f_strcat()
     }
     if (s1->s_nchars < z)
         s1->s_nchars = z;
+    s1->s_chars[s1->s_nchars] = '\0';
     return ici_ret_no_decref(objof(s1));
 }
 

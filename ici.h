@@ -96,7 +96,7 @@ int ici_get_last_win32_error(void);
  */
 #define ICI_VER_MAJOR   4
 #define ICI_VER_MINOR   0
-#define ICI_VER_RELEASE 2
+#define ICI_VER_RELEASE 3
 
 /*
  * The ICI version number composed into an 8.8.16 long for simple comparisons.
@@ -112,7 +112,7 @@ int ici_get_last_win32_error(void);
  * the exernal interface changes in a way that could break already compiled
  * modules. See ici_interface_check().
  */
-#define ICI_BACK_COMPAT_VER ((4UL << 24) | (0UL << 16) | 1)
+#define ICI_BACK_COMPAT_VER ((4UL << 24) | (0UL << 16) | 3)
 
 
 /*
