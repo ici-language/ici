@@ -257,11 +257,6 @@ ici_evaluate(object_t *code, int n_operands)
                         ? stringof(k)->s_slot->sl_value \
                         : fetch(s, k)
 
-    if (isarray(code))
-    {
-        if ((code = objof(new_pc(arrayof(code), 0))) == NULL)
-            return NULL;
-    }
     /*
      * This is pretty scary. An object on the C stack. But it should
      * be OK because it's only on the execution stack and there should be
@@ -279,7 +274,18 @@ ici_evaluate(object_t *code, int n_operands)
     frame.c_odepth = (ici_os.a_top - ici_os.a_base) - n_operands;
     frame.c_vdepth = ici_vs.a_top - ici_vs.a_base;
     *ici_xs.a_top++ = objof(&frame);
-    *ici_xs.a_top++ = code;
+
+    if (isarray(code))
+    {
+        if (new_pc(arrayof(code), ici_xs.a_top))
+            return NULL;
+    }
+    else
+    {
+        *ici_xs.a_top = code;
+    }
+    ++ici_xs.a_top;
+
 
     /*
      * The execution loop.
@@ -844,6 +850,31 @@ ici_evaluate(object_t *code, int n_operands)
                 }
                 continue;
 
+            case OP_IF:
+                /*
+                 * bool obj => -
+                 */
+                if (isfalse(ici_os.a_top[-2]))
+                {
+                    ici_os.a_top -= 2;
+                    continue;
+                }
+                if (new_pc(arrayof(ici_os.a_top[-1]), ici_xs.a_top))
+                    goto fail;
+                ++ici_xs.a_top;
+                ici_os.a_top -= 2;
+                continue;
+
+            case OP_IFELSE:
+                /*
+                 * bool obj1 obj2 => -
+                 */
+                if (new_pc(arrayof(ici_os.a_top[-1 - !isfalse(ici_os.a_top[-3])]), ici_xs.a_top))
+                    goto fail;
+                ++ici_xs.a_top;
+                ici_os.a_top -= 3;
+                continue;
+
             case OP_IFBREAK:
                 /*
                  * bool => - (os)
@@ -923,10 +954,10 @@ ici_evaluate(object_t *code, int n_operands)
                  *       => pc (xs)
                  */
 
-                if ((*ici_xs.a_top = objof(new_pc(arrayof(ici_os.a_top[-1]), 0))) == NULL)
+                if (new_pc(arrayof(ici_os.a_top[-1]), ici_xs.a_top))
                     goto fail;
-                --ici_os.a_top;
                 ++ici_xs.a_top;
+                --ici_os.a_top;
                 continue;
 
             case OP_CRITSECT:
@@ -941,7 +972,7 @@ ici_evaluate(object_t *code, int n_operands)
                     if (*ici_xs.a_top == NULL)
                         goto fail;
                     ++ici_xs.a_top;
-                    if ((*ici_xs.a_top = objof(new_pc(arrayof(ici_os.a_top[-1]), 0))) == NULL)
+                    if (new_pc(arrayof(ici_os.a_top[-1]), ici_xs.a_top))
                         goto fail;
                     ++ici_xs.a_top;
                     --ici_os.a_top;
@@ -994,7 +1025,7 @@ ici_evaluate(object_t *code, int n_operands)
                 decref(c);
                 goto badfail;
             }
-            if ((*ici_xs.a_top = objof(new_pc(arrayof(c->c_catcher), 0))) == NULL)
+            if (new_pc(arrayof(c->c_catcher), ici_xs.a_top))
                 goto badfail;
             ++ici_xs.a_top;
             decref(c);

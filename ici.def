@@ -118,8 +118,6 @@ EXPORTS ici_op_for
 EXPORTS ici_op_looper
 EXPORTS ici_op_continue
 EXPORTS ici_op_andand
-EXPORTS ici_op_if
-EXPORTS ici_op_ifelse
 EXPORTS ici_op_switcher
 EXPORTS ici_op_switch
 EXPORTS ici_op_pop

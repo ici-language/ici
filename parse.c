@@ -1811,7 +1811,7 @@ ici_array_nels(&ici_vs)); ###*/
         case 1:
             if (a->a_top == a->a_base)
                 continue;
-            if ((*ici_xs.a_top = objof(new_pc(a, 0))) == NULL)
+            if (new_pc(a, ici_xs.a_top))
             {
                 decref(a);
                 return 1;

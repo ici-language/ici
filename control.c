@@ -20,14 +20,12 @@
 int
 ici_op_for()
 {
-    pc_t        *pc;
-
-    if ((pc = new_pc(arrayof(ici_os.a_top[-1]), 1)) == NULL)
+    if (new_pc(arrayof(ici_os.a_top[-1]), ici_xs.a_top + 1))
         return 1;
-    pc->pc_next += opof(ici_xs.a_top[-1])->op_code;
+    pcof(ici_xs.a_top[1])->pc_next += opof(ici_xs.a_top[-1])->op_code;
     ici_xs.a_top[-1] = ici_os.a_top[-1];
     *ici_xs.a_top++ = objof(&o_looper);
-    *ici_xs.a_top++ = objof(pc);
+    ++ici_xs.a_top; /* pc */
     --ici_os.a_top;
     return 0;
 }
@@ -39,7 +37,7 @@ ici_op_for()
 int
 ici_op_looper()
 {
-    if ((*ici_xs.a_top = objof(new_pc(arrayof(ici_xs.a_top[-2]), 0))) == NULL)
+    if (new_pc(arrayof(ici_xs.a_top[-2]), ici_xs.a_top))
         return 1;
     ++ici_xs.a_top;
     return 0;
@@ -86,10 +84,10 @@ ici_op_andand()
          * Have to test next part of the condition.
          */
         --ici_xs.a_top;
-        if ((*ici_xs.a_top = objof(new_pc(arrayof(ici_os.a_top[-1]), 0))) == NULL)
+        if (new_pc(arrayof(ici_os.a_top[-1]), ici_xs.a_top))
             return 1;
-        ici_os.a_top -= 2;
         ++ici_xs.a_top;
+        ici_os.a_top -= 2;
         return 0;
     }
     /*
@@ -98,40 +96,6 @@ ici_op_andand()
     ici_os.a_top[-2] = objof(c ? o_one : o_zero);
     --ici_os.a_top;
     --ici_xs.a_top;
-    return 0;
-}
-
-/*
- * bool obj => -
- */
-int
-ici_op_if()
-{
-    if (isfalse(ici_os.a_top[-2]))
-    {
-        ici_os.a_top -= 2;
-        --ici_xs.a_top;
-        return 0;
-    }
-    --ici_xs.a_top;
-    if ((*ici_xs.a_top = objof(new_pc(arrayof(ici_os.a_top[-1]), 0))) == NULL)
-        return 1;
-    ++ici_xs.a_top;
-    ici_os.a_top -= 2;
-    return 0;
-}
-
-/*
- * bool obj1 obj2 => -
- */
-int
-ici_op_ifelse()
-{
-    --ici_xs.a_top;
-    if ((*ici_xs.a_top = objof(new_pc(arrayof(ici_os.a_top[-1 - !isfalse(ici_os.a_top[-3])]), 0))) == NULL)
-        return 1;
-    ++ici_xs.a_top;
-    ici_os.a_top -= 3;
     return 0;
 }
 
@@ -165,7 +129,7 @@ ici_op_switch()
     }
     ici_xs.a_top[-1] = objof(&o_null);
     *ici_xs.a_top++ = objof(&o_switcher);
-    if ((*ici_xs.a_top = objof(new_pc(arrayof(ici_os.a_top[-2]), 0))) == NULL)
+    if (new_pc(arrayof(ici_os.a_top[-2]), ici_xs.a_top))
         return 1;
     pcof(*ici_xs.a_top)->pc_next += intof(sl->sl_value)->i_value;
     ++ici_xs.a_top;
@@ -186,10 +150,10 @@ op_t    o_looper        = {OBJ(TC_OP), ici_op_looper};
 op_t    o_loop          = {OBJ(TC_OP), NULL, OP_LOOP};
 op_t    o_break         = {OBJ(TC_OP), NULL, OP_BREAK};
 op_t    o_continue      = {OBJ(TC_OP), ici_op_continue};
-op_t    o_if            = {OBJ(TC_OP), ici_op_if};
+op_t    o_if            = {OBJ(TC_OP), NULL, OP_IF};
 op_t    o_ifnotbreak    = {OBJ(TC_OP), NULL, OP_IFNOTBREAK};
 op_t    o_ifbreak       = {OBJ(TC_OP), NULL, OP_IFBREAK};
-op_t    o_ifelse        = {OBJ(TC_OP), ici_op_ifelse};
+op_t    o_ifelse        = {OBJ(TC_OP), NULL, OP_IFELSE};
 op_t    o_pop           = {OBJ(TC_OP), ici_op_pop};
 op_t    o_andand        = {OBJ(TC_OP), ici_op_andand, 0, 1};
 op_t    o_barbar        = {OBJ(TC_OP), ici_op_andand, 0, 0};

@@ -40,6 +40,8 @@ enum
     OP_ASSIGNLOCAL,
     OP_EXEC,
     OP_LOOP,
+    OP_IF,
+    OP_IFELSE,
     OP_IFNOTBREAK,
     OP_IFBREAK,
     OP_BREAK,

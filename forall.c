@@ -197,7 +197,7 @@ exec_forall()
     return 1;
 
 next:
-    if ((*ici_xs.a_top = objof(new_pc(arrayof(fa->fa_code), 0))) == NULL)
+    if (new_pc(arrayof(fa->fa_code), ici_xs.a_top))
         return 1;
     ++ici_xs.a_top;
     return 0;

@@ -14,6 +14,9 @@ mark_pc(object_t *o)
 }
 
 /*
+ * Get a new (hopefully recycled) pc and store it at through the given
+ * pointer to a slot on the execution stack.
+ *
  * pc objects exist only in a one-to-one relationship with a fixed (for their
  * life) position on the execution stack. We take advantage of this by keeping
  * a cache of pc objects shadowing the execution stack. For this reson we
@@ -22,24 +25,24 @@ mark_pc(object_t *o)
  *
  * NB: pc's come back ready-decref'ed.
  */
-pc_t *
-new_pc(array_t *c, int xs_offset)
+int
+new_pc(array_t *c, object_t **xs)
 {
     pc_t                *pc;
     int                 n;
 
-    n = ici_xs.a_top - ici_xs.a_base + xs_offset;
+    n = xs - ici_xs.a_base;
     if
     (
-        ici_exec->x_xs_pc_cache->a_top - ici_exec->x_xs_pc_cache->a_bot < n + 1
+        ici_exec->x_xs_pc_cache->a_top - ici_exec->x_xs_pc_cache->a_base < n + 1
         ||
         (pc = pcof(ici_exec->x_xs_pc_cache->a_base[n])) == pcof(&o_null)
     )
     {
         if (ici_stk_probe(ici_exec->x_xs_pc_cache, n))
-            return NULL;
+            return 1;
         if ((pc = pcof(ici_talloc(pc_t))) == NULL)
-            return NULL;
+            return 1;
         objof(pc)->o_tcode = TC_PC;
         assert(ici_typeof(pc) == &pc_type);
         objof(pc)->o_flags = 0;
@@ -50,7 +53,8 @@ new_pc(array_t *c, int xs_offset)
     pc->pc_code = c;
     pc->pc_next = c->a_base;
     pc->pc_limit = c->a_top;
-    return pc;
+    *xs = objof(pc);
+    return 0;
 }
 
 /*

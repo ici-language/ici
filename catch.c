@@ -97,10 +97,10 @@ ici_op_onerror()
 {
     if ((ici_xs.a_top[-1] = objof(new_catch(ici_os.a_top[-1], ici_os.a_top - ici_os.a_base - 2, ici_vs.a_top - ici_vs.a_base, 0))) == NULL)
         return 1;
-    if ((*ici_xs.a_top = objof(new_pc(arrayof(ici_os.a_top[-2]), 0))) == NULL)
+    if (new_pc(arrayof(ici_os.a_top[-2]), ici_xs.a_top))
         return 1;
-    ici_os.a_top -= 2;
     ++ici_xs.a_top;
+    ici_os.a_top -= 2;
     return 0;
 }
 

@@ -166,7 +166,6 @@ call_func(object_t *o, object_t *subject)
 {
     register func_t     *f;
     register struct_t   *d;     /* The local variable structure. */
-    register pc_t       *pc;
     register object_t   **ap;   /* Actual parameter. */
     register object_t   **fp;   /* Formal parameter. */
     slot_t              *sl;
@@ -179,9 +178,6 @@ call_func(object_t *o, object_t *subject)
         ici_profile_call(f);
 #endif
 
-    if ((pc = new_pc(f->f_code, 0)) == NULL)
-        return 1;
-    incref(pc);
     if ((d = structof(copy(objof(f->f_autos)))) == NULL)
         goto fail;
     if (subject != NULL)
@@ -225,19 +221,19 @@ call_func(object_t *o, object_t *subject)
          */
         while (fp < f->f_args->a_top && n > 0)
         {
-			assert(isstring(*fp));
-			if (stringof(*fp)->s_struct == d && stringof(*fp)->s_vsver == ici_vsver)
-			{
-				stringof(*fp)->s_slot->sl_value = *ap;
-			}
-			else
-			{
-				if (assign(d, *fp, *ap))
-					goto fail;
+            assert(isstring(*fp));
+            if (stringof(*fp)->s_struct == d && stringof(*fp)->s_vsver == ici_vsver)
+            {
+                stringof(*fp)->s_slot->sl_value = *ap;
             }
-			++fp;
-			--ap;
-			--n;
+            else
+            {
+                if (assign(d, *fp, *ap))
+                    goto fail;
+            }
+            ++fp;
+            --ap;
+            --n;
         }
     }
     va = NULL;
@@ -261,16 +257,16 @@ call_func(object_t *o, object_t *subject)
     if (va != NULL)
         decref(va);
 
+    ici_xs.a_top[-1] = objof(&o_mark);
+    if (new_pc(f->f_code, ici_xs.a_top))
+        goto fail;
+    ++ici_xs.a_top;
     *ici_vs.a_top++ = objof(d);
     decref(d);
     ici_os.a_top -= NARGS() + 2;
-    ici_xs.a_top[-1] = objof(&o_mark);
-    *ici_xs.a_top++ = objof(pc);
-    decref(pc);
     return 0;
 
 fail:
-    decref(pc);
     if (d != NULL)
         decref(d);
     return 1;
