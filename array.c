@@ -180,7 +180,11 @@ ici_array_push(array_t *a, object_t *o)
          */
         if (a->a_top == a->a_limit)
         {
-            if (a->a_base + 1 >= a->a_bot || a->a_bot == a->a_limit)
+            /*
+             * The a_top pointer is at the limit of the array. So it has to
+             * wrap to the base. But will there be room after that?
+             */
+            if (a->a_base + 1 >= a->a_bot)
             {
                 if (ici_array_grow(a))
                     return 1;
@@ -188,6 +192,8 @@ ici_array_push(array_t *a, object_t *o)
             else
             {
                 a->a_top = a->a_base; /* Wrap from limit to base. */
+                if (a->a_bot == a->a_limit)
+                    a->a_bot = a->a_base; /* a_bot was also at limit. */
             }
         }
     }
