@@ -97,7 +97,6 @@
 #define ICI_PTR_HASH_BITS(p)    ((unsigned long)(p) >> 6)
 
 #define nels(a)         (sizeof a / sizeof a[0])
-//#define talloc(t)       ((t *)ici_alloc(sizeof(t)))
 
 typedef struct array    array_t;
 typedef struct catchs   catch_t;

@@ -758,8 +758,8 @@ usei:
             ici_exec->x_os_temp_cache->a_base[n] = o;
             rego(o);
         }
-        ici_typeof(o) = &int_type;
         o->o_tcode = TC_INT;
+        assert(ici_typeof(o) == &int_type);
         o->o_flags = O_TEMP;
         o->o_nrefs = 0;
         o->o_leafz = sizeof(ostemp_t);

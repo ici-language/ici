@@ -1041,7 +1041,7 @@ expr(parse_t *p, expr_t **ep, int exclude)
          */
         if ((e = ici_talloc(expr_t)) == NULL)
         {
-            //ici_tfree((char *)e); ###???
+            /*ici_tfree((char *)e); ###???*/
             return -1;
         }
         e->e_what = this;
