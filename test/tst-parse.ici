@@ -340,7 +340,14 @@ bad("[module:[struct]");
 bad("[module fail(\"xx\");]");
 bad("[class (");
 bad("[class (1");
-bad("[class (1)]");
+a := 1;
+{a := 2}
+if (a != 2)
+    fail("failed to handle no semicolon expression");
+parse("a = 3", scope());
+if (a != 3)
+    fail("failed to handle no semicolon on eof");
+
 bad("[class func(+)]");
 bad("[class name");
 bad("[class name=");

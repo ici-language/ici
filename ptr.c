@@ -99,7 +99,8 @@ call_ptr(ici_obj_t *o, ici_obj_t *subject)
 {
     ici_obj_t   *f;
 
-    f = ici_fetch(ptrof(o)->p_aggr, ptrof(o)->p_key);
+    if ((f = ici_fetch(ptrof(o)->p_aggr, ptrof(o)->p_key)) == NULL)
+        return 1;
     if (ici_typeof(f)->t_call == NULL)
     {
         char    n1[30];

@@ -2050,13 +2050,21 @@ statement(ici_parse_t *p, ici_array_t *a, ici_struct_t *sw, char *m, int endme)
         case 0: goto none;
         case -1: return -1;
         }
-        if (next(p, a) != T_SEMICOLON)
+        switch (next(p, a))
         {
+        case T_OFFCURLY:
+        case T_EOF:
+            reject(p);
+            break;
+
+        case T_SEMICOLON:
+            break;
+
+        default:
             reject(p);
             ici_error = "badly formed expression, or missing \";\"";
             return -1;
         }
-        break;
     }
     if (endme)
     {
