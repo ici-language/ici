@@ -10,14 +10,17 @@ ici \- ICI programming language interpreter
 \fBici\fP [\fB-h \fP| \fB-?\fP | \fB-v\fP]
 .SH DESCRIPTION
 \fBici\fP is an interpreter for the ICI language defined in
-\fIThe ICI Programming Language\fP (available in PDF in ICI
-distributions, and probably installed somewhere on this system
-if this manual page is installed).
-It is designed for use in many environments, including embedded
-systems, as an adjunct to other programs, as a text-based interface to
-compiled libraries, and as a cross-platform scripting language with good
-string-handling capabilities. The ICI language and source code
-is free for any use.
+\fIThe ICI Programming Language\fP (\fIici.pdf\fP from \fIici.sf.net\fP,
+and probably installed on this system).
+ICI is a general purpose interpretive programming language
+that has dynamic typing and flexible data types with the basic
+syntax, flow control constructs andoperators of C. It is designed
+for use in many environments, including embedded systems, as
+an adjunct to other programs, as a text-based interface to compiled
+libraries, and as a cross-platform scripting language with
+good string-handling capabilities.
+The ICI language and source is free for any use but without
+warranties of any kind.
 .PP
 This page details the command line switches, and
 gives a summary of the language. More detail may be found in the
@@ -48,27 +51,17 @@ has its own man page. These are a seperate installation from
 the language core.
 
 .PP
-The ICI language is reminiscent of C,
-with a very similar syntax,
-the same operator precedence,
-but a few powerful additions.
-Automatic garbage collection,
-exception handling,
-dynamic aggregate data types like
-sets,
+The ICI language is reminiscent of C, with a very similar syntax,
+and the same operator precedence.
+Features of the language include automatic garbage collection,
+exception handling, dynamic aggregate data types like sets,
 associative arrays (`structs'),
-and support for object oriented programming are features of the language.
-Types are properties of objects, rather than the variables
-that refer to them, and can be examined via `typeof()'.
-The only requirement is that types must make sense at run-time
-(i.e. ICI is strongly, but dynamically, typed).
-Function argument lists are represented as an ici array so
-they can be manipulated just like any other first-class type \-
-they can be examined,
-extended,
-and passed on to other functions.
-Functions can be called with optional parameters,
-default values,
+and support for object oriented programming.
+ICI is strongly, but dynamically, typed.
+That is, types are properties of objects, rather than the variables
+that refer to them.
+The only requirement is that types must make sense at run-time.
+Functions can be called with optional parameters, default values,
 and varying types.
 Case-expressions in switch statements can be strings and other types.
 .PP
@@ -121,7 +114,7 @@ statements generate code which is executed.
 The ici interpreter accepts the command line options described below.
 For these options to be accepted,
 they must be provided before any other options intended for
-the ici script itself.\fP
+the ici script itself.
 They may be terminated by the `--' option.
 .PP
 The remaining options (after those intended for the interpreter),
@@ -167,13 +160,14 @@ Parse (run) the expression. Multiple \fI-e\fP options may be given and
 may also be mixed with other switches.
 
 .TP 1i
-.B "\(mis"
-Do not read the startup file.
-
-.TP 1i
 .B "\(mi#"
 \fI#\fP is a decimal digit. Parse a module from a specific
 file descriptor.
+
+.TP 1i
+.B "\(mil mod"
+Loads the module \fImod\fP as if by the \fIload()\fP function.
+
 .PP
 Any arguments not starting with a `\(mi'
 are placed in the ici program's \fIargv\fP array.
@@ -184,24 +178,20 @@ On Win32 platforms,
 ici performs wildcard expansion in the traditional
 MS-DOS fashion.  Arguments containing wildcard meta-characters, `?' and
 `*', may be protected by enclosing them in single or double quotes.
+The character / may be used as well as \(mi to introduce options.
 .PP
-In an ici program,
-access to the command line options is via these two variables:
+In an ICI program,
+access to the command line options is via the variable:
 .PP
 \fBargv\fP
 .PP
 An array of strings containing the command line options. The first
 element is the name of the ici program and subsequent elements are the
 options (arguments) passed to that program.
-.PP
-\fBargc\fP
-.PP
-The count of the number of elements in \fBargv\fP.
-Initially equal to \fCnels(argv)\fP.
 
 .SS "Reserved Words"
 .PP
-The complete list of ici's reserved words is:
+The complete list of ICI's reserved words is:
 .PP
 .nf
         \fBNULL        auto        break
@@ -210,7 +200,7 @@ The complete list of ici's reserved words is:
         for         forall      if
         in          onerror     return
         static      switch      try
-        while\fP
+        waitfor     while\fP
 .fi
 
 .ta 1c 2c 3c 4c 5c 6c 7c 8c 9c 10c
@@ -233,7 +223,7 @@ These are the tokens that make up ici's set of operators:
         :       ?       =       +=      \(mi=
         *=      /=      %=      >>=     <<=
         &=      ^=      |=      ~~=     <=>
-        .       \(mi>
+        .       \(mi>      :       :=      :^
     
 Other tokens are:
 
@@ -248,9 +238,9 @@ literal characters,
 and literal numbers.
 
 White space consists of spaces, tabs, newlines, or comments.
-Comments are as in C (/* ... */),
-and also from a # at the start of a line
-to the end of the line.
+Comments are as in C++ (/* ... */ and // till end of line).
+Also, lines starting in # in the first column 
+are ignored by the core interpreter.
 
 Literal strings and literal characters can include the following escape
 sequences:
@@ -289,6 +279,7 @@ the character with octal code \fIn...\fP (1, 2, or 3 octal digits).
 .PP
 Adjacent string literals (separated by white space)
 are concatenated to form a single string literal.
+As are regular expressions.
 A sequence of upper or lower case letters, underscores and digits is
 interpreted as:
 .IP "" 1c
@@ -323,6 +314,8 @@ executable-statement    expression \fB;\fP
         \fBcontinue ;\fP
         \fBreturn\fP [ expression ] \fB;\fP
         \fBtry\fP statement \fBonerror\fP statement
+	\fBwaitfor (\fP expression \fB;\fP expression \fB)\fP statement
+	\fBcritsect\fP statement
         \fB;\fP
 .PP
 factor  integer-number
@@ -335,8 +328,11 @@ factor  integer-number
         \fB(\fP expression \fB)\fP
         \fB[ array\fP expression-list  \fB]\fP 
         \fB[ set\fP expression-list \fB]\fP 
-        \fB[ struct\fP [ \fB:\fP expression \fB,\fP ] assignment-list \fB]\fP 
+        \fB[ struct\fP [(\fB:\fP|\fB=\fP) expression \fB,\fP] assignment-list \fB]\fP 
+        \fB[ class\fP [(\fB:\fP|\fB=\fP) expression \fB,\fP] assignment-list \fB]\fP 
         \fB[ func\fP function-body \fB]\fP
+	\fB[ module\fP [(\fB:\fP|\fB=\fP) expression \fB,\fP] statement...\fB]\fP
+	\fB[\fP identifier users-data... \fB]\fP
 .PP
 
 expression-list empty
@@ -405,7 +401,7 @@ binary-operator Any of:
         ||
         :
         ?
-        =  +=  \(mi=  *=  /=  %=  >>=  <<=  &=  ^=  |=  ~~=  <=>
+        =  := +=  \(mi=  *=  /=  %=  >>=  <<=  &=  ^=  |=  ~~=  <=>
         ,\fP
 
 compound-statement
@@ -507,6 +503,8 @@ Choice separator (must be right hand subject of ? operator)
 Choice (right hand expression must use : operator)
 .IP \fB=\fP 2c
 Assignment
+.IP \fB:=\fP 2c
+Assignment to most local scope or context
 .IP \fB+=\fP 2c
 Add to
 .IP \fB\(mi=\fP 2c

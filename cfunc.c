@@ -444,7 +444,7 @@ fail:
  *          return ici_argerror(0);
  *      . . .
  *
- * This function forms part of ICI's exernal API --ici-api-- --func--
+ * This --func-- forms part of ICI's exernal API --ici-api-- 
  */
 int
 ici_argerror(int i)
@@ -1976,27 +1976,52 @@ f_del()
     {
         ici_array_t     *a;
         ici_obj_t       **e;
-        ici_obj_t       **prev_e;
+        long            i;
+        ptrdiff_t       n;
 
+        
+        if (!isint(o))
+            return ici_null_ret();
         a = arrayof(s);
-        for (e = ici_astart(a); e != ici_alimit(a); e = ici_anext(a, e))
+        i = intof(o)->i_value;
+        n = ici_array_nels(a);
+        if (i < 0 || i >= n)
+            return ici_null_ret();
+        if (s->o_flags & O_ATOM)
         {
-            if (*e == o)
+            ici_error = "attempt to modify to an atomic array";
+            return 1;
+        }
+        if (i >= n / 2)
+        {
+            ici_obj_t       **prev_e;
+
+            e = ici_array_find_slot(a, i);
+            prev_e = e;
+            for (e = ici_anext(a, e); e != ici_alimit(a); e = ici_anext(a, e))
             {
+                *prev_e = *e;
                 prev_e = e;
-                for (e = ici_anext(a, e); e != ici_alimit(a); e = ici_anext(a, e))
-                {
-                    *prev_e = *e;
-                    prev_e = e;
-                }
-                ici_array_pop(a);
-                break;
             }
+            ici_array_pop(a);
+        }
+        else
+        {
+            ici_obj_t       *prev_o;
+
+            prev_o = *(e = ici_astart(a));
+            for (e = ici_anext(a, e); --i >= 0; e = ici_anext(a, e))
+            {
+                o = *e;
+                *e = prev_o;
+                prev_o = o;
+            }
+            ici_array_rpop(a);
         }
     }
     else
     {
-        return ici_argerror(1);
+        return ici_argerror(0);
     }
     return ici_null_ret();
 }
@@ -3195,6 +3220,47 @@ f_strcat()
     return ici_ret_no_decref(objof(s1));
 }
 
+static int
+f_which()
+{
+    ici_objwsup_t       *s;
+    ici_obj_t           *k;
+
+    s = NULL;
+    if (ici_typecheck(NARGS() < 2 ? "o" : "oo", &k, &s))
+        return 1;
+    if (s == NULL)
+        s = objwsupof(ici_vs.a_top[-1]);
+    else if (!hassuper(s))
+        return ici_argerror(0);
+    while (s != NULL)
+    {
+        if (isstruct(s))
+        {
+            if (find_raw_slot(structof(s), k)->sl_key == k)
+                return ici_ret_no_decref(objof(s));
+        }
+        else
+        {
+            ici_objwsup_t   *t;
+            ici_obj_t       *v;
+            int             r;
+
+            t = s->o_super;
+            s->o_super = NULL;
+            r = ici_fetch_super(s, k, &v, NULL);
+            s->o_super = t;
+            switch (r)
+            {
+            case -1: return 1;
+            case  1: return ici_ret_no_decref(objof(s));
+            }
+        }
+        s = s->o_super;
+    }
+    return ici_null_ret();
+}
+
 /*
  * Cleans up data structures allocated/referenced in this module.
  * Required for a clean shutdown.
@@ -3281,6 +3347,7 @@ ici_cfunc_t std_cfuncs[] =
     {CF_OBJ,    (char *)SS(sleep),        f_sleep},
     {CF_OBJ,    (char *)SS(strbuf),       f_strbuf},
     {CF_OBJ,    (char *)SS(strcat),       f_strcat},
+    {CF_OBJ,    (char *)SS(which),        f_which},
     {CF_OBJ,    (char *)SS(cmp),          f_coreici, SS(cmp),       SS(core1)},
     {CF_OBJ,    (char *)SS(pathjoin),     f_coreici, SS(pathjoin),  SS(core2)},
     {CF_OBJ,    (char *)SS(basename),     f_coreici, SS(basename),  SS(core2)},

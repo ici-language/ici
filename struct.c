@@ -31,7 +31,7 @@ long    ici_vsver   = 1;
  * Find the struct slot which does, or should, contain the key k.  Does
  * not look down the super chain.
  */
-ici_sslot_t*
+ici_sslot_t *
 find_raw_slot(ici_struct_t *s, ici_obj_t *k)
 {
     register ici_sslot_t *sl;

@@ -50,12 +50,6 @@ fetch_cfunc(ici_obj_t *o, ici_obj_t *k)
     return objof(&o_null);
 }
 
-    ici_obj_t   o_head;
-    char        *cf_name;
-    int         (*cf_cfunc)();
-    void        *cf_arg1;
-    void        *cf_arg2;
-
 void
 free_cfunc(ici_obj_t *o)
 {

@@ -72,11 +72,10 @@ Add optional seperator string to implode().
 
 ---
 
-Add 'which' function for find which struct in a super chain
-an object first appears in.
+top() and pop() should work on sets.
 
 ---
 
 Todo before 4.1 release:
 * Either update man pages, or flag them out-of-date.
-* Add at least minimal help to extension modules and make simultaneous release.
+* Is the Windows DLL load address right?

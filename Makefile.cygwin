@@ -7,6 +7,7 @@
 FLAVOUR = cygwin
 VERSION = "`awk '{print $$1}' VERSION`"
 PREFIX  = /usr/local
+#PREFIX  = /tmp/ici-dist
 
 IMPORT_LIB = libici4.dll.a
 SHARED_LIB = libici4.dll

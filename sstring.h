@@ -220,6 +220,7 @@ SSTRING(tokenobj, "tokenobj")
 SSTRING(rejecttoken, "rejecttoken")
 SSTRING(parsevalue, "parsevalue")
 SSTRING(rejectchar, "rejectchar")
+SSTRING(which, "which")
 #if 0
     SSTRING(parse_expr, "parse_expr")
     SSTRING(parse_stmt, "parse_stmt")

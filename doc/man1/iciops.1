@@ -92,24 +92,6 @@ noted value.  any must be an lvalue and obey the
 restrictions of the binary - operator.  See - below.
 
 .TP 1i
-.B "any1 @ ident"
-Form pointer: Returns a pointer object.
-It is a pointer within the aggregate object any1.
-It refers to the part of any1 keyed by the identifier.
-E.g. [array 1, "fred", 3 ] @ "fred" yields a pointer
-to the 2nd element of the array.
-Refer also to the section \fIMethod Calls\fP.
-.br
-\fI[Actually, it core dumps.]\fP \" ###
-'\" ### Or this:
-'\"     auto a = [array 1, "fred"];
-'\"     auto p = a@fred;
-'\"     printf("%s\n", typeof(p));
-'\"     ptr
-'\"     printf("%s\n", typeof(*p));
-'\"     stdin, 4: attempt to read an array keyed by "fred"
-
-.TP 1i
 .B "num1 * num2"
 Multiplication: Returns the product of the two numbers, if
 both nums are ints, the result is int, else the result
@@ -358,6 +340,12 @@ Will subtract d from c, then add the result to b, then assign
 the final value to a.
 
 .TP 1i
+.B "any1 := any2"
+Assignment to local scope: Assigns any2 to any1, except it ignores
+any existing named value in super scopes of a struct and always
+assigns in the base struct (creating the element if necessary).
+
+.TP 1i
 .B "+=  -=  *=  /=  %=  >>=  <<=  &=  ^=  |=  ~~="
 Compound assignments: All these operators are defined by the rewriting
 rule:
@@ -400,3 +388,5 @@ comma has meaning at the top level of parsing an  expression (such as
 in function call arguments), expression parsing precedence starts at one
 level below the comma, and a comma will not be recognised as an operator.
 Surround the expression with brackets to avoid this if necessary.
+.SH "SEE ALSO"
+ici(1), icinet(1), icioo(1), iciops(1), icisyn(1), icitypes(1), iciex(1)

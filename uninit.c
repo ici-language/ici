@@ -117,7 +117,11 @@ ici_uninit(void)
     ici_decref(&ici_vs);
     ici_decref(&ici_os);
     ici_decref(&ici_xs);
-    ici_dump_refs();
+    {
+        extern void ici_dump_refs(void);
+
+        ici_dump_refs();
+    }
 #endif
 
     if (ici_buf != ici_error)

@@ -287,6 +287,60 @@ and line number on which the error occurred to the error string,
 print this, and exit.
 
 .PP
+.SS "The critsect statement"
+
+.PP
+The critsect, or "critical section" statement has the form:
+
+.PP
+        \fBcritsect\fP statement
+.PP
+The parser converts this to an internal form.  Upon execution,
+the  statement is executed indivisibly with respect to other threads. Thus:
+.nf
+        critsect x = x + 1;
+.fi
+will increment x by 1, even if another thread is doing similar increments.
+Without the use of the critsect statement we could encounter a
+situation where both threads read the current value of x (say 2)
+at the same time, then both added 1 and stored the result 3, rather
+than one thread incrementing the value to 3, then the other to 4.
+.PP
+The indivisibility bestowed by a critsect statement applies
+as long as the code it dominates is executing, including all
+functions that code calls. Even operations that block (such
+as the waitfor statement) will be affected. The indivisibility
+will be revoked once the critsect statement completes, either
+through completing normally, or through an error being thrown by
+the code it is dominating.
+.PP
+.SS "The waitfor statement"
+.PP
+The waitfor statement has the form:
+.PP
+        \fBwaitfor (\fP expression \fB;\fP expression \fB)\fP statement
+.PP
+The parser converts this to an internal form.  Upon execution, a
+critical section is established that extends for the entire scope
+of the waitfor statement (except for the special exception explained below).
+Within the scope of this critical section, the waitfor statement
+repeatedly evaluates the first expression until it is true (that is,
+neither 0 nor NULL). Once the first expression evaluates to true,
+control passes to the statement (still within the scope of the
+critical section). After executing statement the critical section
+is released and the waitfor statement is finished.
+.PP
+However, each time the first expression evalutes to a false value,
+the second expression is evaluated and the object that it evaluates
+to is noted. Then, indivisibly, the current thread sleeps waiting
+for that object to be signaled (by a call to the wakeup() function),
+and the critical section is suppressed (thus allowing other thread
+to run). The thread will remain asleep until it is woken up by a call
+to wakeup() with the given object as an argument. Each time this
+occurs, the critical section is again enforced and the process
+repeats with the evaluation and testing of the first expression.
+While the thread is asleep it consumes no significant CPU time.
+.PP
 .SS "The null statement"
 
 .PP
@@ -373,3 +427,5 @@ is a shorthand for:
 
 .ti 1i
 \fCstatic sum = [func (a, b) { return a + b; }];\fR
+.SH "SEE ALSO"
+ici(1), icinet(1), icioo(1), iciops(1), icisyn(1), icitypes(1), iciex(1)

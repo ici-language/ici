@@ -1,5 +1,9 @@
 Changes in version 4.1.0 (a beta release) <- ###Planned, not done yet###
 
+*   Added new function 'which()', which returns which object in
+    a super chain a given name is first found in (default the
+    current scope.) (timl)
+
 *   Corrected pointer calls so NULL@xxx() won't crash. (timl)
 
 *   Made the semicolon that terminates an expression statement

@@ -389,6 +389,7 @@ extern int              ici_parse(ici_file_t *, ici_objwsup_t *);
 extern ici_obj_t        *ici_eval(ici_str_t *);
 extern ici_obj_t        *ici_make_handle_member_map(ici_name_id_t *);
 extern int              ici_parse_fname(char *);
+extern ici_obj_t        **ici_array_find_slot(ici_array_t *, ptrdiff_t);
 
 extern ici_exec_t       *ici_leave(void);
 extern void             ici_enter(ici_exec_t *);

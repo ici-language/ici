@@ -364,10 +364,14 @@ ici_array_rpop(ici_array_t *a)
 
 /*
  * Return a pointer to the slot in the array 'a' that does, or should contain
- * the index 'i'.  This will grow and 'ici_null' fill the array as necessary.
- * Only positive 'i'.  Returns NULL on error, usual conventions.
+ * the index 'i'.  This will grow and 'ici_null' fill the array as necessary
+ * (and fail if the array is atomic).  Only positive 'i'.  Returns NULL on
+ * error, usual conventions.  This will not fail if 'i' is less than
+ * 'ici_array_nels(a)'.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
-static ici_obj_t **
+extern ici_obj_t **
 ici_array_find_slot(ici_array_t *a, ptrdiff_t i)
 {
     ptrdiff_t           n;
@@ -380,6 +384,11 @@ ici_array_find_slot(ici_array_t *a, ptrdiff_t i)
          * ici_array_span to find the pointer to it.
          */
         return ici_array_span(a, i, NULL);
+    }
+    if (objof(a)->o_flags & O_ATOM)
+    {
+        ici_error = "attempt to modify to an atomic array";
+        return NULL;
     }
     i = i - n + 1; /* Number of elements we need to add. */
     while (--i >= 0)

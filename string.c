@@ -55,6 +55,8 @@ ici_str_alloc(int nchars)
  * The returned string has a reference count of 1 (which is caller is
  * expected to decrement, eventually).
  *
+ * See also: 'ici_str_new_nul_term()' and 'ici_str_get_nul_term()'.
+ *
  * Returns NULL on error, usual conventions.
  *
  * This --func-- forms part of the --ici-api--.
@@ -119,7 +121,8 @@ ici_str_new(char *p, int nchars)
 }
 
 /*
- * Make a new atomic immutable string from the given characters.
+ * Make a new atomic immutable string from the given nul terminated
+ * string of characters.
  *
  * The returned string has a reference count of 1 (which is caller is
  * expected to decrement, eventually).
@@ -139,7 +142,8 @@ ici_str_new_nul_term(char *p)
 }
 
 /*
- * Make a new atomic immutable string from the given characters.
+ * Make a new atomic immutable string from the given nul terminated
+ * string of characters.
  *
  * The returned string has a reference count of 0, unlike
  * ici_str_new_nul_term() which is exactly the same in other respects.

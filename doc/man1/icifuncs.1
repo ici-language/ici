@@ -31,7 +31,7 @@ is a detailed description of each of them.
 	float = 	\fBcputime\fP([foat])
 	file = 	\fBcurrentfile\fP([string])
 	int = 	\fBdebug\fP([int])
-		\fBdel\fP(struct, any)
+		\fBdel\fP(aggr, any)
 	array = 	\fBdir\fP([path], [, regexp] [, format])
 	int = 	\fBeof\fP(file)
 	int = 	\fBeq\fP(any, any)
@@ -123,6 +123,7 @@ is a detailed description of each of them.
 	string = 	\fBversion\fP()
 	array = 	\fBvstack\fP([int])
 		\fBwakeup\fP(any)
+	struct = 	\fBwhich\fP(key [, struct])
 .fi
 .DT
 .SH DETAILS
@@ -482,12 +483,13 @@ that register themselves with the interpreter through
 an internal API.
 .SS "del(aggr, key)"
 .P
-Deletes an element of \fIaggr\fP, which must be a struct,
-a set or an array, as identified by \fIkey\fP. Any super
-structs are ignored. For structs and sets this is an
-efficient operation. For arrays it is O(n) where n
-is the length from where the element is found, to the
-end of the array. Returns NULL.
+Deletes an element of \fIaggr\fP, which must be a struct, a set
+or an array, as identified by \fIkey\fP.  Any super structs are ignored.
+For structs and sets this is an efficient operation. For arrays it
+is O(\fIn\fP) where \fIn\fP is the length from the index key, to the nearest
+end of the array (that is, either the beginning of the end).
+If \fIkey\fP is not a current element of \fIaggr\fP there is no effect and
+no error. Returns NULL.
 .P
 For example:
 .P
@@ -1890,5 +1892,13 @@ the value of stdin in the callers context).
 .P
 Wakes up all ICI threads that are waiting for \fIany\fP (and
 thus allow them to re-evaluate their wait expression).
+.SS "struct = which(key [, struct])"
+.P
+Finds the first struct (or other object) in a super chain that
+has the given \fIkey\fP as an element. If the argument \fIstruct\fP
+is given (which is normally a struct, but may be any object that
+supports a super), that object is used as the base of the search,
+else the current scope is used. Returns NULL if  \fIkey\fP was not
+an element of any object in the super chain.
 .SH "SEE ALSO"
 ici(1), icinet(1), icioo(1), iciops(1), icisyn(1), icitypes(1), iciex(1)

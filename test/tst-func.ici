@@ -223,6 +223,11 @@ if (call(afunc, 1, [array 2]) != 3)
 if (call(afunc, 1, 2, NULL) != 3)
     fail("call() didn't return correctly");
 
+cc := [class a(z){return z + 1;}];
+x := call(cc:a, 4, NULL);
+if (x != 5)
+    fail("failed to call() method");
+
 x = keys([struct a=1, b=2]);
 if (x != [array "a", "b"] && x != [array "b", "a"])
     fail("keys() didn't produce the expected result");
@@ -896,8 +901,26 @@ if (a != [set "a", "c"])
 
 a = array("a", "b", "c");
 del(a, "b");
-if (a != [array "a", "c"])
+if (a != [array "a", "b", "c"])
+    fail("incorrectly deleted from an array");
+
+a = [array 10, 11, 12, 13, 14, 15, 16, 17, 18];
+del(a, 8);
+del(a, 6);
+del(a, 2);
+del(a, 0);
+del(a, -1);
+if (a != [array 11, 13, 14, 15, 17])
+{
+    forall (x in a)
+        printf("%a\n", x);
     fail("failed to del from array");
+}
+
+error = NULL; try del(@[array 1, 2], 0); onerror;
+if (error == NULL)
+    fail("failed to fail on del()of atomic array");
+
 
 error = NULL; try del(1, 2); onerror;
 if (error == NULL)
@@ -1046,6 +1069,20 @@ if (gettokens("test data ", " ", "d") != [array "test"])
 
 if (gettokens("dtest data ", ' ', "d") != [array ""])
     fail("failed to gettokens from string with term after idle");
+    
+a := struct(struct(scope(), "a", 1, "b", 2), "a", 3);
+c := 3;
+static a_static;
+if (which("a", a) != a)
+    fail("which() returned wrong result 1");
+if (which("b", a) != super(a))
+    fail("which() returned wrong result 2");
+if (which("c", a) != scope())
+    fail("which() returned wrong result 3");
+if (which("c") != scope())
+    fail("which() returned wrong result 4");
+if (which("a_static") != super(scope()))
+    fail("which() returned wrong result 5");
 
 if (typeof(now()) != "float")
     fail("now() didn't return a float");
@@ -1289,3 +1326,4 @@ if (basename("\\abc\\xyz\\mno") != "mno")
     fail("wrong result from basename 2");
 if (basename("mno") != "mno")
     fail("wrong result from basename 3");
+
