@@ -274,28 +274,30 @@ f_tmpname()
 static int
 f_put()
 {
-    char                *s;
-    ici_file_t          *f;
-    ici_exec_t          *x;
+    ici_str_t  *s;
+    ici_file_t *f;
+    ici_exec_t *x;
 
     if (NARGS() > 1)
     {
-        if (ici_typecheck("su", &s, &f))
+        if (ici_typecheck("ou", &s, &f))
             return 1;
     }
     else
     {
-        if (ici_typecheck("s", &s))
+        if (ici_typecheck("o", &s))
             return 1;
         if ((f = ici_need_stdout()) == NULL)
             return 1;
     }
+    if (!isstring(objof(s)))
+        return ici_argerror(0);
     x = ici_leave();
     if
     (
-        (*f->f_type->ft_write)(s, stringof(ARG(0))->s_nchars, f->f_file)
+        (*f->f_type->ft_write)(s->s_chars, s->s_nchars, f->f_file)
         !=
-        stringof(ARG(0))->s_nchars
+        s->s_nchars
     )
     {
         ici_enter(x);
