@@ -1,17 +1,18 @@
 .r ici.1
 .TH "ici" "1"
 .SH NAME
-ici \- ICI interpreter
+ici \- ICI programming language interpreter
 .SH SYNOPSIS
-.B ici
-.I file arguments...
+\fBici\fP \fIfile args...\fP
 .br
-.B ici
-.I [options] file arguments...
+\fBici\fP [\fB-f\fP \fIfile\fP] [\fB-\fP] [\fB-e\fP \fIprog\fP] [\fB-\fP\fI#\fP] [\fB-l\fP \fImod\fP] [\fB-m\fP \fIname\fP] [\fB--\fP] \fIargs...\fP
+.br
+\fBici\fP [\fB-h \fP| \fB-?\fP | \fB-v\fP]
 .SH DESCRIPTION
-Ici is an interpreter for the ICI language defined in
+\fBici\fP is an interpreter for the ICI language defined in
 \fIThe ICI Programming Language\fP (available in PDF in ICI
-distributions).
+distributions, and probably installed somewhere on this system
+if this manual page is installed).
 It is designed for use in many environments, including embedded
 systems, as an adjunct to other programs, as a text-based interface to
 compiled libraries, and as a cross-platform scripting language with good
@@ -53,13 +54,14 @@ the same operator precedence,
 but a few powerful additions.
 Automatic garbage collection,
 exception handling,
-dynamic collection data types like
+dynamic aggregate data types like
 sets,
 associative arrays (`structs'),
 and support for object oriented programming are features of the language.
-Types are assigned at run-time and
-can be examined via `typeof()'.
-The only requirement is that types must make sense at run-time.
+Types are properties of objects, rather than the variables
+that refer to them, and can be examined via `typeof()'.
+The only requirement is that types must make sense at run-time
+(i.e. ICI is strongly, but dynamically, typed).
 Function argument lists are represented as an ici array so
 they can be manipulated just like any other first-class type \-
 they can be examined,
@@ -83,27 +85,31 @@ Declarations are executable statements \- but they are executed
 \fIonce only\fP,
 at parse time.
 .PP
-The interpreter may be invoked in two ways, the
-first using no command line \fIswitches\fP and the second using
-switches forcing the interpreter to examine the command line
-arguments. The first form is useful when your program requires access
-to command line switches. The second form provides some useful command
-line options.
+The interpreter may be invoked in three ways, the
+first using no command line switches, the second using
+switches, and the third (which is trivial) just prints version
+or help information and exits.
+.P
+The first form is useful when your program is a script invoked
+via a #! on the first line. In this form all arguments are passed
+directly to your program. 
+The second form allows certain options to be specified to the interpreter
+itself, rather than just your program.
 .PP
 In both usages the \fIfile\fP argument may be replaced
 with a \fB\(mi\fP to indicate that standard input should be read. Also any
 remaining command line arguments are collected into an array and made
-available to the ici program as the global variables \fBargc\fP and
-\fBargv\fP (see below for further information).
+available to the ici program as the global variable \fBargv\fP.
 .PP
 The interpreter parses the ICI program from the named file and
 executes it. ICI programs are ordinary text files. Comments may
 started with the characters /* and continue until the next */, and
 they may also be stated with // and continue till end of line.
-Also, lines which start with a # character are considered comments.
+Also, lines which start with a # in column one are ignored by
+the core language.
 .PP
 A program consists of a series of statements. Statements may be either
-declarations or expressions. A declaration defines a name and possibly
+declarations or executable statements. A declaration defines a name and possibly
 associates a parse-time value with that name.
 Expressions and other executable
 statements generate code which is executed.
@@ -113,10 +119,10 @@ statements generate code which is executed.
 .SS "Command Line Arguments"
 .PP
 The ici interpreter accepts the command line options described below.
-\fIFor these options to be accepted,
+For these options to be accepted,
 they must be provided before any other options intended for
 the ici script itself.\fP
-They should also be terminated by the `--' option.
+They may be terminated by the `--' option.
 .PP
 The remaining options (after those intended for the interpreter),
 are made available to the user's program via the extern variable \fIargv\fP,
