@@ -24,6 +24,22 @@ icisdk      Builds ici-sdk-install.exe, which is an installer for the
             ICI SDK.
 
 
+Visual Studio.NET Files
+
+For VC++.NET (aka VC++ 7) the following files are provided:
+
+ici.sln      Overall "solution" file (workspace) that contains
+             the project files.
+
+ici4.vcproj  Project to build ici4.dll, the core language interpreter.
+
+ici.vcproj   Project to build ici.exe, the Windows command-line utility.
+
+iciw.vcproj  Project to build iciw.exe, the Windows non-command line version.
+
+
+Installer
+
 The installer builds uses the free Nullsoft Installer System for Windows.
 This can be downloaded and installed from:
 
