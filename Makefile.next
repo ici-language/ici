@@ -42,8 +42,8 @@ OBJS	= \
 	$(LIB)(set.o) $(LIB)(sfile.o) $(LIB)(signals.o)\
 	$(LIB)(skt.o) $(LIB)(smash.o) \
 	$(LIB)(src.o) $(LIB)(sstring.o) $(LIB)(string.o) \
-	$(LIB)(struct.o) $(LIB)(syscall.o) $(LIB)(syserr.o) $(LIB)(ti.o) \
-	$(LIB)(trace.o) $(LIB)(unary.o) $(LIB)(uninit.o) $(LIB)(win.o) \
+	$(LIB)(struct.o) $(LIB)(syserr.o) \
+	$(LIB)(trace.o) $(LIB)(unary.o) $(LIB)(uninit.o) \
 	$(LIB)(wrap.o) $(LIB)(buf.o) $(LIB)(strtol.o) \
 	$(LIB)(idb.o) $(LIB)(idb2.o)
 
@@ -90,14 +90,14 @@ $(LIB)(float.o)        : float.h
 $(LIB)(forall.o)       : exec.h struct.h set.h forall.h str.h buf.h
 $(LIB)(func.o)         : func.h exec.h ptr.h struct.h op.h pc.h str.h catch.h buf.h mark.h null.h
 $(LIB)(icimain.o)      : ptr.h exec.h file.h str.h struct.h buf.h wrap.h func.h
-$(LIB)(init.o)         : func.h buf.h struct.h multi.h
+$(LIB)(init.o)         : func.h buf.h struct.h
 $(LIB)(int.o)          : int.h
 $(LIB)(lex.o)          : parse.h file.h buf.h src.h array.h trace.h
 $(LIB)(mark.o)         : mark.h
 $(LIB)(mem.o)          : mem.h int.h buf.h
 $(LIB)(mkvar.o)        : exec.h struct.h
 $(LIB)(null.o)         : null.h
-$(LIB)(object.o)       : exec.h buf.h int.h str.h float.h func.h multi.h
+$(LIB)(object.o)       : exec.h buf.h int.h str.h float.h func.h
 $(LIB)(op.o)           : op.h exec.h
 $(LIB)(parse.o)        : parse.h func.h str.h struct.h buf.h file.h op.h exec.h
 $(LIB)(pc.o)           : exec.h pc.h
@@ -110,10 +110,6 @@ $(LIB)(smash.o)        :
 $(LIB)(src.o)          : exec.h src.h
 $(LIB)(string.o)       : str.h struct.h exec.h int.h
 $(LIB)(struct.o)       : struct.h ptr.h exec.h func.h op.h int.h buf.h str.h pc.h
-$(LIB)(syscall.o)      : func.h op.h exec.h
-$(LIB)(syserr.o)       :
-$(LIB)(ti.o)           : acs.h exec.h func.h int.h wrap.h buf.h
 $(LIB)(trace.o)        : func.h object.h trace.h file.h set.h struct.h array.h re.h str.h int.h float.h exec.h op.h
 $(LIB)(unary.o)        : exec.h float.h int.h op.h parse.h buf.h null.h
-$(LIB)(win.o)          : exec.h op.h str.h win.h acs.h buf.h func.h int.h wrap.h
 $(LIB)(wrap.o)         : wrap.h

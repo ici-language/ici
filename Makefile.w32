@@ -20,7 +20,7 @@ VER=4
 # All these options are in the documentation, but here is a ready-ref:
 # /GB   Optimise for a Pentium, but blend in other processor optimisations.
 # /MD   Use multithreaded release DLL versions of standard libs.
-# /Zi   Us a "program database" for debug info.
+# /Zi   Use a "program database" for debug info.
 # /O2p- Optimisation level, and a float thing.
 #       (O2 implies /Og /Oi /Ot /Oy /Ob1 /Gs /Gf /Gy)
 # /GF   Merged and read-only strings.

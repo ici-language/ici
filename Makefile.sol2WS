@@ -41,8 +41,8 @@ OBJS	= \
 	object.o oofuncs.o op.o parse.o pc.o \
 	ptr.o refuncs.o regexp.o set.o sfile.o \
 	signals.o skt.o smash.o src.o sstring.o string.o \
-	struct.o syscall.o syserr.o ti.o \
-	trace.o unary.o uninit.o win.o \
+	struct.o syserr.o \
+	trace.o unary.o uninit.o \
 	wrap.o buf.o strtol.o \
 	idb.o idb2.o profile.o
 
@@ -81,7 +81,7 @@ ICIHDRS=\
 	alloc.h array.h buf.h catch.h conf-$(FLAVOUR).h exec.h file.h float.h\
 	forall.h func.h fwd.h int.h mark.h mem.h null.h object.h op.h\
 	parse.h pc.h primes.h ptr.h re.h set.h skt.h src.h str.h struct.h\
-	trace.h win.h wrap.h
+	trace.h wrap.h
 
 PCREHDRS=\
 	pcre/internal.h\
@@ -152,14 +152,14 @@ float.o        : float.h
 forall.o       : exec.h struct.h set.h forall.h str.h buf.h
 func.o         : func.h exec.h ptr.h struct.h op.h pc.h str.h catch.h buf.h mark.h null.h
 icimain.o      : ptr.h exec.h file.h str.h struct.h buf.h wrap.h func.h
-init.o         : func.h buf.h struct.h multi.h
+init.o         : func.h buf.h struct.h
 int.o          : int.h
 lex.o          : parse.h file.h buf.h src.h array.h trace.h
 mark.o         : mark.h
 mem.o          : mem.h int.h buf.h
 mkvar.o        : exec.h struct.h
 null.o         : null.h
-object.o       : exec.h buf.h int.h str.h float.h func.h multi.h
+object.o       : exec.h buf.h int.h str.h float.h func.h
 op.o           : op.h exec.h
 parse.o        : parse.h func.h str.h struct.h buf.h file.h op.h exec.h
 pc.o           : exec.h pc.h
@@ -172,10 +172,7 @@ smash.o        :
 src.o          : exec.h src.h
 string.o       : str.h struct.h exec.h int.h
 struct.o       : struct.h ptr.h exec.h func.h op.h int.h buf.h str.h pc.h
-syscall.o      : func.h op.h exec.h
 syserr.o       :
-ti.o           : acs.h exec.h func.h int.h wrap.h buf.h
 trace.o        : func.h object.h trace.h file.h set.h struct.h array.h re.h str.h int.h float.h exec.h op.h
 unary.o        : exec.h float.h int.h op.h parse.h buf.h null.h
-win.o          : exec.h op.h str.h win.h acs.h buf.h func.h int.h wrap.h
 wrap.o         : wrap.h

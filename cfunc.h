@@ -44,7 +44,7 @@ struct cfunc
 /*
  * Count of actual arguments to this C function.
  */
-#define NARGS()         (intof(ici_os.a_top[-2])->i_value)
+#define NARGS()         ((int)intof(ici_os.a_top[-2])->i_value)
 
 /*
  * A pointer to the first arg to this C function, decrement for next

@@ -43,10 +43,6 @@ Modules
 	hierarchy directly in ICI rather than via the ICIPATH environment
 	variable.
 
-	It would be convenient to treat auto-loaded modules as
-	classes. The functions defined within being methods.
-
-
 Future Changes
 
 	The sockets functions and the system calls are to be removed
@@ -57,15 +53,8 @@ Future Changes
 	new functionality will be introduced using modules. The core
 	language will remain small.
 
-Documentation
-
-	This is a problem area. The documentation is not currently
-	entirely up to date with the actual interpreter.
-
 Trivial fixes
 
-	Fix "float thing" comment in Win32 makefile.
-	
 	Add esc() function.
 	
 	Add iota() & rho() equivalents.
@@ -119,3 +108,11 @@ Document wrap.
 ---
 
 Document things defined in icicore.ici
+
+---
+
+Resurrect win stuff as an extension module and document.
+
+---
+
+Verify the Makefile.maint is up-to-date and working.

@@ -23,7 +23,7 @@ SRCS	= \
 	method.c mkvar.c nptrs.c null.c object.c oofuncs.c op.c parse.c pc.c\
 	ptr.c refuncs.o regexp.c set.c\
 	sfile.c signals.c skt.c smash.c src.c sstring.c string.c\
-	struct.c syscall.c syserr.c ti.c trace.c unary.c uninit.c win.c\
+	struct.c syserr.c trace.c unary.c uninit.c \
 	wrap.c buf.c strtol.c idb.c idb2.c profile.c win32err.c
 
 PCRESRCS= \
@@ -49,7 +49,7 @@ ICIHDRS=\
 	alloc.h array.h buf.h catch.h cfunc.h conf-bsd.h exec.h file.h\
 	float.h forall.h func.h fwd.h ici.h int.h mark.h mem.h method.h\
 	null.h object.h op.h parse.h pc.h primes.h ptr.h re.h set.h skt.h\
-	src.h str.h struct.h trace.h win.h wrap.h
+	src.h str.h struct.h trace.h wrap.h
 
 PCREHDRS=\
 	pcre/internal.h\
