@@ -209,7 +209,7 @@ call_cfunc(ici_obj_t *o, ici_obj_t *subject)
          * execution stack at the same level are considered to be returning
          * now.
          */
-        xt = ici_xs.a_top;
+        xt = ici_xs.a_top - 1;
         result = (*cfuncof(o)->cf_cfunc)(subject);
         if (xt != ici_xs.a_top)
             return result;
