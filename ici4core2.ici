@@ -1,5 +1,5 @@
 /*
- * $Id: ici4core2.ici,v 1.1 2002/03/17 03:21:45 timl Exp $
+ * $Id: ici4core2.ici,v 1.2 2002/11/26 01:15:14 timl Exp $
  *
  * Standard ICI startup file. This is parsed when the ICI interpreter is
  * initialised and allows simple functions to be written in ICI.
@@ -30,7 +30,7 @@ dirname(path)
 }
 
 /*
- * basename - return the base portion of a pathname, minus an option extension
+ * basename - return the base portion of a pathname, minus an optional extension
  */
 extern
 basename(path, ext)
@@ -38,7 +38,7 @@ basename(path, ext)
     auto        s;
     auto        ext = NULL;
 
-	s = path ~~ #.*/|\\([^/\\]*)$#;
+    s = path ~~ #.*/|\\([^/\\]*)$#;
     if (s == NULL)
         s = path;
     if (ext)
