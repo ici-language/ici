@@ -14,8 +14,8 @@ MAINTAINER=	atrn@zeta.org.au
 
 MAKEFILE=	Makefile.bsd
 
-MAN1=		ici.1 icifuncs.1 icinet.1 icioo.1 iciops.1 icire.1\
-		icistmt.1 icisys.1 icitypes.1
+MAN1=		ici.1 icifuncs.1 icioo.1 iciops.1 icire.1\
+		icistmt.1 icitypes.1
 
 MANCOMPRESSED=	yes
 

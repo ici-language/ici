@@ -6,5 +6,12 @@ lib/ici4/ici3core1.ici
 lib/ici4/ici3core2.ici
 lib/ici4/ici3core3.ici
 lib/libici4.a
+man/man1/ici.1.gz
+man/man1/icifuncs.1.gz
+man/man1/icioo.1.gz
+man/man1/iciops.1.gz
+man/man1/icire.1.gz
+man/man1/icistmt.1.gz
+man/man1/icitypes.1.gz
 %%PORTDOCS%%share/doc/ici4/ici.pdf
 @unexec rmdir %D/lib/ici4 2>/dev/null || true

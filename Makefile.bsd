@@ -32,12 +32,10 @@ OBJS	+= study.o maketables.o pcre.o
 MANDIR	= $(PREFIX)/man/man
 MAN1	= doc/man1/ici.1\
 	  doc/man1/icifuncs.1\
-	  doc/man1/icinet.1\
 	  doc/man1/icioo.1\
 	  doc/man1/iciops.1\
 	  doc/man1/icire.1\
 	  doc/man1/icistmt.1\
-	  doc/man1/icisys.1\
 	  doc/man1/icitypes.1
 
 CLEANFILES =\
