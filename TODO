@@ -116,3 +116,10 @@ Resurrect win stuff as an extension module and document.
 ---
 
 Verify the Makefile.maint is up-to-date and working.
+
+---
+
+Make all the makefiles create ici.h
+
+---
+
