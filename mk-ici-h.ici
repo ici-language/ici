@@ -24,7 +24,6 @@ incs := [array
     "ptr.h",
     "re.h",
     "set.h",
-    "skt.h",
     "src.h",
     "str.h",
     "struct.h",

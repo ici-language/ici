@@ -165,7 +165,7 @@ f_build()
         }
     }
     if (dstart == c.c_dlimit)
-        return null_ret();
+        return ici_null_ret();
     if (c.c_cstart == NULL)
     {
         default_content = objof(&o_null);

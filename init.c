@@ -103,7 +103,7 @@ ici_init(void)
         return 1;
 
 #ifndef NOSTARTUPFILE
-    if (ici_call("load", "o", SSO(core)) != NULL)
+    if (ici_call(SS(load), "o", SSO(core)))
         return 1;
 #endif
     return 0;

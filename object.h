@@ -329,8 +329,7 @@ struct objwsup
 #define TC_MARK         20
 #define TC_NULL         21
 #define TC_HANDLE       22
-#define TC_SOCKET       23
-#define TC_MEM          24
+#define TC_MEM          23
 
 #define TC_MAX_CORE     24
 

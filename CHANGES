@@ -1,3 +1,29 @@
+*	Added stuff to build a Windows installer with a script based
+	on NullSoft's free installer system. (timl)
+
+*	Expanded the handle_t to support an optional private struct
+	for storing local values. This makes it much easier to make
+	C objects that act as first class ICI instances, including the
+	ability to sub-class them and define new instance variables. (timl)
+
+*	Added ici_module_new and ici_class_new functions to make it
+	easier to make extensions and stuff. (timl)
+
+*	Added more ici_ prefixes to more functions. (timl)
+
+*	Added support for handle_t objects to ici_typecheck. They check
+	that the handle is one of the correct type by a supplied name. (timl)
+
+*	Changed the interface to ici_call[v] and ici_func[v] functions
+	to be more consistent with other functions and tack string_t *
+	args instead of char * (now that string_t types are easier to
+	get). Also added ici_method for making method calls from C. (timl)
+
+*	Removed the socket functions from the core. They are now
+	only accessable through the net module (also upgraded the
+	net module to ici4, but that's in the ici-modules checkout).
+	(timl)
+
 *	Added support for [module:xxx and [module=xxx which actually
 	never made it into ICI 3. Imroved the error reporting in that
 	area. (timl)

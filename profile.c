@@ -240,7 +240,7 @@ f_profile()
 
     /* Start profiling. */
     ici_profile_active = 1;
-    return null_ret();
+    return ici_null_ret();
 }
 
 

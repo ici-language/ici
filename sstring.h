@@ -77,6 +77,9 @@ SSTRING(result, "result")
 SSTRING(critsect, "critsect")
 SSTRING(raw, "raw")
 SSTRING(path, "path")
+#ifndef NOSIGNALS
+SSTRING(ignore, "ignore")
+#endif
 #ifndef NOCLASSPROTO
 SSTRING(proto, "proto")
 #endif

@@ -79,7 +79,8 @@ ici_assign_cfuncs(objwsup_t *s, cfunc_t *cf)
         {
             /*
              * Temporary migration hack while we change over
-             * to using static strings in these initialisations.
+             * to using static strings in these initialisations
+             * in the ICI core.
              */
             n = (string_t *)cf->cf_name;
             cf->cf_name = n->s_chars;
@@ -112,6 +113,39 @@ int
 def_cfuncs(cfunc_t *cf)
 {
     return ici_assign_cfuncs(objwsupof(ici_vs.a_top[-1])->o_super, cf);
+}
+
+/*
+ * Create a new class struct and assign the given cfuncs into it (as
+ * in ici_new_struct_with_cfuncs() above). If super is NULL, the super
+ * of the new struct is set to the outer-most writeable struct in the
+ * current scope. Thus this is a new top-level class (not derived from
+ * anything). If super is non-NULL, it is presumably the parent class
+ * and is used directly as the super. Returns NULL on error, usual
+ * conventions. The returned struct has an incref the caller owns.
+ */
+objwsup_t *
+ici_class_new(cfunc_t *cf, objwsup_t *super)
+{
+    objwsup_t           *s;
+
+    if ((s = objwsupof(ici_struct_new())) == NULL)
+        return NULL;
+    if (ici_assign_cfuncs(s, cf))
+    {
+        ici_decref(s);
+        return NULL;
+    }
+    if (super == NULL && (super = ici_outermost_writeable_struct()) == NULL)
+        return NULL;
+    s->o_super = super;
+    return s;
+}
+
+objwsup_t *
+ici_module_new(cfunc_t *cf)
+{
+    return ici_class_new(cf, NULL);
 }
 
 static int

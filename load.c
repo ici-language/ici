@@ -54,6 +54,33 @@ static const char   ici_prefix[] = "ici4";
 static const char   old_prefix[] = "ici3";
 
 /*
+ * Find and return the outer-most writeable struct in the current scope.
+ * This is typically the struct that contains all the ICI core language
+ * functions. This is the place we lodge new dynamically loaded modules
+ * and is also the typical parent for top level classes made by dynamically
+ * loaded modules. Usual error conventions.
+ */
+objwsup_t *
+ici_outermost_writeable_struct(void)
+{
+    objwsup_t           *outer;
+    objwsup_t           *ows;
+
+    outer = NULL;
+    for (ows = objwsupof(ici_vs.a_top[-1]); ows != NULL; ows = ows->o_super)
+    {
+        if (objof(ows)->o_flags & O_ATOM)
+            continue;
+        if (!isstruct(ows))
+            continue;
+        outer = ows;
+    }
+    if (outer == NULL)
+        ici_error = "no writeable structs in current scope";
+    return outer;
+}
+
+/*
  * any = load(string)
  *
  * Function form of auto-loading. String is the name of a file to be
@@ -72,11 +99,10 @@ f_load(void)
     object_t    *result;
     char        fname[FILENAME_MAX];
     char        entry_symbol[64];
-    objwsup_t   *ows;
     struct_t    *statics;
     struct_t    *autos;
     struct_t    *externs;
-    struct_t    *outer;
+    objwsup_t   *outer;
     file_t      *file;
     FILE        *stream;
 
@@ -100,16 +126,7 @@ f_load(void)
      * Find the outer-most writeable scope. This is where the new name
      * will be defined should it be loadable as a library.
      */
-    outer = NULL;
-    for (ows = objwsupof(ici_vs.a_top[-1]); ows != NULL; ows = ows->o_super)
-    {
-        if (objof(ows)->o_flags & O_ATOM)
-            continue;
-        if (!isstruct(ows))
-            continue;
-        outer = structof(ows);
-    }
-    if (outer == NULL)
+    if ((outer = ici_outermost_writeable_struct()) == NULL)
         return 0;
 
     /*
@@ -226,7 +243,7 @@ f_load(void)
                 goto fail;
         }
         statics->o_head.o_super = objwsupof(externs);
-        externs->o_head.o_super = objwsupof(outer);
+        externs->o_head.o_super = outer;
         if (parse_module(file, objwsupof(autos)) < 0)
             goto fail;
         f_close(file);
@@ -289,7 +306,7 @@ push_path_elements(array_t *a, char *path)
          * Don't add inaccessable dirs...
          */
         if (access(s->s_chars, 0) != 0)
-        	goto skip;
+                goto skip;
         if (ici_stk_push_chk(a, 1))
         {
             ici_decref(s);

@@ -505,7 +505,7 @@ ici_evaluate(object_t *code, int n_operands)
                     if ((f = ici_fetch(ici_vs.a_top[-1], SSO(load))) == objof(&o_null))
                         goto undefined;
                     *ici_xs.a_top++ = o; /* Temp restore formal state. */
-                    if (ici_func(f, "o", o) != NULL)
+                    if (ici_func(f, "o", o))
                         goto fail;
                     --ici_xs.a_top;
                     switch

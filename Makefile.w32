@@ -37,15 +37,15 @@ SDK=ici4-win32-sdk
 # /GF   Merged and read-only strings.
 # /Wn	Warning level n.
 #
-CFLAGS  = /GB /MD /Zi /O2p-b2 /GF /DNDEBUG /W3 /I.
-LDFLAGS = /MD /Zi
+#CFLAGS  = /GB /MD /Zi /O2p-b2 /GF /DNDEBUG /W3 /I.
+#LDFLAGS = /MD /Zi
 LIBS    = user32.lib wsock32.lib advapi32.lib winmm.lib
 
 #
 # If you want to debug...
 #
-#CFLAGS = /GB /MDd /Zi /Od /Op- /W3 -I.
-#LDFLAGS = /MDd /Zi
+CFLAGS = /GB /MDd /Zi /Od /Op- /W3 -I.
+LDFLAGS = /MDd /Zi
 
 OBJS    = \
     alloc.obj aplfuncs.obj arith.obj array.obj call.obj \
@@ -57,7 +57,7 @@ OBJS    = \
     mkvar.obj nptrs.obj null.obj \
     object.obj oofuncs.obj op.obj parse.obj pc.obj profile.obj \
     ptr.obj refuncs.obj regexp.obj set.obj sfile.obj \
-    signals.obj skt.obj smash.obj src.obj \
+    signals.obj smash.obj src.obj \
     sstring.obj string.obj \
     struct.obj syserr.obj thread.obj \
     trace.obj unary.obj uninit.obj win32err.obj \
@@ -129,7 +129,7 @@ clean:
 ici.h : conf-w32.h fwd.h object.h alloc.h buf.h catch.h \
     cfunc.h array.h int.h float.h exec.h file.h forall.h func.h \
     handle.h mark.h mem.h method.h null.h op.h parse.h pc.h \
-    ptr.h re.h set.h skt.h src.h str.h struct.h trace.h wrap.h
+    ptr.h re.h set.h src.h str.h struct.h trace.h wrap.h
 
 alloc.obj: fwd.h conf-linux.h
 alloc.obj:  alloc.h
@@ -158,7 +158,7 @@ cfunco.obj:  alloc.h int.h float.h ptr.h struct.h op.h
 cfunco.obj: pc.h str.h sstring.h catch.h buf.h mark.h null.h primes.h
 clib.obj: file.h exec.h array.h object.h fwd.h conf-linux.h
 clib.obj:  alloc.h int.h float.h func.h cfunc.h op.h str.h
-clib.obj: sstring.h buf.h null.h re.h pcre/pcre.h skt.h 
+clib.obj: sstring.h buf.h null.h re.h pcre/pcre.h 
 clib2.obj: str.h sstring.h func.h cfunc.h
 compile.obj: parse.h array.h object.h fwd.h conf-linux.h
 compile.obj:  alloc.h op.h str.h sstring.h
@@ -251,10 +251,6 @@ sfile.obj: file.h
 signals.obj: fwd.h conf-linux.h
 signals.obj:  alloc.h exec.h array.h object.h fwd.h
 signals.obj: int.h float.h op.h func.h cfunc.h method.h str.h sstring.h
-skt.obj: fwd.h conf-linux.h
-skt.obj:  alloc.h null.h skt.h primes.h
-skt.obj: buf.h exec.h array.h object.h fwd.h int.h float.h op.h func.h
-skt.obj: cfunc.h set.h struct.h str.h sstring.h file.h
 smash.obj: fwd.h conf-linux.h
 smash.obj:  alloc.h
 src.obj: exec.h array.h object.h fwd.h conf-linux.h

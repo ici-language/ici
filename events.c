@@ -24,7 +24,7 @@ f_eventloop()
         {
         case 0:
             ici_enter(x);
-            return null_ret();
+            return ici_null_ret();
 
         case -1:
             ici_enter(x);

@@ -117,14 +117,6 @@ ici_str_get_nul_term(char *p)
     return s;
 }
 
-int
-need_string(string_t **p, char *s)
-{
-    if (*p != NULL)
-        return 0;
-    return (*p = ici_str_new_nul_term(s)) == NULL;
-}
-
 /*
  * Mark this and referenced unmarked objects, return memory costs.
  * See comments on t_mark() in object.h.

@@ -117,7 +117,7 @@ f_putenv(void)
     }
     ici_decref(n);
     putenv(s->s_chars);
-    return null_ret();
+    return ici_null_ret();
 }
 
 cfunc_t extra_cfuncs[] =

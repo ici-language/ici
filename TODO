@@ -131,21 +131,10 @@ Put it general forall
 
 ---
 
-Hello there,
+Put --help and/or /? help into ici.exe
 
-        So what about this:
+---
 
-$ ./ici.linux -e 'a = 1 ? 0 + 1 : 2;'
-1: ":" not followed by an identifier or "("
+Make the Windows path include ici sub-dir of module dir.
 
-        I posted report here couldn't remember how long ago, Tim told me
-        that this was "fixed and commited", though CVS@sourceforge
-        doesn't contains any fixes related to this issue...
-
-        Well, it is possible to workaround (using braces), but anyway :)
-
-        And, I couldn't figure out _where_ is the problem (well, actually
-        I could but fix is not trivial - if it would be regular bison/yacc
-        grammar it would be easy, but... may be I am not clever enough :)
-
-/Al
+---

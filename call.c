@@ -10,12 +10,38 @@
 #include "catch.h"
 
 /*
- * The common code used by ici_func() and ici_call() below. Also a
- * varient of ici_func() taking a variable argument list. See comment
- * on ici_func() below for details.
+ * The core common function of the things that call ICI functions from
+ * C with a simple marshalled argument list (ici_func, ici_call, ici_method).
+ *
+ * If subject is NULL, then callable is taken to be a callable object
+ * (could be a func or a method) and is called directly. If subject is
+ * non-NULL, it is taken to be an instance object and callable is taken
+ * to be the name of the method to be invoked on it.
+ *
+ * In common with all these functions, arguments are marshalled from
+ * C into ICI arguments according to a simple specification given by
+ * the string types.
+ *
+ * Types can be of the forms ".=..." or "...".  In the first case the 1st
+ * extra arg is used as a pointer to store the return value through.
+ *
+ * Type key letters are:
+ *      i       a long
+ *      f       a double
+ *      s       a '\0' terminated string
+ *      o       an ICI object
+ *
+ * When a string is returned it is a pointer to the character data of an
+ * internal ICI string object. It will only remain valid until the next
+ * call to any ICI function because it is not necessarily held agains
+ * garbage collection.  When an object is returned it has been ici_incref'ed
+ * (i.e. it is held against garbage collection).
+ *
+ * There is some historical support for '@' operators, but it is deprecated
+ * and may be removed in future versions.
  */
-char *
-ici_funcv(object_t *func_obj, char *types, va_list va)
+int
+ici_funcv(object_t *subject, object_t *callable, char *types, va_list va)
 {
     int                 nargs;
     int                 arg;
@@ -24,6 +50,7 @@ ici_funcv(object_t *func_obj, char *types, va_list va)
     char                ret_type;
     char                *ret_ptr;
     ptrdiff_t           os_depth;
+    op_t                *call_op;
 
     if (types[0] != '\0' && types[1] == '@')
     {
@@ -53,7 +80,7 @@ ici_funcv(object_t *func_obj, char *types, va_list va)
      */
     nargs = strlen(types);
     if (ici_stk_push_chk(&ici_os, nargs + 80))
-        return ici_error;
+        return 1;
     for (arg = 0; arg < nargs; ++arg)
         *ici_os.a_top++ = objof(&o_null);
     for (arg = -1; arg >= -nargs; --arg)
@@ -105,10 +132,13 @@ ici_funcv(object_t *func_obj, char *types, va_list va)
         goto fail;
     ici_decref(*ici_os.a_top);
     ++ici_os.a_top;
-    *ici_os.a_top++ = func_obj;
+    if (subject != NULL)
+        *ici_os.a_top++ = subject;
+    *ici_os.a_top++ = callable;
 
     os_depth = (ici_os.a_top - ici_os.a_base) - os_depth;
-    if ((ret_obj = ici_evaluate(objof(&o_call), os_depth)) == NULL)
+    call_op = subject != NULL ? &o_method_call : &o_call;
+    if ((ret_obj = ici_evaluate(objof(call_op), os_depth)) == NULL)
         goto fail;
 
     switch (ret_type)
@@ -148,52 +178,72 @@ ici_funcv(object_t *func_obj, char *types, va_list va)
         ici_error = "incorrect return type";
         goto fail;
     }
-    return NULL;
+    return 0;
 
 fail:
-    return ici_error;
+    return 1;
 }
 
 /*
  * Varient of ici_call() (see below) taking a variable argument list.
  */
-char *
-ici_callv(char *func_name, char *types, va_list va)
+int
+ici_callv(string_t *func_name, char *types, va_list va)
 {
-    object_t            *name_obj;
     object_t            *func_obj;
     object_t            *member_obj;
-    char                *result;
 
-    name_obj = NULL;
     func_obj = NULL;
-
-    if ((name_obj = objof(ici_str_new_nul_term(func_name))) == NULL)
-        return ici_error;
     if (types[0] != '\0' && types[1] == '@')
     {
         va_list tmp;
         tmp = va;
         member_obj = va_arg(tmp, object_t *);
-        if ((func_obj = ici_fetch(member_obj, name_obj)) == objof(&o_null))
+        if ((func_obj = ici_fetch(member_obj, func_name)) == objof(&o_null))
         {
-            sprintf(buf, "\"%s\" undefined in object", func_name);
+            sprintf(buf, "\"%s\" undefined in object", func_name->s_chars);
             ici_error = buf;
-            ici_decref(name_obj);
-            return ici_error;
+            return 1;
         }
         va_end(tmp);
     }
-    else if ((func_obj = ici_fetch(ici_vs.a_top[-1], name_obj)) == objof(&o_null))
+    else if ((func_obj = ici_fetch(ici_vs.a_top[-1], func_name)) == objof(&o_null))
     {
-        sprintf(buf, "\"%s\" undefined", func_name);
+        sprintf(buf, "\"%s\" undefined", func_name->s_chars);
         ici_error = buf;
-        ici_decref(name_obj);
-        return ici_error;
+        return 1;
     }
-    ici_decref(name_obj);
-    name_obj = NULL;
-    result = ici_funcv(func_obj, types, va);
+    return ici_funcv(NULL, func_obj, types, va);
+}
+
+/*
+ * ici_func(func, types, args...)
+ *
+ * Call an ICI function from C with simple argument types and return value.
+ *
+ * Types can be of the forms ".=..." or "...".  In the first case the 1st
+ * extra arg is used as a pointer to store the return value through.
+ *
+ * Type key letters are:
+ *      i       a long
+ *      f       a double
+ *      s       a '\0' terminated string
+ *      o       an ici object
+ *
+ * When a string is returned it is a pointer to the character data of an
+ * internal ICI string object. It will only remain valid until the next
+ * call to any ICI function.  When an object is returned it has been ici_incref'ed
+ * (i.e. it is held against garbage collection).
+ */
+int
+ici_func(object_t *func_obj, char *types, ...)
+{
+    va_list     va;
+    int         result;
+
+    va_start(va, types);
+    result = ici_funcv(NULL, func_obj, types, va);
+    va_end(va);
     return result;
 }
 
@@ -216,14 +266,14 @@ ici_callv(char *func_name, char *types, va_list va)
  * call to any ICI function.  When an object is returned it has been ici_incref'ed
  * (i.e. it is held against garbage collection).
  */
-char *
-ici_func(object_t *func_obj, char *types, ...)
+int
+ici_method(object_t *inst, string_t *mname, char *types, ...)
 {
     va_list     va;
-    char        *result;
+    int         result;
 
     va_start(va, types);
-    result = ici_funcv(func_obj, types, va);
+    result = ici_funcv(inst, objof(mname), types, va);
     va_end(va);
     return result;
 }
@@ -253,43 +303,34 @@ ici_func(object_t *func_obj, char *types, ...)
  * call to any ICI function.  When an object is returned it has been ici_incref'ed
  * (i.e. it is held against garbage collection).
  */
-char *
-ici_call(char *func_name, char *types, ...)
+int
+ici_call(string_t *func_name, char *types, ...)
 {
-    object_t            *name_obj;
     object_t            *func_obj;
     object_t            *member_obj;
     va_list             va;
-    char                *result;
+    int                 result;
 
-    name_obj = NULL;
     func_obj = NULL;
-
-    if ((name_obj = objof(ici_str_new_nul_term(func_name))) == NULL)
-        return ici_error;
     if (types[0] != '\0' && types[1] == '@')
     {
         va_start(va, types);
         member_obj = va_arg(va, object_t *);
-        if ((func_obj = ici_fetch(member_obj, name_obj)) == objof(&o_null))
+        if ((func_obj = ici_fetch(member_obj, func_name)) == objof(&o_null))
         {
-            sprintf(buf, "\"%s\" undefined in object", func_name);
+            sprintf(buf, "\"%s\" undefined in object", func_name->s_chars);
             ici_error = buf;
-            ici_decref(name_obj);
-            return ici_error;
+            return 1;
         }
     }
-    else if ((func_obj = ici_fetch(ici_vs.a_top[-1], name_obj)) == objof(&o_null))
+    else if ((func_obj = ici_fetch(ici_vs.a_top[-1], func_name)) == objof(&o_null))
     {
-        sprintf(buf, "\"%s\" undefined", func_name);
+        sprintf(buf, "\"%s\" undefined", func_name->s_chars);
         ici_error = buf;
-        ici_decref(name_obj);
-        return ici_error;
+        return 1;
     }
     va_start(va, types);
-    ici_decref(name_obj);
-    name_obj = NULL;
-    result = ici_funcv(func_obj, types, va);
+    result = ici_funcv(NULL, func_obj, types, va);
     va_end(va);
     return result;
 }

@@ -13,9 +13,6 @@ extern cfunc_t  load_cfuncs[];
 #ifndef NOTRACE
 extern cfunc_t  trace_cfuncs[];
 #endif
-#ifndef NOSKT
-extern cfunc_t  skt_cfuncs[];
-#endif
 #ifndef NOEVENTS
 extern cfunc_t  ici_event_cfuncs[];
 #endif
@@ -41,9 +38,6 @@ cfunc_t *funcs[] =
     load_cfuncs,
 #ifndef NOTRACE
     trace_cfuncs,
-#endif
-#ifndef NOSKT
-    skt_cfuncs,
 #endif
 #ifndef NODEBUGGING
     ici_debug_cfuncs,
@@ -93,9 +87,6 @@ char ici_version_string[] = "@(#)ICI 4.0.0, " CONFIG_FILE ", " __DATE__
 #endif
 #ifndef NOPIPES
     "pipes "
-#endif
-#ifndef NOSKT
-    "sockets "
 #endif
 #ifndef NODIR
     "dir "

@@ -23,6 +23,7 @@
 #include "null.h"
 #include "parse.h"
 #include "mem.h"
+#include "handle.h"
 #include <stdio.h>
 #include <limits.h>
 #include <math.h>
@@ -93,6 +94,9 @@ uninit_cfunc(void)
  * o    Any ICI object is required in the actuals, the corresponding pointer
  *      must be a pointer to a (object_t *); which will be set to the actual
  *      argument.
+ * h    An ICI handle object, that has the name given by the corresponding
+ *      argument, is required. The next argument is a pointer to store the
+ *      handle_t * through.
  * p    An ICI ptr object is required in the actuals, then as for o.
  * d    An ICI struct object is required in the actuals, then as for o.
  * a    An ICI array object is required in the actuals, then as for o.
@@ -178,6 +182,13 @@ ici_typecheck(char *types, ...)
             *(object_t **)ptr = o;
             break;
 
+        case 'h': /* A handle with a particular name. */
+            if (!ishandleof(o, (string_t *)ptr))
+                goto fail;
+            ptr = va_arg(va, char *);
+            *(ici_handle_t **)ptr = handleof(o);
+            break;
+
         case 'p': /* Any pointer. */
             if (!isptr(o))
                 goto fail;
@@ -240,6 +251,9 @@ ici_typecheck(char *types, ...)
                 goto fail;
             *(mem_t **)ptr = memof(o);
             break;
+
+        default:
+            assert(0);
         }
     }
     va_end(va);
@@ -776,6 +790,8 @@ f_typeof()
 {
     if (NARGS() != 1)
         return ici_argcount(1);
+    if (ishandle(ARG(0)))
+        return ici_ret_no_decref(objof(handleof(ARG(0))->h_name));
     if (ici_typeof(ARG(0))->t_ici_name == NULL)
         ici_typeof(ARG(0))->t_ici_name = ici_str_new_nul_term(ici_typeof(ARG(0))->t_name);
     return ici_ret_no_decref(objof(ici_typeof(ARG(0))->t_ici_name));
@@ -1073,29 +1089,29 @@ f_include()
 #ifndef NODEBUGGING
     ici_debug_ignore_errors();
 #endif
-    if ((ici_error = ici_call("fopen", "o=o", &f, filename)) != NULL)
+    if (ici_call(SS(fopen), "o=o", &f, filename))
     {
-    char    fname[1024];
+        char    fname[1024];
 
-    strncpy(fname, filename->s_chars, 1023);
-    if (!ici_find_on_path(fname, NULL))
-    {
-        ici_error = "can't find include file";
-        return 1;
-    }
-        if ((ici_error = ici_call("fopen", "o=s", &f, fname)) != NULL)
-    {
+        strncpy(fname, filename->s_chars, 1023);
+        if (!ici_find_on_path(fname, NULL))
+        {
+            ici_error = "can't find include file";
+            return 1;
+        }
+        if (ici_call(SS(fopen), "o=s", &f, fname))
+        {
 #ifndef NODEBUGGING
-        ici_debug_respect_errors();
+            ici_debug_respect_errors();
 #endif
             return 1;
-    }
+        }
     }
 #ifndef NODEBUGGING
     ici_debug_respect_errors();
 #endif
     rc = parse_module(f, objwsupof(a));
-    ici_call("close", "o", f);
+    ici_call(SS(close), "o", f);
     ici_decref(f);
     return rc < 0 ? 1 : ici_ret_no_decref(objof(a));
 }
@@ -1764,7 +1780,7 @@ f_currentfile()
             return ici_ret_with_decref(objof(f));
         }
     }
-    return null_ret();
+    return ici_null_ret();
 }
 
 static int
@@ -1809,7 +1825,7 @@ f_del()
     {
         return ici_argerror(1);
     }
-    return null_ret();
+    return ici_null_ret();
 }
 
 /*
@@ -1887,7 +1903,7 @@ f_super()
         return 1;
     }
     if (oldsuper == NULL)
-        return null_ret();
+        return ici_null_ret();
     return ici_ret_no_decref(objof(oldsuper));
 }
 
@@ -2188,7 +2204,7 @@ f_gettoken()
     {
         c = (*get)(file);
         if (c == EOF)
-            return null_ret();
+            return ici_null_ret();
         for (i = 0; i < nseps; ++i)
         {
             if (c == seps[i])
@@ -2436,7 +2452,7 @@ f_gettokens()
             if (a->a_top == a->a_base)
             {
                 ici_decref(a);
-                return null_ret();
+                return ici_null_ret();
             }
             return ici_ret_with_decref(objof(a));
 
@@ -2617,7 +2633,7 @@ f_sort()
         while (p != 0)
         {
             q = PARENT(p);
-            if (CMP(&cmp, p, q) != NULL)
+            if (CMP(&cmp, p, q))
                 goto fail;
             if (cmp <= 0)
                 break;
@@ -2641,7 +2657,7 @@ f_sort()
             r = RIGHT(p);
             if (r >= k)
             {
-                if (CMP(&cmp, l, p) != NULL)
+                if (CMP(&cmp, l, p))
                     goto fail;
                 if (cmp <= 0)
                     break;
@@ -2650,11 +2666,11 @@ f_sort()
             }
             else
             {
-                if (CMP(&cmp, l, p) != NULL)
+                if (CMP(&cmp, l, p))
                     goto fail;
                 if (cmp <= 0)
                 {
-                    if (CMP(&cmp, r, p) != NULL)
+                    if (CMP(&cmp, r, p))
                         goto fail;
                     if (cmp <= 0)
                         break;
@@ -2663,7 +2679,7 @@ f_sort()
                 }
                 else
                 {
-                    if (CMP(&cmp, r, l) != NULL)
+                    if (CMP(&cmp, r, l))
                         goto fail;
                     if (cmp <= 0)
                     {
@@ -2695,7 +2711,7 @@ static int
 f_reclaim()
 {
     ici_reclaim();
-    return null_ret();
+    return ici_null_ret();
 }
 #endif
 
@@ -2866,7 +2882,7 @@ f_sleep()
         ici_enter(x);
     }
 #endif
-    return null_ret();
+    return ici_null_ret();
 }
 
 /*

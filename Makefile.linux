@@ -17,10 +17,10 @@ LIBS	= -lm -ltermcap -ldl -lpthread
 # For debugging...
 OPTIM	=
 # For releases
-#OPTIM	= -DNDEBUG -O3 -finline-functions -fexpensive-optimizations \
+OPTIM	= -DNDEBUG -O3 -finline-functions -fexpensive-optimizations \
 	-fomit-frame-pointer -malign-double
 
-CFLAGS	= -g -Wall $(OPTIM) -DCONFIG_FILE='"$(CONFIG)"'  -DPREFIX='"$(PREFIX)"' -I.
+#CFLAGS	= -g -Wall $(OPTIM) -DCONFIG_FILE='"$(CONFIG)"'  -DPREFIX='"$(PREFIX)"' -I.
 LDFLAGS	= -export-dynamic -g
 RANLIB	= ranlib
 RM	= rm -f

@@ -94,15 +94,15 @@ func_totals(struct_t *funcs, profilecall_t *pc)
             profilecall_t *called = profilecallof(sl->sl_value);
 
             /* Has this function been found before? */
-            if (isnull(objof(tot_pc = profilecallof(fetch(objof(funcs), f)))))
+            if (isnull(objof(tot_pc = profilecallof(ici_fetch(objof(funcs), f)))))
             {
                 /* No, create a new record. */
                 tot_pc = new_profilecall(NULL);
                 _ASSERT(tot_pc != NULL);
 
                 /* Add it to the calling function. */
-                assign(objof(funcs), f, objof(tot_pc));
-                decref(tot_pc);
+                ici_assign(objof(funcs), f, objof(tot_pc));
+                ici_decref(tot_pc);
             }
 
             /* Add the total for this call to the overall total for this
@@ -115,7 +115,7 @@ func_totals(struct_t *funcs, profilecall_t *pc)
                 parent = parent->pc_calledby
             )
             {
-                if (!isnull(fetch(objof(parent->pc_calls), objof(f))))
+                if (!isnull(ici_fetch(objof(parent->pc_calls), objof(f))))
                 {
                     /* Found recursion, leave parent non-null. */
                     break;
@@ -164,15 +164,15 @@ func_intrinsic_totals(profilecall_t *funcs, profilecall_t *pc)
             profilecall_t *called = profilecallof(sl->sl_value);
 
             /* Has this function been found before? */
-            if (isnull(objof(tot_pc = profilecallof(fetch(funcs->pc_calls, f)))))
+            if (isnull(objof(tot_pc = profilecallof(ici_fetch(funcs->pc_calls, f)))))
             {
                 /* No, create a new record. */
                 tot_pc = new_profilecall(funcs);
                 _ASSERT(tot_pc != NULL);
 
                 /* Add it to the calling function. */
-                assign(funcs->pc_calls, f, objof(tot_pc));
-                decref(tot_pc);
+                ici_assign(funcs->pc_calls, f, objof(tot_pc));
+                ici_decref(tot_pc);
             }
 
             /* Add the total for this call to the overall total for this
@@ -214,31 +214,31 @@ profile_done_callback(profilecall_t *pc)
     /* Create a struct that will hold the different versions of the
      * profiling information.  Each member of this struct has a key naming
      * the type of profiling data and a value that's the information. */
-    profile = objof(new_struct());
+    profile = objof(ici_struct_new());
     _ASSERT(profile != NULL);
 
     /* Construct a list of fundamental functions (ie. functions that don't
      * call other functions). */
-    name = objof(new_cname("function totals"));
+    name = objof(ici_str_new_nul_term("function totals"));
     _ASSERT(name != NULL);
     /* Hold them in a profilecall_t so that they're sorted by pc_total */
-    totals = new_struct();
+    totals = ici_struct_new();
     _ASSERT(totals != NULL);
-    VERIFY(!assign(profile, name, objof(totals)));
-    decref(name);
-    decref(objof(totals));
+    VERIFY(!ici_assign(profile, name, objof(totals)));
+    ici_decref(name);
+    ici_decref(objof(totals));
     func_totals(totals, pc);
 
     /* Construct a list of fundamental functions (ie. functions that don't
      * call other functions). */
-    name = objof(new_cname("function intrinsic totals"));
+    name = objof(ici_str_new_nul_term("function intrinsic totals"));
     _ASSERT(name != NULL);
     /* Hold them in a profilecall_t so that they're sorted by pc_total */
     intrinsic_totals = new_profilecall(NULL);
     _ASSERT(intrinsic_totals != NULL);
-    VERIFY(!assign(profile, name, objof(intrinsic_totals)));
-    decref(name);
-    decref(objof(intrinsic_totals));
+    VERIFY(!ici_assign(profile, name, objof(intrinsic_totals)));
+    ici_decref(name);
+    ici_decref(objof(intrinsic_totals));
     func_intrinsic_totals(intrinsic_totals, pc);
     /* We're paranoid that these don't add up right, so add them up to
      * check. */
@@ -257,14 +257,14 @@ profile_done_callback(profilecall_t *pc)
     }
 
     /* Add the call basic call graph output. */
-    name = objof(new_cname("call graph"));
+    name = objof(ici_str_new_nul_term("call graph"));
     _ASSERT(name != NULL);
-    VERIFY(!assign(profile, name, pc));
-    decref(name);
+    VERIFY(!ici_assign(profile, name, pc));
+    ici_decref(name);
 
     /* Display it. */
     WIDB_view_object(profile, NULL);
-    decref(profile);
+    ici_decref(profile);
 }
 
 
@@ -409,7 +409,7 @@ add_item(HWND hDlg, HTREEITEM parent, object_t *o, int expand)
         ptr_t *p = ptrof(o);
         safe_strncpy(value, get_simple_value(p->p_key), sizeof(value));
         strncat(value, " = ", sizeof(value) - strlen(value) - 1);
-        object_to_expand = fetch(p->p_aggr, p->p_key);
+        object_to_expand = ici_fetch(p->p_aggr, p->p_key);
     }
     else
     {
@@ -495,6 +495,7 @@ objcmp(void const *elem1, void const *elem2)
     /* They're the same. */
     switch (type1)
     {
+    default:
     case 0:
         /* Something else, sort by simple object pointer. */
         if (o1 < o2)
@@ -555,9 +556,9 @@ add_item_children(HWND hDlg, HTREEITEM parent, object_t *parent_o)
         s = structof(parent_o);
 
         // Add any super the struct has.
-        if (s->s_super != NULL)
+        if (s->o_head.o_super != NULL)
         {
-            add_item(hDlg, parent, objof(s->s_super), FALSE);
+            add_item(hDlg, parent, objof(s->o_head.o_super), FALSE);
         }
 
         // Make an array containing everything in the struct.
@@ -576,23 +577,23 @@ add_item_children(HWND hDlg, HTREEITEM parent, object_t *parent_o)
         // Add the items to the control.
         for (sorted_i = 0; sorted_i < nels_sorted; ++ sorted_i)
         {
-            object_t *element = objof(new_ptr(parent_o, sorted[sorted_i]));
+            object_t *element = objof(ici_ptr_new(parent_o, sorted[sorted_i]));
             _ASSERT(element != NULL);
             add_item(hDlg, parent, element, FALSE);
-            decref(element);
+            ici_decref(element);
         }
         free(sorted);
     }
     else if (isarray(parent_o))
     {
         array_t *a;
-        object_t **element;
+        object_t **e;
 
         // This is an array, we can simply add every element in it.
         a = arrayof(parent_o);
-        for (element = a->a_base; element < a->a_top; element ++)
+        for (e = ici_astart(a); e < ici_alimit(a); e = ici_anext(a, e))
         {
-            add_item(hDlg, parent, *element, FALSE);
+            add_item(hDlg, parent, *e, FALSE);
         }
     }
     else if (isset(parent_o))
@@ -624,21 +625,21 @@ add_item_children(HWND hDlg, HTREEITEM parent, object_t *parent_o)
         object_t *name;
         object_t *element;
 
-        name = objof(new_cname("autos"));
+        name = objof(ici_str_new_nul_term("autos"));
         _ASSERT(name != NULL);
-        element = objof(new_ptr(parent_o, name));
-        decref(name);
+        element = objof(ici_ptr_new(parent_o, name));
+        ici_decref(name);
         _ASSERT(element != NULL);
         add_item(hDlg, parent, element, FALSE);
-        decref(element);
+        ici_decref(element);
 
-        name = objof(new_cname("args"));
+        name = objof(ici_str_new_nul_term("args"));
         _ASSERT(name != NULL);
-        element = objof(new_ptr(parent_o, name));
-        decref(name);
+        element = objof(ici_ptr_new(parent_o, name));
+        ici_decref(name);
         _ASSERT(element != NULL);
         add_item(hDlg, parent, element, FALSE);
-        decref(element);
+        ici_decref(element);
     }
 #ifndef NOPROFILE
     else if (isprofilecall(parent_o))
@@ -677,12 +678,12 @@ add_item_children(HWND hDlg, HTREEITEM parent, object_t *parent_o)
         {
             object_t *element = objof
                                 (
-                                    new_ptr(objof(s),
+                                    ici_ptr_new(objof(s),
                                     sorted[sorted_i * 2 + 1])
                                 );
             _ASSERT(element != NULL);
             add_item(hDlg, parent, element, FALSE);
-            decref(element);
+            ici_decref(element);
         }
         free(sorted);
     }
@@ -753,14 +754,14 @@ static LRESULT CALLBACK tree_wnd_proc
                     used_mem = 0;
                     for (a = objs; a < objs_top; ++a)
                         if ((*a)->o_nrefs > 0)
-                            used_mem += mark(*a);
+                            used_mem += ici_mark(*a);
 
                     // Count the remaining objects, these could do with
                     // garbage collection.
                     uncollected_mem = 0;
                     for (a = objs; a < objs_top; ++a)
                         if (!((*a)->o_flags & O_MARK))
-                            uncollected_mem += mark(*a);
+                            uncollected_mem += ici_mark(*a);
 
                     // Clear the flags we've set.
                     for (a = objs; a < objs_top; ++a)
@@ -848,7 +849,7 @@ static LRESULT CALLBACK view_object_wnd_proc
                             // We choose to expand the thing being pointed
                             // to, this is the commonly useful case.
                             ptr_t *p = ptrof(to_expand);
-                            to_expand = fetch(p->p_aggr, p->p_key);
+                            to_expand = ici_fetch(p->p_aggr, p->p_key);
                             _ASSERT(to_expand != NULL && !isnull(to_expand));
                         }
                         add_item_children
@@ -965,7 +966,7 @@ display_mem_use(object_t *o, HWND hDlg, HWND tree, HTREEITEM tv_item)
             if (isptr(parent_o))
             {
                 ptr_t *p = ptrof(parent_o);
-                parent_o = fetch(p->p_aggr, p->p_key);
+                parent_o = ici_fetch(p->p_aggr, p->p_key);
             }
             parent_o->o_flags |= O_MARK;
         }
@@ -977,11 +978,11 @@ display_mem_use(object_t *o, HWND hDlg, HWND tree, HTREEITEM tv_item)
     if (isptr(o))
     {
         ptr_t *p = ptrof(o);
-        o = fetch(p->p_aggr, p->p_key);
+        o = ici_fetch(p->p_aggr, p->p_key);
     }
 
     // Find out how much memory is in this object.
-    obj_mem = mark(o);
+    obj_mem = ici_mark(o);
 
     // And how much is in atomic stuff.
     atomic_mem = 0;
@@ -995,7 +996,7 @@ display_mem_use(object_t *o, HWND hDlg, HWND tree, HTREEITEM tv_item)
         )
         {
             (*a)->o_flags &= ~O_MARK;
-            atomic_mem += mark(*a);
+            atomic_mem += ici_mark(*a);
         }
     }
 
@@ -1036,7 +1037,7 @@ edit_object(object_t *o, HWND parent)
         ptr_t *p;
 
         p = ptrof(o);
-        to_edit = fetch(p->p_aggr, p->p_key);
+        to_edit = ici_fetch(p->p_aggr, p->p_key);
         _ASSERT(to_edit != NULL);
 
         // So far we only have capability to edit strings.
@@ -1075,7 +1076,7 @@ edit_object(object_t *o, HWND parent)
                 case IDOK:
                 {
                     // Remember the change.
-                    VERIFY(0 == assign(p->p_aggr, p->p_key, to_edit));
+                    VERIFY(0 == ici_assign(p->p_aggr, p->p_key, to_edit));
                     break;
                 }
 
@@ -1177,8 +1178,8 @@ static LRESULT CALLBACK edit_string_wnd_proc
                 }
 
                 // Save the text back into the object we're editing.
-                decref(to_edit);
-                to_edit = objof(new_name(text, text_len));
+                ici_decref(to_edit);
+                to_edit = objof(ici_str_new(text, text_len));
                 _ASSERT(to_edit != NULL);
                 free(text);
                 EndDialog(hDlg, IDOK);

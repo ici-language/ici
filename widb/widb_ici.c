@@ -47,16 +47,16 @@ ici_debug_src(src_t *src)
     {
         // Remember the scope in case they want to look at the variables.
         widb_scope = ici_vs.a_top[-1];
-        incref(widb_scope);
+        ici_incref(widb_scope);
 
         // Stop executing and show the debugger until the user opts to continue in
         // some way.
-        incref(src);
+        ici_incref(src);
         _ASSERT(src->s_filename != NULL);
         widb_debug(src);
-        decref(src);
+        ici_decref(src);
 
-        decref(widb_scope);
+        ici_decref(widb_scope);
         widb_scope = NULL;
     }
 }
@@ -81,7 +81,7 @@ ici_debug_fncall(object_t *o, object_t **ap, int nargs)
     if (o != NULL && isptr(o))
     {
         object_t *agg = ptrof(o)->p_aggr;
-        o = fetch(agg, ptrof(o)->p_key);
+        o = ici_fetch(agg, ptrof(o)->p_key);
     }
     if (o != NULL)
     {
@@ -92,12 +92,12 @@ ici_debug_fncall(object_t *o, object_t **ap, int nargs)
 
         // Ensure that the stack exists.
         if (widb_exec_name_stack == NULL)
-            widb_exec_name_stack = new_array(0);
+            widb_exec_name_stack = ici_array_new(0);
 
         // Make a new entry.
         VERIFY(0 == ici_stk_push_chk(widb_exec_name_stack, 1));
         objname(n1, o);
-        VERIFY(NULL != (name = get_cname(n1)));
+        VERIFY(NULL != (name = ici_str_get_nul_term(n1)));
         *widb_exec_name_stack->a_top++ = objof(name);
 
         ++ exec_no_name_index;
@@ -198,14 +198,14 @@ ici_debug_error(char *err, src_t *src)
         case IDRETRY:
             // Remember the scope in case they want to look at the variables.
             widb_scope = ici_vs.a_top[-1];
-            incref(widb_scope);
+            ici_incref(widb_scope);
 
             // Stop executing and show the debugger until the user opts to continue in
             // some way.
-            incref(src);
+            ici_incref(src);
             widb_debug(src);
-            decref(src);
-            decref(widb_scope);
+            ici_decref(src);
+            ici_decref(widb_scope);
             widb_scope = NULL;
             break;
 
@@ -281,15 +281,14 @@ f_WIDB_view_object()
  *
  *  Cleans up anything allocated by this module.
  */
-static int
-widb_ici_uninit()
+static void
+widb_ici_uninit(void)
 {
     if (widb_exec_name_stack != NULL)
     {
-        decref(widb_exec_name_stack);
+        ici_decref(widb_exec_name_stack);
         widb_exec_name_stack = NULL;
     }
-    return 0;
 }
 
 /*
@@ -300,8 +299,8 @@ widb_ici_uninit()
 object_t *
 ici_widb_library_init() /* Was widb_ici_init() */
 {
-    static wrap_t   wrap;
-    struct_t        *s;
+    static wrap_t       wrap;
+    objwsup_t           *s;
 
     static cfunc_t cfuncs[] =
     {
@@ -310,9 +309,7 @@ ici_widb_library_init() /* Was widb_ici_init() */
         {CF_OBJ}
     };
 
-    if ((s = new_struct()) == NULL)
-        return NULL;
-    if (ici_assign_cfuncs(s, cfuncs))
+    if ((s = ici_module_new(cfuncs)) == NULL)
         return NULL;
     ici_debug = &ici_debug_funcs;
     ici_debug_enabled = 1;
@@ -322,9 +319,7 @@ ici_widb_library_init() /* Was widb_ici_init() */
 #endif
 
     /* Ensure that this module is uninitialised on exit. */
-    wrap.w_func = widb_ici_uninit;
-    wrap.w_next = wraps;
-    wraps = &wrap;
+    ici_atexit(widb_ici_uninit, &wrap);
     return objof(s);
 }
 

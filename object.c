@@ -54,7 +54,6 @@ type_t          *ici_types[ICI_MAX_TYPES] =
     &mark_type,
     &null_type,
     &ici_handle_type,
-    &socket_type,
     &mem_type,
 };
 
@@ -86,8 +85,8 @@ objname(char *p, object_t *o)
 
     if (isstring(o))
     {
-        if (stringof(o)->s_nchars > 10)
-            sprintf(p, "\"%.10s...\"", stringof(o)->s_chars);
+        if (stringof(o)->s_nchars > 24)
+            sprintf(p, "\"%.24s...\"", stringof(o)->s_chars);
         else
             sprintf(p, "\"%s\"", stringof(o)->s_chars);
     }

@@ -9,14 +9,11 @@ EXPORTS copy_simple
 EXPORTS exec_forall
 EXPORTS expand_error
 EXPORTS f_close
-EXPORTS ici_fetch_fail
 EXPORTS file_type DATA
 EXPORTS find_raw_slot
-EXPORTS ici_float_ret
 EXPORTS float_type DATA
 EXPORTS forall_type DATA
 EXPORTS free_simple
-EXPORTS ici_str_get_nul_term
 EXPORTS grow_objs
 EXPORTS hash_unique
 EXPORTS ici_aborted DATA
@@ -41,6 +38,7 @@ EXPORTS ici_call
 EXPORTS ici_callv
 EXPORTS ici_catch_type DATA
 EXPORTS ici_cfunc_type DATA
+EXPORTS ici_class_new
 EXPORTS ici_cmkvar
 EXPORTS ici_debug DATA
 EXPORTS ici_debug_enabled DATA
@@ -51,24 +49,41 @@ EXPORTS ici_enter
 EXPORTS ici_error DATA
 EXPORTS ici_evaluate
 EXPORTS ici_exec DATA
+EXPORTS ici_fetch_fail
 EXPORTS ici_find_on_path
+EXPORTS ici_flists DATA
+EXPORTS ici_float_new
+EXPORTS ici_float_ret
+EXPORTS ici_fltmp DATA
 EXPORTS ici_free
 EXPORTS ici_func
 EXPORTS ici_func_type DATA
 EXPORTS ici_funcv
+EXPORTS ici_get_last_errno
 EXPORTS ici_grow_stack
 EXPORTS ici_growbuf
+EXPORTS ici_handle_method_check
+EXPORTS ici_handle_new
 EXPORTS ici_handle_type
 EXPORTS ici_hash_string
 EXPORTS ici_init
+EXPORTS ici_int_new
+EXPORTS ici_int_ret
 EXPORTS ici_leave
 EXPORTS ici_main
 EXPORTS ici_maind
+EXPORTS ici_mem DATA
+EXPORTS ici_mem_new
+EXPORTS ici_method
+EXPORTS ici_method_check
 EXPORTS ici_method_type DATA
+EXPORTS ici_module_new
 EXPORTS ici_nalloc
+EXPORTS ici_need_stdin
+EXPORTS ici_need_stdout
 EXPORTS ici_new_exec
-EXPORTS ici_new_handle
 EXPORTS ici_nfree
+EXPORTS ici_one DATA
 EXPORTS ici_op_andand
 EXPORTS ici_op_continue
 EXPORTS ici_op_fetch
@@ -85,16 +100,27 @@ EXPORTS ici_op_switch
 EXPORTS ici_op_switcher
 EXPORTS ici_op_unary
 EXPORTS ici_os DATA
+EXPORTS ici_outermost_writeable_struct
 EXPORTS ici_pcre
 EXPORTS ici_pcre_exec
 EXPORTS ici_popen_ftype DATA
+EXPORTS ici_ptr_new
 EXPORTS ici_reclaim
+EXPORTS ici_regexp_new
+EXPORTS ici_register_type
 EXPORTS ici_ret_no_decref
 EXPORTS ici_ret_with_decref
 EXPORTS ici_retcheck
+EXPORTS ici_set_new
 EXPORTS ici_set_val
 EXPORTS ici_sopen
+EXPORTS ici_str_get_nul_term
+EXPORTS ici_str_new
+EXPORTS ici_str_new_nul_term
+EXPORTS ici_str_ret
 EXPORTS ici_strtol
+EXPORTS ici_struct_new
+EXPORTS ici_struct_unassign
 EXPORTS ici_talloc_work
 EXPORTS ici_typecheck
 EXPORTS ici_types DATA
@@ -103,35 +129,22 @@ EXPORTS ici_unwind
 EXPORTS ici_vs DATA
 EXPORTS ici_vsver DATA
 EXPORTS ici_xs DATA
-EXPORTS ici_int_ret
+EXPORTS ici_zero DATA
 EXPORTS int_type DATA
 EXPORTS lex
 EXPORTS mark_type DATA
 EXPORTS mem_type DATA
-EXPORTS ici_need_stdin
-EXPORTS ici_need_stdout
-EXPORTS need_string
 EXPORTS new_catch
-EXPORTS ici_str_new_nul_term
 EXPORTS new_file
-EXPORTS ici_float_new
 EXPORTS new_func
-EXPORTS ici_int_new
-EXPORTS ici_mem_new
-EXPORTS ici_str_new
 EXPORTS new_op
 EXPORTS new_parse
 EXPORTS new_pc
-EXPORTS ici_ptr_new
-EXPORTS ici_regexp_new
-EXPORTS ici_set_new
 EXPORTS new_src
 EXPORTS new_string
-EXPORTS ici_struct_new
 EXPORTS nptrs
 EXPORTS null_type DATA
-EXPORTS ici_one DATA
-EXPORTS ici_zero DATA
+EXPORTS o_null DATA
 EXPORTS objname
 EXPORTS objs DATA
 EXPORTS objs_limit DATA
@@ -149,21 +162,10 @@ EXPORTS regexp_type DATA
 EXPORTS set_ispropersubset
 EXPORTS set_issubset
 EXPORTS set_type DATA
-EXPORTS skt_close
 EXPORTS smash
-EXPORTS socket_type DATA
 EXPORTS src_type DATA
 EXPORTS ssmash
 EXPORTS stdio_ftype DATA
-EXPORTS ici_str_ret
 EXPORTS string_type DATA
 EXPORTS struct_type DATA
-EXPORTS ici_get_last_errno
 EXPORTS unassign_set
-EXPORTS ici_struct_unassign
-EXPORTS ici_register_type
-EXPORTS ici_mem DATA
-EXPORTS ici_flists DATA
-EXPORTS ici_fltmp DATA
-EXPORTS o_null DATA
-

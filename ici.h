@@ -178,9 +178,6 @@ typedef struct mem      mem_t;
 typedef struct expr     expr_t;
 typedef union  ostemp   ostemp_t;
 typedef struct ici_handle ici_handle_t;
-#ifndef NOSKT
-typedef struct skt      skt_t;
-#endif
 #ifndef NODEBUGGING
 typedef struct debug    debug_t;
 #endif
@@ -235,9 +232,6 @@ extern DLI type_t       parse_type;
 extern DLI type_t       ostemp_type;
 extern DLI type_t       ici_handle_type;
 extern DLI type_t       profilecall_type;
-#ifndef NOSKT
-extern DLI type_t       socket_type;
-#endif
 extern DLI type_t       mem_type;
 
 extern DLI ftype_t      stdio_ftype;
@@ -254,7 +248,7 @@ extern DLI debug_t *ici_debug;
 
 extern char     ici_version_string[];
 
-#define null_ret() ici_ret_no_decref(objof(&o_null))
+#define ici_null_ret() ici_ret_no_decref(objof(&o_null))
 
 extern char     **smash(char *, int);
 extern char     **ssmash(char *, char *);
@@ -278,7 +272,6 @@ extern mem_t    *ici_mem_new(void *, size_t, int, void (*)());
 extern catch_t  *new_catch(object_t *, int, int, int);
 extern string_t *ici_str_new_nul_term(char *);
 extern string_t *ici_str_get_nul_term(char *);
-extern int      need_string(string_t **, char *);
 extern unsigned long    ici_hash_string(object_t *);
 extern set_t    *ici_set_new(void);
 extern struct_t *ici_struct_new(void);
@@ -356,10 +349,11 @@ extern int      set_ispropersubset(set_t *, set_t *);
 extern void     ici_reclaim(void);
 extern int      ici_str_ret(char *);
 extern int      ici_float_ret(double);
-extern char     *ici_func(object_t *, char *, ...);
-extern char     *ici_funcv(object_t *, char *, va_list);
-extern char     *ici_call(char *, char *, ...);
-extern char     *ici_callv(char *, char *, va_list);
+extern int      ici_func(object_t *, char *, ...);
+extern int      ici_method(object_t *, string_t *, char *, ...);
+extern int      ici_funcv(object_t *, object_t *, char *, va_list);
+extern int      ici_call(string_t *, char *, ...);
+extern int      ici_callv(string_t *, char *, va_list);
 extern int      ici_cmkvar(objwsup_t *, char *, int, void *);
 extern int      ici_set_val(objwsup_t *, string_t *, int, void *);
 extern int      ici_fetch_num(object_t *, object_t *, double *);
@@ -374,7 +368,7 @@ extern int      ici_main(int, char **);
 extern int      ici_init_sstrings(void);
 extern method_t *ici_method_new(object_t *, object_t *);
 extern int      ici_get_foreign_source_code(parse_t *, array_t *, int, int, int, int, int, unsigned long *);
-extern ici_handle_t *ici_new_handle(void *, string_t *, objwsup_t *);
+extern ici_handle_t *ici_handle_new(void *, string_t *, objwsup_t *);
 extern int      ici_register_type(type_t *t);
 extern ptrdiff_t ici_array_nels(array_t *);
 extern int      ici_grow_stack(array_t *, ptrdiff_t);
@@ -390,6 +384,11 @@ extern void     ici_drop_all_small_allocations(void);
 extern int      ici_engine_stack_check(void);
 extern void     get_pc(array_t *code, object_t **xs);
 extern void     ici_atexit(void (*)(void), wrap_t *);
+extern objwsup_t *ici_outermost_writeable_struct(void);
+extern objwsup_t *ici_class_new(cfunc_t *cf, objwsup_t *super);
+extern objwsup_t *ici_module_new(cfunc_t *cf);
+extern int      ici_handle_method_check(object_t *, string_t *, ici_handle_t **, void **);
+extern int      ici_method_check(object_t *o, int tcode);
 
 extern exec_t   *ici_leave(void);
 extern void     ici_enter(exec_t *);
@@ -430,10 +429,6 @@ extern int      ici_signals_blocking_syscall(int);
 #define ici_signals_pending 0
 #define ici_signals_blocking_syscall(x)
 #define ici_signals_invoke_handlers()
-#endif
-
-#ifndef NOSKT
-extern int      skt_close(skt_t *);
 #endif
 
 #ifdef BSD
@@ -772,8 +767,7 @@ struct objwsup
 #define TC_MARK         20
 #define TC_NULL         21
 #define TC_HANDLE       22
-#define TC_SOCKET       23
-#define TC_MEM          24
+#define TC_MEM          23
 
 #define TC_MAX_CORE     24
 
@@ -1161,19 +1155,46 @@ struct func
 
 /*
  * A handle is a generic object that can be used to refer to some C data
- * object. It supports a super pointer. This can be used to (a) identify
- * a handle as being associated with a particular C data type, and (b) to
- * provide objects of the same type with a class full of methods to operate
- * on the objects of that type.
+ * object. Handles support an (optional) super pointer. Handles are named
+ * with an ICI string to give type checking, reporting, and diagnostic
+ * support. The handle object provides most of the generic machinery
+ * of ICI objects. An optional pre-free function pointer can be supplied
+ * to handle cleanup on final collection of the handle.
  */
 struct ici_handle
 {
     objwsup_t   o_head;
     void        *h_ptr;
     string_t    *h_name;
+    void        (*h_pre_free)(ici_handle_t *h);
 };
 #define handleof(o)        ((ici_handle_t *)(o))
 #define ishandle(o)        (objof(o)->o_tcode == TC_HANDLE)
+#define ishandleof(o, n)   (ishandle(o) && handleof(o)->h_name == (n))
+/*
+ * Flags set in the upper nibble of o_head.o_flags, which is
+ * allowed for type specific use.
+ */
+#define H_CLOSED                0x10
+#define H_HAS_PRIV_STRUCT       0x20
+/*
+ * H_CLOSED             If set, the thing h_ptr points to is no longer
+ *                      valid (it has probably been freed). This flag
+ *                      exists for the convenience of users, as the
+ *                      core handle code doesn't touch this much.
+ *						Although it is significant in handle comparisons
+ *						(a closed handle doesn't match a non-closed one
+ *						even if the h_name and h_ptr are equal).
+ *                      Use of this latent feature depends on needs.
+ *
+ * H_HAS_PRIV_STRUCT    This handle has had a private struct allocated
+ *                      to hold ICI values that have been assigned to
+ *                      it. This does not happen until required, as
+ *                      not all handles will ever need one. The super
+ *                      is the private struct (and it's super is the
+ *                      super the creator originally supplied).
+ */
+
 
 /* From mark.h */
 
@@ -1321,29 +1342,6 @@ struct sets
 };
 #define setof(o)        ((set_t *)(o))
 #define isset(o)        ((o)->o_tcode == TC_SET)
-
-/* From skt.h */
-
-
-#ifdef _WIN32
-/*
- * Windows uses a special type to represent its SOCKET descriptors.
- * For correctness we include winsock.h here. Other platforms (i.e.,
- * BSD) are easier and use integers.
- */
-#include <winsock.h>
-#else
-#define SOCKET  int
-#endif
-
-struct skt
-{
-    object_t    o_head;
-    SOCKET      s_skt;
-    int         s_closed;
-};
-#define sktof(o)        ((skt_t *)(o))
-#define isskt(o)        (objof(o)->o_tcode == TC_SOCKET)
 
 /* From src.h */
 

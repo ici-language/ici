@@ -303,18 +303,6 @@ ici_signals_invoke_handlers(void)
     return 0;
 }
 
-
-/*
- * The two strings "default" and "ignore" are special to the
- * ici signal() function. As arguments they are used to specify
- * signal handling be returned to the default state or be ignored.
- * As results they indicate signal handling is set to the default
- * state or is being ignored.
- */
-static string_t *string_default;
-static string_t *string_ignore;
-
-
 /*
  * string|func = signal(int|string [, func|string])
  *
@@ -337,104 +325,99 @@ f_signal(void)
     object_t    *prev_handler;
     object_t    *result;
 
-    if (string_default == NULL && need_string(&string_default, "default"))
-    return 1;
-    if (string_ignore == NULL && need_string(&string_ignore, "ignore"))
-    return 1;
-
     handlero = NULL;
     if (NARGS() == 1)
-    sigo = ARG(0);
+        sigo = ARG(0);
     else if (NARGS() == 2)
     {
-    sigo = ARG(0);
-    handlero = ARG(1);
+        sigo = ARG(0);
+        handlero = ARG(1);
     }
     else
-    return ici_argcount(2);
+        return ici_argcount(2);
     if (isstring(objof(sigo)))
     {
-    if ((signo = signam_to_signo(stringof(sigo)->s_chars)) == 0)
-    {
-        ici_error = "invalid signal name";
-        return 1;
-    }
+        if ((signo = signam_to_signo(stringof(sigo)->s_chars)) == 0)
+        {
+            ici_error = "invalid signal name";
+            return 1;
+        }
     }
     else if (isint(objof(sigo)))
     {
-    signo = intof(sigo)->i_value;
-    if (signo < 1 || signo > NSIG)
-    {
-        ici_error = "invalid signal number";
-        return 1;
-    }
+        signo = intof(sigo)->i_value;
+        if (signo < 1 || signo > NSIG)
+        {
+            ici_error = "invalid signal number";
+            return 1;
+        }
     }
     else
     {
-    return ici_argerror(0);
+        return ici_argerror(0);
     }
 
     prev_handler = signal_handler[signo_to_index(signo)];
 
     if (handlero == NULL)
     {
-    if (prev_handler)
-        return ici_ret_no_decref(handlero);
-    signal(signo, handler = signal(signo, SIG_IGN));
-    if (handler == ici_signal_handler)
-    {
-        ici_error = "signals messed up, unrecorded handler present";
+        if (prev_handler)
+            return ici_ret_no_decref(handlero);
+        signal(signo, handler = signal(signo, SIG_IGN));
+        if (handler == ici_signal_handler)
+        {
+            ici_error = "signals messed up, unrecorded handler present";
+            return 1;
+        }
+        if (handler == SIG_DFL)
+            return ici_ret_no_decref(SSO(default));
+        if (handler == SIG_IGN)
+            return ici_ret_no_decref(SSO(ignore));
+        ici_error = "signal in indeterminate state";
         return 1;
     }
-    if (handler == SIG_DFL)
-        return ici_ret_no_decref(objof(string_default));
-    if (handler == SIG_IGN)
-        return ici_ret_no_decref(objof(string_ignore));
-    ici_error = "signal in indeterminate state";
-    return 1;
-    }
 
-    if (stringof(handlero) == string_default)
+    if (stringof(handlero) == SS(default))
     {
-    signal_handler[signo_to_index(signo)] = NULL;
-    handler = SIG_DFL;
+        signal_handler[signo_to_index(signo)] = NULL;
+        handler = SIG_DFL;
     }
-    else if (stringof(handlero) == string_ignore)
+    else if (stringof(handlero) == SS(ignore))
     {
-    signal_handler[signo_to_index(signo)] = NULL;
-    handler = SIG_IGN;
+        signal_handler[signo_to_index(signo)] = NULL;
+        handler = SIG_IGN;
     }
     else if (isfunc(handlero) || ismethod(handlero))
     {
-    signal_handler[signo_to_index(signo)] = handlero;
-    ici_incref(handlero);
-    handler = ici_signal_handler;
+        signal_handler[signo_to_index(signo)] = handlero;
+        ici_incref(handlero);
+        handler = ici_signal_handler;
     }
     else
     {
-    return ici_argerror(1);
+        return ici_argerror(1);
     }
 
     rc = signal(signo, handler);
 
     if (rc == SIG_ERR)
     {
-    signal_handler[signo_to_index(signo)] = prev_handler;
-    ici_error = strerror(errno);
-    return 1;
+        signal_handler[signo_to_index(signo)] = prev_handler;
+        ici_error = strerror(errno);
+        return 1;
     }
 
     if (rc == ici_signal_handler)
-    result = prev_handler;
+        result = prev_handler;
     else if (rc == SIG_DFL)
-    result = objof(string_default);
+        result = SSO(default);
     else if (rc == SIG_IGN)
-    result = objof(string_ignore);
+        result = SSO(ignore);
     else
     {
-    signal(signo, rc);
-    ici_error = "unexpected result from signal";
-    return 1;
+        signal(signo, rc);
+        ici_error = "unexpected result from signal";
+        return 1;
     }
 
     return ici_ret_no_decref(result);
@@ -455,11 +438,11 @@ f_signam(void)
     char    *nam;
 
     if (ici_typecheck("i", &signo))
-    return 1;
+        return 1;
     if ((nam = signo_to_signam(signo)) == NULL)
     {
-    ici_error = "invalid signal number";
-    return 1;
+        ici_error = "invalid signal number";
+        return 1;
     }
     return ici_str_ret(nam);
 }

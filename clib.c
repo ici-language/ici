@@ -9,9 +9,6 @@
 #include "buf.h"
 #include "null.h"
 #include "re.h"
-#ifndef NOSKT
-#include "skt.h"
-#endif
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -134,7 +131,7 @@ f_getchar()
     {
         if ((FILE *)f->f_file == stdin)
             clearerr(stdin);
-        return null_ret();
+        return ici_null_ret();
     }
     buf[0] = c;
     return ici_ret_with_decref(objof(ici_str_new(buf, 1)));
@@ -185,7 +182,7 @@ f_getline()
         free(buf);
         if ((FILE *)f->f_file == stdin)
             clearerr(stdin);
-        return null_ret();
+        return ici_null_ret();
     }
     str = ici_str_new(buf, i);
     free(buf);
@@ -284,7 +281,7 @@ f_put()
         return 1;
     }
     ici_enter(x);
-    return null_ret();
+    return ici_null_ret();
 }
 
 static int
@@ -311,7 +308,7 @@ f_fflush()
         return 1;
     }
     ici_enter(x);
-    return null_ret();
+    return ici_null_ret();
 }
 
 static long
@@ -460,11 +457,7 @@ f_fclose()
     o = ARG(0);
     x = ici_leave();
     if (isfile(o))
-        r = f_close(fileof(o)) ? 1 : null_ret();
-#ifndef NOSKT
-    else if (isskt(o))
-        r = skt_close(sktof(o)) ? 1 : null_ret();
-#endif
+        r = f_close(fileof(o)) ? 1 : ici_null_ret();
     else
         r = ici_argerror(0);
     ici_enter(x);
@@ -503,7 +496,7 @@ f_remove(void)
         return 1;
     if (remove(s) != 0)
         return ici_get_last_errno("remove", s);
-    return null_ret();
+    return ici_null_ret();
 }
 
 #ifndef NODIR

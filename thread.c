@@ -385,7 +385,7 @@ f_wakeup()
         return ici_argcount(1);
     if (ici_wakeup(ARG(0)))
         return 1;
-    return null_ret();
+    return ici_null_ret();
 }
 
 /*
