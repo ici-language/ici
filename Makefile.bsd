@@ -1,9 +1,8 @@
 #
 # For compiling a standard version on FreeBSD {2,3,4}.x
 #
-PROG	= ici4
-LIBRARY	= lib$(PROG).a
-FILES	= ici.h
+PROG	= ici
+LIBRARY	= libici4.a
 VERSION	= "`awk '{print $$1}' VERSION`"
 PREFIX	?= /usr/local
 # Keep all symbol information please.  Used by bsd.prog.mk's install target
@@ -43,7 +42,7 @@ MAN1	= doc/man1/ici.1\
 
 CLEANFILES =\
 	$(LIBRARY)\
-	ici4.1 ici4.1.gz\
+	ici.1 ici.1.gz\
 	icifuncs.1 icifuncs.1.gz\
 	icinet.1 icinet.1.gz\
 	icioo.1 icioo.1.gz\
@@ -71,7 +70,6 @@ pcre.o  : pcre/pcre.c
 
 # Headers that are potentially used in module writing are made public
 ICIHDRS=\
-	conf-bsd.h\
 	ici.h\
 	icistr-setup.h
 
@@ -95,7 +93,7 @@ afterinstall:
 	@echo '=========================================='
 	@echo 'Creating installation directories'
 	@echo '=========================================='
-	-mkdir -p $(PREFIX)/include/ici4
+	-mkdir -p $(PREFIX)/include
 	-mkdir -p $(PREFIX)/lib/ici4
 	-mkdir -p $(PREFIX)/share/doc/ici4
 	@echo '=========================================='
@@ -112,7 +110,7 @@ afterinstall:
 	@echo '=========================================='
 	@echo 'Headers'
 	@echo '=========================================='
-	install -c -m 444 $(ICIHDRS) $(PREFIX)/include/ici4
+	install -c -m 444 $(ICIHDRS) $(PREFIX)/include
 	@echo '=========================================='
 	@echo 'Documentation'
 	@echo '=========================================='
