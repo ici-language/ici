@@ -6,9 +6,9 @@ VERSION = "`awk '{print $$1}' VERSION`"
 TARGET  = ici4
 LIB     = libici4.a
 CC      = cc -pipe
-LIBS    = -ldl -framework Foundation
+LIBS    = -framework Foundation
 CFLAGS  = -g -Wall -O2 -I.
-LDFLAGS = -g  -u __dummy
+LDFLAGS = -g
 RM      = rm -f
 
 #
@@ -37,8 +37,9 @@ OBJS    = \
 	signals.o smash.o src.o string.o sstring.o \
 	struct.o syserr.o\
 	thread.o trace.o unary.o uninit.o\
-	wrap.o buf.o strtol.o \
-	idb.o idb2.o profile.o
+	buf.o strtol.o \
+	idb.o idb2.o profile.o \
+	dlfcn_simple.o
 
 PCREOBJS=\
 	study.o maketables.o pcre.o
@@ -62,12 +63,14 @@ maketables.o    : pcre/maketables.c
 pcre.o  : pcre/pcre.c
 	$(CC) -c -o $@ $(CFLAGS) pcre/pcre.c
 
+dlfcn_simple.o : macosx/dlfcn_simple.c
+	$(CC) -c -o $@ $(CFLAGS) macosx/dlfcn_simple.c
+
 # Headers that are potentially used in module writing are made public
 ICIHDRS=\
-	alloc.h array.h buf.h catch.h cfunc.h conf-$(FLAVOUR).h exec.h file.h float.h\
-	forall.h func.h fwd.h ici.h int.h mark.h method.h mem.h null.h object.h op.h\
-	parse.h pc.h primes.h ptr.h re.h set.h src.h str.h struct.h\
-	trace.h wrap.h
+	ici.h\
+	icistr-setup.h\
+	conf-osx.h
 
 PCREHDRS=\
 	pcre/internal.h\
@@ -75,7 +78,7 @@ PCREHDRS=\
 
 # Useful public documentation
 DOCS=\
-	doc/ici-a4.ps doc/ici-ltr.ps doc/ici.txt
+	doc/ici.pdf
 
 # Install the init file, headers and docs.
 install: $(TARGET) $(LIB)
@@ -89,10 +92,10 @@ install: $(TARGET) $(LIB)
 	@echo '=========================================='
 	@echo 'Creating installation directories'
 	@echo '=========================================='
-	-mkdir -p $(PREFIX)/lib/ici3
-	-mkdir -p $(PREFIX)/include/ici3
-	-mkdir -p $(PREFIX)/include/ici3/pcre
-	-mkdir -p $(PREFIX)/share/doc/ici3
+	-mkdir -p $(PREFIX)/lib/ici4
+	-mkdir -p $(PREFIX)/include/ici4
+	-mkdir -p $(PREFIX)/include/ici4/pcre
+	-mkdir -p $(PREFIX)/share/doc/ici4
 	@echo '=========================================='
 	@echo 'Installing ici library'
 	@echo '=========================================='
@@ -101,19 +104,19 @@ install: $(TARGET) $(LIB)
 	@echo '=========================================='
 	@echo 'Startup file'
 	@echo '=========================================='
-	install -c -m 444 ici3core.ici $(PREFIX)/lib/ici3
-	install -c -m 444 ici3core1.ici $(PREFIX)/lib/ici3
-	install -c -m 444 ici3core2.ici $(PREFIX)/lib/ici3
-	install -c -m 444 ici3core3.ici $(PREFIX)/lib/ici3
+	install -c -m 444 ici4core.ici $(PREFIX)/lib/ici4
+	install -c -m 444 ici4core1.ici $(PREFIX)/lib/ici4
+	install -c -m 444 ici4core2.ici $(PREFIX)/lib/ici4
+	install -c -m 444 ici4core3.ici $(PREFIX)/lib/ici4
 	@echo '=========================================='
 	@echo 'Headers'
 	@echo '=========================================='
-	install -c -m 444 $(ICIHDRS) $(PREFIX)/include/ici3
-	install -c -m 444 $(PCREHDRS) $(PREFIX)/include/ici3/pcre
+	install -c -m 444 $(ICIHDRS) $(PREFIX)/include/ici4
+	install -c -m 444 $(PCREHDRS) $(PREFIX)/include/ici4/pcre
 	@echo '=========================================='
 	@echo 'Documentation'
 	@echo '=========================================='
-	install -c -m 444 $(DOCS) $(PREFIX)/share/doc/ici3
+	install -c -m 444 $(DOCS) $(PREFIX)/share/doc/ici4
 	@echo '=========================================='
 	@echo 'Install done'
 	@echo '=========================================='

@@ -1,8 +1,7 @@
 #ifndef ICI_CONF_H
 #define ICI_CONF_H
 
-#define ici_float_t ici_float_t
-#define ici_int_t ici_int_t
+#include <math.h>
 
 #include <sys/param.h>
 #undef isset
@@ -32,5 +31,13 @@
 
 #define ICI_DLL_EXT     ".dylib"
 #define NEED_UNDERSCORE_ON_SYMBOLS
+
+#if 0
+/* Need to wait until sem_init replacement exists */
+# define ICI_USE_POSIX_THREADS
+#endif
+
+#include <crt_externs.h>
+#define environ *_NSGetEnviron()
 
 #endif /*ICI_CONF_H*/

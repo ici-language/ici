@@ -313,12 +313,17 @@ long
 WINAPI /* Ensure correct Win32 calling convention. */
 ici_thread_base(ici_exec_t *x)
 {
-#endif
-#ifdef ICI_USE_POSIX_THREADS
+#else
+# ifdef ICI_USE_POSIX_THREADS
 void *
 ici_thread_base(void *arg)
 {
-    ici_exec_t  *x = arg;
+    ici_exec_t      *x = arg;
+# else
+int
+ici_thread_base(exec_t *x)
+{
+# endif
 #endif
     int                 n_ops;
 
