@@ -70,7 +70,7 @@ extern void             ici_free(void *);
                         : sizeof(t) <= 16 ? 1 \
                         : sizeof(t) <= 32 ? 2 \
                         : sizeof(t) <= 64 ? 3 \
-                        : 0)
+                        : sizeof(t))
 
 /*
  * If the object is too big for a fast free list, these macros should reduce
