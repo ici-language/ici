@@ -7,7 +7,7 @@ PREFIX  ?= /usr/local
 # Keep all symbol information please.  Used by bsd.prog.mk's install target
 STRIP   =
 BINDIR  = $(PREFIX)/bin
-OPTIM   =
+OPTIM   = -DNDEBUG -O3
 LDFLAGS = -g
 LDADD   = -lm
 DEFS    = -DCONFIG_FILE='"conf-bsd.h"' -DPREFIX='"$(PREFIX)"' -D_THREAD_SAFE -pthread
