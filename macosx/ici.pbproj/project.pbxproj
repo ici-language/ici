@@ -17,10 +17,55 @@
 			settings = {
 			};
 		};
+		A12DB6C603E1C26100A80108 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = wrap.h;
+			path = ../wrap.h;
+			refType = 2;
+		};
+		A12DB6C703E1C26200A80108 = {
+			fileRef = A12DB6C603E1C26100A80108;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		A12DB6C803E1C2B800A80108 = {
+			children = (
+				A144404203DF1ECD00A80108,
+			);
+			isa = PBXGroup;
+			name = main;
+			refType = 4;
+		};
+		A12DB6C903E1C2FC00A80108 = {
+			children = (
+				A144408603DF1F7700A80108,
+				A144408503DF1F7700A80108,
+				A144406003DF1EFF00A80108,
+				A144406103DF1EFF00A80108,
+				A144406203DF1EFF00A80108,
+			);
+			isa = PBXGroup;
+			name = PCRE;
+			refType = 4;
+		};
+		A12DB6CA03E1C32900A80108 = {
+			children = (
+				A1071D9F03DF285600A80108,
+			);
+			isa = PBXGroup;
+			name = "OS X Sources";
+			path = "";
+			refType = 4;
+		};
 		A12FEAC103DF1DDB00A80108 = {
 			children = (
 				A144402103DF1E0D00A80108,
 				A144402203DF1E1300A80108,
+				A12DB6C903E1C2FC00A80108,
+				A12DB6CA03E1C32900A80108,
+				A12DB6C803E1C2B800A80108,
 				A1676E0B03DF28DF00A80108,
 				A1AF3B6603DF332200A80108,
 				A144408D03DF1F9500A80108,
@@ -96,7 +141,6 @@
 				A144403F03DF1ECD00A80108,
 				A144404003DF1ECD00A80108,
 				A144404103DF1ECD00A80108,
-				A144404203DF1ECD00A80108,
 				A144404303DF1ECD00A80108,
 				A144404403DF1ECD00A80108,
 				A144404503DF1ECD00A80108,
@@ -125,24 +169,20 @@
 				A144405C03DF1ECD00A80108,
 				A144405D03DF1ECD00A80108,
 				A144405E03DF1ECD00A80108,
-				A144406003DF1EFF00A80108,
-				A144406103DF1EFF00A80108,
-				A144406203DF1EFF00A80108,
-				A1071D9F03DF285600A80108,
 			);
 			isa = PBXGroup;
-			name = Sources;
+			name = "ICI Source";
 			refType = 4;
 		};
 		A144402203DF1E1300A80108 = {
 			children = (
+				A144406903DF1F5B00A80108,
 				A144406303DF1F5B00A80108,
 				A144406403DF1F5B00A80108,
 				A144406503DF1F5B00A80108,
 				A144406603DF1F5B00A80108,
 				A144406703DF1F5B00A80108,
 				A144406803DF1F5B00A80108,
-				A144406903DF1F5B00A80108,
 				A144406A03DF1F5B00A80108,
 				A144406B03DF1F5B00A80108,
 				A144406C03DF1F5B00A80108,
@@ -170,11 +210,10 @@
 				A144408203DF1F5B00A80108,
 				A144408303DF1F5B00A80108,
 				A144408403DF1F5B00A80108,
-				A144408503DF1F7700A80108,
-				A144408603DF1F7700A80108,
+				A12DB6C603E1C26100A80108,
 			);
 			isa = PBXGroup;
-			name = Headers;
+			name = "ICI Headers";
 			refType = 4;
 		};
 		A144402303DF1ECD00A80108 = {
@@ -398,8 +437,8 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = main.c;
-			path = ../main.c;
-			refType = 2;
+			path = /Users/andy/SourceCode/ici/4/ici/main.c;
+			refType = 0;
 		};
 		A144404303DF1ECD00A80108 = {
 			fileEncoding = 30;
@@ -601,22 +640,22 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = maketables.c;
-			path = ../pcre/maketables.c;
-			refType = 2;
+			path = /Users/andy/SourceCode/ici/4/ici/pcre/maketables.c;
+			refType = 0;
 		};
 		A144406103DF1EFF00A80108 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = pcre.c;
-			path = ../pcre/pcre.c;
-			refType = 2;
+			path = /Users/andy/SourceCode/ici/4/ici/pcre/pcre.c;
+			refType = 0;
 		};
 		A144406203DF1EFF00A80108 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = study.c;
-			path = ../pcre/study.c;
-			refType = 2;
+			path = /Users/andy/SourceCode/ici/4/ici/pcre/study.c;
+			refType = 0;
 		};
 		A144406303DF1F5B00A80108 = {
 			fileEncoding = 30;
@@ -860,15 +899,15 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = internal.h;
-			path = ../pcre/internal.h;
-			refType = 2;
+			path = /Users/andy/SourceCode/ici/4/ici/pcre/internal.h;
+			refType = 0;
 		};
 		A144408603DF1F7700A80108 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			name = pcre.h;
-			path = ../pcre/pcre.h;
-			refType = 2;
+			path = /Users/andy/SourceCode/ici/4/ici/pcre/pcre.h;
+			refType = 0;
 		};
 		A144408703DF1F9500A80108 = {
 			buildActionMask = 2147483647;
@@ -909,6 +948,7 @@
 				A14440F003DF204E00A80108,
 				A14440F103DF204E00A80108,
 				A14440F203DF204E00A80108,
+				A12DB6C703E1C26200A80108,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1762,7 +1802,7 @@
 				A1676E0F03DF28FC00A80108,
 			);
 			isa = PBXGroup;
-			name = "Core ICI files";
+			name = "ICI core modules";
 			refType = 4;
 		};
 		A1676E0C03DF28FC00A80108 = {
