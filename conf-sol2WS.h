@@ -25,11 +25,12 @@
 #define NOPROFILE       /* Profiler, see profile.c. */
 #undef  NOSIGNALS       /* ICI level signal handling */
 
+#define ICI_USE_POSIX_THREADS
+
 /*
  * Mentioned in the version string.
  */
 #define CONFIG_STR      "Solaris 2.x"
-
 
 /*
  * Solaris curses tputs() uses a putc() with a char arg.
@@ -39,3 +40,4 @@
 #define TI_PUTC_ARG     char
 
 #endif /*ICI_CONF_H*/
+
