@@ -27,7 +27,7 @@
 #define PREFIX  "/usr/local/"
 #endif
 
-#define ICI_DLL_EXT     ".dylib"
+#define ICI_DLL_EXT     ".bundle"
 
 #if 0
 /* Need to wait until sem_init replacement exists */
