@@ -4,7 +4,7 @@
         [ident stuff...]
 
     to be defined for things other than the built-in ones. The
-    stuff... can be any suntax, build variously from low level
+    stuff... can be any syntax, build variously from low level
     character data, from standard ICI tokens, or from full ICI
     expressions.
     
