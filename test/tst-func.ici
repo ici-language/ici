@@ -283,6 +283,8 @@ if (interval("12345", -10, 1) != "")
     fail("interval() before string didn't give correct string");
 if (interval("12345", 10, 1) != "")
     fail("interval() after string didn't give correct string");
+if (interval("12345", 0) != "12345")
+    fail("interval() didn't give correct string");
 
 error = NULL; try interval(6, 2); onerror;
 if (error == NULL)

@@ -1412,21 +1412,13 @@ f_interval()
     long                start;
     long                length;
     long                nel;
-    register ici_str_t  *s = 0; /* init to shut up compiler */
-    register ici_array_t    *a = 0; /* init to shut up compiler */
-    register ici_array_t    *a1;
+    ici_str_t           *s = 0; /* init to shut up compiler */
+    ici_array_t         *a = 0; /* init to shut up compiler */
+    ici_array_t         *a1;
 
 
     if (ici_typecheck("oi*", &o, &start))
         return 1;
-    length = -1;
-    if (NARGS() > 2)
-    {
-        if (!isint(ARG(2)))
-            return ici_argerror(2);
-        if ((length = intof(ARG(2))->i_value) < 0)
-            ici_argerror(2);
-    }
     switch (o->o_tcode)
     {
     case TC_STRING:
@@ -1441,6 +1433,15 @@ f_interval()
 
     default:
         return ici_argerror(0);
+    }
+
+    length = nel;
+    if (NARGS() > 2)
+    {
+        if (!isint(ARG(2)))
+            return ici_argerror(2);
+        if ((length = intof(ARG(2))->i_value) < 0)
+            ici_argerror(2);
     }
 
     if (length < 0)
