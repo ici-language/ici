@@ -2356,10 +2356,10 @@ ici_token_name(int t)
     return "token";
 }
 
-static parse_t *
+static ici_parse_t *
 parse_file_argcheck(void)
 {
-    file_t              *f;
+    ici_file_t          *f;
 
     if (ici_typecheck("u", &f))
         return NULL;
@@ -2374,7 +2374,7 @@ parse_file_argcheck(void)
 static int
 f_parsetoken()
 {
-    parse_t             *p;
+    ici_parse_t         *p;
     int                 t;
 
     if ((p = parse_file_argcheck()) == NULL)
@@ -2387,7 +2387,7 @@ f_parsetoken()
 static int
 f_tokenobj()
 {
-    parse_t             *p;
+    ici_parse_t         *p;
 
     if ((p = parse_file_argcheck()) == NULL)
         return 1;
@@ -2410,7 +2410,7 @@ f_tokenobj()
 static int
 f_rejecttoken()
 {
-    parse_t             *p;
+    ici_parse_t         *p;
 
     if ((p = parse_file_argcheck()) == NULL)
         return 1;
@@ -2421,7 +2421,7 @@ f_rejecttoken()
 static int
 f_parsevalue()
 {
-    parse_t             *p;
+    ici_parse_t         *p;
     ici_obj_t           *o;
 
     if ((p = parse_file_argcheck()) == NULL)
@@ -2437,8 +2437,8 @@ f_parsevalue()
 static int
 f_rejectchar()
 {
-    file_t              *f;
-    string_t            *s;
+    ici_file_t          *f;
+    ici_str_t           *s;
 
     if (ici_typecheck("uo", &f, &s))
         return 1;
@@ -2457,7 +2457,7 @@ f_rejectchar()
     static int
     f_parse_expr()
     {
-        parse_t             *p;
+        ici_parse_t         *p;
         ici_array_t         *a;
         ici_code_t          *c;
 
@@ -2486,7 +2486,7 @@ f_rejectchar()
     static int
     f_parse_stmt()
     {
-        parse_t             *p;
+        ici_parse_t         *p;
         ici_array_t         *a;
         ici_code_t          *c;
 
