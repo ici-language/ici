@@ -5,8 +5,7 @@
  * Return the number of pointers in a NULL terminated array of pointers.
  */
 int
-nptrs(p)
-register char   **p;
+nptrs(char **p)
 {
     register int        i;
 

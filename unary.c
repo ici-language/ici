@@ -11,7 +11,6 @@ int
 ici_op_unary(void)
 {
     int_t       *i;
-    float_t     *f;
 
     switch (opof(ici_xs.a_top[-1])->op_code)
     {
@@ -34,24 +33,11 @@ ici_op_unary(void)
         return 0;
 
     case t_subtype(T_MINUS):
-        if (isint(ici_os.a_top[-1]))
-        {
-            if ((i = ici_int_new(-intof(ici_os.a_top[-1])->i_value)) == NULL)
-                return 1;
-            ici_os.a_top[-1] = objof(i);
-            ici_decref(i);
-            --ici_xs.a_top;
-            return 0;
-        }
-        else if (isfloat(ici_os.a_top[-1]))
-        {
-            if ((f = ici_float_new(-floatof(ici_os.a_top[-1])->f_value)) == NULL)
-                return 1;
-            ici_os.a_top[-1] = objof(f);
-            ici_decref(f);
-            --ici_xs.a_top;
-            return 0;
-        }
+        /*
+         * Unary minus is implemented as a binary op because they are
+         * more heavily optimised.
+         */
+        assert(0);
     fail:
     default:
         switch (opof(ici_xs.a_top[-1])->op_code)

@@ -38,6 +38,9 @@ char                    *ici_fltmp;
  */
 char                    *ici_flists[4];
 
+#if !ICI_RAWMALLOC
+
+
 /*
  * The current next available block, and limits, within each of
  * the allocation chunks for each of the size categories we have
@@ -265,3 +268,48 @@ ici_drop_all_small_allocations(void)
         free(c);
     }
 }
+
+#else /* ICI_RAWMALLOC */
+
+#undef ici_nalloc
+#undef ici_nfree
+#undef ici_alloc
+#undef ici_free
+
+void *
+ici_talloc_work(int fi, size_t z)
+{
+    assert(0);
+    return NULL;
+}
+
+void *
+ici_nalloc(size_t z)
+{
+    return malloc(z);
+}
+
+void
+ici_nfree(void *p, size_t z)
+{
+    free(p);
+}
+
+void *
+ici_alloc(size_t z)
+{
+    return malloc(z);
+}
+
+void
+ici_free(void *p)
+{
+    free(p);
+}
+
+void
+ici_drop_all_small_allocations(void)
+{
+}
+
+#endif /* ICI_RAWMALLOC */

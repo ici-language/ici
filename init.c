@@ -19,7 +19,7 @@ extern cfunc_t  *funcs[];
  * extern scope of any files parsed at the top level.
  *
  * In systems supporting threads, on exit, the global ICI mutex has been
- * acquired (with ici_enter()).
+ * acquired (with ici_enter()). 
  */
 int
 ici_init(void)

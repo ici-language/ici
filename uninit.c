@@ -32,6 +32,9 @@ ici_uninit(void)
     int                 i;
     exec_t              *x;
     extern int          ici_n_allocs;
+    extern struct_t     *ici_environ;
+    extern void         ici_dump_refs(void);
+
 
     /*
      * This catches the case where ici_uninit() is called without ici_init
@@ -60,9 +63,16 @@ ici_uninit(void)
     uninit_compile();
     uninit_cfunc();
 
-    /* Ensure that the stacks don't stop anything being collected. */
+    /*
+     * Active threads, including the main one, will count reference counts
+     * for their exec structs. But finished ones will have none. We don't
+     * really care. Just zap them all and let the garbage collector sort
+     * them out. This routine doesn't really handle shutdown with outstanding
+     * threads running.
+     */
     for (x = ici_execs; x != NULL; x = x->x_next)
-        ici_decref(x);
+        x->o_head.o_nrefs = 0;
+
     /*
      * We don't decref the static cached copies of our stacks, because
      * if we did the garbage collector would try to free them (but they
@@ -77,6 +87,10 @@ ici_uninit(void)
     ici_reclaim();
     ici_reclaim();
 
+    /*
+    ici_dump_refs();
+    */
+
     /* Free the general purpose buffer. */
     ici_nfree(ici_buf, ici_bufz + 1);
     ici_buf = NULL;
@@ -90,4 +104,8 @@ ici_uninit(void)
 
     ici_drop_all_small_allocations();
     /*fprintf(stderr, "ici_mem = %ld, n = %d\n", ici_mem, ici_n_allocs);*/
+
+#if 1 && defined(WIN32) && !defined(NDEBUG)
+    _CrtDumpMemoryLeaks();
+#endif
 }

@@ -176,8 +176,7 @@ fail:
  * Grow the set s so that it has twice as many slots.
  */
 static int
-grow_set(s)
-register set_t  *s;
+grow_set(set_t *s)
 {
     object_t            **e;
     object_t            **oldslots;
@@ -206,9 +205,7 @@ register set_t  *s;
  * Remove the key from the set.
  */
 int
-unassign_set(s, k)
-register set_t  *s;
-object_t        *k;
+unassign_set(set_t *s, object_t *k)
 {
     register object_t   **sl;
     register object_t   **ss;
@@ -315,9 +312,7 @@ type_t  set_type =
  * Return 1 if a is a subset of b, else 0.
  */
 int
-set_issubset(a, b) /* a is a subset of b */
-set_t *a;
-set_t *b;
+set_issubset(set_t *a, set_t *b) /* a is a subset of b */
 {
     register object_t   **sl;
     register int        i;
@@ -337,9 +332,7 @@ set_t *b;
  * and not equal.
  */
 int
-set_ispropersubset(a, b) /* a is a proper subset of b */
-set_t *a;
-set_t *b;
+set_ispropersubset(set_t *a, set_t *b) /* a is a proper subset of b */
 {
     return a->s_nels < b->s_nels && set_issubset(a, b);
 }

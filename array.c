@@ -560,6 +560,11 @@ assign_array(object_t *o, object_t *k, object_t *v)
     long        i;
     object_t    **e;
 
+    if (o->o_flags & O_ATOM)
+    {
+        ici_error = "attempt to assign to an atomic array";
+        return 1;
+    }
     if (!isint(k))
         return ici_assign_fail(o, k, v);
     i = intof(k)->i_value;

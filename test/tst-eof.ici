@@ -15,9 +15,9 @@ static doit(a)
 
 auto a;
 a = fopen("/tmp/icitest", "w");
-fprintf(a, "xyz");
+printf(a, "xyz");
 close(a);
-doit(fopen("/tmp/icitest", "r"));
-doit(sopen("xyz", "r"));
-doit(popen("cat /tmp/icitest", "r"));
+/*doit(fopen("/tmp/icitest", "r"));
+doit(sopen("xyz", "r"));*/
+doit(popen("cat /tmp/icitest > /tmp/z", "r"));
 

@@ -38,7 +38,7 @@ f_regexp()
         break;
     default:
         return ici_argcount(2);
-     }
+    }
     if (CF_ARG2() != NULL)
         opts |= PCRE_CASELESS;
     return ici_ret_with_decref(objof(ici_regexp_new(stringof(ARG(0)), opts)));
@@ -560,18 +560,28 @@ f_smash()
     static regexp_t     *default_re;
     int                 i;
     int                 include_remainder;
+    int                 nargs;
+
+    if (NARGS() < 1)
+        return ici_argcount(1);
 
     if (NARGS() == 2 && isstring(ARG(1)))
         return f_old_smash();
 
-    if (NARGS() < 1)
-        return ici_argcount(1);
+    nargs = NARGS();
+    include_remainder = 0;
+    if (isint(ARG(nargs - 1)))
+    {
+        include_remainder = intof(ARG(NARGS() - 1))->i_value != 0;
+        if (--nargs == 0)
+            return ici_argerror(0);
+    }
 
     if (!isstring(ARG(0)))
         return ici_argerror(0);
     str = stringof(ARG(0));
 
-    if (NARGS() < 2)
+    if (nargs < 2)
     {
         if (default_re == NULL)
         {
@@ -587,8 +597,7 @@ f_smash()
         re = regexpof(ARG(1));
     }
 
-    include_remainder = 0;
-    if (NARGS() < 3)
+    if (nargs < 3)
     {
         default_repl[0] = SS(slosh0);
         repls = &default_repl[0];
@@ -596,15 +605,7 @@ f_smash()
     }
     else
     {
-        if (isint(ARG(NARGS() - 1)))
-        {
-            include_remainder = intof(ARG(NARGS() - 1))->i_value != 0;
-            n_repls = NARGS() - 3;
-        }
-        else
-        {
-            n_repls = NARGS() - 2;
-        }
+        n_repls = nargs - 2;
         repls = (string_t **)(ARGS() - 2);
         for (i = 0; i < n_repls; ++i)
         {

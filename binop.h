@@ -435,6 +435,22 @@
     /*
      * Everything else...
      */
+    case TRI(TC_PTR, TC_INT, T_MINUS):
+    case TRI(TC_PTR, TC_INT, T_MINUSEQ):
+        if (!isint(ptrof(o0)->p_key))
+            goto mismatch;
+        {
+            object_t    *i;
+
+            if ((i = objof(ici_int_new(intof(ptrof(o0)->p_key)->i_value
+                    - intof(o1)->i_value))) == NULL)
+                goto fail;
+            if ((o = objof(ici_ptr_new(ptrof(o0)->p_aggr, i))) == NULL)
+                goto fail;
+            ici_decref(i);
+        }
+        goto looseo;
+        
     case TRI(TC_INT, TC_PTR, T_PLUS):
     case TRI(TC_INT, TC_PTR, T_PLUSEQ):
         if (!isint(ptrof(o1)->p_key))
@@ -570,10 +586,12 @@
     case TRI(TC_SET, TC_SET, T_ASTERIX):
     case TRI(TC_SET, TC_SET, T_ASTERIXEQ):
         {
-            register set_t      *s;
-            register object_t   **sl;
-            register int        i;
+            set_t      *s;
+            object_t   **sl;
+            int        i;
 
+            if (setof(o0)->s_nels > setof(o1)->s_nels)
+                SWAP();
             if ((s = ici_set_new()) == NULL)
                 goto fail;
             sl = setof(o0)->s_slots;

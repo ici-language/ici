@@ -172,7 +172,6 @@ struct type
  *
  */
 
-#ifndef SMALL
 /*
  * Macros to perform the operation on the object.
  */
@@ -184,17 +183,11 @@ struct type
  * Thus the size of this macro. The o_leafz field of an object tells us it
  * doesn't reference any other objects and is of small (ie o_leafz) size.
  */
-#if 1
 #define ici_mark(o)         ((objof(o)->o_flags & O_MARK) == 0 \
                             ? (objof(o)->o_leafz != 0 \
                                 ? (objof(o)->o_flags |= O_MARK, objof(o)->o_leafz) \
                                 : (*ici_typeof(o)->t_mark)(objof(o))) \
                             : 0L)
-#else
-#define ici_mark(o)         ((objof(o)->o_flags & O_MARK) == 0 \
-                            ? (*ici_typeof(o)->t_mark)(objof(o)) \
-                            : 0L)
-#endif
 #define freeo(o)        ((*ici_typeof(o)->t_free)(objof(o)))
 #define hash(o)         ((*ici_typeof(o)->t_hash)(objof(o)))
 #define cmp(o1,o2)      ((*ici_typeof(o1)->t_cmp)(objof(o1), objof(o2)))
@@ -206,6 +199,7 @@ struct type
 #define assign_base(o,k,v) ((*ici_typeof(o)->t_assign_base)(objof(o), objof(k), objof(v)))
 #define fetch_base(o,k) ((*ici_typeof(o)->t_fetch_base)(objof(o), objof(k)))
 
+#ifndef BUGHUNT
 /*
  * Link an object into the list of objects. We clear the o_leafz field
  * here because that is the safe thing to do and, as of the introduction
@@ -217,6 +211,11 @@ struct type
                             ? (void)(*objs_top++ = objof(o)) \
                             : grow_objs(objof(o))))
 #else
+#define rego(o)         bughunt_rego(objof(o))
+extern void             bughunt_rego(object_t *);
+#endif
+
+#if 0
 /*
  * Functions to performs operations on the object.
  */
@@ -227,7 +226,6 @@ extern int              cmp(object_t *, object_t *);
 extern object_t         *copy(object_t *);
 extern object_t         *ici_fetch(object_t *, object_t *);
 extern int              ici_assign(object_t *, object_t *, object_t *);
-extern void             rego(object_t *);
 #endif
 
 #define ici_atom_hash_index(h)  (ICI_PTR_HASH_BITS(h) & (atomsz - 1))

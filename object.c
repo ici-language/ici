@@ -71,6 +71,8 @@ object_t        **atoms;        /* Hash table of atomic objects. */
 int             atomsz;         /* Number of slots in hash table. */
 static int      natoms;         /* Number of atomic objects. */
 
+static int      supress_collect;
+
 /*
  * Format a human readable version of the object in 30 chars or less.
  */
@@ -225,7 +227,10 @@ grow_atoms(ptrdiff_t newz)
 
     assert(((newz - 1) & newz) == 0); /* Assert power of 2. */
     oldz = atomsz;
-    if ((o = (object_t **)ici_nalloc(newz * sizeof(object_t *))) == NULL)
+    ++supress_collect;
+    o = (object_t **)ici_nalloc(newz * sizeof(object_t *));
+    --supress_collect;
+    if (o == NULL)
         return;
     atomsz = newz;
     memset((char *)o, 0, newz * sizeof(object_t *));
@@ -286,7 +291,10 @@ ici_atom(object_t *o, int lone)
      */
     if (!lone)
     {
-        if ((*po = copy(o)) == NULL)
+        ++supress_collect;
+        *po = copy(o);
+        --supress_collect;
+        if (*po == NULL)
             return o;
         o = *po;
     }
@@ -422,8 +430,7 @@ delete:
 }
 
 void
-grow_objs(o)
-object_t        *o;
+grow_objs(object_t *o)
 {
     object_t            **newobjs;
     ptrdiff_t           newz;
@@ -467,6 +474,16 @@ collect(void)
     long                tc_counts[16];
     memset((char *)tc_counts, 0, sizeof tc_counts);
 #endif
+    if (supress_collect)
+    {
+        /*
+         * There are some times when it is a bad idea to collect. Basicly
+         * when we are fiddling with the basic data structures like the
+         * atom pool and recursive calls.
+         */
+        return;
+    }
+    ++supress_collect;
 
     /*
      * Mark all objects which are referenced (and thus what they ref).
@@ -516,11 +533,6 @@ collect(void)
         }
         natoms -= ndead_atoms;
         /*
-         * Override the size trigger for collection so that allocation
-         * in grow_atoms doesn't trigger an recursive collect.
-         */
-        ici_mem_limit = LONG_MAX;
-        /*
          * Call grow_atoms() to reuild the atom pool. On entry it isn't
          * a legal hash table, but grow_atoms() doesn't care. We make the
          * new one the same size as the old one. Should we?
@@ -561,8 +573,9 @@ collect(void)
         }
         objs_top = b;
     }
-/*printf("mem=%ld vs. %ld, nobjects=%d, natoms=%d\n", mem, ici_mem, objs_top - objs, natoms);*/
-
+/*
+printf("mem=%ld vs. %ld, nobjects=%d, natoms=%d\n", mem, ici_mem, objs_top - objs, natoms);
+*/
     /*
      * Set ici_mem_limit (which is the point at which to trigger a
      * new call to us) to twice what is currently allocated, but
@@ -590,6 +603,22 @@ collect(void)
         printf("\n");
     }
 #endif
+    --supress_collect;
+}
+
+void
+ici_dump_refs(void)
+{
+    object_t            **a;
+    char                n[30];
+
+    for (a = objs; a < objs_top; ++a)
+    {
+        if ((*a)->o_nrefs == 0)
+            continue;
+        printf("%d 0x%08X: %s\n", (*a)->o_nrefs, *a, objname(n, *a));
+    }
+
 }
 
 /*
@@ -603,16 +632,24 @@ ici_reclaim(void)
     collect();
 }
 
+
 #ifdef  BUGHUNT
+
+object_t    *traceobj;
+
 void
 bughunt_incref(object_t *o)
 {
-    if ((unsigned char)objof(o)->o_nrefs == (unsigned char)0xFF)
+    if (o == traceobj)
+    {
+        printf("incref traceobj(%d)\n", o->o_tcode);
+    }
+    if ((unsigned char)objof(o)->o_nrefs == (unsigned char)0x7F)
     {
         printf("Oops: ref count overflow\n");
         abort();
     }
-    if (++objof(o)->o_nrefs > 10)
+    if (++objof(o)->o_nrefs > 50)
     {
         printf("Warning: nrefs %d > 10\n", objof(o)->o_nrefs);
         fflush(stdout);
@@ -622,20 +659,33 @@ bughunt_incref(object_t *o)
 void
 bughunt_decref(object_t *o)
 {
+    if (o == traceobj)
+    {
+        printf("decref traceobj(%d)\n", o->o_tcode);
+    }
     if (--o->o_nrefs < 0)
     {
         printf("Oops: ref count underflow\n");
         abort();
     }
 }
+
+void
+bughunt_rego(object_t *o)
+{
+    if (o == traceobj)
+    {
+        printf("rego traceobj(%d)\n", o->o_tcode);
+    }
+    o->o_leafz = 0;                     
+    if (objs_top < objs_limit)
+        *objs_top++ = o;
+    else
+        grow_objs(o);
+}
 #endif
 
-#ifdef  SMALL
-/*
- * If SMALL is defined we use simple functions for these type vectored
- * operations. They are normally macros.
- */
-
+#if 0
 unsigned long
 ici_mark(object_t *o)
 {
@@ -680,12 +730,5 @@ ici_assign(object_t *o, object_t *k, object_t *v)
     return (*ici_typeof(o)->t_assign)(o, k, v);
 }
 
-void
-rego(object_t *o)
-{
-    if (objs_top < objs_limit)
-        *objs_top++ = o;
-    else
-        grow_objs(o);
-}
 #endif
+

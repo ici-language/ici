@@ -84,6 +84,7 @@ ici_assign_cfuncs(objwsup_t *s, cfunc_t *cf)
              */
             n = (string_t *)cf->cf_name;
             cf->cf_name = n->s_chars;
+            /* ### should be a decref here? ### */
         }
         else
         {

@@ -444,6 +444,7 @@ lex(parse_t *p, array_t *a)
     case '#':
     {
         string_t *regexp_str;
+
         i = 0;
         while ((c = get(p, a)) != '#' && c != '\n' && c != EOF)
         {

@@ -6,7 +6,7 @@
 #include <windows.h>
 
 /*
- * Convert the current gdi error into an ICI error message.
+ * Convert the current Win32 error into an ICI error message.
  * Returns 1 so it can be use directly in a return from an
  * ICI instrinsic function.
  */

@@ -24,10 +24,10 @@ extern "C" {
  * possibly even work) for the particular port of ICI.
  */
 #undef  NOMATH          /* Trig and etc. */
-#define NOTRACE         /* For debugging. */
+#undef  NOTRACE         /* For debugging. */
 #define NOWAITFOR       /* Requires select() or similar system primitive. */
 #undef  NOSYSTEM        /* Command interpreter (shell) escape. */
-#undef  NOPIPES         /* Requires popen(). */
+#define NOPIPES         /* Requires popen(). */
 #undef  NOSKT           /* BSD style network interface. */
 #undef  NODIR           /* Directory reading function, dir(). */
 #define NOPASSWD        /* UNIX password file access */
@@ -35,7 +35,7 @@ extern "C" {
 #undef  NOSTARTUPFILE   /* Parse a standard file of ICI code at init time. */
 #undef  NODEBUGGING     /* Debugger interface and functions */
 #undef  NOEVENTS        /* Event loop and associated processing. */
-#define NOPROFILE       /* Profiler, see profile.c. */
+#undef  NOPROFILE       /* Profiler, see profile.c. */
 #define NOSIGNALS       /* ICI level signal handling */
 #undef  NOFASTFREELISTS /* Fast free lists: +8bytes per malloc, more speed. */
 #define NOCLASSPROTO
@@ -607,7 +607,6 @@ struct type
  *
  */
 
-#ifndef SMALL
 /*
  * Macros to perform the operation on the object.
  */
@@ -619,17 +618,11 @@ struct type
  * Thus the size of this macro. The o_leafz field of an object tells us it
  * doesn't reference any other objects and is of small (ie o_leafz) size.
  */
-#if 1
 #define ici_mark(o)         ((objof(o)->o_flags & O_MARK) == 0 \
                             ? (objof(o)->o_leafz != 0 \
                                 ? (objof(o)->o_flags |= O_MARK, objof(o)->o_leafz) \
                                 : (*ici_typeof(o)->t_mark)(objof(o))) \
                             : 0L)
-#else
-#define ici_mark(o)         ((objof(o)->o_flags & O_MARK) == 0 \
-                            ? (*ici_typeof(o)->t_mark)(objof(o)) \
-                            : 0L)
-#endif
 #define freeo(o)        ((*ici_typeof(o)->t_free)(objof(o)))
 #define hash(o)         ((*ici_typeof(o)->t_hash)(objof(o)))
 #define cmp(o1,o2)      ((*ici_typeof(o1)->t_cmp)(objof(o1), objof(o2)))
@@ -641,6 +634,7 @@ struct type
 #define assign_base(o,k,v) ((*ici_typeof(o)->t_assign_base)(objof(o), objof(k), objof(v)))
 #define fetch_base(o,k) ((*ici_typeof(o)->t_fetch_base)(objof(o), objof(k)))
 
+#ifndef BUGHUNT
 /*
  * Link an object into the list of objects. We clear the o_leafz field
  * here because that is the safe thing to do and, as of the introduction
@@ -652,6 +646,11 @@ struct type
                             ? (void)(*objs_top++ = objof(o)) \
                             : grow_objs(objof(o))))
 #else
+#define rego(o)         bughunt_rego(objof(o))
+extern void             bughunt_rego(object_t *);
+#endif
+
+#if 0
 /*
  * Functions to performs operations on the object.
  */
@@ -662,7 +661,6 @@ extern int              cmp(object_t *, object_t *);
 extern object_t         *copy(object_t *);
 extern object_t         *ici_fetch(object_t *, object_t *);
 extern int              ici_assign(object_t *, object_t *, object_t *);
-extern void             rego(object_t *);
 #endif
 
 #define ici_atom_hash_index(h)  (ICI_PTR_HASH_BITS(h) & (atomsz - 1))
@@ -820,24 +818,33 @@ struct objwsup
  */
 #if     !ICI_ALLALLOC
 
-#define ici_talloc(t)   \
+#   define ici_talloc(t)   \
     (ICI_FLOK(t) && (ici_fltmp = ici_flists[ICI_FLIST(t)]) != NULL  \
         ? (ici_flists[ICI_FLIST(t)] = *(char **)ici_fltmp,          \
             ici_mem += sizeof(t),                                   \
             ici_fltmp)                                              \
         : ici_talloc_work(ICI_FLIST(t), sizeof(t)))
 
-#define ici_tfree(p, t) \
+#   define ici_tfree(p, t) \
     (ICI_FLOK(t)                                        \
         ? (*(char **)(p) = ici_flists[ICI_FLIST(t)],    \
             ici_flists[ICI_FLIST(t)] = (char *)(p),     \
             ici_mem -= sizeof(t))                       \
         : ici_nfree((p), sizeof(t)))
 
+#elif !ICI_RAWMALLOC
+
+#   define ici_talloc(t)   ici_talloc_work(ICI_FLIST(t), sizeof(t))
+#   define ici_tfree(p, t) ici_nfree((p), sizeof(t))
+
 #else
 
-#define ici_talloc(t)   ici_talloc_work(ICI_FLIST(t), sizeof(t))
-#define ici_tfree(p, t) ici_nfree((p), sizeof(t))
+#   define ici_talloc(t)    (t *)malloc(sizeof(t))
+#   define ici_tfree(p, t)  free(p)
+#   define ici_nalloc       malloc
+#   define ici_nfree(p, z)  free(p)
+#   define ici_alloc        malloc 
+#   define ici_free         free 
 
 #endif  /* ICI_ALLALLOC */
 
@@ -845,11 +852,14 @@ extern DLI char         *ici_flists[4];
 extern DLI char         *ici_fltmp;
 extern DLI long         ici_mem;
 extern long             ici_mem_limit;
+
+#if !ICI_RAWMALLOC
 extern void             *ici_talloc_work(int fi, size_t z);
 extern void             *ici_nalloc(size_t z);
 extern void             ici_nfree(void *p, size_t z);
 extern void             *ici_alloc(size_t z);
 extern void             ici_free(void *p);
+#endif
 
 
 /* From buf.h */
@@ -1031,13 +1041,14 @@ struct array
                 : 0)
 
 /*
- * Macros to assist in doing for for loop over the elements of an array.
+ * Macros to assist in doing for loops over the elements of an array.
  * Use as:
  *    object **e;
- *    for (e = ici_astart(a); e < ici_alimit(a); e = ici_anext(a, e))
+ *    for (e = ici_astart(a); e != ici_alimit(a); e = ici_anext(a, e))
  *        ...
  */
-#define ici_astart(a)   ((a)->a_bot == (a)->a_limit ? (a)->a_base : (a)->a_bot)
+#define ici_astart(a)   ((a)->a_bot == (a)->a_limit && (a)->a_bot != (a)->a_top \
+                            ? (a)->a_base : (a)->a_bot)
 #define ici_alimit(a)   ((a)->a_top)
 #define ici_anext(a, e) ((e) + 1 == (a)->a_limit && (a)->a_limit != (a)->a_top \
                             ? (a)->a_base : (e) + 1)

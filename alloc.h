@@ -10,6 +10,7 @@
  */
 #if     !ICI_ALLALLOC
 #define ICI_ALLALLOC    0   /* Always call malloc, no caches. */
+#define ICI_RAWMALLOC   0   /* If ALLALLOC, just use malloc. */
 #endif
 
 /*
@@ -47,24 +48,33 @@
  */
 #if     !ICI_ALLALLOC
 
-#define ici_talloc(t)   \
+#   define ici_talloc(t)   \
     (ICI_FLOK(t) && (ici_fltmp = ici_flists[ICI_FLIST(t)]) != NULL  \
         ? (ici_flists[ICI_FLIST(t)] = *(char **)ici_fltmp,          \
             ici_mem += sizeof(t),                                   \
             ici_fltmp)                                              \
         : ici_talloc_work(ICI_FLIST(t), sizeof(t)))
 
-#define ici_tfree(p, t) \
+#   define ici_tfree(p, t) \
     (ICI_FLOK(t)                                        \
         ? (*(char **)(p) = ici_flists[ICI_FLIST(t)],    \
             ici_flists[ICI_FLIST(t)] = (char *)(p),     \
             ici_mem -= sizeof(t))                       \
         : ici_nfree((p), sizeof(t)))
 
+#elif !ICI_RAWMALLOC
+
+#   define ici_talloc(t)   ici_talloc_work(ICI_FLIST(t), sizeof(t))
+#   define ici_tfree(p, t) ici_nfree((p), sizeof(t))
+
 #else
 
-#define ici_talloc(t)   ici_talloc_work(ICI_FLIST(t), sizeof(t))
-#define ici_tfree(p, t) ici_nfree((p), sizeof(t))
+#   define ici_talloc(t)    (t *)malloc(sizeof(t))
+#   define ici_tfree(p, t)  free(p)
+#   define ici_nalloc       malloc
+#   define ici_nfree(p, z)  free(p)
+#   define ici_alloc        malloc 
+#   define ici_free         free 
 
 #endif  /* ICI_ALLALLOC */
 
@@ -72,11 +82,14 @@ extern DLI char         *ici_flists[4];
 extern DLI char         *ici_fltmp;
 extern DLI long         ici_mem;
 extern long             ici_mem_limit;
+
+#if !ICI_RAWMALLOC
 extern void             *ici_talloc_work(int fi, size_t z);
 extern void             *ici_nalloc(size_t z);
 extern void             ici_nfree(void *p, size_t z);
 extern void             *ici_alloc(size_t z);
 extern void             ici_free(void *p);
+#endif
 
 /*
  * End of ici.h export. --ici.h-end--

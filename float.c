@@ -9,8 +9,7 @@
  * reference count inceremented.
  */
 float_t *
-ici_float_new(v)
-double  v;
+ici_float_new(double v)
 {
     register float_t    *f;
     static float_t      proto = {OBJ(TC_FLOAT)};

@@ -527,6 +527,8 @@ ici_ret_with_decref(object_t *o)
 int
 ici_ret_no_decref(object_t *o)
 {
+    if (o == NULL)
+        return 1;
     ici_os.a_top -= NARGS() + 1;
     ici_os.a_top[-1] = o;
     --ici_xs.a_top;
@@ -627,8 +629,7 @@ ici_need_stdout(void)
  * the behaviour.
  */
 int
-matherr(exc)
-struct exception *exc;
+matherr(struct exception *exc)
 {
     switch (exc->type)
     {
@@ -1137,6 +1138,7 @@ f_include()
         strncpy(fname, filename->s_chars, 1023);
         if (!ici_find_on_path(fname, NULL))
         {
+            ici_debug_respect_errors();
             ici_error = "can't find include file";
             return 1;
         }
@@ -1384,15 +1386,22 @@ f_interval()
         return ici_argerror(0);
     }
 
+    if (length < 0)
+    {
+        if ((length += nel) < 0)
+            length = 0;
+    }
     if (start < 0)
     {
         if ((start += nel) < 0)
+        {
+            if ((length += start) < 0)
+                length = 0;
             start = 0;
+        }
     }
     else if (start > nel)
         start = nel;
-    if (length < 0)
-        length = nel;
     if (start + length > nel)
         length = nel - start;
 
@@ -1536,7 +1545,6 @@ f_mopen()
     return ici_ret_with_decref(objof(f));
 }
 
-/*### Up to here with coverage. ###*/
 int
 f_sprintf()
 {
@@ -1550,11 +1558,13 @@ f_sprintf()
     int                 stars[2];       /* Precision and field widths. */
     int                 nstars;
     int                 gotl;           /* Have a long int flag. */
+    int                 gotdot;         /* Have a . in % format. */
     long                ivalue;
     double              fvalue;
     char                *svalue;
     object_t            **o;            /* Argument pointer. */
     file_t              *file;
+    char                oname[ICI_OBJNAMEZ];
 #ifdef  BAD_PRINTF_RETVAL
 #define IPLUSEQ
 #else
@@ -1591,15 +1601,30 @@ f_sprintf()
         }
 
         nstars = 0;
+        stars[0] = 0;
+        stars[1] = 0;
         gotl = 0;
+        gotdot = 0;
         subfmt[0] = *p++;
         j = 1;
-        while (*p != '\0' && strchr("diouxXfeEgGcs%", *p) == NULL)
+        while (*p != '\0' && strchr("adiouxXfeEgGcs%", *p) == NULL)
         {
             if (*p == '*')
                 ++nstars;
             else if (*p == 'l')
                 gotl = 1;
+            else if (*p == '.')
+                gotdot = 1;
+            else if (*p >= '0' && *p <= '9')
+            {
+                do
+                {
+                    stars[gotdot] = stars[gotdot] * 10 + *p - '0';
+                    subfmt[j++] = *p++;
+
+                } while (*p >= '0' && *p <= '9');
+                continue;
+            }
             subfmt[j++] = *p++;
         }
         if (gotl == 0 && strchr("diouxX", *p) != NULL)
@@ -1608,8 +1633,6 @@ f_sprintf()
         subfmt[j++] = '\0';
         if (nstars > 2)
             nstars = 2;
-        stars[0] = 0;
-        stars[1] = 0;
         for (j = 0; j < nstars; ++j)
         {
             if (nargs <= 0)
@@ -1636,7 +1659,7 @@ f_sprintf()
                 ivalue = (long)floatof(*o)->f_value;
             else
                 goto type;
-            if (ici_chkbuf(i + 30)) /* Worst case. */
+            if (ici_chkbuf(i + 30 + stars[0] + stars[1])) /* Pessimistic. */
                 return 1;
             switch (nstars)
             {
@@ -1665,7 +1688,7 @@ f_sprintf()
                 ivalue = (long)floatof(*o)->f_value;
             else
                 goto type;
-            if (ici_chkbuf(i + 30)) /* Worst case. */
+            if (ici_chkbuf(i + 30 + stars[0] + stars[1])) /* Pessimistic. */
                 return 1;
             switch (nstars)
             {
@@ -1711,6 +1734,32 @@ f_sprintf()
             --nargs;
             break;
 
+        case 'a':
+            if (nargs <= 0)
+                goto lacking;
+            objname(oname, *o);
+            svalue = oname;
+            if (ici_chkbuf(i + ICI_OBJNAMEZ + stars[0] + stars[1]))
+                return 1;
+            subfmt[strlen(subfmt) - 1] = 's';
+            switch (nstars)
+            {
+            case 0:
+                IPLUSEQ sprintf(&buf[i], subfmt, svalue);
+                break;
+
+            case 1:
+                IPLUSEQ sprintf(&buf[i], subfmt, stars[0], svalue);
+                break;
+
+            case 2:
+                IPLUSEQ sprintf(&buf[i], subfmt, stars[0], stars[1], svalue);
+                break;
+            }
+            --o;
+            --nargs;
+            break;
+
         case 'f':
         case 'e':
         case 'E':
@@ -1724,7 +1773,7 @@ f_sprintf()
                 fvalue = floatof(*o)->f_value;
             else
                 goto type;
-            if (ici_chkbuf(i + 40)) /* Worst case. */
+            if (ici_chkbuf(i + 40 + stars[0] + stars[1])) /* Pessimistic. */
                 return 1;
             switch (nstars)
             {
@@ -2016,6 +2065,7 @@ f_alloc()
     return ici_ret_with_decref(objof(ici_mem_new(p, (unsigned long)length, accessz, ici_free)));
 }
 
+#ifndef NOMEM
 static int
 f_mem()
 {
@@ -2045,6 +2095,7 @@ f_mem()
         accessz = 1;
     return ici_ret_with_decref(objof(ici_mem_new((char *)base, (unsigned long)length, accessz, NULL)));
 }
+#endif
 
 static int
 f_assign()
@@ -2203,7 +2254,7 @@ f_gettoken()
     int                 i;
     int                 j;
 
-    seps = (unsigned char *) " \t\n";
+    seps = (unsigned char *)" \t\n";
     nseps = 3;
     switch (NARGS())
     {
@@ -2282,9 +2333,9 @@ f_gettoken()
 }
 
 /*
- * Fast (relatively) version for gettokens() if argument is not file
+ * Fast (relatively) version for gettokens() if argument is not file.
  */
-static array_t *
+static int
 fast_gettokens(char *str, char *delims)
 {
     array_t     *a;
@@ -2292,7 +2343,7 @@ fast_gettokens(char *str, char *delims)
     char        *cp     = str;
 
     if ((a = ici_array_new(0)) == NULL)
-        return NULL;
+        return 1;
     while (*cp)
     {
         while (*cp && strchr(delims, *cp))
@@ -2307,17 +2358,21 @@ fast_gettokens(char *str, char *delims)
             )
             {
                 ici_decref(a);
-                return NULL;
+                return 1;
             }
+            ici_decref(*a->a_top);
             ++a->a_top;
             if (*(cp += k))
                 cp++;
             continue;
         }
     }
-    for (k = a->a_top - a->a_base - 1; k >= 0; k--)
-        ici_decref(a->a_base[k]);
-    return(a);
+    if (a->a_top == a->a_base)
+    {
+        ici_decref(a);
+        return ici_null_ret();
+    }
+    return ici_ret_with_decref(objof(a));
 }
 
 static int
@@ -2361,9 +2416,7 @@ f_gettokens()
             return 1;
         if (isstring(objof(f)))
         {
-            array_t     *a;
-            a = fast_gettokens(stringof(f)->s_chars, " \t");
-            return a ? ici_ret_with_decref(objof(a)) : 1;
+            return fast_gettokens(stringof(f)->s_chars, " \t");
         }
         else if (!isfile(objof(f)))
             return ici_argerror(0);
@@ -2376,9 +2429,7 @@ f_gettokens()
             return 1;
         if (NARGS() == 2 && isstring(objof(f)) && isstring(objof(s)))
         {
-            array_t     *a;
-            a = fast_gettokens(stringof(f)->s_chars, stringof(s)->s_chars);
-            return a ? ici_ret_with_decref(objof(a)) : 1;
+            return fast_gettokens(stringof(f)->s_chars, stringof(s)->s_chars);
         }
         if (isstring(objof(f)))
         {
@@ -2431,7 +2482,7 @@ f_gettokens()
         break;
 
     default:
-        return ici_argcount(3);
+        return ici_argcount(4);
     }
     get = f->f_type->ft_getch;
     file = f->f_file;
@@ -2576,6 +2627,7 @@ fail:
         ici_decref(a);
     return 1;
 }
+
 
 /*
  * sort(array, cmp)
@@ -2889,7 +2941,7 @@ f_calendar()
 }
 
 /*
- * ICI: alarm(when)
+ * ICI: sleep(num)
  */
 static int
 f_sleep()
@@ -2979,6 +3031,7 @@ f_version()
         return 1;
     return ici_ret_no_decref(objof(ver));
 }
+
 
 cfunc_t std_cfuncs[] =
 {

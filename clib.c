@@ -81,13 +81,11 @@ static int
 xpclose(FILE *f)
 {
     int rc = pclose(f);
+
     if (rc != 0)
     {
-        if (!ici_chkbuf(80))
-        {
-            sprintf(buf, "popen command exit status %d", rc);
-            ici_error = buf;
-        }
+        sprintf(buf, "popen command exit status %d", rc);
+        ici_error = buf;
     }
     return rc;
 }
@@ -146,7 +144,7 @@ f_getline()
     file_t              *f;
     int                 (*get)();
     exec_t              *x;
-    char                *buf;
+    char                *b;
     int                 buf_size;
     string_t            *str;
 
@@ -163,29 +161,29 @@ f_getline()
     }
     get = f->f_type->ft_getch;
     file = f->f_file;
-    if ((buf = malloc(buf_size = 128)) == NULL)
+    if ((b = malloc(buf_size = 128)) == NULL)
         goto nomem;
     ici_signals_blocking_syscall(1);
     x = ici_leave();
     for (i = 0; (c = (*get)(file)) != '\n' && c != EOF; ++i)
     {
-        if (i == buf_size && (buf = realloc(buf, buf_size *= 2)) == NULL)
+        if (i == buf_size && (b = realloc(b, buf_size *= 2)) == NULL)
             break;
-        buf[i] = c;
+        b[i] = c;
     }
     ici_enter(x);
     ici_signals_blocking_syscall(0);
-    if (buf == NULL)
+    if (b == NULL)
         goto nomem;
     if (i == 0 && c == EOF)
     {
-        free(buf);
+        free(b);
         if ((FILE *)f->f_file == stdin)
             clearerr(stdin);
         return ici_null_ret();
     }
-    str = ici_str_new(buf, i);
-    free(buf);
+    str = ici_str_new(b, i);
+    free(b);
     if (str == NULL)
         return 1;
     return ici_ret_with_decref(objof(str));
@@ -195,10 +193,6 @@ nomem:
     return 1;
 }
 
-/*
- * ### If given a string argument, interpret it as a file name and
- * do open/get/close.
- */
 static int
 f_getfile()
 {
@@ -208,45 +202,73 @@ f_getfile()
     int                 (*get)();
     char                *file;
     exec_t              *x;
-    char                *buf;
+    char                *b;
     int                 buf_size;
     string_t            *str;
-
+    int                 must_close;
+    
+    must_close = 0;
+    str = NULL; /* Pessimistic. */
     if (NARGS() != 0)
     {
-        if (ici_typecheck("u", &f))
-            return 1;
+        if (isstring(ARG(0)))
+        {
+            if (ici_call(SS(fopen), "o=o", &f, ARG(0)))
+                goto finish;
+            must_close = 1;
+        }
+        else
+            f = fileof(ARG(0));
+        if (!isfile(f))
+        {
+            char    n1[ICI_OBJNAMEZ];
+
+            sprintf(ici_buf, "getfile() given %s instead of a file",
+                objname(n1, objof(f)));
+            ici_error = ici_buf;
+            goto finish;
+        }
     }
     else
     {
         if ((f = ici_need_stdin()) == NULL)
-            return 1;
+            goto finish;
     }
     get = f->f_type->ft_getch;
     file = f->f_file;
-    if ((buf = malloc(buf_size = 128)) == NULL)
+    if ((b = malloc(buf_size = 128)) == NULL)
         goto nomem;
     ici_signals_blocking_syscall(1);
     x = ici_leave();
     for (i = 0; (c = (*get)(file)) != EOF; ++i)
     {
-        if (i == buf_size && (buf = realloc(buf, buf_size *= 2)) == NULL)
+        if (i == buf_size && (b = realloc(b, buf_size *= 2)) == NULL)
             break;
-        buf[i] = c;
+        b[i] = c;
     }
     ici_enter(x);
     ici_signals_blocking_syscall(0);
-    if (buf == NULL)
+    if (b == NULL)
         goto nomem;
-    str = ici_str_new(buf, i);
-    free(buf);
-    if (str == NULL)
-        return 1;
-    return ici_ret_with_decref(objof(str));
+    str = ici_str_new(b, i);
+    free(b);
+    goto finish;
 
 nomem:
     ici_error = "ran out of memory";
-    return 1;
+finish:
+    if (must_close)
+    {
+        ici_call(SS(close), "o", f);
+        ici_decref(f);
+    }
+    return ici_ret_with_decref(objof(str));
+}
+
+static int
+f_tmpname()
+{
+    return ici_str_ret(tmpnam(NULL));
 }
 
 static int
@@ -312,10 +334,7 @@ f_fflush()
 }
 
 static long
-xfseek(stream, offset, whence)
-FILE    *stream;
-long    offset;
-int     whence;
+xfseek(FILE *stream, long offset, int whence)
 {
     if (fseek(stream, offset, whence) == -1)
     {
@@ -326,17 +345,13 @@ int     whence;
 }
 
 static int
-xfeof(stream)
-FILE *stream;
+xfeof(FILE *stream)
 {
     return feof(stream);
 }
 
 static int
-xfwrite(s, n, stream)
-char *s;
-long n;
-FILE *stream;
+xfwrite(char *s, long n, FILE *stream)
 {
     return fwrite(s, 1, (size_t)n, stream);
 }
@@ -483,9 +498,9 @@ f_eof()
             return 1;
     }
     x = ici_leave();
-    r = ici_int_ret((long)(*f->f_type->ft_eof)(f->f_file));
+    r = (*f->f_type->ft_eof)(f->f_file);
     ici_enter(x);
-    return r;
+    return ici_int_ret((long)r);
 }
 
 static int
@@ -777,8 +792,7 @@ fail:
  * result of the system call.
  */
 static int
-sys_ret(ret)
-int     ret;
+sys_ret(int ret)
 {
     if (ret < 0)
         return ici_get_last_errno(NULL, NULL);
@@ -835,6 +849,7 @@ cfunc_t clib_cfuncs[] =
 #ifndef NOPIPES
     {CF_OBJ,    (char *)SS(_popen),        f_popen},
 #endif
+    {CF_OBJ,    (char *)SS(tmpname),      f_tmpname},
     {CF_OBJ,    (char *)SS(put),          f_put},
     {CF_OBJ,    (char *)SS(flush),        f_fflush},
     {CF_OBJ,    (char *)SS(close),        f_fclose},

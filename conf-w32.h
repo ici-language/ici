@@ -13,10 +13,10 @@
  * possibly even work) for the particular port of ICI.
  */
 #undef  NOMATH          /* Trig and etc. */
-#define NOTRACE         /* For debugging. */
+#undef  NOTRACE         /* For debugging. */
 #define NOWAITFOR       /* Requires select() or similar system primitive. */
 #undef  NOSYSTEM        /* Command interpreter (shell) escape. */
-#undef  NOPIPES         /* Requires popen(). */
+#define NOPIPES         /* Requires popen(). */
 #undef  NOSKT           /* BSD style network interface. */
 #undef  NODIR           /* Directory reading function, dir(). */
 #define NOPASSWD        /* UNIX password file access */
@@ -24,7 +24,7 @@
 #undef  NOSTARTUPFILE   /* Parse a standard file of ICI code at init time. */
 #undef  NODEBUGGING     /* Debugger interface and functions */
 #undef  NOEVENTS        /* Event loop and associated processing. */
-#define NOPROFILE       /* Profiler, see profile.c. */
+#undef  NOPROFILE       /* Profiler, see profile.c. */
 #define NOSIGNALS       /* ICI level signal handling */
 #undef  NOFASTFREELISTS /* Fast free lists: +8bytes per malloc, more speed. */
 #define NOCLASSPROTO

@@ -10,7 +10,7 @@
  *
  * Ici's int's are 32bit _signed_ for the purposes of arithmetic, but may
  * be treated as unsigned for input/output. This subtle variation on strtol
- * uses strtoul to allow such numbers as 0xFFFFFFFF and eve -0xFFFFFFFF.
+ * uses strtoul to allow such numbers as 0xFFFFFFFF and even -0xFFFFFFFF.
  *
  * This is not the exact prototype as the ANSI function. How do they
  * return a pointer into a const string through a non-const pointer?

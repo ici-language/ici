@@ -405,9 +405,7 @@ compile_expr(array_t *a, expr_t *e, int why)
                 return 1;
             goto unary_arith;
         case T_EXCLAM:
-            if (why == FOR_TEMP || why == FOR_LVALUE)
-                why = FOR_VALUE;
-            if (compile_expr(a, e->e_arg[0], why))
+            if (compile_expr(a, e->e_arg[0], why == FOR_TEMP ? FOR_VALUE : NOTLV(why)))
                 return 1;
         unary_arith:
             if (why == FOR_EFFECT)

@@ -157,3 +157,41 @@ include document doesn't mention that it calls close() function of
 current scope.
 
 ---
+
+Documentation of interval() doesn't mention the case of -ve
+length.
+
+---
+
+Doc of fetch() says *struct* but could be any. Also is->if.
+
+
+---
+
+Doc of gettoken() doesn't mention that first arg can be string.
+
+---
+
+gettokens() documentation does not mention optional 4th arg "delims"
+(self delimiting single char tokens).
+
+---
+
+Doc on sopen() should mention that \r\n is not \n even on windows.
+
+---
+
+Add getfile(fname) documentation.
+
+---
+
+Document new %a format in sprintf.
+
+---
+
+Add ptr - int operator to documentation.
+
+---
+
+Make seek() documentation mention meaning of whence.
+

@@ -161,6 +161,7 @@ ici_maind(int argc, char *argv[], int debugging)
             ici_set_val(objwsupof(ici_vs.a_top[-1])->o_super, SS(argc), 'i', &l)
         )
             goto fail;
+        ici_decref(av);
      }
 
 #ifndef NODEBUGGING
@@ -274,16 +275,6 @@ ici_maind(int argc, char *argv[], int debugging)
         ici_profile_return();
 #endif
 
-/*
- * For tracking down object leaks...
-ici_incref(ici_fetch(ici_vs.a_top[-1], SS(_stdout));
-ici_vs.a_top = ici_vs.a_base;
-ici_os.a_top = ici_os.a_base;
-ici_xs.a_top = ici_xs.a_base;
-ICI_reclaim();
-ICI_reclaim();
-pause();
-*/
     ici_uninit();
     return 0;
 

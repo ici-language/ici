@@ -21,7 +21,17 @@
  */
 long    ici_vsver   = 1;
 
-#define HASHINDEX(k, s) (((unsigned long)(k) >> 6) & ((s)->s_nslots - 1))
+/*
+ * Hash a pointer to get the initial position in a struct has table.  This is
+ * probably something that needs to be optimised for each machine.  The code
+ * here is, I guess, a reasonable compromise.
+ */
+#define HASHINDEX(k, s) \
+    ( \
+        (((unsigned long)(k) >> 12) ^ ((unsigned long)(k) >> 4)) \
+        & \
+        ((s)->s_nslots - 1) \
+    )
 
 /*
  * Find the struct slot which does, or should, contain the key k.  Does
@@ -553,7 +563,14 @@ assign_struct(object_t *o, object_t *k, object_t *v)
     while (sl->sl_key != NULL)
     {
         if (sl->sl_key == k)
+        {
+            if (o->o_flags & O_ATOM)
+            {
+                ici_error = "attempt to modify an atomic struct";
+                return 1;
+            }
             goto do_assign;
+        }
         if (--sl < structof(o)->s_slots)
             sl = structof(o)->s_slots + structof(o)->s_nslots - 1;
     }

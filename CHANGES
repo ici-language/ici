@@ -1,3 +1,51 @@
+*   Added many test cases. These were added by examining code
+	coverage, and adding test cases until all code that could
+	be reached by a script was reached. Some of the fixes to
+	problems revealed by this are detailed below. However there
+	were others not mentioned in detail here.
+
+*	Added test/tst-misc.ici, test/tst-prof.ici and test/tst-types.ici
+	as part of test coverage upgrade.
+
+*	Corrected failure to return NULL on empty gettokens in simple
+	2 arg string, string case.
+
+*	Corrected buffer overun when using large widths in printfs
+    (such as %1000d).
+
+*	Added ptr - int support.
+
+*	Corrected failure to detect modification of an atomic array
+	(in some circumstances).
+
+*	Added special new printf format %a - 'any'. This accepts any
+	object and produces a short (up to 30 chars) human readable
+	interpretation of it.
+
+*	Disabled popen in Win32 until a working Win32 popen is written.
+	(Primitive popen() only works in console apps in Windows it
+	seems.)
+
+*	Allowed getfile() to be give a file name as argument. It is
+    opened, read, and closed.
+
+*	Added tmpname() function (ala the C lib tmpnam() function).
+
+*	Changes getenv/putenv handling (again) to overcome problems
+	when programs uninit() ICI, then exec something else, and
+	some bugs in Windows case matching.
+
+*	Added protection against execessive recursive core engine
+	invocation (limit of 50 currently).
+
+*	Fixed a rare but long standing bug relating to an inopportune
+	collect while adding an atom to the atom pool. The symptom of
+	this was failure to find an atom to be removed from the atom
+	pool during collection (an assert in debug builds).
+
+*	Huge number of fixes in parse.c relating to refernce count
+	fixes in error cases.
+
 Changes in version 4.0.0 (an alpha release)
 
 *	Added stuff to build a Windows installer with a script based
@@ -141,9 +189,9 @@ Changes in version 4.0.0 (an alpha release)
 
 *	Changed the internal ICI calling convention. The call operator
 	object used to store the number of actual parameters to a
-	function. Now an seperate int is pushed onto the operand
+	function. Now a seperate int is pushed onto the operand
 	stack. There is now just a single static call operator.
-	Because ints are not heavily optimised, a call from C to ICI
+	Because ints are now heavily optimised, a call from C to ICI
 	now, typically, does no allocation until its in the main
 	execution engine. (timl)
 

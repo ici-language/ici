@@ -318,7 +318,7 @@ ici_evaluate(object_t *code, int n_operands)
     src = &default_src;
     ici_incref(src);
 
-    if (++ici_exec->x_n_engine_recurse > 100)
+    if (++ici_exec->x_n_engine_recurse > 50)
     {
         ici_error = "excessive recursive invocations of the main interpreter";
         goto badfail;
@@ -667,6 +667,7 @@ ici_evaluate(object_t *code, int n_operands)
                             goto fail;
                         --ici_os.a_top;
                         ici_os.a_top[-1] = objof(m);
+                        ici_decref(m);
                         goto stable_stacks_continue;
                     }
                     /*
@@ -882,20 +883,25 @@ ici_evaluate(object_t *code, int n_operands)
 
                     if ((v1 = ici_fetch(ici_os.a_top[-4], ici_os.a_top[-3])) == NULL)
                         goto fail;
+                    ici_incref(v1);
                     if ((v2 = ici_fetch(ici_os.a_top[-2], ici_os.a_top[-1])) == NULL)
+                    {
+                        ici_decref(v1);
                         goto fail;
+                    }
                     ici_incref(v2);
                     if (ici_assign(ici_os.a_top[-2], ici_os.a_top[-1], v1))
                     {
+                        ici_decref(v1);
                         ici_decref(v2);
                         goto fail;
                     }
                     if (ici_assign(ici_os.a_top[-4], ici_os.a_top[-3], v2))
                     {
+                        ici_decref(v1);
                         ici_decref(v2);
                         goto fail;
                     }
-                    ici_decref(v2);
                     switch (opof(o)->op_code)
                     {
                     case FOR_EFFECT:
@@ -911,6 +917,8 @@ ici_evaluate(object_t *code, int n_operands)
                         ici_os.a_top -= 2;
                         break;
                     }
+                    ici_decref(v1);
+                    ici_decref(v2);
                 }
                 continue;
 

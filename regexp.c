@@ -130,8 +130,8 @@ fetch_regexp(object_t *o, object_t *k)
 }
 
 /*
- * This function is just a wrapper round pcre_exec so that external
- * modules don't need to drag in the whole definition of pcre.
+ * This function is just a wrapper round pcre_exec so that external modules
+ * don't need to drag in the whole definition of pcre's include files.
  */
 int
 ici_pcre(regexp_t *r,

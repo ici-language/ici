@@ -111,8 +111,7 @@ cfunc_t trace_cfuncs[] =
 };
 
 static char *
-fixup(s)
-char *s;
+fixup(char *s)
 {
     static char buffer[128]; /* kludge */
     register char *p;
@@ -167,8 +166,7 @@ char *s;
 }
 
 static void
-pcall_arg(ap)
-object_t *ap;
+pcall_arg(object_t *ap)
 {
     if (isint(ap))
         fprintf(stderr, "%ld", intof(ap)->i_value);
@@ -191,8 +189,7 @@ object_t *ap;
 }
 
 void
-trace_pcall(o)
-object_t *o;
+trace_pcall(object_t *o)
 {
     func_t   *f = NULL;
     char     *s;

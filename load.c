@@ -215,6 +215,8 @@ f_load(void)
     strcat(fname, name->s_chars);
     if (ici_find_on_path(fname, ".ici"))
     {
+        string_t        *fn;
+
     got_file:
         /*
          * We have a file .../iciX.ici, open the file, make new statics
@@ -223,7 +225,14 @@ f_load(void)
          */
         if ((stream = fopen(fname, "r")) == NULL)
             return ici_get_last_errno("open", fname);
-        if ((file = new_file((char *)stream, &stdio_ftype, ici_str_new_nul_term(fname), NULL)) == NULL)
+        if ((fn = ici_str_new_nul_term(fname)) == NULL)
+        {
+            fclose(stream);
+            goto fail;
+        }
+        file = new_file((char *)stream, &stdio_ftype, fn, NULL);
+        ici_decref(fn);
+        if (file == NULL)
         {
             fclose(stream);
             goto fail;

@@ -125,6 +125,8 @@ if (!isatom(@[array]))
 
 if (!eq(regexp(".*"), #.*#))
     fail("regexp() didn't produce expected result");
+if (!eq(regexp(".*", 0), #.*#))
+    fail("regexp() didn't produce expected result");
 
 if (nels(123) != 1)
     fail("nels(123) didn't produce 1");
@@ -227,16 +229,34 @@ if (x != [array "a", "b"] && x != [array "b", "a"])
 
 if (smash("ab cd ef", " ") != [array "ab", "cd", "ef"])
     fail("smash() didn't produce the expected result");
+if (smash("ab cd ef", " c") != [array "ab", "", "d", "ef"])
+    fail("smash() didn't produce the expected result");
 if (smash("ab cd ef", # #, "\\0") != [array "ab", "cd"])
     fail("smash() didn't produce the expected result");
 if (smash("ab cd ef", # #, "\\0", 0) != [array "ab", "cd"])
     fail("smash() didn't produce the expected result");
 if (smash("ab cd ef", # #, "\\0", 1) != [array "ab", "cd", "ef"])
     fail("smash() didn't produce the expected result");
-if (smash("ab cd ef", #(.) #, "x\\0", 1) != [array "xa", "xc", "ef"])
+if (smash("ab cd ef", #(.) #, "x\\0\\a", 1) != [array "xa\\a", "xc\\a", "ef"])
+    fail("smash() didn't produce the expected result");
+if (smash("ab cd ef", #(.) #, "x\\0", "\\1", 0) != [array "xa", "b", "xc", "d"])
+    fail("smash() didn't produce the expected result");
+if (smash("abc\nefg\nx") != [array "abc", "efg"])
+    fail("smash() didn't produce the expected result");
+if (smash("abc\nefg\nx", #\n#, 1) != [array "abc", "efg", "x"])
     fail("smash() didn't produce the expected result");
 if (tochar(0x41) != "A")
     fail("tochar() didn't produce the expected result");
+
+if (gsub("x", "q*$", "") != "x")
+	fail("failed to ignore stupid gsub");
+if (sub("x", "q*$", "") != "x")
+	fail("failed to ignore stupid sub");
+
+if (sub("abcabc", #b(c)#, "\\&B\\1\\a\\\\") != "abcBc\\a\\abc")
+	fail("failed to sub correctly");
+if (gsub("abcabc", #b(c)#, "\\&B\\1") != "abcBcabcBc")
+	fail("failed to gsub correctly");
 
 if (toint("A") != 0x41)
     fail("toint() didn't produce the expected result");
@@ -259,6 +279,14 @@ if (interval("12345", 2, 2) != "34")
     fail("interval() with 2 arg on string count failed");
 if (interval("12345", 2, 10) != "345")
     fail("interval() with 2 arg, 2nd large, on string count failed");
+if (interval("12345", -10, 1) != "")
+	fail("interval() before string didn't give correct string");
+if (interval("12345", 10, 1) != "")
+	fail("interval() after string didn't give correct string");
+
+error = NULL; try interval(6, 2); onerror;
+if (error == NULL)
+	fail("failed to fail on bad arg1 to interval()");
 
 if (interval([array 1, 2, 3, 4, 5], -1) != [array 5])
     fail("interval() with array and neg offset failed");
@@ -270,6 +298,10 @@ if (interval([array 1, 2, 3, 4, 5], 2, 2) != [array 3, 4])
     fail("interval() with 2 arg on array count failed");
 if (interval([array 1, 2, 3, 4, 5], 2, 10) != [array 3, 4, 5])
     fail("interval() with 2 arg, 2nd large, on array count failed");
+if (interval([array 1, 2, 3, 4, 5], -10, 1) != [array])
+    fail("interval() before array didn't give correct array");
+if (interval([array 1, 2, 3, 4, 5], 10, 1) != [array])
+    fail("interval() before after didn't correct array");
 
 if (explode("ABC") != [array 0x41, 0x42, 0x43])
     fail("explode() didn't produce the expected result");
@@ -279,6 +311,27 @@ if (implode([array 0x41, "BC", 0x44]) != "ABCD")
 
 if (getfile(sopen("ABCD", "r")) != "ABCD")
     fail("sopen() failed to produce the expected result");
+
+error = NULL; try sopen("ABC", "x"); onerror;
+if (error == NULL)
+	fail("failed to fail on bad mode to sopen");
+
+x = alloc(123, 1);
+if (typeof(mopen(x)) != "file")
+	fail("failed to mopen mem object");
+if (typeof(mopen(x, "r")) != "file")
+	fail("failed to mopen mem object with mode");
+error = NULL; try mopen(x, "x"); onerror;
+if (error == NULL)
+	fail("failed to fail on bad mode to mopen");
+x = alloc(123, 2);
+error = NULL; try mopen(x, "r"); onerror;
+if (error == NULL)
+	fail("failed to fail on bad mem element size to mopen");
+error = NULL; try mopen(2, "r"); onerror;
+if (error == NULL)
+	fail("failed to fail on bad mopen");
+
 
 if (num("0x123A") != 0x123A)
     fail("num(\"0x123A\") returned wrong value");
@@ -331,6 +384,15 @@ if ((x = getline(currentfile())) != "This is the rest of this line")
 }
 else
     ;This is the rest of this line
+
+if ((x = getline(currentfile("raw"))) != "This is the rest of this line")
+{
+    fail("did not read correct data from currentfile");
+    exit(0);
+}
+else
+    ;This is the rest of this line
+
 
 x = gettokens(currentfile())
 ;  this is  the input
@@ -399,6 +461,69 @@ if (x + y != [array 0, 1, 2, -1, 0, 1, 2, 3])
 /* import() not tested here. */
 /* vstack() not tested here. */
 /* sprintf() not tested here. */
+if (sprintf("%d", 123) != "123") fail("sprintf 1");
+if (sprintf("%ld", 123) != "123") fail("sprintf 1.5");
+if (sprintf("%4d", 123) != " 123") fail("sprintf 2");
+if (sprintf("%*d", 5, 123) != "  123") fail("sprintf 3");
+error = NULL; try sprintf("%*d"); onerror; if (error == NULL) fail("sprintf 4");
+error = NULL; try sprintf("%*d", "x"); onerror; if (error == NULL) fail("sprintf 5");
+error = NULL; try sprintf("%d"); onerror; if (error == NULL) fail("sprintf 6");
+if (sprintf("%d", 123.0) != "123") fail("sprintf 7");
+error = NULL; try sprintf("%d", #x#); onerror; if (error == NULL) fail("sprintf 8");
+if (sprintf("%5.4d", 123) != " 0123") fail("sprintf 10");
+if (sprintf("%*.*d", 5, 4, 123) != " 0123") fail("sprintf 12");
+if (sprintf("%7.2f", 123.456) != " 123.46") fail("sprintf 9");
+if (sprintf("%*.*f", 7, 2, 123.456) != " 123.46") fail("sprintf 11");
+
+if (nels(sprintf("%1000d", 1)) != 1000)
+	fail("failed to do big sprintf");
+
+if (sprintf("%c", 0x41) != "A") fail("sprintf c1");
+if (sprintf("%lc", 0x41) != "A") fail("sprintf c1.5");
+if (sprintf("%4c", 0x41) != "   A") fail("sprintf c2");
+if (sprintf("%*c", 5, 0x41) != "    A") fail("sprintf c3");
+error = NULL; try sprintf("%*c"); onerror; if (error == NULL) fail("sprintf 4");
+error = NULL; try sprintf("%*c", "x"); onerror; if (error == NULL) fail("sprintf 5");
+error = NULL; try sprintf("%c"); onerror; if (error == NULL) fail("sprintf 6");
+if (sprintf("%c", 65.0) != "A") fail("sprintf 7");
+error = NULL; try sprintf("%c", #x#); onerror; if (error == NULL) fail("sprintf 8");
+if (sprintf("%5.4c", 0x41) != "    A") fail("sprintf 10");
+if (sprintf("%*.*c", 5, 4, 0x41) != "    A") fail("sprintf 12");
+
+if (sprintf("%s", "abc") != "abc") fail("sprintf c1");
+if (sprintf("%4s", "abc") != " abc") fail("sprintf c2");
+if (sprintf("%*s", 5, "abc") != "  abc") fail("sprintf c3");
+error = NULL; try sprintf("%*s"); onerror; if (error == NULL) fail("sprintf 4");
+error = NULL; try sprintf("%*s", "x"); onerror; if (error == NULL) fail("sprintf 5");
+error = NULL; try sprintf("%s"); onerror; if (error == NULL) fail("sprintf 6");
+error = NULL; try sprintf("%s", #x#); onerror; if (error == NULL) fail("sprintf 8");
+if (sprintf("%5.4s", "abc") != "  abc") fail("sprintf 10");
+if (sprintf("%*.*s", 5, 4, "abc") != "  abc") fail("sprintf 12");
+
+if (sprintf("%f", 123) != "123.000000") fail("sprintf 1");
+if (sprintf("%lf", 123) != "123.000000") fail("sprintf 1.5");
+if (sprintf("%4f", 123) != "123.000000") fail("sprintf 2");
+if (sprintf("%*f", 5, 123) != "123.000000") fail("sprintf 3");
+error = NULL; try sprintf("%*f"); onerror; if (error == NULL) fail("sprintf 4");
+error = NULL; try sprintf("%*f", "x"); onerror; if (error == NULL) fail("sprintf 5");
+error = NULL; try sprintf("%f"); onerror; if (error == NULL) fail("sprintf 6");
+if (sprintf("%f", 123.0) != "123.000000") fail("sprintf 7");
+error = NULL; try sprintf("%f", #x#); onerror; if (error == NULL) fail("sprintf 8");
+if (sprintf("%5.4f", 123) != "123.0000") fail("sprintf 10");
+if (sprintf("%*.*f", 5, 4, 123) != "123.0000") fail("sprintf 12");
+if (sprintf("%7.2f", 123.456) != " 123.46") fail("sprintf 9");
+if (sprintf("%*.*f", 7, 2, 123.456) != " 123.46") fail("sprintf 11");
+
+if (sprintf("x%%d") != "x%d") fail("failed to convert %% to % in printf");
+
+if (sprintf("%a", 123) != "123") fail("sprintf c1");
+if (sprintf("%4a", 123) != " 123") fail("sprintf c2");
+if (sprintf("%*a", 5, 123) != "  123") fail("sprintf c3");
+error = NULL; try sprintf("%*a"); onerror; if (error == NULL) fail("sprintf 4");
+error = NULL; try sprintf("%*a", "x"); onerror; if (error == NULL) fail("sprintf 5");
+error = NULL; try sprintf("%a"); onerror; if (error == NULL) fail("sprintf 6");
+if (sprintf("%5.4a", 123) != "  123") fail("sprintf 10");
+if (sprintf("%*.*a", 5, 4, 123) != "  123") fail("sprintf 12");
 
 x := build(2, 3);
 if (typeof(x) != "array" || nels(x) != 2 || nels(x[1]) != 3)
@@ -570,9 +695,38 @@ if (error == NULL)
 if (*&1 != 1)
 	fail("failed to make array lvalue");
 
-x = sort(array(2,5,6,8,9,1,0,3,4,7));
-if (x != [array 0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+a := [array 2, 5, 6, 8, 9, 1, 0, 3, 4, 7];
+b := [array 0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+if (sort(copy(a)) != b)
+	fail("sort 1 arg incorrect");
+
+
+if (sort(copy(a), cmp) != b)
+	fail("sort 2 arg incorrect");
+
+static
+c(a, b, c)
+{
+	if (c != 123)
+		fail("failed to pass arg to sort");
+	return a < b ? -1 : a > b;
+}
+
+if (sort(copy(a), c, 123) != b)
+	fail("sort 3 arg incorrect");
+
+if (sort(sort(copy(a))) != b)
+	fail("sort sort failed");
+
+static
+c(a, b)
+{
+	return a > b ? -1 : a < b;
+}
+if (sort(copy(a), c) != [array 9, 8, 7, 6, 5, 4, 3, 2, 1, 0])
 	fail("sort incorrect");
+
 
 error = NULL;
 try
@@ -674,3 +828,375 @@ if (typeof(vstack()) != "array")
 	fail("vstack() didn't return an array");
 if (!eq(top(vstack()), scope()))
 	fail("top(vstack) is not scope()");
+
+a = struct("a", 1, "b", 2, "c", 3);
+del(a, "b");
+if (a != [struct a = 1, c = 3])
+	fail("failed to del from struct");
+
+a = set("a", "b", "c");
+del(a, "b");
+if (a != [set "a", "c"])
+	fail("failed to del from set");
+
+a = array("a", "b", "c");
+del(a, "b");
+if (a != [array "a", "c"])
+	fail("failed to del from array");
+
+error = NULL; try del(1, 2); onerror;
+if (error == NULL)
+	fail("failed to fail on bad del()");
+
+a = struct();
+b = struct(a);
+c = struct(b);
+error = NULL; try super(a, c); onerror;
+if (error == NULL)
+	fail("failed to fail on super loop");
+
+error = NULL; try super(1, c); onerror;
+if (error == NULL)
+	fail("failed to fail on bad super");
+
+error = NULL; try super(c, 2); onerror;
+if (error == NULL)
+	fail("failed to fail on bad super");
+
+error = NULL; try super(@c, a); onerror;
+if (error == NULL)
+	fail("failed to fail on set super of atom");
+
+a = 123;
+scope(scope());
+if (a != 123)
+	fail("failed to set scope to current value");
+
+error = NULL; try alloc(-2); onerror;
+if (error == NULL)
+	fail("failed to fail on alloc(-ve)");
+
+error = NULL; try alloc(10, 3); onerror;
+if (error == NULL)
+	fail("failed to fail on alloc(..., 3)");
+
+if (typeof(mem(1000, 1000, 1)) != "mem")
+	fail("mem() failed");
+
+a = struct(scope());
+if (assign(a, "a", 1) != 1)
+	fail("assign failed to return value");
+super(a, NULL);
+if (a.a != 1)
+	fail("failed to assign() 3 args");
+
+assign(a, "a");
+if (a.a != NULL)
+	fail("failed to assign() 2 args");
+
+if (fetch(a, "b") != NULL)
+	fail("fetch() failed to return NULL on not-found");
+error = NULL; try assign(1, 2); onerror;
+if (error == NULL)
+	fail("failed to fail on bad assign");
+
+a = 123;
+if (fetch(scope(), "a") != 123)
+	fail("failed to fetch");
+
+error = NULL; try fetch(1, "a"); onerror;
+if (error == NULL)
+	fail("failed to fail on bad fetch");
+
+
+a = sopen("test data for file stuff", "r");
+if (gettoken(a) != "test")
+	fail("failed to gettoken, 1 arg");
+if (gettoken(a, "f") != " data ")
+	fail("failed to gettoken, 2 arg");
+if (gettoken(a, "f") != "or ")
+	fail("failed to gettoken with leading sep");
+stdin := a;
+if (gettoken() != "file")
+	fail("failed to gettoken, 0 arg");
+if (gettoken() != "stuff")
+	fail("failed to gettoken at eof");
+
+if (gettoken("test data for file stuff") != "test")
+	fail("failed to gettoken on string");
+if (gettoken("test data for file stuff", "da") != "test ")
+	fail("failed to gettoken on string, 2 arg");
+
+if (gettoken("") != NULL)
+	fail("failed to return NULL on gettoken eof");
+
+stdin := sopen("test data");
+if (gettokens() != [array "test", "data"])
+	fail("failed to gettokens from stdin");
+
+if (gettokens("  test  data  ") != [array "test", "data"])
+	fail("failed to gettokens from string");
+
+error = NULL; try gettokens(1); onerror;
+if (error == NULL)
+	fail("failed to fail on bad 1 arg gettokens");
+
+if (gettokens(".,.,test..data,,", ".,") != [array "test", "data"])
+	fail("failed to gettokens from string, 2 args");
+
+if (gettokens("x..y", '.') != [array "x", "", "y"])
+	fail("failed to gettokens with char");
+
+error = NULL; try gettokens(1, " "); onerror;
+if (error == NULL)
+	fail("failed to fail on bad 2 arg gettokens");
+
+a := sopen("test data");
+if (gettokens(a, " ") != [array "test", "data"])
+	fail("failed to gettokens 2 arg from file");
+
+error = NULL; try gettokens("test data", 2.1); onerror;
+if (error == NULL)
+	fail("failed to fail on bad 2 arg gettokens");
+
+a := sopen("test data; etc");
+if (gettokens(a, " ", ";") != [array "test", "data"])
+	fail("failed to gettokens from string, 3 args");
+if (gettokens(a, " ", ";") != [array "etc"])
+	fail("failed to gettokens from string, 3 args");
+
+
+a := sopen("te.st .data;. etc");
+if (gettokens(a, " ", ";", ".") != [array "te", ".", "st", ".", "data"])
+	fail("failed to gettokens from string, 4 args");
+
+if (gettokens(" ") != NULL)
+	fail("gettokens didn't return NULL at eof");
+a := sopen("");
+if (gettokens(a) != NULL)
+	fail("gettokens didn't return NULL at eof");
+	
+error = NULL; try gettokens("test data", " ", "d", 1); onerror;
+if (error == NULL)
+	fail("failed to fail on bad 4 arg gettokens");
+
+stdin := sopen("test data ");
+if (gettokens() != [array "test", "data"])
+	fail("failed to gettokens from stdin");
+if (gettokens("test data ", " ", "") != [array "test", "data"])
+	fail("failed to gettokens from string");
+
+if (gettokens("test data ", " ", "d") != [array "test"])
+	fail("failed to gettokens from string with term after idle");
+
+if (gettokens("dtest data ", ' ', "d") != [array ""])
+	fail("failed to gettokens from string with term after idle");
+
+if (typeof(now()) != "float")
+	fail("now() didn't return a float");
+
+sleep(0.1);
+
+if (version() !~ #ICI#)
+	fail("bad version");
+
+if (version() ~ #pipes#)
+{
+	a := popen("ici -e \"printf(\\\"hello\\n\\\");", "r");
+	if (typeof(a) != "file")
+		fail("failed to popen");
+	put(getfile(a));
+	if (getfile(a) !~ #hello#)
+		fail("failed to popen and read expected data");
+	close(a);
+}
+
+stdin := sopen("abc", "r");
+if (getchar() != "a")
+	fail("failed to getchar a");
+if (getchar() != "b")
+	fail("failed to getchar b");
+if (getchar() != "c")
+	fail("failed to getchar c");
+if (getchar() != NULL)
+	fail("failed to getchar eof");
+a := sopen("xyz", "r");
+if (getchar(a) != "x")
+	fail("failed to getchar x");
+if (getchar(a) != "y")
+	fail("failed to getchar y");
+if (getchar(a) != "z")
+	fail("failed to getchar z");
+if (getchar(a) != NULL)
+	fail("failed to getchar eof");
+
+stdin := sopen("abc\nxyz\n", "r");
+if (getline() != "abc")
+	fail("failed to getline abc");
+if (getline() != "xyz")
+	fail("failed to getline xyz");
+if (getline() != NULL)
+	fail("failed to getline eof");
+a := sopen("abc\nxyz\n", "r");
+if (getline(a) != "abc")
+	fail("failed to getline abc");
+if (getline(a) != "xyz")
+	fail("failed to getline xyz");
+if (getline(a) != NULL)
+	fail("failed to getline eof");
+
+stdin := sopen("abc\nxyz\n", "r");
+if (getfile() != "abc\nxyz\n")
+	fail("failed to getfile no args");
+a := sopen("abc\nxyz\n", "r");
+if (getfile(a) != "abc\nxyz\n")
+	fail("failed to getfile 1 arg");
+if (getfile("data/amodule.ici") !~ #return#)
+	fail("failed to getfile named file");
+error = NULL; try getfile(1); onerror;
+if (error == NULL)
+	fail("failed to fail on bad getfile");
+
+a := tmpname();
+stdout := fopen(a, "w");
+put("Hello\n");
+put("world.\n");
+flush();
+close(stdout);
+stdin := fopen(a, "r");
+if (getfile() != "Hello\nworld.\n")
+	fail("failed to put and get file");
+if (!eof())
+	fail("failed to detect eof, 0 arg");
+close(stdin);
+remove(a);
+
+a := tmpname();
+b := fopen(a, "wb");
+put("Hello\n", b);
+put("world.\n", b);
+flush(b);
+close(b);
+b := fopen(a, "r");
+if (seek(b, 6, 0) != 6)
+	fail("failed to seek");
+if (eof(b))
+	fail("detected eof wrongly");
+if (getfile(b) != "world.\n")
+	fail("failed to put, seek, get file");
+close(b);
+remove(a);
+
+a := tmpname();
+system(sprintf("echo hello > \"%s\"", a));
+if (getfile(a) !~ #hello#)
+	fail("failed to system() and getfile the result");
+remove(a);
+
+static
+tstdir(sense, tag)
+{
+	auto	vargs;
+
+	a := call(dir, vargs);
+	c := 0;
+	forall (b in a)
+		c |= b ~ #(?i)tst-func.ici#;
+	if (c != sense)
+		fail(sprintf("failed to match self in dir() case %s", tag));
+}
+
+tstdir(1, "0 arg");
+tstdir(1, "1 arg", ".");
+tstdir(1, "2 arg match", ".", #(?i)tst#);
+tstdir(0, "2 arg, nomatch", ".", #(?i)e#);
+tstdir(1, "1 arg match", #(?i)tst#);
+tstdir(0, "1 arg, nomatch", #(?i)e#);
+tstdir(1, "3 arg match", ".", #(?i)tst#, "f");
+tstdir(0, "3 arg match", ".", #(?i)tst#, "d");
+tstdir(1, "2 arg match", #(?i)tst#, "a");
+tstdir(0, "2 arg match", #(?i)tst#, "d");
+
+a := tmpname();
+b := fopen(a, "wb");
+put("Hello\n", b);
+put("world.\n", b);
+close(b);
+c := tmpname();
+rename(a, c);
+b := fopen(c, "r");
+if (getfile(b) != "Hello\nworld.\n")
+	fail("failed to put, rename, get file");
+close(b);
+remove(c);
+
+if (getcwd() !~ #test#)
+	fail("failed to get own dirname");
+
+if (typeof(getenv("PATH")) != "string")
+	fail("getenv(\"PATH\") didn't return string");
+if (getenv("I trust this value isn't in the environment") != NULL)
+	fail("getenv failed to return NULL on not-found");
+putenv("ICITEST=xyz");
+if (getenv("ICITEST") != "xyz")
+	fail("getenv/putenv failed");
+putenv("ICITEST=xyz");
+if (getenv("ICITEST") != "xyz")
+	fail("getenv/putenv 2 failed");
+putenv("ICITEST=abc");
+if (getenv("ICITEST") != "abc")
+	fail("getenv/putenv 3 failed");
+error = NULL; try putenv("xyz"); onerror;
+if (error == NULL)
+	fail("failed to fail on bad putenv");
+
+a := sopen("abc");
+close(a);
+error = NULL; try close(a); onerror;
+if (error !~ #already#)
+	fail("failed to get correct failed on double close");
+
+if (#12\n3\a#.pattern != "12\\n3\\a")
+	fail("failed to get pattern of regexp");
+
+if (#12\n3\a#.options != 0)
+	fail("failed to get pattern of regexp");
+
+if ($regexp("abc", 1).options != 1)
+	fail("failed to get options of regexp");
+
+error = NULL; try (@[set 1, 2])[1] = 0; onerror;
+if (error == NULL)
+	fail("failed to fail on mod of atomic set");
+
+a := sopen("abcde");
+if (seek(a, 1, 0) != 1)
+	fail("bad seek on string");
+if (getchar(a) != "b")
+	fail("failed to seek and read string");
+if (seek(a, 1, 1) != 3)
+	fail("bad seek on string");
+if (getchar(a) != "d")
+	fail("failed to seek and read string");
+if (seek(a, -1, 2) != 4)
+	fail("bad seek on string");
+if (getchar(a) != "e")
+	fail("failed to seek and read string");
+if (getchar(a) != NULL)
+	fail("failed to read NULL at eof on string");
+if (!eof(a))
+	fail("failed to detect eof on string");
+
+error = NULL; try put("x", a); onerror;
+if (error == NULL)
+	fail("failed to fail on write to string file");
+
+if (fetch(@[struct a = 1], "a") != 1)
+	fail("failed to fetch from atomic struct");
+
+error = NULL; try (@[struct b = 1]).a = 2; onerror;
+if (error == NULL)
+	fail("failed to fail on assign to atomic struct");
+error = NULL; try assign(@[struct b = 1], "b", 2); onerror;
+if (error == NULL)
+	fail("failed to fail on assign to atomic struct");

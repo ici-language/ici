@@ -31,6 +31,10 @@
 #include CONFIG_FILE
 #endif
 
+#ifndef NDEBUG
+#define BUGHUNT
+#endif
+
 /*
  * The following portion of this file exports to ici.h. --ici.h-start--
  */
@@ -399,5 +403,10 @@ extern void     trace_pcall(object_t *);
  */
 
 #include "alloc.h"
+
+#if defined(WIN32) && !defined(NDEBUG)
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#endif
 
 #endif /* ICI_FWD_H */

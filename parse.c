@@ -80,8 +80,8 @@ not_followed_by(char *a, char *b)
 }
 
 /*
- * Returns a non-decref array of identifiers parsed from a comma seperated
- * list, or NULL on error.  The array may be empty.
+ * Returns a non-decref atomic array of identifiers parsed from a comma
+ * seperated list, or NULL on error.  The array may be empty.
  */
 static array_t *
 ident_list(parse_t *p)
@@ -105,7 +105,7 @@ ident_list(parse_t *p)
         if (next(p, NULL) != T_COMMA)
         {
             reject(p);
-            return a;
+            return arrayof(ici_atom(objof(a), 1));
         }
     }
 
@@ -141,6 +141,7 @@ function(parse_t *p, string_t *name)
     saved_func = p->p_func;
     if (next(p, NULL) != T_OFFROUND)
     {
+        reject(p);
         not_followed_by("ident ( [args]", "\")\"");
         goto fail;
     }
@@ -162,8 +163,6 @@ function(parse_t *p, string_t *name)
     ici_decref(a);
     a = NULL;
     f->f_name = name;
-    if (ici_stk_push_chk(f->f_args, 1))
-        goto fail;
     switch (compound_statement(p, NULL))
     {
     case 0: not_followed_by("ident ( [args] )", "\"{\"");
@@ -178,7 +177,6 @@ function(parse_t *p, string_t *name)
     *f->f_code->a_top++ = objof(&o_null);
     *f->f_code->a_top++ = objof(&o_return);
     *f->f_code->a_top++ = objof(&o_end);
-    f->f_args = f->f_args;
     f->f_autos = structof(ici_atom(objof(f->f_autos), 2));
     p->p_got.t_obj = ici_atom(objof(f), 1);
     p->p_func = saved_func;
@@ -214,6 +212,7 @@ data_def(parse_t *p, objwsup_t *ows)
     {
         if (next(p, NULL) != T_NAME)
         {
+            reject(p);
             ici_error = "syntax error in variable definition";
             goto fail;
         }
@@ -271,6 +270,7 @@ data_def(parse_t *p, objwsup_t *ows)
         case T_COMMA: continue;
         case T_SEMICOLON: return 1;
         }
+        reject(p);
         ici_error = "variable definition not followed by \";\" or \",\"";
         goto fail;
     }
@@ -307,6 +307,7 @@ compound_statement(parse_t *p, struct_t *sw)
     }
     if (next(p, a) != T_OFFCURLY)
     {
+        reject(p);
         ici_error = "badly formed statement";
         goto fail;
     }
@@ -342,21 +343,23 @@ free_expr(expr_t *e)
     }
 }
 
+/*
+ * We have just got an accepted the '('. Now get the rest up to and
+ * including the ')'.
+ */
 static int
 bracketed_expr(parse_t *p, expr_t **ep)
 {
-    if (next(p, NULL) != T_ONROUND)
-    {
-        reject(p);
-        return 0;
-    }
     switch (expr(p, ep, T_NONE))
     {
     case 0: not_followed_by("(", an_expression);
     case -1: return -1;
     }
     if (next(p, NULL) != T_OFFROUND)
+    {
+        reject(p);
         return not_followed_by("( expr", "\")\"");
+    }
     return 1;
 }
 
@@ -444,7 +447,6 @@ primary(parse_t *p, expr_t **ep, int exclude)
         break;
 
     case T_ONROUND:
-        reject(p);
         ici_tfree(e, expr_t);
         e = NULL;
         if (bracketed_expr(p, &e) < 1)
@@ -454,6 +456,7 @@ primary(parse_t *p, expr_t **ep, int exclude)
     case T_ONSQUARE:
         if (next(p, NULL) != T_NAME)
         {
+            reject(p);
             not_followed_by("[", "an identifier");
             goto fail;
         }
@@ -467,7 +470,10 @@ primary(parse_t *p, expr_t **ep, int exclude)
             {
                 switch (const_expression(p, &o, T_COMMA))
                 {
-                case -1: goto fail;
+                case -1:
+                    ici_decref(a);
+                    goto fail;
+
                 case 1:
                     if (ici_stk_push_chk(a, 1))
                     {
@@ -485,6 +491,7 @@ primary(parse_t *p, expr_t **ep, int exclude)
             }
             if (next(p, NULL) != T_OFFSQUARE)
             {
+                reject(p);
                 ici_decref(a);
                 not_followed_by("[array expr, expr ...", "\",\" or \"]\"");
                 goto fail;
@@ -543,9 +550,10 @@ primary(parse_t *p, expr_t **ep, int exclude)
                     break;
 
                 default:
+                    reject(p);
                     if (super != NULL)
                         ici_decref(super);
-                   if (d != NULL)
+                    if (d != NULL)
                         ici_decref(o);
                     sprintf(n, "[%s %c expr", stringof(name)->s_chars, is_eq ? '=' : ':');
                     not_followed_by(n, "\",\" or \"]\"");
@@ -575,7 +583,10 @@ primary(parse_t *p, expr_t **ep, int exclude)
                 struct_t    *autos;
 
                 if ((autos = ici_struct_new()) == NULL)
+                {
+                    ici_decref(d);
                     goto fail;
+                }
                 autos->o_head.o_super = objwsupof(d);
                 *ici_vs.a_top++ = objof(autos);
                 ici_decref(autos);
@@ -584,7 +595,10 @@ primary(parse_t *p, expr_t **ep, int exclude)
                 --p->p_module_depth;
                 --ici_vs.a_top;
                 if (o == NULL)
+                {
+                    ici_decref(d);
                     goto fail;
+                }
                 ici_decref(o);
                 e->e_what = T_CONST;
                 e->e_obj = objof(d);
@@ -599,10 +613,16 @@ primary(parse_t *p, expr_t **ep, int exclude)
                  * the class. Create autos with the new struct as the super.
                  */
                 if ((autos = ici_struct_new()) == NULL)
+                {
+                    ici_decref(d);
                     goto fail;
+                }
                 autos->o_head.o_super = objwsupof(d);
                 if (ici_stk_push_chk(&ici_vs, 80)) /* ### Formalise */
+                {
+                    ici_decref(d);
                     goto fail;
+                }
                 *ici_vs.a_top++ = objof(autos);
                 ici_decref(autos);
             }
@@ -621,7 +641,9 @@ primary(parse_t *p, expr_t **ep, int exclude)
                     }
                     if (next(p, NULL) != T_OFFROUND)
                     {
+                        reject(p);
                         not_followed_by("[struct ... (expr", "\")\"");
+                        ici_decref(d);
                         goto fail;
                     }
                     n = o;
@@ -635,7 +657,10 @@ primary(parse_t *p, expr_t **ep, int exclude)
                     {
                         reject(p);
                         if (function(p, stringof(n)) < 0)
+                        {
+                            ici_decref(d);
                             goto fail;
+                        }
                         o = p->p_got.t_obj;
                         wasfunc = 1;
                     }
@@ -644,7 +669,7 @@ primary(parse_t *p, expr_t **ep, int exclude)
                         switch (const_expression(p, &o, T_COMMA))
                         {
                         case 0: not_followed_by("[struct ... ident =", an_expression);
-                        case -1: goto fail;
+                        case -1: ici_decref(d); goto fail;
                         }
                     }
                     else if (this == T_COMMA || this == T_OFFSQUARE)
@@ -655,6 +680,7 @@ primary(parse_t *p, expr_t **ep, int exclude)
                     }
                     else
                     {
+                        reject(p);
                         not_followed_by("[struct ... key", "\"=\", \"(\", \",\" or \"]\"");
                         ici_decref(d);
                         ici_decref(n);
@@ -678,7 +704,14 @@ primary(parse_t *p, expr_t **ep, int exclude)
                             continue;
                         }
                     }
+                    reject(p);
                     not_followed_by("[struct ... key = expr", "\",\" or \"]\"");
+                    ici_decref(d);
+                    goto fail;
+
+                default:
+                    reject(p);
+                    not_followed_by("[struct ...", "an initialiser");
                     ici_decref(d);
                     goto fail;
                 }
@@ -704,7 +737,10 @@ primary(parse_t *p, expr_t **ep, int exclude)
             {
                 switch (const_expression(p, &o, T_COMMA))
                 {
-                case -1: goto fail;
+                case -1:
+                    ici_decref(s);
+                    goto fail;
+
                 case 1:
                     if (ici_assign(s, o, ici_one))
                     {
@@ -721,6 +757,7 @@ primary(parse_t *p, expr_t **ep, int exclude)
             }
             if (next(p, NULL) != T_OFFSQUARE)
             {
+                reject(p);
                 ici_decref(s);
                 not_followed_by("[set expr, expr ...", "\"]\"");
                 goto fail;
@@ -742,6 +779,7 @@ primary(parse_t *p, expr_t **ep, int exclude)
             e->e_obj = p->p_got.t_obj;
             if (next(p, NULL) != T_OFFSQUARE)
             {
+                reject(p);
                 not_followed_by("[func function-body ", "\"]\"");
                 goto fail;
             }
@@ -783,6 +821,7 @@ primary(parse_t *p, expr_t **ep, int exclude)
             }
             if (next(p, NULL) != T_OFFSQUARE)
             {
+                reject(p);
                 not_followed_by("[ expr", "\"]\"");
                 goto fail;
             }
@@ -826,12 +865,12 @@ primary(parse_t *p, expr_t **ep, int exclude)
                 break;
 
             case T_ONROUND:
-                reject(p);
                 if (bracketed_expr(p, &(*ep)->e_arg[1]) < 1)
                     goto fail;
                 break;
 
             default:
+                reject(p);
                 switch (oldthis)
                 {
                 case T_COLON:      token_name = ":"; break;
@@ -839,7 +878,7 @@ primary(parse_t *p, expr_t **ep, int exclude)
                 case T_PTR:        token_name = "->"; break;
                 case T_DOT:        token_name = "."; break;
                 case T_AT:         token_name = "@"; break;
-                default: abort();
+                default:           assert(0);
                 }
                 not_followed_by(token_name, "an identifier or \"(\"");
                 goto fail;
@@ -883,6 +922,7 @@ primary(parse_t *p, expr_t **ep, int exclude)
             }
             if (next(p, NULL) != T_OFFROUND)
             {
+                reject(p);
                 ici_error = "error in function call arguments";
                 goto fail;
             }
@@ -1057,10 +1097,7 @@ expr(parse_t *p, expr_t **ep, int exclude)
          * and the following factor.
          */
         if ((e = ici_talloc(expr_t)) == NULL)
-        {
-            /*ici_tfree((char *)e); ###???*/
             return -1;
-        }
         e->e_what = this;
         e->e_arg[0] = *ep;
         e->e_arg[1] = NULL;
@@ -1168,6 +1205,7 @@ xx_brac_expr_brac(parse_t *p, array_t *a, char *xx)
 {
     if (next(p, a) != T_ONROUND)
     {
+        reject(p);
         sprintf(buf, "\"%s\" %s a \"(\"", xx, not_by);
         goto fail;
     }
@@ -1182,6 +1220,7 @@ xx_brac_expr_brac(parse_t *p, array_t *a, char *xx)
     }
     if (next(p, a) != T_OFFROUND)
     {
+        reject(p);
         sprintf(buf, "\"%s (expr\" %s \")\"", xx, not_by);
         goto fail;
     }
@@ -1306,7 +1345,10 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
             ici_decref(i);
             ici_decref(o);
             if (next(p, a) != T_COLON)
+            {
+                reject(p);
                 return not_followed_by("case expr", "\":\"");
+            }
             break;
         }
         if (p->p_got.t_obj == SSO(default))
@@ -1318,7 +1360,10 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
                 return -1;
             }
             if (next(p, a) != T_COLON)
+            {
+                reject(p);
                 return not_followed_by("default", "\":\"");
+            }
             if ((i = ici_int_new((long)(a->a_top - a->a_base))) == NULL)
                 return -1;
             if (ici_assign(sw, &o_mark, i))
@@ -1346,14 +1391,26 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
             {
                 ici_decref(p->p_got.t_obj);
                 if ((a2 = ici_array_new(0)) == NULL)
+                {
+                    ici_decref(a1);
                     return -1;
+                }
                 if (statement(p, a2, NULL, "if (expr) stmt else", 1) == -1)
+                {
+                    ici_decref(a1);
+                    ici_decref(a2);
                     return -1;
+                }
             }
             else
                 reject(p);
             if (ici_stk_push_chk(a, 3))
+            {
+                ici_decref(a1);
+                if (a2 != NULL)
+                    ici_decref(a2);
                 return -1;
+            }
             *a->a_top++ = objof(a1);
             ici_decref(a1);
             if (a2 != NULL)
@@ -1384,7 +1441,10 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
             }
             *a1->a_top++ = objof(&o_ifnotbreak);
             if (statement(p, a1, NULL, "while (expr)", 0) == -1)
+            {
+                ici_decref(a1);
                 return -1;
+            }
             if (ici_stk_push_chk(a1, 1))
             {
                 ici_decref(a1);
@@ -1392,7 +1452,10 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
             }
             *a1->a_top++ = objof(&o_rewind);
             if (ici_stk_push_chk(a, 2))
+            {
+                ici_decref(a1);
                 return -1;
+            }
             *a->a_top++ = objof(a1);
             ici_decref(a1);
             *a->a_top++ = objof(&o_loop);
@@ -1404,12 +1467,23 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
             if ((a1 = ici_array_new(0)) == NULL)
                 return -1;
             if (statement(p, a1, NULL, "do", 0) == -1)
+            {
+                ici_decref(a1);
                 return -1;
+            }
             if (next(p, a1) != T_NAME || p->p_got.t_obj != SSO(while))
+            {
+                reject(p);
+                ici_decref(a1);
                 return not_followed_by("do statement", "\"while\"");
+            }
             ici_decref(p->p_got.t_obj);
             if (next(p, NULL) != T_ONROUND)
+            {
+                reject(p);
+                ici_decref(a1);
                 return not_followed_by("do statement while", "\"(\"");
+            }
             switch (expression(p, a1, FOR_VALUE, T_NONE))
             {
             case 0: ici_error = "syntax error";
@@ -1417,16 +1491,23 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
             }
             if (next(p, a1) != T_OFFROUND || next(p, NULL) != T_SEMICOLON)
             {
+                reject(p);
                 ici_decref(a1);
                 return not_followed_by("do statement while (expr", "\");\"");
             }
             if (ici_stk_push_chk(a1, 2))
+            {
+                ici_decref(a1);
                 return -1;
+            }
             *a1->a_top++ = objof(&o_ifnotbreak);
             *a1->a_top++ = objof(&o_rewind);
 
             if (ici_stk_push_chk(a, 2))
+            {
+                ici_decref(a1);
                 return -1;
+            }
             *a->a_top++ = objof(a1);
             ici_decref(a1);
             *a->a_top++ = objof(&o_loop);
@@ -1438,7 +1519,10 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
 
             ici_decref(p->p_got.t_obj);
             if (next(p, a) != T_ONROUND)
+            {
+                reject(p);
                 return not_followed_by("forall", "\"(\"");
+            }
             if ((rc = expression(p, a, FOR_LVALUE, T_COMMA)) == -1)
                 return -1;
             if (rc == 0)
@@ -1453,13 +1537,19 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
                 if (expression(p, a, FOR_LVALUE, T_COMMA) == -1)
                     return -1;
                 if (next(p, a) != T_NAME || p->p_got.t_obj != SSO(in))
+                {
+                    reject(p);
                     return not_followed_by("forall (expr, expr", "\"in\"");
+                }
                 ici_decref(p->p_got.t_obj);
             }
             else
             {
                 if (this != T_NAME || p->p_got.t_obj != SSO(in))
+                {
+                    reject(p);
                     return not_followed_by("forall (expr", "\",\" or \"in\"");
+                }
                 ici_decref(p->p_got.t_obj);
                 if (ici_stk_push_chk(a, 2))
                     return -1;
@@ -1469,13 +1559,22 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
             if (expression(p, a, FOR_VALUE, T_NONE) == -1)
                 return -1;
             if (next(p, a) != T_OFFROUND)
+            {
+                reject(p);
                 return not_followed_by("forall (expr [, expr] in expr", "\")\"");
+            }
             if ((a1 = ici_array_new(0)) == NULL)
                 return -1;
             if (statement(p, a1, NULL, "forall (expr [, expr] in expr)", 1) == -1)
+            {
+                ici_decref(a1);
                 return -1;
+            }
             if (ici_stk_push_chk(a, 2))
+            {
+                ici_decref(a1);
                 return -1;
+            }
             *a->a_top++ = objof(a1);
             ici_decref(a1);
             if ((*a->a_top = objof(new_op(ici_op_forall, 0, 0))) == NULL)
@@ -1489,11 +1588,17 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
         {
             ici_decref(p->p_got.t_obj);
             if (next(p, a) != T_ONROUND)
+            {
+                reject(p);
                 return not_followed_by("for", "\"(\"");
+            }
             if (expression(p, a, FOR_EFFECT, T_NONE) == -1)
                 return -1;
             if (next(p, a) != T_SEMICOLON)
+            {
+                reject(p);
                 return not_followed_by("for (expr", "\";\"");
+            }
 
             /*
              * Get the condition expression, but don't generate code yet.
@@ -1503,7 +1608,10 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
                 return -1;
 
             if (next(p, a) != T_SEMICOLON)
+            {
+                reject(p);
                 return not_followed_by("for (expr; expr", "\";\"");
+            }
 
             /*
              * a1 is the body of the loop.  Get the step expression.
@@ -1511,7 +1619,10 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
             if ((a1 = ici_array_new(0)) == NULL)
                 return -1;
             if (expression(p, a1, FOR_EFFECT, T_NONE) == -1)
+            {
+                ici_decref(a1);
                 return -1;
+            }
             stepz = a1->a_top - a1->a_base;
 
             if (e != NULL)
@@ -1522,22 +1633,39 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
                 if (compile_expr(a1, e, FOR_VALUE))
                 {
                     free_expr(e);
+                    ici_decref(a1);
                     return -1;
                 }
                 free_expr(e);
                 if (ici_stk_push_chk(a1, 1))
+                {
+                    ici_decref(a1);
                     return -1;
+                }
                 *a1->a_top++ = objof(&o_ifnotbreak);
             }
             if (next(p, a1) != T_OFFROUND)
+            {
+                reject(p);
+                ici_decref(a1);
                 return not_followed_by("for (expr; expr; expr", "\")\"");
+            }
             if (statement(p, a1, NULL, "for (expr; expr; expr)", 0) == -1)
+            {
+                ici_decref(a1);
                 return -1;
+            }
             if (ici_stk_push_chk(a1, 1))
+            {
+                ici_decref(a1);
                 return -1;
+            }
             *a1->a_top++ = objof(&o_rewind);
             if (ici_stk_push_chk(a, 2))
+            {
+                ici_decref(a1);
                 return -1;
+            }
             *a->a_top++ = objof(a1);
             ici_decref(a1);
             if ((*a->a_top = objof(new_op(ici_op_for, 0, stepz))) == NULL)
@@ -1555,11 +1683,18 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
                 return -1;
             switch (compound_statement(p, d))
             {
-            case 0: not_followed_by("switch (expr)", "a compound statement");
-            case -1: return -1;
+            case 0:
+                not_followed_by("switch (expr)", "a compound statement");
+            case -1:
+                ici_decref(d);
+                return -1;
             }
             if (ici_stk_push_chk(a, 3))
+            {
+                ici_decref(d);
+                ici_decref(p->p_got.t_obj);
                 return -1;
+            }
             *a->a_top++ = p->p_got.t_obj;
             ici_decref(p->p_got.t_obj);
             *a->a_top++ = objof(d);
@@ -1571,7 +1706,10 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
         {
             ici_decref(p->p_got.t_obj);
             if (next(p, a) != T_SEMICOLON)
+            {
+                reject(p);
                 return not_followed_by("break", "\";\"");
+            }
             if (ici_stk_push_chk(a, 1))
                 return -1;
             *a->a_top++ = objof(&o_break);
@@ -1582,7 +1720,10 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
         {
             ici_decref(p->p_got.t_obj);
             if (next(p, a) != T_SEMICOLON)
+            {
+                reject(p);
                 return not_followed_by("continue", "\";\"");
+            }
             if (ici_stk_push_chk(a, 1))
                 return -1;
             *a->a_top++ = objof(&o_continue);
@@ -1602,7 +1743,10 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
                 ++a->a_top;
             }
             if (next(p, a) != T_SEMICOLON)
+            {
+                reject(p);
                 return not_followed_by("return [expr]", "\";\"");
+            }
             if (ici_stk_push_chk(a, 1))
                 return -1;
             *a->a_top++ = objof(&o_return);
@@ -1614,16 +1758,31 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
             if ((a1 = ici_array_new(0)) == NULL)
                 return -1;
             if (statement(p, a1, NULL, "try", 1) == -1)
+            {
+                ici_decref(a1);
                 return -1;
+            }
             if (next(p, NULL) != T_NAME || p->p_got.t_obj != SSO(onerror))
+            {
+                reject(p);
+                ici_decref(a1);
                 return not_followed_by("try statement", "\"onerror\"");
+            }
             ici_decref(p->p_got.t_obj);
             if ((a2 = ici_array_new(0)) == NULL)
                 return -1;
             if (statement(p, a2, NULL, "try statement onerror", 1) == -1)
+            {
+                ici_decref(a1);
+                ici_decref(a2);
                 return -1;
+            }
             if (ici_stk_push_chk(a, 3))
+            {
+                ici_decref(a1);
+                ici_decref(a2);
                 return -1;
+            }
             *a->a_top++ = objof(a1);
             *a->a_top++ = objof(a2);
             *a->a_top++ = objof(&o_onerror);
@@ -1686,7 +1845,10 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
              *     waitfor operator
              */
             if (next(p, a2) != T_ONROUND)
+            {
+                reject(p);
                 return not_followed_by("waitfor", "\"(\"");
+            }
             switch (expression(p, a2, FOR_VALUE, T_NONE))
             {
             case 0: not_followed_by("waitfor (", an_expression);
@@ -1696,7 +1858,10 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
                 return -1;
             *a2->a_top++ = objof(&o_ifbreak);
             if (next(p, a2) != T_SEMICOLON)
+            {
+                reject(p);
                 return not_followed_by("waitfor (expr", "\";\"");
+            }
             switch (expression(p, a2, FOR_VALUE, T_NONE))
             {
             case 0: not_followed_by("waitfor (expr;", an_expression);
@@ -1713,7 +1878,10 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
              * the critical section catcher.
              */
             if (next(p, a2) != T_OFFROUND)
+            {
+                reject(p);
                 return not_followed_by("waitfor (expr; expr", "\")\"");
+            }
             if (statement(p, a1, NULL, "waitfor (expr; expr)", 1) == -1)
                 return -1;
             break;
@@ -1727,6 +1895,7 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
         }
         if (next(p, a) != T_SEMICOLON)
         {
+            reject(p);
             ici_error = "badly formed expression, or missing \";\"";
             return -1;
         }
@@ -1860,12 +2029,14 @@ parse_exec(void)
             {
                 if (this != T_OFFSQUARE)
                 {
+                    reject(p);
                     not_followed_by("[module statements", "\"]\"");
                     goto fail;
                 }
             }
             else if (this != T_EOF)
             {
+                reject(p);
                 ici_error = "syntax error";
                 goto fail;
             }
@@ -1874,10 +2045,10 @@ parse_exec(void)
             return 0;
 
         default:
-        fail:
-            ici_decref(a);
             if (this == T_ERROR)
                 ici_error = p->p_got.t_str;
+        fail:
+            ici_decref(a);
             expand_error(p->p_lineno, p->p_file->f_name);
             return 1;
         }
@@ -1912,6 +2083,14 @@ new_parse(file_t *f)
 static void
 free_parse(object_t *o)
 {
+    switch (parseof(o)->p_ungot.t_what)
+    {
+    case T_NAME:
+    case T_REGEXP: 
+    case T_STRING:
+        ici_decref(parseof(o)->p_ungot.t_obj);
+    }
+    parseof(o)->p_ungot.t_what = T_NONE;
     ici_tfree(o, parse_t);
 }
 
