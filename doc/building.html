@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
-<TITLE>Notes on building ICI</TITLE>
+<TITLE>Notes on building the ICI core</TITLE>
 <META NAME="Generator" CONTENT="TextPad 3.0">
 <META NAME="Author" CONTENT="Tim Long">
 <META NAME="Keywords" CONTENT="ICI">
@@ -22,7 +22,7 @@
 </A>
 
 <UL>
-    <LI><A HREF="#summary_of_platforms">Summary of platforms</A>
+    <LI><A HREF="#intro">Introduction</A>
     <LI><A HREF="#supported">Building ICI for a supported UNIX like platform</A>
     <LI><A HREF="#ICI_on_windows">ICI on Microsoft Windows</A>
     <LI><A HREF="#Configuration">Configuration</A>
@@ -33,43 +33,95 @@
     <LI><A HREF="#ICI_as_extentsion">ICI as an extension</A>
 </UL>
 
-<A NAME="summary_of_platforms">
-<H2>Summary of platforms</H2>
+<A NAME="intro">
+<H2>Introduction</H2>
 </A>
+    The ICI core is designed to build simply and easily on most
+    platforms. This description deals with building the ICI core
+    itself. The extension modules are in a seperate package.
+<P ALIGN="left">
+    The build process makes two things:<OL>
+        <LI> The core run-time that can be used to run ICI scripts
+             from the command line (or loaded dynamically by other
+             programs).
+        <LI> A software development kit (SDK) which can be used
+             to write extension modules (or use ICI as an
+             extension to another program).
+    </OL>
+    For each target configurtion (typically a platform flavour)
+    a different configuration include file is made by copying
+    the closest exisiting one, and adjusting. Each of these files
+    is called <I>conf-xxx.h</I> where <I>xxx</I> is the "flavour".
+    There is typically also a <I>Makefile.xxx</I> to match each of these.
+    (For Windows there is also a Visual C workspace.)
+<P ALIGN="left">
+    The file ici.h is the main include file for both seperately
+    compiled extension
+    modules and programs invoking the ICI interpreter. It is
+    made by the build process specificly for each different flavour.
+    (Actually, it is made by an ICI script, <I>mk-ici-h.ici</I>,
+    so you <I>must</I>
+    successfully build ICI before you can make ici.h.)
+<P ALIGN="left">
+    The following table summarises some of the standard configurations
+    for which configuration includes and Makefiles are included
+    in the ICI source. Building on these platforms should be
+    reasonably straightforward.
 <TABLE BORDER=1 CELLSPACING=1 CELLPADDING=1 WIDTH="100%">
 <TR ALIGN="left" VALIGN="top">
     <TH>Platform</TH>
     <TH>Makefile</TH>
     <TH>Config file</TH>
-    <TH>Contacts</TH>
+    <TH>Main runtime files</TH>
+    <TH>Main SDK files</TH>
     <TH>Notes</TH>
 </TR>
 <TR ALIGN="left" VALIGN="top">
-    <TD>Windows (All Win32)</TD>
-    <TD>Makefile.w32</TD>
+    <TD>Win32</TD>
+    <TD>win32\ici4.dsw or Makefile.w32</TD>
     <TD>conf-w32.h</TD>
-    <TD>Tim Long</TD>
+    <TD>ici4.dll, ici.exe, iciw.exe, ici4core*.ici</TD>
+    <TD>ici4.lib, ici.h</TD>
     <TD><A HREF="#ICI_on_Windows">ICI on Microsoft Windows</A></TD>
 </TR>
 <TR ALIGN="left" VALIGN="top">
     <TD>Linux</TD>
     <TD>Makefile.linux</TD>
     <TD>conf-linux.h</TD>
-    <TD>Andy Newman</TD>
+    <TD>ici.linux, ici4core*.ici</TD>
+    <TD>ici.h, liblinux.a</TD>
     <TD>&nbsp;</TD>
 </TR>
 <TR ALIGN="left" VALIGN="top">
     <TD>BeOS (x86)</TD>
     <TD>Makefile.beos</TD>
     <TD>conf-beos.h</TD>
-    <TD>XXX</TD>
+    <TD>ici.beos, ici4core*.ici</TD>
+    <TD>ici.h, libbeos.a</TD>
     <TD>&nbsp;</TD>
 </TR>
 <TR ALIGN="left" VALIGN="top">
     <TD>BSD</TD>
     <TD>Makefile.bsd</TD>
     <TD>conf-bsd.h</TD>
-    <TD>Andy Newman</TD>
+    <TD>ici4, ici4core*.ici</TD>
+    <TD>ici.h</TD>
+    <TD><A HREF="#ICI_on_BSD">ICI on BSD Unix</A></TD>
+</TR>
+<TR ALIGN="left" VALIGN="top">
+    <TD>Solaris 2</TD>
+    <TD>Makefile.sol2</TD>
+    <TD>conf-sol2.h</TD>
+    <TD>ici.sol2, ici4core*.ici</TD>
+    <TD>ici.h, libsol2.a</TD>
+    <TD>&nbsp;</TD>
+</TR>
+<TR ALIGN="left" VALIGN="top">
+    <TD>MacOSX</TD>
+    <TD>Makefile.osx</TD>
+    <TD>conf-osx.h</TD>
+    <TD>ici4, ici4core*.ici</TD>
+    <TD>ici.h, libici4.a</TD>
     <TD><A HREF="#ICI_on_BSD">ICI on BSD Unix</A></TD>
 </TR>
 </TABLE>
@@ -96,30 +148,31 @@
 <H2>ICI on Microsoft Windows</H2>
 </A>
     On Windows platforms (any Win32 varient), ICI is compiled into
-    a DLL (Dynamic Link Library) called <I>ici.dll</I>. A definition file
+    a DLL (Dynamic Link Library) called <I>ici4.dll</I>. A definition file
     (<I>ici.def</I>) is used to specify which identifiers should be
-    externally visible to other programs. Just about everything is,
-    and if something is missing, just add it. The DLL is linked to use
+    externally visible to other programs. The DLL is linked to use
     multi-threaded DLL based run-time libraries.
 <P ALIGN="left">
-    To build ICI using the Microsoft Visual C environment, use
-    <I>nmake -f Makefile.w32</I> from a shell prompt.
+    There is a Makefile.w32 that can be used to build ICI
+    from the command line using Microsoft Visual C. However, this
+    is no longer used much. A Visual C workspace is located in
+    the win32 sub-directory. See README.txt in that directory for
+    details.
 <P ALIGN="left">
     Applications may use the ICI DLL as a run-time component by
-    including the library file <I>ici.lib</I> in their build
-    (<I>ici.lib</I> is
-    produced as a side-effect of the build of <I>ici.dll</I>) and,
+    including the library file <I>ici4.lib</I> in their build
+    (<I>ici4.lib</I> is
+    produced as a side-effect of the build of <I>ici4.dll</I>) and,
     of course, including relevent include files.
 <P ALIGN="left">
     Two other programs,
-    <I>cici.exe</I> and <I>wici.exe</I> are also built by
-    <I>Makefile.w32dll</I>. They are just simple
-    stubs to invoke the DLL. The first (<I>cici.exe</I>) is a console
-    application, the second (<I>wici.exe</I>) is a window application.
-    They both take command line arguments, but <I>wici.exe</I> does not
+    <I>ici.exe</I> and <I>iciw.exe</I> are also built. They are just simple
+    stubs to invoke the DLL. The first (<I>ici.exe</I>) is a console
+    application, the second (<I>iciw.exe</I>) is a window application.
+    They both take command line arguments, but <I>iciw.exe</I> does not
     support wild-card expansion.
 <P ALIGN="left">
-    If wici.exe is copied to another file name, say xxx.exe, and
+    If iciw.exe is copied to another file name, say xxx.exe, and
     the file xxx.ici exists in the same directory,
     xxx.ici will be inserted as the first argument
     as if it had been provided on the command line. This is a
@@ -143,47 +196,47 @@
 <P ALIGN="left">
     <TABLE BORDER="1">
       <TR ALIGN="left" VALIGN="top">
-	<TH WIDTH="20%">Variant</TH>
-	<TH>Version</TH>
-	<TH>Make Command</TH>
-	<TH>Comments</TH>
+        <TH WIDTH="20%">Variant</TH>
+        <TH>Version</TH>
+        <TH>Make Command</TH>
+        <TH>Comments</TH>
       </TR>
       <TR ALIGN="left" VALIGN="top">
-	<TD>FreeBSD</TD>
-	<TD>2.x, 3.x, 4.x, 5.x</TD>
-	<TD><TT>make</TT></TD>
-	<TD>The reference BSD platform.</TD>
+        <TD>FreeBSD</TD>
+        <TD>2.x, 3.x, 4.x, 5.x</TD>
+        <TD><TT>make</TT></TD>
+        <TD>The reference BSD platform.</TD>
       </TR>
       <TR ALIGN="left" VALIGN="top">
-	<TD>NetBSD</TD>
-	<TD>1.4, 1.5</TD>
-	<TD><TT>make MANDIR=${PREFIX}/man</TT></TD>
-	<TD>NetBSD installs manual pages differently to FreeBSD
-	  On NetBSD the pages are formatted and the <EM>cat</EM>
-	  version of the page installed. Select ${PREFIX} according
-	  to where you install ICI, this is usally /usr/local</TD>
+        <TD>NetBSD</TD>
+        <TD>1.4, 1.5</TD>
+        <TD><TT>make MANDIR=${PREFIX}/man</TT></TD>
+        <TD>NetBSD installs manual pages differently to FreeBSD
+          On NetBSD the pages are formatted and the <EM>cat</EM>
+          version of the page installed. Select ${PREFIX} according
+          to where you install ICI, this is usally /usr/local</TD>
       </TR>
       <TR ALIGN="left" VALIGN="top">
-	<TD>OpenBSD</TD>
-	<TD>2.7</TD>
-	<TD><TT>make</TT></TD>
-	<TD>No significant differences between OpenBSD and FreeBSD.</TD>
+        <TD>OpenBSD</TD>
+        <TD>2.7</TD>
+        <TD><TT>make</TT></TD>
+        <TD>No significant differences between OpenBSD and FreeBSD.</TD>
       </TR>
       <TR ALIGN="left" VALIGN="top">
-	<TD>BSDi</TD>
-	<TD>?</TD>
-	<TD><TT>make?</TT></TD>
-	<TD>This configuration has yet to be tested</TD>
+        <TD>BSDi</TD>
+        <TD>?</TD>
+        <TD><TT>make?</TT></TD>
+        <TD>This configuration has yet to be tested</TD>
       </TR>
       <TR ALIGN="left" VALIGN="top">
-	<TD>Darwin (Mac OS X)</TD>
-	<TD>10.0.4</TD>
-	<TD><TT>make</TT></TD>
-	<TD>Darwin has an odd dynamic loading mechanism and
-	ICI requires the <em>dlcompat</em> library to supporting
-	loading of native code modules.  This library may be
-	found at numerous Mac OS X sites.
-	</TD>
+        <TD>Darwin (Mac OS X)</TD>
+        <TD>10.0.4</TD>
+        <TD><TT>make</TT></TD>
+        <TD>Darwin has an odd dynamic loading mechanism and
+        ICI requires the <em>dlcompat</em> library to supporting
+        loading of native code modules.  This library may be
+        found at numerous Mac OS X sites.
+        </TD>
       </TR>
     </TABLE>
 
@@ -200,7 +253,7 @@
 <A NAME="Config_change">
 <H3>Changing the configuration</H3>
 </A>
-    To change the configuration you edit the system's `conf' header file
+    To change the configuration you edit the system's `conf-xxx.h' header file
     and define or undefine macros to include/exclude features. The default
     macros are listed below. Defining the macro REMOVES the feature from
     the build (which is why the names all start with "NO"). The macros
@@ -242,13 +295,14 @@
             provide this.
 
     <DT>NOSKT<DD>
-            Don't include the BSD sockets functions (skt.c).
-            Again useful on platforms that don't support or
-            require networking.
-
+            Obsolete. Previous versions of ICI included BSD sockets
+            functions in the core. They have now moved to the net
+            extension module.
+            
     <DT>NOSYSCALL<DD>
-            Don't include Unix-style system calls (syscall.c).
-            Many of these functions work on Win32 systems too.
+            Obsolete. Previous versions of ICI included Unix-style
+            function in the core. They have now moved to the sys
+            extension module.
 
     <DT>NODIR<DD>
             Don't include the dir() function.
