@@ -306,8 +306,16 @@ compile_expr(ici_array_t *a, expr_t *e, int why)
         case T_NAME:
             if (why == FOR_LVALUE)
                 *a->a_top++ = objof(&o_namelvalue);
-            if (why != FOR_EFFECT)
-                *a->a_top++ = e->e_obj;
+            *a->a_top++ = e->e_obj;
+            if (why == FOR_EFFECT)
+            {
+                /*
+                 * We do evaluate variables even if only for value, because
+                 * they can have the side-effect of loading a module. But we
+                 * then have to pop the value.
+                 */
+                *a->a_top++ = objof(&o_pop);
+            }
             return 0;
 
         case T_PLUS:

@@ -1,21 +1,39 @@
 Changes in version 4.1.0 (a beta release) <- ###Planned, not done yet###
 
+*   Corrected pointer calls so NULL@xxx() won't crash. (timl)
+
+*   Made the semicolon that terminates an expression statement
+    optional when followed by either } or EOF. This is mainly so
+    short expressions that are evaluated in strings don't need
+    a semicolon. Like:
+    
+        ici -e dbg.cmd=1 ...
+
+    (timl)
+
 *   Removed the Windows ICI debugger from the Windows build. It
     is now in ici-modules. (timl)
 
 *   Stacked source markers on the execution stack during function
     calls. This stops them being wrong between function return, and
-    the next source line. (timl) 
+    the next source line. (timl)
+
+*   Changed the path[] initialisation on UNIX-like systems to
+    always include the lib/ici4 directory(s) under /usr/local,
+    /opt and /sw if they exist, plus one optional place that
+    can be specified in the conf file for any particular system.
+    This was done to satisfy the reasons for Andy's change (see
+    below), and also allow uniform binary distributions. (timl)
 
 *   Changed icistr-setup.h and related macros in str.h (exported
     to ici.h) to avoid duplicate symbols in modules.  The
     init_ici_str() function is now made static to limit its
     scope to the file(s) that includes it. The ICIS et al
-    macros in str.h (and exported to ici.h) now include an
+    macros in str.h (and exported to ici.h) now include
     the value of an ICI_MODULE_NAME macro within the symbol
     names.  This allows correct module loading on Mac OS X
     where the dynamic linker disallows duplicate symbols in
-    loaded modules (bundles)  The only impact for other platforms
+    loaded modules (bundles). The only impact for other platforms
     should be the potential for not sharing static string objects
     between modules that define the same strings. (andy)
 
