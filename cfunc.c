@@ -698,6 +698,8 @@ f_math()
     char        n1[30];
     char        n2[80];
 
+    av[0] = 0.0;
+    av[1] = 0.0;
     if (ici_typecheck((char *)CF_ARG2() + 2, &av[0], &av[1]))
         return 1;
     errno = 0;
