@@ -1,0 +1,66 @@
+check = #\b(null_ret|ici_call|ici_func|ici_funcv|ici_callv|a_top|new_array|assign|assign_simple|atom|decref|fetch|fetch_simpe|new_float|float_ret|syserr|incref|new_int|int_ret|mark|new_mem|ici_new_method|need_stdin|need_stdout|o_one|new_ptr|new_regexp|new_set|unassign_set|get_cname|new_name|new_cname|str_ret|new_struct|unassign_struct|ici_alloc|o_zero)\b#;
+
+note = [struct
+
+    a_top = "use %s only if a stack, see array.h",
+    new_array = "%s->ici_array_new, also argument change",
+    assign = "%s->ici_%s",
+    assign_simple = "%s->ici_assign_fail",
+    atom = "%s->ici_%s",
+    decref = "%s->ici_%s",
+    fetch = "%s->ici_%s",
+    fetch_simple = "%s->ici_fetch_fail",
+    new_float = "%s->ici_float_new",
+    float_ret = "%s->ici_float_ret",
+    syserr = "%s->ici_get_last_errno, but also a semantics change, see syserr.c",
+    incref = "%s->ici_%s",
+    new_int = "%s->ici_int_new",
+    int_ret = "%s->ici_int_ret",
+    mark = "%s->ici_mark",
+    new_mem = "%s->ici_mem_new",
+    ici_new_method = "%s->ici_method_new",
+    need_stdin = "%s->ici_%s",
+    need_stdout = "%s->ici_%s",
+    o_one = "%s->ici_one",
+    new_ptr = "%s->ici_ptr_new",
+    new_regexp = "%s->ici_regexp_new",
+    o_type = "no o_type, use ici_register_type, see object.h",
+    new_set = "%s->ici_set_new",
+    unassign_set = "%s->ici_set_unassign",
+    get_cname = "%s->ici_str_get_nul_term",
+    new_name = "%s->ici_str_new",
+    new_cname = "%s->ici_str_new_nul_term",
+    str_ret = "%s->ici_str_ret",
+    new_struct = "%s->ici_struct_new",
+    unassign_struct = "%s->ici_struct_unassign",
+    ici_alloc = "ici_alloc, if possible use ici_talloc or ici_nalloc, see alloc.h",
+    o_zero = "%s->ici_zero",
+    ici_call = "%s now returns int, and string_t * not char * in arg 1",
+    ici_callv = "%s now returns int, and string_t * not char * in arg 1",
+    ici_func = "%s now returns an int",
+    ici_funcv = "%s now returns an int and has an extra arg",
+    null_ret = "%s->ici_%s",
+];
+
+
+forall (fname in dir(#((\.[cC])|(\.[hH]))$#))
+{
+    printf("%s...\n", fname);
+    f = fopen(fname);
+    lineno = 1;
+    while (l = getline(f))
+    {
+        if (match = l ~~ check)
+        {
+            printf("%s, %d: ", fname, lineno, l);
+            if (note[match] != NULL)
+            {
+                printf("[");
+                printf(note[match], match, match);
+                printf("] ");
+            }
+            printf("%s\n", l ~~ #^[ \t]*(.*$)#);
+        }
+        ++lineno;
+    }
+}
