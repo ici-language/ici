@@ -320,6 +320,7 @@ ici_evaluate(ici_obj_t *code, int n_operands)
     ici_obj_t           *pc;
     int                 flags;
     ici_catch_t         frame;
+    ici_src_t           *src;
 #define FETCH(s, k) \
                         isstring(objof(k)) \
                             && stringof(k)->s_struct == structof(s) \
@@ -443,7 +444,7 @@ ici_evaluate(ici_obj_t *code, int n_operands)
             ici_exec->x_src = srcof(o);
             if (ici_debug_active)
                 ici_debug->idbg_src(srcof(o));
-            goto continue_with_same_pc;
+            goto stable_stacks_continue;
 
         case TC_PARSE:
             *ici_xs.a_top++ = o; /* Restore formal state. */
@@ -515,8 +516,15 @@ ici_evaluate(ici_obj_t *code, int n_operands)
                         goto fail;
                     }
                     *ici_xs.a_top++ = o; /* Temp restore formal state. */
+                    src = ici_exec->x_src;
+                    ici_incref(src);
                     if (ici_func(f, "o", o))
+                    {
+                        ici_decref(src);
                         goto fail;
+                    }
+                    ici_exec->x_src = src;
+                    ici_decref(src);
                     --ici_xs.a_top;
                     switch
                     (

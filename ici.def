@@ -109,6 +109,8 @@ EXPORTS ici_uninit
 EXPORTS ici_unwind
 EXPORTS ici_vs DATA
 EXPORTS ici_vsver DATA
+EXPORTS ici_waitfor
+EXPORTS ici_wakeup
 EXPORTS ici_xs DATA
 EXPORTS ici_zero DATA
 EXPORTS o_null DATA

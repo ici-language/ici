@@ -285,7 +285,14 @@ call_func(ici_obj_t *o, ici_obj_t *subject)
     if (va != NULL)
         ici_decref(va);
 
-    ici_xs.a_top[-1] = objof(&o_mark);
+    /*
+     * we push the current source marker onto the execution stack.
+     * That way, after the function returns, it will cause the current
+     * source marker to be reset to the correct value.
+     */
+    ici_xs.a_top[-1] = objof(ici_exec->x_src);
+
+    *ici_xs.a_top++ = objof(&o_mark);
     get_pc(f->f_code, ici_xs.a_top);
     ++ici_xs.a_top;
     *ici_vs.a_top++ = objof(d);
