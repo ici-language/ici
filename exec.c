@@ -126,7 +126,7 @@ free_exec(object_t *o)
 #endif
 #ifdef ICI_USE_POSIX_THREADS
     if (x->x_thread_handle != NULL)
-        pthread_exit(NULL);
+        pthread_cancel(x->x_thread_handle);
     (void)sem_destroy(&x->x_semaphore);
 #endif
     ici_tfree(o, exec_t);
@@ -209,8 +209,8 @@ ici_new_exec(void)
 #ifdef ICI_USE_POSIX_THREADS
     if (sem_init(&x->x_semaphore, 0, 0) == -1)
     {
-    syserr();
-    goto fail;
+        syserr();
+        goto fail;
     }
 #endif
     x->x_state = XS_ACTIVE;

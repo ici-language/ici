@@ -154,7 +154,7 @@ ici_yield(void)
 #else
 # ifdef ICI_USE_POSIX_THREADS
         pthread_mutex_unlock(&ici_mutex);
-        /*pthread_yield();*/
+        sched_yield();
         if (pthread_mutex_lock(&ici_mutex) == -1)
             perror("ici_mutex");
 # else
@@ -434,4 +434,3 @@ cfunc_t ici_thread_cfuncs[] =
     {CF_OBJ,    "wakeup",        f_wakeup},
     {CF_OBJ}
 };
-
