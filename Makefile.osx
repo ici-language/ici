@@ -1,11 +1,13 @@
 #
 # For compiling a standard version on Mac OS X
 #
+PREFIX	= /usr/local
 PROG    = ici
 LIB     = libici4.a
 CC      = cc -pipe
 LIBS    = -framework Foundation
-CFLAGS  = -g -Wall -O2 -I. -DNDEBUG
+COPT	?= -O2
+CFLAGS  = -g -Wall $(COPT) -I. -DNDEBUG -DPREFIX='"$(PREFIX)"'
 LDFLAGS = -g
 RM      = rm -f
 
@@ -20,7 +22,6 @@ MAN1	= doc/man1/ici.1\
 #
 # Where things get installed.
 #
-PREFIX  = /usr/local
 BINDIR  = $(PREFIX)/bin
 MANDIR  = $(PREFIX)/man/man1
 INCDIR	= $(PREFIX)/include
