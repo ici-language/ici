@@ -296,7 +296,7 @@ ici_hash_string(ici_obj_t *o)
         if (stringof(o)->s_hash != 0)
             return stringof(o)->s_hash;
 #   endif
-    h = ici_crc(STR_PRIME_0, stringof(o)->s_chars, stringof(o)->s_nchars);
+    h = ici_crc(STR_PRIME_0, (const unsigned char *)stringof(o)->s_chars, stringof(o)->s_nchars);
 #   if KEEP_STRING_HASH
         stringof(o)->s_hash = h;
 #   endif
