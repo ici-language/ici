@@ -26,20 +26,6 @@
 #undef  NOEVENTS        /* Event loop and associated processing. */
 #undef  NOPROFILE       /* Profiler, see profile.c. */
 #define NOSIGNALS       /* ICI level signal handling */
-#undef  NOFASTFREELISTS /* Fast free lists: +8bytes per malloc, more speed. */
-
-#define ICI_USE_WIN32_THREADS
-/*
- * Mentioned in the version string.
- */
-#define CONFIG_STR      "Microsoft Win32 platforms"
-
-#define popen           _popen
-#define pclose          _pclose
-#define access          _access
-#define ICI_PATH_SEP    ';'
-#define ICI_DIR_SEP     '\\'
-#define ICI_DLL_EXT     ".dll"
 
 /*
  * ICI_CORE is defined by core language files, as opposed to builds of
@@ -55,10 +41,6 @@
 #define DLI   __declspec(dllimport) /* See DLI in fwd.h. */
 #endif
 
-#ifndef PREFIX
-#define PREFIX "C:/ICI"
-#endif
-
 #ifndef _WIN32
 #define _WIN32
 #endif
@@ -68,5 +50,18 @@ int ici_get_last_win32_error(void);
 /*
  * End of ici.h export. --ici.h-end--
  */
+
+#define ICI_USE_WIN32_THREADS
+/*
+ * Mentioned in the version string.
+ */
+#define CONFIG_STR      "Microsoft Win32 platforms"
+
+#define popen           _popen
+#define pclose          _pclose
+#define access          _access
+#define ICI_PATH_SEP    ';'
+#define ICI_DIR_SEP     '\\'
+#define ICI_DLL_EXT     ".dll"
 
 #endif /*ICI_CONF_H*/

@@ -13,10 +13,16 @@
  * setting like this in Visual C, Project Builder and similar "advanced"
  * development environments.
  */
-#if defined(_WIN32) && !defined(CONFIG_FILE)
-#define CONFIG_FILE "conf-w32.h"
-#elif defined(__MACH__) && defined(__APPLE__) && !defined(CONFIG_FILE)
-#define CONFIG_FILE "conf-osx.h"
+#if !defined(CONFIG_FILE)
+#    if defined(_WIN32)
+#        define CONFIG_FILE "conf-w32.h"
+#    elif defined(__MACH__) && defined(__APPLE__)
+#        define CONFIG_FILE "conf-osx.h"
+#    elif defined(__linux__)
+#        define CONFIG_FILE "conf-linux.h"
+#    elif defined(__bsd__)
+#        define CONFIG_FILE "conf-bsd.h"
+#    endif
 #endif
 
 #ifndef CONFIG_FILE

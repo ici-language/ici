@@ -20,18 +20,23 @@ LIBS    = -lm -ltermcap -ldl -lpthread
 OPTIM  = -DNDEBUG -O3 -finline-functions -fexpensive-optimizations \
 	-fomit-frame-pointer -malign-double
 
-CFLAGS  = -g -Wall $(OPTIM) -DCONFIG_FILE='"$(CONFIG)"'  -DPREFIX='"$(PREFIX)"' -I.
+CFLAGS  = -g -Wall $(OPTIM) -DPREFIX='"$(PREFIX)"' -I.
 LDFLAGS = -export-dynamic -g
 RANLIB  = ranlib
 RM      = rm -f
 
 #
-# For installing...
+# For installing. $(PREFIX) is built into ICI as the default base
+# where it looks for extension modules. $(INSDIR) allows you to
+# install somewhere else (to test or make a binary distribution
+# that will ultimately be installed elsewhere).
 #
-PREFIX  = /usr/local
-BINDIR  = $(PREFIX)/bin
-MANDIR  = $(PREFIX)/man/man1
-INSTALL = install -c
+#PREFIX  = /usr/local
+INSDIR  = $(PREFIX)
+INSDIR  = /home/users/t/ti/timl/linux
+BINDIR  = $(INSDIR)/bin
+MANDIR  = $(INSDIR)/man/man1
+INSTALL = install -C
 
 .pref.ici:
 	sed "s|\$$PREFIX|$(PREFIX)|g" $< > $@
@@ -80,73 +85,58 @@ maketables.o    : pcre/maketables.c
 pcre.o  : pcre/pcre.c
 	$(CC) -c -o $@ $(CFLAGS) pcre/pcre.c
 
-#
-# This doesn't work for gmake...
-#
-#       $(CC) -c $(CFLAGS) $(?:.o=.c)
-#       $(AR) r $@ $?
-#       $(RANLIB) $@
-#       $(RM) $?
-
-
-# Headers that are potentially used in module writing are made public
-ICIHDRS=\
-	alloc.h array.h buf.h catch.h cfunc.h conf-$(FLAVOUR).h exec.h\
-	file.h float.h forall.h func.h fwd.h ici.h int.h mark.h mem.h\
-	method.h null.h object.h op.h\
-	parse.h pc.h primes.h ptr.h re.h set.h src.h str.h struct.h\
-	trace.h wrap.h
-
-PCREHDRS=\
-	pcre/internal.h\
-	pcre/pcre.h
-
-# Useful public documentation
-DOCS=\
-	doc/ici-a4.ps doc/ici-ltr.ps doc/ici.txt
+ici.h	: $(TARGET)
+	$(TARGET) mk-ici-h.ici $(CONFIG)
 
 # Core modules
 COREMODS=\
-	ici3core.ici\
-	ici3core1.ici\
-	ici3core2.ici\
-	ici3core3.ici
+	ici4core.ici\
+	ici4core1.ici\
+	ici4core2.ici\
+	ici4core3.ici
+
+MAN1S=\
+	doc/man1/ici.1\
+	doc/man1/icifuncs.1\
+	doc/man1/icinet.1\
+	doc/man1/icioo.1\
+	doc/man1/iciops.1\
+	doc/man1/icire.1\
+	doc/man1/icistmt.1\
+	doc/man1/icisys.1\
+	doc/man1/icitypes.1
 
 # Install the init file, headers and docs.
-install: $(TARGET) $(LIB) $(COREMODS)
-	@echo '=========================================='
-	@echo 'Installing ici interpreter and manual page'
-	@echo '=========================================='
-	-mkdir -p $(PREFIX)/bin
-	$(INSTALL) $(TARGET) $(BINDIR)/ici-$(VERSION)
-	ln -fs ici-$(VERSION) $(BINDIR)/ici
-	-mkdir -p $(MANDIR)
-	$(INSTALL) doc/ici.1 $(MANDIR)
+install: $(TARGET) $(LIB) $(COREMODS) ici.h icistr-setup.h $(MAN1S) doc/ici.pdf
 	@echo '=========================================='
 	@echo 'Creating installation directories'
 	@echo '=========================================='
-	-mkdir -p $(PREFIX)/lib/ici3
-	-mkdir -p $(PREFIX)/include/ici3
-	-mkdir -p $(PREFIX)/include/ici3/pcre
-	-mkdir -p $(PREFIX)/share/doc/ici3
+	-mkdir -p $(INSDIR)/lib/ici4
+	-mkdir -p $(INSDIR)/include
+	-mkdir -p $(INSDIR)/share/doc/ici4
+	-mkdir -p $(INSDIR)/bin
+	-mkdir -p $(MANDIR)
+	@echo '=========================================='
+	@echo 'Installing ici interpreter and manual page'
+	@echo '=========================================='
+	$(INSTALL) $(TARGET) $(BINDIR)/ici-$(VERSION)
+	$(INSTALL) -m 444 $(COREMODS) $(INSDIR)/lib/ici4
+	ln -fs ici-$(VERSION) $(BINDIR)/ici
+	$(INSTALL) -m 444 $(MAN1S) $(MANDIR)
 	@echo '=========================================='
 	@echo 'Installing ici library'
 	@echo '=========================================='
-	install -c -m 444 $(LIB) $(PREFIX)/lib
-	ranlib $(PREFIX)/lib/$(LIB)
-	@echo '=========================================='
-	@echo 'Startup files'
-	@echo '=========================================='
-	install -c -m 444 $(COREMODS) $(PREFIX)/lib/ici3
+	$(INSTALL) -m 444 $(LIB) $(INSDIR)/lib/libici4.a
+	ranlib $(INSDIR)/lib/libici4.a
 	@echo '=========================================='
 	@echo 'Headers'
 	@echo '=========================================='
-	install -c -m 444 $(ICIHDRS)  $(PREFIX)/include/ici3
-	install -c -m 444 $(PCREHDRS) $(PREFIX)/include/ici3/pcre
+	$(INSTALL) -m 444 ici.h  $(INSDIR)/include
+	$(INSTALL) -m 444 icistr-setup.h $(INSDIR)/include
 	@echo '=========================================='
 	@echo 'Documentation'
 	@echo '=========================================='
-	install -c -m 444 $(DOCS) $(PREFIX)/share/doc/ici3
+	$(INSTALL) -m 444 doc/ici.pdf $(INSDIR)/share/doc/ici4
 	@echo '=========================================='
 	@echo 'Install done'
 	@echo '=========================================='

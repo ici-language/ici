@@ -4,6 +4,10 @@
 #define BSD     43
 /*#undef        BSD */
 
+/*
+ * The following portion of this file exports to ici.h. --ici.h-start--
+ */
+
 #undef  NOMATH          /* Trig and etc. */
 #define NOTRACE         /* For debugging. */
 #undef  NOWAITFOR       /* Requires select() or similar system primitive. */
@@ -18,6 +22,10 @@
 #define NOEVENTS        /* Event loop and associated processing. */
 #define NOPROFILE       /* Profiler, see profile.c. */
 #undef  NOSIGNALS       /* ICI level signal handling */
+
+/*
+ * End of ici.h export. --ici.h-end--
+ */
 
 #define	ICI_USE_POSIX_THREADS
 #define pthread_mutexattr_settype pthread_mutexattr_setkind_np

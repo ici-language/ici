@@ -222,7 +222,7 @@ ici_maind(int argc, char *argv[], int debugging)
 #ifdef  MSDOS
                     fmt = "C:\\ICI\\LIB%s.ICI";
 #else
-                    fmt = PREFIX "/lib/ici3/%s.ici";
+                    fmt = PREFIX "/lib/ici4/%s.ici";
 #endif
                     goto dofile;
 

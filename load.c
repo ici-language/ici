@@ -36,7 +36,7 @@ typedef void    *dll_t;
 static int
 push_os_path_elements(ici_array_t *a)
 {
-    return push_path_elements(a, PREFIX "/lib/ici");
+    return push_path_elements(a, PREFIX "/lib/ici4");
 }
 
 # endif /* _WIN32, __BEOS__ */
