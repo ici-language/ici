@@ -362,8 +362,6 @@ extern char     *syserr(void);
 extern int      ici_argcount(int);
 extern int      ici_argerror(int);
 extern array_t  *mk_strarray(char **);
-extern int      f_simple(void);
-extern int      f_vsimple(void);
 extern void     unassign_struct(struct_t *, object_t *);
 extern int      unassign_set(set_t *, object_t *);
 extern void     grow_objs(object_t *);
@@ -1345,3 +1343,138 @@ struct sets
 /* From skt.h */
 
 
+#ifdef _WIN32
+/*
+ * Windows uses a special type to represent its SOCKET descriptors.
+ * For correctness we include winsock.h here. Other platforms (i.e.,
+ * BSD) are easier and use integers.
+ */
+#include <winsock.h>
+#else
+#define SOCKET  int
+#endif
+
+struct skt
+{
+    object_t    o_head;
+    SOCKET      s_skt;
+    int         s_closed;
+};
+#define sktof(o)        ((skt_t *)(o))
+#define isskt(o)        (objof(o)->o_tcode == TC_SOCKET)
+
+/* From src.h */
+
+
+struct src
+{
+    object_t    s_head;
+    int         s_lineno;
+    string_t    *s_filename;
+};
+#define srcof(o)        ((src_t *)o)
+#define issrc(o)        ((o)->o_tcode == TC_SRC)
+
+/* From str.h */
+
+
+struct string
+{
+    object_t    o_head;
+    struct_t    *s_struct;      /* Where we were last found on the vs. */
+    slot_t      *s_slot;        /* And our slot. */
+    long        s_vsver;        /* The vs version at that time. */
+    unsigned long s_hash;       /* String hash code or 0 if not yet computed */
+    int         s_nchars;
+    char        s_chars[1];     /* And following bytes. */
+};
+#define stringof(o)     ((string_t *)o)
+#define isstring(o)     ((o)->o_tcode == TC_STRING)
+
+/*
+ * This flag indicates that the lookup-lookaside mechanism is referencing
+ * an atomic struct. It is stored in the allowed area of o_flags in o_head.
+ */
+#define S_LOOKASIDE_IS_ATOM 0x10
+
+/*
+ * Macros to assist external modules in getting ICI strings. To use, make
+ * an include file called "icistr.h" with your strings, and what you want to
+ * call them by, formatted like this:
+ *
+ *  ICI_STR(fred, "fred")
+ *  ICI_STR(amp, "&")
+ *
+ * etc. Include that file in any files that access ICI strings.
+ * Access them with either ICIS(fred) or ICISO(fred) which return
+ * string_t* and object_t* pointers respectively. For example:
+ *
+ *  o = fetch(s, ICIS(fred));
+ *
+ * Next, in one of your source file, include the special include file
+ * "icistr-setup.h". This will (a) declare pointers to the string objects,
+ * and (b) define a function (init_ici_str()) that initialises those pointers.
+ *
+ * Finally, call init_ici_str() at startup. It returns 1 on error, usual
+ * conventions.
+ */
+#define ICIS(name)              (ici_str_##name)
+#define ICISO(name)             (objof(ICIS(name)))
+#define ICI_STR_NORM(name, str) extern string_t *ici_str_##name;
+#define ICI_STR_DECL(name, str) string_t *ici_str_##name;
+#define ICI_STR_MAKE(name, str) (ICIS(name) = new_cname(str)) == NULL ||
+#define ICI_STR_REL(name, str)  decref(ICIS(name));
+#define ICI_STR                 ICI_STR_NORM
+
+/* From struct.h */
+
+
+struct slot
+{
+    object_t    *sl_key;
+    object_t    *sl_value;
+};
+
+struct structs
+{
+    objwsup_t   o_head;
+    int         s_nels;         /* How many slots used. */
+    int         s_nslots;       /* How many slots allocated. */
+    slot_t      *s_slots;
+};
+#define structof(o)     ((struct_t *)(o))
+#define isstruct(o)     (objof(o)->o_tcode == TC_STRUCT)
+
+
+/* From trace.h */
+
+
+extern int trace_yes;
+extern int trace_flags;
+
+#define TRACE_LEXER         1
+#define TRACE_EXPR          2
+#define TRACE_INTRINSICS    4
+#define TRACE_FUNCS         8
+#define TRACE_MEM           16
+#define TRACE_SRC           32
+#define TRACE_GC            64
+
+#define TRACE_ALL       (TRACE_EXPR|TRACE_FUNCS|TRACE_GC)
+
+/* From wrap.h */
+
+
+struct wrap
+{
+    wrap_t      *w_next;
+    int         (*w_func)();
+};
+
+extern DLI wrap_t       *wraps;
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* ICI_ICI_H */

@@ -317,8 +317,6 @@ extern char     *syserr(void);
 extern int      ici_argcount(int);
 extern int      ici_argerror(int);
 extern array_t  *mk_strarray(char **);
-extern int      f_simple(void);
-extern int      f_vsimple(void);
 extern void     unassign_struct(struct_t *, object_t *);
 extern int      unassign_set(set_t *, object_t *);
 extern void     grow_objs(object_t *);

@@ -513,6 +513,10 @@ str_ret(char *str)
     return ici_ret_with_decref(objof(new_cname(str)));
 }
 
+/*
+ * Return the file object that is the current value of the "stdin"
+ * name in the current scope. Else NULL, usual conventions.
+ */
 file_t *
 need_stdin()
 {

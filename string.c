@@ -5,23 +5,31 @@
 #include "int.h"
 #include "primes.h"
 
+/*
+ * How many bytes of memory we need for a string of n chars.
+ */
+#define STR_ALLOCZ(n)   (offsetof(string_t, s_chars) + (n) + 1)
+
 string_t *
 new_string(int nchars)
 {
     register object_t   *o;
+    size_t              az;
 
-    nchars += sizeof(string_t);
-    if ((o = (object_t *)ici_nalloc(nchars)) == NULL)
+    az = STR_ALLOCZ(nchars);
+    if ((o = (object_t *)ici_nalloc(az)) == NULL)
         return NULL;
     o->o_tcode = TC_STRING;
     assert(ici_typeof(o) == &string_type);
     o->o_flags = 0;
     o->o_nrefs = 1;
     rego(o);
-    if (sizeof(string_t) + nchars <= 127)
-        o->o_leafz = sizeof(string_t) + nchars;
-    stringof(o)->s_nchars = nchars - sizeof(string_t);
-    stringof(o)->s_chars[stringof(o)->s_nchars] = '\0';
+    if (az <= 127)
+        o->o_leafz = az;
+    else
+        o->o_leafz = 0;
+    stringof(o)->s_nchars = nchars;
+    stringof(o)->s_chars[nchars] = '\0';
     stringof(o)->s_struct = NULL;
     stringof(o)->s_slot = NULL;
     stringof(o)->s_hash = 0;
@@ -37,7 +45,8 @@ new_string(int nchars)
 string_t *
 new_name(char *p, int nchars)
 {
-    register string_t   *s;
+    string_t            *s;
+    size_t              az;
     static struct
     {
         string_t        s;
@@ -57,21 +66,23 @@ new_name(char *p, int nchars)
             incref(s);
             return s;
         }
-        nchars += sizeof(string_t);
-        if ((s = (string_t *)ici_nalloc(nchars)) == NULL)
+        az = STR_ALLOCZ(nchars);
+        if ((s = (string_t *)ici_nalloc(az)) == NULL)
             return NULL;
-        memcpy((char *)s, (char *)&proto.s, nchars);
+        memcpy((char *)s, (char *)&proto.s, az);
         rego(s);
-        objof(s)->o_leafz = nchars;
+        objof(s)->o_leafz = az;
         return stringof(atom(objof(s), 1));
     }
-    if ((s = (string_t *)ici_nalloc(nchars + sizeof(string_t))) == NULL)
+    if ((s = (string_t *)ici_nalloc(STR_ALLOCZ(nchars))) == NULL)
         return NULL;
     s->o_head = proto.s.o_head;
     assert(ici_typeof(s) == &string_type);
     rego(s);
-    if (sizeof(string_t) + nchars <= 127)
-        objof(s)->o_leafz = sizeof(string_t) + nchars;
+    if (STR_ALLOCZ(nchars) <= 127)
+        objof(s)->o_leafz = STR_ALLOCZ(nchars);
+    else
+        objof(s)->o_leafz = 0;
     s->s_nchars = nchars;
     s->s_struct = NULL;
     s->s_slot = NULL;
@@ -122,7 +133,7 @@ static unsigned long
 mark_string(object_t *o)
 {
     o->o_flags |= O_MARK;
-    return sizeof(string_t) + stringof(o)->s_nchars - 1;
+    return STR_ALLOCZ(stringof(o)->s_nchars);
 }
 
 /*
@@ -149,7 +160,7 @@ cmp_string(object_t *o1, object_t *o2)
 static void
 free_string(object_t *o)
 {
-    ici_nfree(o, sizeof(string_t) + stringof(o)->s_nchars);
+    ici_nfree(o, STR_ALLOCZ(stringof(o)->s_nchars));
 }
 
 /*
