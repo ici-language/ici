@@ -63,23 +63,14 @@ Put in general forall
 
 ---
 
-Put --help and/or /? help into ici.exe
-
----
-
-Add ici_assign_super and ici_fetch_super to public interface.
-
----
-
-Extend handle to optionally allow fetch, assign, and ?call? operations.
-Also document how to use this to do C++ class wrappers without
-lots of linkage functions (i.e. with a switch instead).
-
----
-
 The docuentation doesn't seem to cover the arguments passed to
 intrinsic functions properly.
 
 ---
 
-
+Todo before 4.1 release:
+* Add ici_assign_super and ici_fetch_super to public interface.
+* Put --help and/or /? help into ici.exe.
+* Make ici without arguments give usage message.
+* Either update man pages, or flag them out-of-date.
+* Add at least minimal help to extension modules and make simultaneous release.
