@@ -42,6 +42,12 @@ font_subs(s)
     return s;
 }
 
+static
+trim_off_space(s)
+{
+    return s ~~ #(?s)\s*(.*?)\s*$#;
+}
+
 mmls := array();
 forall (file in files)
 {
@@ -225,8 +231,9 @@ forall (file in files)
                     subject := interval(para, 0, indent);
                     para = interval(para, indent);
                 }
-                subject = subject ~~ #((?s).*\S) *$#;
-                para = para ~~ #^ *((?s)\S.*\S) *$#;
+                subject = trim_off_space(subject);
+                para = trim_off_space(para);
+                para = font_subs(para);
                 if (indent > 17)
                     tag = "TagIn4cm";
                 else
@@ -241,11 +248,13 @@ forall (file in files)
                  * This looks like a continuation.
                  */
                 para = font_subs(para);
+                para = trim_off_space(para);
                 strcatf(mml, "<%s><Tab>%s", tag, para);
             }
             else if (para ~ #^\S#)
             {
                 para = font_subs(para);
+                para = trim_off_space(para);
                 strcatf(mml, "<Body>%s", para);
                 tag = "Body";
             }

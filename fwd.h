@@ -62,7 +62,7 @@
  */
 #define ICI_VER_MAJOR   4
 #define ICI_VER_MINOR   0
-#define ICI_VER_RELEASE 4
+#define ICI_VER_RELEASE 5
 
 /*
  * The ICI version number composed into an 8.8.16 unsigned long for simple

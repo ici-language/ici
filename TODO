@@ -33,12 +33,9 @@ Modules
 	still referenced.
 
 Trivial fixes
+-------------
 
-	Add esc() function.
-
-	str = string(mem) ? Does that work?
-
-	How about ''...'' for strings without \'s?
+Add esc() function.
 
 ---
 
@@ -67,52 +64,5 @@ Put in general forall
 ---
 
 Put --help and/or /? help into ici.exe
-
----
-
-The documentation on the copy() function seem to be missing.
-Huh?
-
----
-
-Document that on Windows fopen allows / as dir sep?
-
----
-
-include document doesn't mention that it calls close() function of
-current scope.
-
----
-
-Doc of fetch() says *struct* but could be any. Also is->if.
-
----
-
-Doc of gettoken() doesn't mention that first arg can be string.
-
----
-
-gettokens() documentation does not mention optional 4th arg "delims"
-(self delimiting single char tokens).
-
----
-
-Doc on sopen() should mention that \r\n is not \n even on windows.
-
----
-
-Add getfile(fname) documentation.
-
----
-
-Make seek() documentation mention meaning of whence.
-
----
-
-General C function to get to hash of a C string (for external libs).
-
----
-
-Make arrays shrink during collection?
 
 ---
