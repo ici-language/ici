@@ -53,6 +53,9 @@ $(TARGET): $(LIB)
 
 .PRECIOUS: $(LIB)
 
+ici.h	: $(TARGET)
+	./$(TARGET) mk-ici-h.ici $(CONFIG)
+
 $(LIB)  : $(OBJS) $(PCREOBJS)
 	$(AR) r $@ $(OBJS) $(PCREOBJS)
 	$(RANLIB) $@
