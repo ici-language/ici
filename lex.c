@@ -107,7 +107,7 @@ get(ici_parse_t *p, ici_array_t *a)
  * the character had never been fetched.
  */
 void
-unget(ici_parse_t *p, int c)
+unget(int c, ici_parse_t *p)
 {
     (*p->p_file->f_type->ft_ungetch)(c, p->p_file->f_file);
     if (c == '\n')
@@ -174,7 +174,7 @@ lex(ici_parse_t *p, ici_array_t *a)
                     {
                         if ((c = get(p, a)) == '/')
                             break;
-                        unget(p, c);
+                        unget(c, p);
                     }
                 }
             }
@@ -188,7 +188,7 @@ lex(ici_parse_t *p, ici_array_t *a)
             }
             else
             {
-                unget(p, c);
+                unget(c, p);
                 goto slash;
             }
             continue;
@@ -209,7 +209,7 @@ lex(ici_parse_t *p, ici_array_t *a)
             t = T_SLASHEQ;
         else
         {
-            unget(p, c);
+            unget(c, p);
             t = T_SLASH;
         }
         break;
@@ -255,13 +255,13 @@ lex(ici_parse_t *p, ici_array_t *a)
                 t = T_2TILDEEQ;
             else
             {
-                unget(p, c);
+                unget(c, p);
                 t = T_2TILDE;
             }
         }
         else
         {
-            unget(p, c);
+            unget(c, p);
             t = T_TILDE;
         }
         break;
@@ -277,12 +277,12 @@ lex(ici_parse_t *p, ici_array_t *a)
     case '.':
         if ((c = get(p, a)) >= '0' && c <= '9')
         {
-            unget(p, c);
+            unget(c, p);
             c = '.';
             i = 0;
             goto alphanum;
         }
-        unget(p, c);
+        unget(c, p);
         t = T_DOT;
         break;
 
@@ -291,7 +291,7 @@ lex(ici_parse_t *p, ici_array_t *a)
             t = T_ASTERIXEQ;
         else
         {
-            unget(p, c);
+            unget(c, p);
             t = T_ASTERIX;
         }
         break;
@@ -301,7 +301,7 @@ lex(ici_parse_t *p, ici_array_t *a)
             t = T_PERCENTEQ;
         else
         {
-            unget(p, c);
+            unget(c, p);
             t = T_PERCENT;
         }
         break;
@@ -311,7 +311,7 @@ lex(ici_parse_t *p, ici_array_t *a)
             t = T_CARETEQ;
         else
         {
-            unget(p, c);
+            unget(c, p);
             t = T_CARET;
         }
         break;
@@ -323,7 +323,7 @@ lex(ici_parse_t *p, ici_array_t *a)
             t = T_PLUSPLUS;
         else
         {
-            unget(p, c);
+            unget(c, p);
             t = T_PLUS;
         }
         break;
@@ -337,7 +337,7 @@ lex(ici_parse_t *p, ici_array_t *a)
             t = T_MINUSMINUS;
         else
         {
-            unget(p, c);
+            unget(c, p);
             t = T_MINUS;
         }
         break;
@@ -349,7 +349,7 @@ lex(ici_parse_t *p, ici_array_t *a)
                 t = T_GRTGRTEQ;
             else
             {
-                unget(p, c);
+                unget(c, p);
                 t = T_GRTGRT;
             }
         }
@@ -357,7 +357,7 @@ lex(ici_parse_t *p, ici_array_t *a)
             t = T_GRTEQ;
         else
         {
-            unget(p, c);
+            unget(c, p);
             t = T_GRT;
         }
         break;
@@ -369,7 +369,7 @@ lex(ici_parse_t *p, ici_array_t *a)
                 t = T_LESSLESSEQ;
             else
             {
-                unget(p, c);
+                unget(c, p);
                 t = T_LESSLESS;
             }
         }
@@ -379,13 +379,13 @@ lex(ici_parse_t *p, ici_array_t *a)
                 t = T_LESSEQGRT;
             else
             {
-                unget(p, c);
+                unget(c, p);
                 t = T_LESSEQ;
             }
         }
         else
         {
-            unget(p, c);
+            unget(c, p);
             t = T_LESS;
         }
         break;
@@ -395,7 +395,7 @@ lex(ici_parse_t *p, ici_array_t *a)
             t = T_EQEQ;
         else
         {
-            unget(p, c);
+            unget(c, p);
             t = T_EQ;
         }
         break;
@@ -407,7 +407,7 @@ lex(ici_parse_t *p, ici_array_t *a)
             t = T_EXCLAMTILDE;
         else
         {
-            unget(p, c);
+            unget(c, p);
             t = T_EXCLAM;
         }
         break;
@@ -419,7 +419,7 @@ lex(ici_parse_t *p, ici_array_t *a)
             t = T_ANDEQ;
         else
         {
-            unget(p, c);
+            unget(c, p);
             t = T_AND;
         }
         break;
@@ -431,7 +431,7 @@ lex(ici_parse_t *p, ici_array_t *a)
             t = T_BAREQ;
         else
         {
-            unget(p, c);
+            unget(c, p);
             t = T_BAR;
         }
         break;
@@ -451,7 +451,7 @@ lex(ici_parse_t *p, ici_array_t *a)
             t = T_COLONEQ;
         else
         {
-            unget(p, c);
+            unget(c, p);
             t = T_COLON;
         }
         break;
@@ -522,7 +522,7 @@ lex(ici_parse_t *p, ici_array_t *a)
                             c -= '0';
                         l = l * 16 + c;
                     }
-                    unget(p, c);
+                    unget(c, p);
                     c = l;
                     break;
 
@@ -536,10 +536,10 @@ lex(ici_parse_t *p, ici_array_t *a)
                             if ((c = get(p, a)) >= '0' && c <= '7')
                                 l = l * 8 + c - '0';
                             else
-                                unget(p, c);
+                                unget(c, p);
                         }
                         else
-                            unget(p, c);
+                            unget(c, p);
                         c = (int)l;
                     }
                     else
@@ -665,7 +665,7 @@ lex(ici_parse_t *p, ici_array_t *a)
             break;
 
         }
-        unget(p, c);
+        unget(c, p);
         if (ici_chkbuf(i))
             break;
         buf[i] = '\0';
@@ -719,9 +719,9 @@ pf_getc(ici_parse_t *p)
 }
 
 static int
-pf_ungetc(ici_parse_t *p, int c)
+pf_ungetc(int c, ici_parse_t *p)
 {
-    unget(p, c);
+    unget(c, p);
     return c;
 }
 

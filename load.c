@@ -383,6 +383,8 @@ push_os_path_elements(ici_array_t *a)
     char                *path;
     char                fname[FILENAME_MAX];
 
+    if (push_path_elements(a, "/usr/local/lib/ici4:/opt/lib/ici4:/sw/lib/ici4"))
+        return 1;
     if ((path = getenv("PATH")) != NULL)
     {
         for (p = path; *p != '\0'; p = *q == '\0' ? q : q + 1)
@@ -393,36 +395,17 @@ push_os_path_elements(ici_array_t *a)
                 continue;
             memcpy(fname, p, (q - p) - 4);
             strcpy(fname + (q - p) - 4, "/lib/ici4");
-            /*
-             * Don't add inaccessable dirs...
-             */
-            if (access(fname, 0) != 0)
-                continue;
-            if ((s = ici_str_new_nul_term(fname)) == NULL)
+            if (push_path_elements(a, fname))
                 return 1;
-            /*
-             * Don't add duplicates...
-             */
-            for (e = a->a_base; e < a->a_top; ++e)
-            {
-                if (*e == objof(s))
-                    goto skip;
-            }
-            if (ici_stk_push_chk(a, 1))
-            {
-                ici_decref(s);
-                return 1;
-            }
-            *a->a_top++ = objof(s);
-        skip:
-            ici_decref(s);
         }
     }
-    /*
-     * Put a default location at the end of the path in case PATH doesn't
-     * contain the directory from which the interpreter was run.
-     */
-    push_path_elements(a, PREFIX "/lib/ici4");
+#   ifdef ICI_CONFIG_PREFIX
+        /*
+         * Put a configuration defined location on, if there is one..
+         */
+        if (push_path_elements(a, ICI_CONFIG_PREFIX "/lib/ici4"))
+            return 1;
+#   endif
     return 0;
 }
 #endif /* End of selection of which push_os_path_elements() to use */

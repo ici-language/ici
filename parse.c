@@ -2427,7 +2427,7 @@ f_rejectchar()
     }
     if (!isstring(objof(s)) || s->s_nchars != 1)
         return ici_argerror(1);
-    (*f->f_type->ft_ungetch)(f->f_file, s->s_chars[0]);
+    (*f->f_type->ft_ungetch)(s->s_chars[0], f->f_file);
     return ici_ret_no_decref(objof(s));
 }
 
