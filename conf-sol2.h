@@ -27,6 +27,8 @@
 #define NOPROFILE       /* Profiler, see profile.c. */
 #undef  NOSIGNALS       /* ICI level signal handling */
 
+#define	ICI_USE_POSIX_THREADS
+
 /*
  * Mentioned in the version string.
  */

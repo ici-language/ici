@@ -9,7 +9,7 @@ LIB     = lib$(FLAVOUR).a
 CONFIG  = conf-$(FLAVOUR).h
 
 CC      = gcc -pipe
-LIBS    = -lm -ltermcap -lnsl -lsocket -ldl -lrt
+LIBS    = -lm -ldl -lrt
 OPTIM   = -O2
 CFLAGS  = -g -Wall $(OPTIM) -DCONFIG_FILE='"$(CONFIG)"' -DPREFIX='"$(PREFIX)"' -I.
 LDFLAGS = -g
