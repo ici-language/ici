@@ -13,9 +13,7 @@
 #define NOWAITFOR       /* Requires select() or similar system primitive. */
 #define NOSYSTEM        /* Command interpreter (shell) escape. */
 #define NOPIPES         /* Requires popen(). */
-#define NOSKT           /* BSD style network interface. */
 #define NODIR           /* Directory reading function, dir(). */
-#define NOPASSWD        /* UNIX password file access. */
 #define NODLOAD         /* Dynamic loading of native machine code modules. */
 #undef  NOSTARTUPFILE   /* Parse a standard file of ICI code at init time. */
 #undef  NODEBUGGING     /* Debugger interface and functions */

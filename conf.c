@@ -98,9 +98,6 @@ char ici_version_string[] =
 #ifndef NODIR
     "dir "
 #endif
-#ifndef NOPASSWD
-    "passwd "
-#endif
 #ifndef NODLOAD
     "dload "
 #endif

@@ -8,7 +8,6 @@
 #undef  NOWAITFOR       /* Requires select() or similar system primitive. */
 #undef  NOSYSTEM        /* Command interpreter (shell) escape. */
 #undef  NOPIPES         /* Requires popen(). */
-#undef  NOSKT           /* BSD style network interface. */
 #define NODIR           /* Directory reading function */
 #define NODLOAD         /* Dynamic loading of native machine code modules. */
 #undef  NOSTARTUPFILE   /* Parse a standard file of ICI code at init time. */
