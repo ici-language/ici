@@ -1,5 +1,5 @@
 # New ports collection makefile for:   ici
-# Date created:        27 December 2000
+# Date created:        11 March 2002
 # Whom:                andy
 #
 # $FreeBSD: ports/lang/ici/Makefile,v 1.7 2000/04/16 11:16:50 knu Exp $
@@ -48,7 +48,7 @@ do-install:
 .if !defined(NOPORTDOCS)
 	${MKDIR} ${PREFIX}/share/doc/ici3
 .for f in ${ICIDOCS}
-	${INSTALL_DATA} ${WRKSRC}/$f ${PREFIX}/share/doc/ici3
+	${INSTALL_MAN} ${WRKSRC}/$f ${PREFIX}/share/doc/ici3
 .endfor
 .endif
 
