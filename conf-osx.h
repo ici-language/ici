@@ -28,7 +28,6 @@
 #endif
 
 #define ICI_DLL_EXT     ".dylib"
-#define NEED_UNDERSCORE_ON_SYMBOLS
 
 #if 0
 /* Need to wait until sem_init replacement exists */
