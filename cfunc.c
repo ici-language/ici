@@ -1334,7 +1334,7 @@ f_interval()
 
     case TC_ARRAY:
         a = arrayof(o);
-        nel = a->a_top - a->a_base;
+        nel = ici_array_nels(a);
         break;
 
     default:
