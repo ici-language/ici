@@ -2412,6 +2412,7 @@ f_parsevalue()
     return ici_ret_with_decref(o);
 }
 
+static int
 f_rejectchar()
 {
     file_t              *f;
