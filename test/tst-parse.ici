@@ -1,6 +1,14 @@
 /*
  * Test some basic parser features.
  */
+ 
+switch("world")
+{
+case "hello":
+    nels("Hello!\n");
+default:
+}
+
 static
 func1()
 {

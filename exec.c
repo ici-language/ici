@@ -440,12 +440,12 @@ ici_evaluate(ici_obj_t *code, int n_operands)
         case TC_SRC:
             ici_exec->x_src = srcof(o);
             if (ici_debug_active)
-	    {
-		*ici_xs.a_top++ = o; /* Restore formal state. */
+            {
+                *ici_xs.a_top++ = o; /* Restore formal state. */
                 ici_debug->idbg_src(srcof(o));
-		--ici_xs.a_top;
-		continue;
-	    }
+                --ici_xs.a_top;
+                continue;
+            }
             goto stable_stacks_continue;
 
         case TC_PARSE:
@@ -920,7 +920,7 @@ ici_evaluate(ici_obj_t *code, int n_operands)
             case OP_IF:
                 /*
                  * bool => - (os)
-                 * 
+                 *
                  */
                 if (isfalse(ici_os.a_top[-1]))
                 {
@@ -1040,14 +1040,14 @@ ici_evaluate(ici_obj_t *code, int n_operands)
                     }
                     /*
                      * This is the old behaviour of ICI 4.0.3 and before
-                     * where the value was reduced to 0 or 1 exactly. 
+                     * where the value was reduced to 0 or 1 exactly.
                      *
                      * ici_os.a_top[-2] = objof(c ? ici_one : ici_zero);
                      */
                     --ici_os.a_top;
                 }
                 goto stable_stacks_continue;
-            
+
             case OP_CONTINUE:
                 /*
                  * Pop the execution stack until a looper is found.

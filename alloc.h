@@ -96,9 +96,10 @@ extern void             ici_free(void *);
 
 extern char             *ici_flists[4];
 extern char             *ici_fltmp;
-extern long             ici_mem;
-extern long             ici_mem_limit;
 
 #endif  /* ICI_ALLALLOC */
+
+extern long             ici_mem;
+extern long             ici_mem_limit;
 
 #endif /* ICI_ALLOC_H */

@@ -25,7 +25,7 @@ int     re_nbra;
  * Return a new ICI regxep compiled from the given string 's'. 'flags'
  * may contain PCRE option settings as descriped in man pcre.3
  *
- * The returned object has had it' reference count incremented.
+ * The returned object has had its reference count incremented.
  *
  * Returns NULL on error, usual conventions.
  */

@@ -1476,7 +1476,20 @@ statement(ici_parse_t *p, ici_array_t *a, ici_struct_t *sw, char *m, int endme)
             case 0: not_followed_by("case", an_expression);
             case -1: return -1;
             }
-            if ((i = ici_int_new((long)(a->a_top - a->a_base))) == NULL)
+            stepz = a->a_top - a->a_bot;
+	        if (stepz > 0 && issrc(a->a_top[-1]))
+            {
+                /*
+                 * If the last thing in the code array is a source marker,
+                 * make the case label jump to that. This is not only
+                 * useful for correct line tracking, but essential, because
+                 * if there is no further statement, the source marker will
+                 * be trimmed off the array and the jump will land off the
+                 * end.
+                 */
+	            --stepz;
+            }
+            if ((i = ici_int_new((long)stepz)) == NULL)
             {
                 ici_decref(o);
                 return -1;
@@ -1509,7 +1522,20 @@ statement(ici_parse_t *p, ici_array_t *a, ici_struct_t *sw, char *m, int endme)
                 reject(p);
                 return not_followed_by("default", "\":\"");
             }
-            if ((i = ici_int_new((long)(a->a_top - a->a_base))) == NULL)
+            stepz = a->a_top - a->a_bot;
+	        if (stepz > 0 && issrc(a->a_top[-1]))
+            {
+                /*
+                 * If the last thing in the code array is a source marker,
+                 * make the default label jump to that. This is not only
+                 * useful for correct line tracking, but essential, because
+                 * if there is no further statement, the source marker will
+                 * be trimmed off the array and the jump will land off the
+                 * end.
+                 */
+	            --stepz;
+            }
+            if ((i = ici_int_new((long)stepz)) == NULL)
                 return -1;
             if (ici_assign(sw, &o_mark, i))
             {
@@ -2068,11 +2094,11 @@ statement(ici_parse_t *p, ici_array_t *a, ici_struct_t *sw, char *m, int endme)
     }
     if (endme)
     {
-	/*
-	 *  Drop any trailing source marker.
-	 */
-	if (a->a_top > a->a_bot && issrc(a->a_top[-1]))
-	    --a->a_top;
+	    /*
+	     *  Drop any trailing source marker.
+	     */
+	    if (a->a_top > a->a_bot && issrc(a->a_top[-1]))
+	        --a->a_top;
 
         if (ici_stk_push_chk(a, 1))
             return -1;

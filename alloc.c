@@ -264,6 +264,7 @@ ici_free(void *p)
 void
 ici_drop_all_small_allocations(void)
 {
+#if !ICI_ALLALLOC
     achunk_t            *c;
 
     while ((c = ici_achunks) != NULL)
@@ -271,4 +272,5 @@ ici_drop_all_small_allocations(void)
         ici_achunks = c->c_next;
         free(c);
     }
+#endif /* ICI_ALLALLOC */
 }

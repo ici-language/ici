@@ -1,3 +1,14 @@
+*   Corrected error in parser that caused a crash if a default
+    or case label was at the very end of the switch block and
+    had no statement after it. This fix also corrects the mis-reporting
+    of line numbers on the first statement after a case or default
+    label. (timl)
+
+*   Added initialisation of two double values in f_math which in
+    some circumstances (calls to single argument math functions)
+    were not initilised, but then were moved. This was seen to
+    cause (rare) floating point exceptions under Win95. (timl)
+
 Changes in version 4.1.0 (a beta release)
 
 *   Mac OS X ICI now supports threading using a minimal
