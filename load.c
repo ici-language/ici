@@ -406,7 +406,7 @@ push_os_path_elements(ici_array_t *a)
             for (e = a->a_base; e < a->a_top; ++e)
             {
                 if (*e == objof(s))
-                    goto skip1;
+                    goto skip;
             }
             if (ici_stk_push_chk(a, 1))
             {
@@ -414,7 +414,7 @@ push_os_path_elements(ici_array_t *a)
                 return 1;
             }
             *a->a_top++ = objof(s);
-        skip1:
+        skip:
             ici_decref(s);
         }
     }
