@@ -135,7 +135,7 @@
     
 <H3>Manifest of a core install on UNIX-like machines</H3>
 <P ALIGN="left">
-ICI would usually be install in /usr/local. From that base,
+ICI would usually be installed in /usr/local. From that base,
 the following forms a core run-time installation:
 <PRE>
 bin/ici (linked to bin/ici4)
@@ -259,12 +259,13 @@ The following forms a core run-time installation:
       </TR>
       <TR ALIGN="left" VALIGN="top">
         <TD>Darwin (Mac OS X)</TD>
-        <TD>10.0.4</TD>
+        <TD>10.2.6</TD>
         <TD><TT>make</TT></TD>
-        <TD>Darwin has an odd dynamic loading mechanism and
-        ICI requires the <em>dlcompat</em> library to supporting
-        loading of native code modules.  This library may be
-        found at numerous Mac OS X sites.
+	<TD>
+	ICI should build "out of the box" on Mac OS X.  Previous
+	versions required the <TT>dlcompat</TT> library but this
+	has been replaced (see the <TT>macosx</TT> directory in
+	the source distribution).
         </TD>
       </TR>
     </TABLE>
