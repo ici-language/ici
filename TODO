@@ -76,6 +76,11 @@ top() and pop() should work on sets.
 
 ---
 
+copy() of a string results in a non-atomic string. I don't this
+this is made clear enough in the documentation.
+
+---
+
 Todo before 4.1 release:
 * Either update man pages, or flag them out-of-date.
 * Is the Windows DLL load address right?

@@ -152,7 +152,15 @@ myfunc()<HardReturn>
 \ \ \ \ if\ (!ismem(ARG(0)))<HardReturn>
 \ \ \ \ \ \ \ \ return\ ici_argerror(0);<HardReturn>
 \ \ \ \ .\ .\ .
-<Heading2><Marker <MType 2> <MText `ici_array_gather, C API function'> >ici_array_gather
+<Heading2><Marker <MType 2> <MText `ici_array_find_slot, C API function'> >ici_array_find_slot
+<CodeIn1cm><bold>extern\ ici_obj_t\ **\ ici_array_find_slot(ici_array_t\ *a,\ ptrdiff_t\ i)
+<nobold>
+<Comment From array.c>
+<Body>Return a pointer to the slot in the array <italic>a<noitalic> that does, or should contain
+the index <italic>i<noitalic>.  This will grow and <italic>ici_null<noitalic> fill the array as necessary
+(and fail if the array is atomic).  Only positive <italic>i<noitalic>.  Returns NULL on
+error, usual conventions.  This will not fail if <italic>i<noitalic> is less than
+<italic>ici_array_nels(a)<noitalic>.<Heading2><Marker <MType 2> <MText `ici_array_gather, C API function'> >ici_array_gather
 <CodeIn1cm><bold>void\ ici_array_gather(ici_obj_t\ **b,\ ici_array_t\ *a,\ ptrdiff_t\ start,\ ptrdiff_t\ n)
 <nobold>
 <Comment From array.c>
@@ -231,7 +239,16 @@ functions.<Body>Returns non-zero on error, in which case error is set, else zero
 entry in a type's <italic>ici_type_t<noitalic> struction if the type doesn't support
 asignment.  It sets <italic>ici_error<noitalic> to a message of the form:<CodeIn1cm><pts 9>\ attempt\ to\ set\ %s\ keyed\ by\ %s\ to\ %s
 <Body>and returns 1.  Also, it can b called from within a custom assign function
-in cases where the particular assignment is illegal.<Heading2><Marker <MType 2> <MText `ici_astart, C API macro'> >ici_astart
+in cases where the particular assignment is illegal.<Heading2><Marker <MType 2> <MText `ici_assign_super, C API macro'> >ici_assign_super
+<CodeIn1cm>\ <bold>#define\ ici_assign_super(o,k,v,b)<HardSpace><HardSpace>...<nobold>
+<Comment From object.h>
+<Body>Assign the value <italic>v<noitalic> at the key <italic>k<noitalic> of the object <italic>o<noitalic>, but only if the key
+<italic>k<noitalic> is already an element of <italic>o<noitalic> or one of its supers.  The object <italic>o<noitalic>
+*must* be one that supports supers (such as a <italic>struct<noitalic> or a <italic>handle<noitalic>).<Body>This function is used internally in assignments up the super chain (thus
+the name).  In this context the argument <italic>b<noitalic> indicates the base struct of
+the assign and is used to maintain the internal lookup look-aside
+mechanism.  If not used in this manner, <italic>b<noitalic> should be supplied as NULL.<Body>Return -1 on error, 0 if it was not found, and 1 if the assignment was
+completed.<Heading2><Marker <MType 2> <MText `ici_astart, C API macro'> >ici_astart
 <CodeIn1cm>\ <bold>#define\ ici_astart(a)<HardSpace><HardSpace>...<nobold>
 <Comment From array.h>
 <Body>A macro to assist in doing for loops over the elements of an array.
@@ -298,13 +315,11 @@ and may be removed in future versions.<Heading2><Marker <MType 2> <MText `ici_cf
 <Body>The C struct which is the ICI intrinsic function type. That is,
 a function that is coded in C. (There are actually two types, this
 one, and a second for functions that are coded in ICI, that are both
-called <italic>func<noitalic>.)<Body><italic>ici_cfunc_t<noitalic> objects are often declared staticly (in an array) when
+called <italic>func<noitalic>.)<Comment From cfunc.h>
+<Body><italic>ici_cfunc_t<noitalic> objects are often declared staticly (in an array) when
 setting up a group of C functions to be called from ICI. When doing
 this, the macro <italic>CF_OBJ<noitalic> can be used as the initialiser of the
-<italic>o_head<noitalic> field (the standard ICI object heade).<Body>The type has a well-known built-in type code of <italic>TC_CFUNC<noitalic>.<Comment From cfunc.h>
-<CodeIn1cm><pts 9>\ <HardReturn>
-o_head\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ The\ standard\ ICI\ object\ header.
-<DefnTerm>cf_name<DefnIn4cm>A name for the function. Calls to functions
+<italic>o_head<noitalic> field (the standard ICI object heade).<Body>The type has a well-known built-in type code of <italic>TC_CFUNC<noitalic>.<DefnTerm>o_head<DefnIn4cm>The standard ICI object header.<DefnTerm>cf_name<DefnIn4cm>A name for the function. Calls to functions
                      such as <italic>ici_assign_cfuncs<noitalic> will use this as
                      the name to use when assigning it into an ICI
                      struct. Apart from that, it is only used in
@@ -442,7 +457,8 @@ object immediately.  Callers are responsible for taking care.<Body>Note that the
 <Comment From object.h>
 <Body>Fetch the value of the key <italic>k<noitalic> from the object <italic>o<noitalic>, but only consider
 the base object, even if there is a super chain. See the notes on
-<italic>ici_fetch()<noitalic>, which also apply here.<Heading2><Marker <MType 2> <MText `ici_fetch_fail, C API function'> >ici_fetch_fail
+<italic>ici_fetch()<noitalic>, which also apply here. The object <italic>o<noitalic> *must* be one that
+supports super types (such as a <italic>struct<noitalic> or a <italic>handle<noitalic>).<Heading2><Marker <MType 2> <MText `ici_fetch_fail, C API function'> >ici_fetch_fail
 <CodeIn1cm><bold>ici_obj_t\ *\ ici_fetch_fail(ici_obj_t\ *o,\ ici_obj_t\ *k)
 <nobold>
 <Comment From object.c>
@@ -450,7 +466,17 @@ the base object, even if there is a super chain. See the notes on
 entry in a type's <italic>ici_type_t<noitalic> struction if the type doesn't support
 fetching.  It sets <italic>ici_error<noitalic> to a message of the form:<CodeIn1cm><pts 9>\ attempt\ to\ read\ %s\ keyed\ by\ %
 <Body>and returns 1.  Also, it can b called from within a custom assign function
-in cases where the particular fetch is illegal.<Heading2><Marker <MType 2> <MText `ici_file_close, C API function'> >ici_file_close
+in cases where the particular fetch is illegal.<Heading2><Marker <MType 2> <MText `ici_fetch_super, C API macro'> >ici_fetch_super
+<CodeIn1cm>\ <bold>#define\ ici_fetch_super(o,k,v,b)<HardSpace><HardSpace>...<nobold>
+<Comment From object.h>
+<Body>Fetch the value of the key <italic>k<noitalic> from <italic>o<noitalic> and store it through <italic>v<noitalic>, but only
+if the item <italic>k<noitalic> is already an element of <italic>o<noitalic> or one of its supers.  See the
+notes on <italic>ici_fetch()<noitalic>, which also apply here.  The object <italic>o<noitalic> *must* be
+one that supports supers (such as a <italic>struct<noitalic> or a <italic>handle<noitalic>).<Body>This function is used internally in fetches up the super chain (thus the
+name).  In this context the argument <italic>b<noitalic> indicates the base struct of the
+fetch and is used to maintain the internal lookup look-aside mechanism.  If
+not used in this manner, <italic>b<noitalic> should be supplied as NULL.<Body>Return -1 on error, 0 if it was not found, and 1 if it was found.  If
+found, the value is stored in *v.<Heading2><Marker <MType 2> <MText `ici_file_close, C API function'> >ici_file_close
 <CodeIn1cm><bold>int\ ici_file_close(ici_file_t\ *f)
 <nobold>
 <Comment From file.c>
@@ -1058,7 +1084,8 @@ expected to decrement, eventually).<Body>Returns NULL on error, usual convention
 <CodeIn1cm><bold>ici_str_t\ *\ ici_str_get_nul_term(char\ *p)
 <nobold>
 <Comment From string.c>
-<Body>Make a new atomic immutable string from the given characters.<Body>The returned string has a reference count of 0, unlike
+<Body>Make a new atomic immutable string from the given nul terminated
+string of characters.<Body>The returned string has a reference count of 0, unlike
 ici_str_new_nul_term() which is exactly the same in other respects.<Body>Returns NULL on error, usual conventions.<Heading2><Marker <MType 2> <MText `ici_str_need_size, C API function'> >ici_str_need_size
 <CodeIn1cm><bold>int\ ici_str_need_size(ici_str_t\ *s,\ int\ n)
 <nobold>
@@ -1073,11 +1100,12 @@ Checks that the string is mutable and not atomic.<Heading2><Marker <MType 2> <MT
 <Body>Make a new atomic immutable string from the given characters.<Body>Note that the memory allocated to a string is always at least one byte
 larger than the listed size and the extra byte contains a <italic>\0<noitalic>.  For
 when a C string is needed.<Body>The returned string has a reference count of 1 (which is caller is
-expected to decrement, eventually).<Body>Returns NULL on error, usual conventions.<Heading2><Marker <MType 2> <MText `ici_str_new_nul_term, C API function'> >ici_str_new_nul_term
+expected to decrement, eventually).<Body>See also: <italic>ici_str_new_nul_term()<noitalic> and <italic>ici_str_get_nul_term()<noitalic>.<Body>Returns NULL on error, usual conventions.<Heading2><Marker <MType 2> <MText `ici_str_new_nul_term, C API function'> >ici_str_new_nul_term
 <CodeIn1cm><bold>ici_str_t\ *\ ici_str_new_nul_term(char\ *p)
 <nobold>
 <Comment From string.c>
-<Body>Make a new atomic immutable string from the given characters.<Body>The returned string has a reference count of 1 (which is caller is
+<Body>Make a new atomic immutable string from the given nul terminated
+string of characters.<Body>The returned string has a reference count of 1 (which is caller is
 expected to decrement, eventually).<Body>Returns NULL on error, usual conventions.<Heading2><Marker <MType 2> <MText `ici_str_ret, C API function'> >ici_str_ret
 <CodeIn1cm><bold>int\ ici_str_ret(char\ *str)
 <nobold>

@@ -84,6 +84,7 @@ SSTRING(ignore, "ignore")
 #ifndef NOCLASSPROTO
 SSTRING(proto, "proto")
 #endif
+SSTRING(line, "line")
 
 
 /*

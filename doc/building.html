@@ -11,11 +11,6 @@
 <BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#FF0000" VLINK="#800000" ALINK="#FF00FF" BACKGROUND="?">
 <H1>Notes on building ICI</H1>
 <P ALIGN="left">
-    <I>This documentation is maintained in hand-crafted HTML in order
-    to allow well-behaved revision control and simultaneous edits by
-    different people. Please don't use WYSIWIG editors. Sorry if that
-    makes it hard.</I>
-<P ALIGN="left">
 
 <A NAME="contents">
 <H2>Contents</H2>
@@ -31,6 +26,7 @@
     </UL>
     <LI><A HREF="#ICI_extentsions">General notes on building ICI and extensions</A>
     <LI><A HREF="#ICI_as_extentsion">ICI as an extension</A>
+    <LI><A HREF="#releases">Some notes on making release</A>
 </UL>
 
 <A NAME="intro">
@@ -408,6 +404,55 @@ The following forms a core run-time installation:
 <P ALIGN="left">
     See <A HREF="#ICI_on_Windows">ICI on Microsoft Windows</A>
     for further details of linking ICI into Window's programs.
+    
+<A NAME="releases">
+<H2>Some notes on making release</H2>
+</A>
+<P ALIGN="left">
+    These notes are a checklist of a few things that shouldn't be forgotten
+    when making new releases. They are not a complete recipe.
+<UL>
+    <LI>
+        Update and commit everything on all machines.
+    </LI>
+    <LI>
+        Rebuild the core API documentation MML file that
+        is extracted from the core source by going to
+        doc/book and running ici extract-doc-from-src.ici
+    </LI>
+    <LI>
+        Use FrameMaker to open the book, update it, and regenerate doc/ici.pdf.
+    </LI>
+    <LI>
+        Check and update the ICI_VER* version numbers in fwd.h. 
+    </LI>
+    <LI>
+        Update the version string in conf.c.
+    </LI>
+    <LI>
+        Write some release notes to be pasted into the release note area
+        at SourceForge associated with the release. (You'll also paste in
+        the change log.)
+    </LI>
+    <LI>
+        Using MS Visual C, build 'ici4', 'ici4sdk', and 'ici4install' and test
+        install the core and the SDK. Test with test/tst-all.ici.
+    </LI>
+    <LI>
+        Test and install the Linux build.
+    </LI>
+    <LI>
+        Examine Makefile.dist and adjust things if necessary. Especially the
+        release number.
+    </LI>
+    <LI>
+        Use make -f Makefile.dist dist-gz to make a distribution.
+    </LI>
+    <LI>
+        Unpack it somewhere and build and test under both Linux and Windows.
+    </LI>
+</UL>
+
 
 </BODY>
 </HTML>

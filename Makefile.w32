@@ -67,10 +67,6 @@ OBJS    = \
 PCREOBJS=\
     study.obj maketables.obj pcre.obj
 
-WIDBSOURCES = \
-    widb/widb_ici.c widb/widb_sources.c widb/widb_viewobj.c \
-    widb/widb_wnd.c widb/widb.res
-        
 SDKFILES = \
     ici$(VER).dll ici$(VER).lib ici$(VER).pdb \
     ici4core.ici ici4core1.ici ici4core2.ici ici4core3.ici \
@@ -79,7 +75,7 @@ SDKFILES = \
     doc\ici.pdf \
     ici$(VER)widb.dll
 
-all             : ici$(VER).dll ici.h ici.exe iciw.exe ici$(VER)widb.dll
+all             : ici$(VER).dll ici.h ici.exe iciw.exe
 
 sdk             : ici$(VER)-win32-sdk.zip
 
@@ -102,10 +98,6 @@ ici.exe         : main.obj ici$(VER).dll
 
 iciw.exe:       winmain.obj ici$(VER).dll
                 $(CC) $(LDFLAGS) -Fe$@ winmain.obj ici$(VER).lib user32.lib
-
-ici$(VER)widb.dll:      $(WIDBSOURCES)
-                rc widb/widb.rc
-                $(CC) $(CFLAGS) -Fe$@ ici$(VER).lib $(LIBS) comctl32.lib $(WIDBSOURCES) /link /DLL /export:ici_widb_library_init
 
 main.obj        : main.c
                 $(CC) -c -Fo$@ $(CFLAGS) main.c

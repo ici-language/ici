@@ -15,13 +15,6 @@
  * one, and a second for functions that are coded in ICI, that are both
  * called 'func'.)
  *
- * 'ici_cfunc_t' objects are often declared staticly (in an array) when
- * setting up a group of C functions to be called from ICI. When doing
- * this, the macro 'CF_OBJ' can be used as the initialiser of the
- * 'o_head' field (the standard ICI object heade).
- *
- * The type has a well-known built-in type code of 'TC_CFUNC'.
- *
  * This --struct-- forms part of the --ici-api--.
  */
 struct ici_cfunc
@@ -33,7 +26,12 @@ struct ici_cfunc
     void        *cf_arg2;
 };
 /*
- * This comment is also part of the --ici-api--.
+ * 'ici_cfunc_t' objects are often declared staticly (in an array) when
+ * setting up a group of C functions to be called from ICI. When doing
+ * this, the macro 'CF_OBJ' can be used as the initialiser of the
+ * 'o_head' field (the standard ICI object heade).
+ *
+ * The type has a well-known built-in type code of 'TC_CFUNC'.
  *
  * o_head               The standard ICI object header.
  *
@@ -51,6 +49,8 @@ struct ici_cfunc
  *                      useful to write a single C function that masquerades
  *                      as severl ICI functions - driven by distinguishing
  *                      data from these two fields. See 'CF_ARG1()'.
+ *
+ * This comment is also part of the --ici-api--.
  */
 #define cfuncof(o)      ((ici_cfunc_t *)(o))
 #define iscfunc(o)      (objof(o)->o_tcode == TC_CFUNC)

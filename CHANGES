@@ -1,4 +1,11 @@
-Changes in version 4.1.0 (a beta release) <- ###Planned, not done yet###
+Changes in version 4.1.0 (a beta release)
+
+*   Added indexing of file object by 'name' to obtain the diagnostic
+    name associated with the file object when it was created.
+    Also, for the special files associated with an ICI parse stream
+    (as returned by currentfile()), the index 'line' returns the
+    current line number parseing has reached. This allows proper
+    diagnostics in user-parsed literals. (timl)
 
 *   Added new function 'which()', which returns which object in
     a super chain a given name is first found in (default the

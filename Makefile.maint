@@ -113,11 +113,7 @@ FILES   = \
 	pcre/study.c pcre/testinput pcre/testinput1 pcre/testinput2\
 	pcre/testinput3 pcre/testinput4 pcre/testoutput pcre/testoutput1\
 	pcre/testoutput2 pcre/testoutput3 pcre/testoutput4\
-	\
-	widb/resource.h widb/widb.h widb/widb.rc widb/widb_ici.c\
-	widb/widb_ici.h widb/widb_sources.c widb/widb_sources.h\
-	widb/widb_todo.txt widb/widb_viewobj.c widb/widb_wnd.c\
-	widb/widb_wnd.h widb/widb-priv.h widb/widb_main.c
+
 
 dist    :
 	(\

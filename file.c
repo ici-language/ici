@@ -1,5 +1,7 @@
 #define ICI_CORE
 #include "file.h"
+#include "str.h"
+#include "parse.h"
 #include "primes.h"
 
 /*
@@ -31,8 +33,30 @@ free_file(ici_obj_t *o)
 }
 
 /*
+ * Return the object at key k of the obejct o, or NULL on error.
+ * See the comment on t_fetch in object.h.
+ */
+static ici_obj_t *
+fetch_file(ici_obj_t *o, ici_obj_t *k)
+{
+    if (k == SSO(name) && fileof(o)->f_name != NULL)
+        return objof(fileof(o)->f_name);
+    if (fileof(o)->f_type == &ici_parse_ftype && k == SSO(line))
+    {
+        ici_int_t   *l;
+
+        if ((l = ici_int_new(parseof(fileof(o)->f_file)->p_lineno)) != NULL)
+            ici_decref(l);
+        return objof(l);
+    }
+    return ici_fetch_fail(o, k);
+}
+
+
+
+/*
  * Return a file object with the given 'ftype' and a file type specific
- * pointer 'fp' which is often somethings like a 'STREAM *' or a file
+ * pointer 'fp' which is often something like a 'STREAM *' or a file
  * descriptor.  The 'name' is mostly for error messages and stuff.  The
  * returned object has a ref count of 1.  Returns NULL on error.
  *
@@ -113,6 +137,6 @@ ici_type_t  file_type =
     cmp_file,
     ici_copy_simple,
     ici_assign_fail,
-    ici_fetch_fail,
+    fetch_file,
     "file"
 };

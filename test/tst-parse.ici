@@ -452,6 +452,11 @@ if ("xx#xx" !~ ## "#")
 }
 1234 hello
 
+if (typeof(currentfile().line) != "int")
+    fail("currentfile().line is not an int");
+if (currentfile().name !~ #tst-parse.ici#)
+    fail("failed to get name of file");
+
 static complex = [class
 
     parser(f)
