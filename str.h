@@ -94,10 +94,18 @@ struct ici_str
  * Finally, call init_ici_str() at startup. It returns 1 on error, usual
  * conventions.
  */
+#ifdef ICI_MODULE_NAME
+#define ICIS_SYM_EXP(module, name) ici_##module##_str_##name
+#define ICIS_SYM(module, name)  ICIS_SYM_EXP(module, name)
+#define ICIS(name)              (ICIS_SYM(ICI_MODULE_NAME, name))
+#define ICI_STR_NORM(name, str) extern ici_str_t *ICIS_SYM(ICI_MODULE_NAME, name);
+#define ICI_STR_DECL(name, str) ici_str_t *ICIS_SYM(ICI_MODULE_NAME, name);
+#else
 #define ICIS(name)              (ici_str_##name)
-#define ICISO(name)             (objof(ICIS(name)))
 #define ICI_STR_NORM(name, str) extern ici_str_t *ici_str_##name;
 #define ICI_STR_DECL(name, str) ici_str_t *ici_str_##name;
+#endif
+#define ICISO(name)             (objof(ICIS(name)))
 #define ICI_STR_MAKE(name, str) (ICIS(name) = ici_str_new_nul_term(str)) == NULL ||
 #define ICI_STR_REL(name, str)  ici_decref(ICIS(name));
 #define ICI_STR                 ICI_STR_NORM

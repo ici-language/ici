@@ -9,7 +9,7 @@
 #define ICI_STR ICI_STR_DECL
 #include "icistr.h"
 
-int
+static int
 init_ici_str(void)
 {
 #undef  ICI_STR
