@@ -486,7 +486,9 @@ assign_struct(object_t *o, object_t *k, object_t *v)
         (k->o_flags & S_LOOKASIDE_IS_ATOM) == 0
     )
     {
+#ifndef NDEBUG
         object_t        *av;
+#endif
 
         assert(fetch_super_struct(o, k, &av, NULL) == 1);
         assert(stringof(k)->s_slot->sl_value == av);

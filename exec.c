@@ -398,6 +398,7 @@ ici_evaluate(object_t *code, int n_operands)
         if (sigisempty(&ici_signals_pending))
             ici_signals_invoke_handlers();
 #endif
+        assert(ici_os.a_top >= ici_os.a_base);
         if (ispc(o = ici_xs.a_top[-1]))
         {
             object_t   *tmp;
@@ -564,9 +565,18 @@ ici_evaluate(object_t *code, int n_operands)
                 return o;
             }
             if (o->o_flags & CF_CRIT_SECT)
+            {
                 --ici_exec->x_critsect;
+                /*
+                 * Force a check for a yield (see top of loop). If we
+                 * don't do this, there is a chance a loop that spends
+                 * much of its time in critsects could beat with the
+                 * stack check countdown and never yield.
+                 */
+                ici_exec->x_count = 1;
+            }
             ici_unwind();
-            goto stable_stacks_continue;
+            continue;
 
         case TC_FORALL:
             *ici_xs.a_top++ = o; /* Restore formal state. */
@@ -778,6 +788,15 @@ ici_evaluate(object_t *code, int n_operands)
                 }
                 continue;
 
+            case OP_ASSIGN_TO_NAME:
+                /*
+                 * value on os, next item in code is name.
+                 */
+                ici_os.a_top += 2;
+                ici_os.a_top[-1] = ici_os.a_top[-3];
+                ici_os.a_top[-2] = *pcof(ici_xs.a_top[-1])->pc_next++;
+                ici_os.a_top[-3] = ici_vs.a_top[-1];
+                /* Fall through. */
             case OP_ASSIGN:
                 /*
                  * aggr key value => - (os, for effect)
@@ -1010,7 +1029,7 @@ ici_evaluate(object_t *code, int n_operands)
                     *ici_xs.a_top = (object_t *)new_catch
                     (
                         NULL,
-                        ici_os.a_top - ici_os.a_base,
+                        (ici_os.a_top - ici_os.a_base) - 1,
                         ici_vs.a_top - ici_vs.a_base,
                         CF_CRIT_SECT
                     );

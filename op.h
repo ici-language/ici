@@ -37,6 +37,7 @@ enum
     OP_DOTKEEP,
     OP_DOTRKEEP,
     OP_ASSIGN,
+    OP_ASSIGN_TO_NAME,
     OP_ASSIGNLOCAL,
     OP_EXEC,
     OP_LOOP,

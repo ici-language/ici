@@ -50,6 +50,27 @@ new_binop(int op, int why)
     return o;
 }
 
+#ifdef  THINK
+int
+optimise_code(array_t *a)
+{
+    for (e = a->a_base; (o = e) < a->a_top; ++e)
+    {
+        if
+        (
+            e[0] == objof(&o_namelvalue)
+            &&
+            isint(e[2])
+        )
+        {
+            e[0] = e[2];
+            e[2] = e[1];
+            e[1] = objof(&o_assignname);
+        }
+    }
+}
+#endif
+
 /*
  * Compile the expression into the code array, for the reason given.
  * Returns 1 on failure, 0 on success.
@@ -112,8 +133,8 @@ compile_expr(array_t *a, expr_t *e, int why)
                 return 1;
             }
             *a2->a_top++ = objof(&o_end);
-            *a->a_top++ = objof(a1 = (array_t *)atom(objof(a1), 1));
-            *a->a_top++ = objof(a2 = (array_t *)atom(objof(a2), 1));
+            *a->a_top++ = objof(a1);
+            *a->a_top++ = objof(a2);
             *a->a_top++ = objof(&o_ifelse);
             decref(a1);
             decref(a2);
@@ -152,6 +173,19 @@ compile_expr(array_t *a, expr_t *e, int why)
                     return 1;
                 decref(*a->a_top);
                 a->a_top++;
+                return 0;
+            }
+            if (e->e_arg[0]->e_what == T_NAME)
+            {
+                if (compile_expr(a, e->e_arg[1], FOR_VALUE))
+                    return 1;
+                if (ici_stk_push_chk(a, 2))
+                    return 1;
+                if ((*a->a_top = objof(new_op(NULL, OP_ASSIGN_TO_NAME, NOTTEMP(why)))) == NULL)
+                    return 1;
+                decref(*a->a_top);
+                ++a->a_top;
+                *a->a_top++ = e->e_arg[0]->e_obj;
                 return 0;
             }
             if (compile_expr(a, e->e_arg[0], FOR_LVALUE))
@@ -213,7 +247,7 @@ compile_expr(array_t *a, expr_t *e, int why)
                 return 1;
             }
             *a1->a_top++ = objof(&o_end);
-            *a->a_top++ = objof(a1 = (array_t *)atom(objof(a1), 1));
+            *a->a_top++ = objof(a1);
             decref(a1);
             *a->a_top++ = objof(e->e_what == T_ANDAND ? &o_andand : &o_barbar);
             if (why == FOR_EFFECT)

@@ -14,7 +14,7 @@ struct pc
     array_t     *pc_code;
     object_t    **pc_next;
 };
-#define pcof(o)         ((pc_t *)o)
+#define pcof(o)         ((pc_t *)(o))
 #define ispc(o)         ((o)->o_tcode == TC_PC)
 /*
  * End of ici.h export. --ici.h-end--
