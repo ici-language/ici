@@ -275,7 +275,7 @@ struct objwsup
 #define objwsupof(o)    ((objwsup_t *)(o))
 #define hassuper(o)     (objof(o)->o_flags & O_SUPER)
 
-#define ici_typeof(o)   (ici_types[objof(o)->o_tcode])
+#define ici_typeof(o)   (ici_types[(int)objof(o)->o_tcode])
 
 /*
  * For static object initialisations...
