@@ -3,12 +3,13 @@
 #
 PROG	= ici4
 LIBRARY	= lib$(PROG).a
+FILES	= ici.h
 VERSION	= "`awk '{print $$1}' VERSION`"
 PREFIX	?= /usr/local
 # Keep all symbol information please.  Used by bsd.prog.mk's install target
 STRIP   =
 BINDIR  = $(PREFIX)/bin
-OPTIM   = -DNDEBUG -O3
+OPTIM   = -DNDEBUG -O2
 LDFLAGS = -g
 LDADD   = -lm
 DEFS    = -DCONFIG_FILE='"conf-bsd.h"' -DPREFIX='"$(PREFIX)"' -D_THREAD_SAFE -pthread
@@ -58,7 +59,9 @@ CLEANFILES =\
 .include <bsd.prog.mk>
 
 ici.h	: $(PROG)
-	./$(PROG) mk-ici-h.ici conf-bsd.h
+	ICIPATH=. ./$(PROG) mk-ici-h.ici conf-bsd.h
+
+CLEANFILES += ici.h
 
 study.o : pcre/study.c
 	$(CC) -c -o $@ $(CFLAGS) pcre/study.c
@@ -72,7 +75,8 @@ pcre.o  : pcre/pcre.c
 # Headers that are potentially used in module writing are made public
 ICIHDRS=\
 	conf-bsd.h\
-	ici.h
+	ici.h\
+	icistr-setup.h
 
 PCREHDRS=\
 	pcre/internal.h\
@@ -80,18 +84,12 @@ PCREHDRS=\
 
 # Useful public documentation
 DOCS=\
-	doc/ici-a4.ps doc/ici-ltr.ps doc/ici.txt
+	doc/ici.pdf
 
 beforeinstall:
 	@echo '=========================================='
 	@echo 'Installing ici interpreter and manual page'
 	@echo '=========================================='
-
-ici4.1: $(MAN1)
-	ln -sf $(MAN1) $@
-
-ici4.1.gz: ici4.1
-	gzip -c ici4.1 > $@
 
 $(LIBRARY): $(OBJS)
 	$(AR) r $(LIBRARY) $(OBJS)
