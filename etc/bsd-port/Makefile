@@ -18,7 +18,7 @@ MANCOMPRESSED=	yes
 
 USE_BZIP2=	yes
 
-ICIHDRS= alloc.h array.h buf.h catch.h cfunc.c conf-bsd.h exec.h file.h float.h \
+ICIHDRS= alloc.h array.h buf.h catch.h cfunc.h conf-bsd.h exec.h file.h float.h \
 	forall.h func.h fwd.h ici.h int.h mark.h mem.h method.h null.h object.h op.h \
 	parse.h pc.h primes.h ptr.h re.h set.h skt.h src.h str.h struct.h \
 	trace.h win.h wrap.h
