@@ -96,8 +96,7 @@ call_method(object_t *o, object_t *subject, string_t *method)
     return (*ici_typeof(m->m_callable)->t_call)
     (
         m->m_callable,
-        m->m_subject,
-        NULL
+        m->m_subject
     );
 }
 

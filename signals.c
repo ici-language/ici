@@ -95,7 +95,6 @@ call_signal_handler(object_t *func, int signo)
 {
     int_t               *isigno;
     object_t            *ret_obj;
-    catch_t             *frame;
 
     if (ici_stk_push_chk(&ici_os, 3 + 80)) /* see comment in ici/call.c */
         return 1;
@@ -108,11 +107,9 @@ call_signal_handler(object_t *func, int signo)
     if ((ret_obj = ici_evaluate(objof(&o_call), 3)) == NULL)
         goto fail;
     decref(ret_obj);
-    decref(frame);
     return 0;
 
 fail:
-    ici_os.a_top = ici_os.a_base + os_depth;
     return 1;
 }
 
