@@ -13,7 +13,7 @@ LIB     = lib$(FLAVOUR).a
 CONFIG  = conf-$(FLAVOUR).h
 
 CC      = cc -pipe
-LIBS    = -lm -ltermcap -ldl -lpthread
+LIBS    = -lm -ldl -lpthread
 
 # For debugging...
 #OPTIM   =
