@@ -19,6 +19,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				OptimizeForProcessor="2"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;ICI4_EXPORTS"
 				StringPooling="TRUE"
 				MinimalRebuild="TRUE"
@@ -40,7 +41,7 @@
 				ModuleDefinitionFile="..\ici.def"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/ici4.pdb"
-				SubSystem="2"
+				SubSystem="0"
 				ImportLibrary="$(OutDir)/ici4.lib"
 				TargetMachine="1"/>
 			<Tool
@@ -70,6 +71,7 @@
 				GlobalOptimizations="TRUE"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="TRUE"
+				FavorSizeOrSpeed="1"
 				OmitFramePointers="TRUE"
 				OptimizeForProcessor="2"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;ICI4_EXPORTS"
@@ -81,7 +83,7 @@
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="FALSE"
-				DebugInformationFormat="3"
+				DebugInformationFormat="0"
 				CompileAs="1"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
@@ -91,7 +93,7 @@
 				OutputFile="$(OutDir)/ici4.dll"
 				LinkIncremental="1"
 				ModuleDefinitionFile="..\ici.def"
-				GenerateDebugInformation="TRUE"
+				GenerateDebugInformation="FALSE"
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
@@ -411,6 +413,13 @@
 			</File>
 			<File
 				RelativePath="..\trace.h">
+			</File>
+		</Filter>
+		<Filter
+			Name="Build Files"
+			Filter="">
+			<File
+				RelativePath="..\ici.def">
 			</File>
 		</Filter>
 	</Files>

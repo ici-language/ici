@@ -19,10 +19,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				OptimizeForProcessor="2"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="5"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="FALSE"
@@ -41,7 +42,11 @@
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCPostBuildEventTool"
+				Description="Creating ici.h from conf-w32.h"
+				CommandLine="cd ..
+win32\$(OutDir)\ici.exe mk-ici-h.ici conf-w32.h
+"/>
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool
@@ -70,13 +75,13 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				StringPooling="TRUE"
 				ExceptionHandling="FALSE"
-				RuntimeLibrary="4"
+				RuntimeLibrary="0"
 				BufferSecurityCheck="FALSE"
 				EnableFunctionLevelLinking="TRUE"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="FALSE"
-				DebugInformationFormat="3"
+				DebugInformationFormat="0"
 				CompileAs="1"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
@@ -85,7 +90,7 @@
 				OutputFile="$(OutDir)/ici.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
-				GenerateDebugInformation="TRUE"
+				GenerateDebugInformation="FALSE"
 				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
@@ -93,7 +98,11 @@
 			<Tool
 				Name="VCMIDLTool"/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCPostBuildEventTool"
+				Description="Creating ici.h from conf-w32.h"
+				CommandLine="cd ..
+win32\$(OutDir)\ici.exe mk-ici-h.ici conf-w32.h
+"/>
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool
