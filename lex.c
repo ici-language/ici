@@ -723,6 +723,12 @@ pf_fail()
     return 0;
 }
 
+static long
+pf_lfail()
+{
+    return 0;
+}
+
 ici_ftype_t ici_parse_ftype =
 {
     pf_getc,
@@ -730,7 +736,7 @@ ici_ftype_t ici_parse_ftype =
     pf_fail,    /* putc */
     pf_fail,    /* flush */
     pf_fail,    /* close */
-    pf_fail,    /* seek */
+    pf_lfail,   /* seek */
     pf_eof,
     pf_fail     /* write */
 };

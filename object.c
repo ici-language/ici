@@ -723,7 +723,7 @@ ici_dump_refs(void)
             printf("The following ojects have spurious left-over reference counts...\n");
             spoken = 1;
         }
-        printf("%d 0x%08X: %s\n", (*a)->o_nrefs, (unsigned long)*a, ici_objname(n, *a));
+        printf("%d 0x%08lX: %s\n", (*a)->o_nrefs, (unsigned long)*a, ici_objname(n, *a));
     }
 
 }

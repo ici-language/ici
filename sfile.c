@@ -104,7 +104,7 @@ ici_sopen(char *data, int size, ici_obj_t *ref)
         return NULL;
     sf->sf_size = size;
     sf->sf_eof = 0;
-    if (sf->sf_foreign_data = (ref != NULL))
+    if ((sf->sf_foreign_data = (ref != NULL)))
     {
         sf->sf_data = data;
         sf->sf_ptr = data;

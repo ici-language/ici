@@ -31,7 +31,6 @@ ici_uninit(void)
 {
     int                 i;
     ici_exec_t          *x;
-    extern void         ici_dump_refs(void);
     extern ici_str_t    *ici_ver_cache;
     extern ici_regexp_t *ici_smash_default_re;
 
