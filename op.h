@@ -8,7 +8,7 @@
 /*
  * The following portion of this file exports to ici.h. --ici.h-start--
  */
-struct op
+struct ici_op
 {
     object_t    o_head;
     int         (*op_func)();

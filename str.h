@@ -21,7 +21,7 @@
  */
 #define KEEP_STRING_HASH 0
 
-struct string
+struct ici_str
 {
     object_t    o_head;
     struct_t    *s_struct;      /* Where we were last found on the vs. */

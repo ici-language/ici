@@ -4,14 +4,15 @@
  * The following portion of this file exports to ici.h. --ici.h-start--
  */
 /*
- * Ensure that buf points to enough memory to hold index n (plus room for
- * a '\0' at the end).
+ * Ensure that 'ici_buf' points to enough memory to hold index 'n' (plus
+ * room for a nul char at the end). Returns 0 on success, else 1 and
+ * sets 'ici_error'.
+ *
+ * See also: 'The error return convention'.
+ *
+ * This --macro-- forms part of the --ici-api--.
  */
-#ifdef  SMALL
-#define ici_chkbuf(n)       ici_growbuf(n)
-#else
 #define ici_chkbuf(n)       (ici_bufz > (int)(n) ? 0 : ici_growbuf(n))
-#endif
 
 extern int      ici_growbuf(int);
 

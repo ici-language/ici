@@ -44,28 +44,6 @@ ici_method_check(object_t *o, int tcode)
     return 0;
 }
 
-#ifndef NOCLASSPROTO
-static int
-assign_proto(struct_t *s, struct_t *d)
-{
-    struct_t    *proto;
-    struct_t    *ss;
-    slot_t      *sl;
-
-    if (s == NULL)
-        return 0;
-    if (assign_proto(s->s_super, d))
-        return 1;
-    proto = ici_fetch_no_super_struct(s, SSO(proto));
-    if (!isstruct(proto))
-        return 0;
-    for (sl = proto->s_slots; sl - proto->s_slots < proto->s_nslots; ++sl)
-        if (sl->sl_key != NULL && ici_assign(d, sl->sl_key, sl->sl_value))
-            return 1;
-    return 0;
-}
-#endif
-
 /*
  * Implemantation of the ICI new method.
  */
@@ -79,9 +57,6 @@ m_new(object_t *o)
     if ((s = ici_struct_new()) == NULL)
         return 1;
     s->o_head.o_super = objwsupof(o);
-#ifndef NOCLASSPROTO
-    assign_proto(o, s);
-#endif
     return ici_ret_with_decref(objof(s));
 }
 

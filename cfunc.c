@@ -71,15 +71,6 @@ extern int      fgetc();
 #endif
 
 /*
- * Cleans up data structures allocated/referenced in this module.
- * Required for a clean shutdown.
- */
-void
-uninit_cfunc(void)
-{
-}
-
-/*
  * ici_typecheck(argspec, &arg1, &arg2...)
  *
  * Check ICI/C function argument types and translate into normal C data types.
@@ -427,7 +418,7 @@ fail:
  *          return ici_argerror(0);
  *      . . .
  *
- * This function is part of the ICI core's external API.
+ * This function forms part of ICI's exernal API --ici-api-- --func--
  */
 int
 ici_argerror(int i)
@@ -446,10 +437,10 @@ ici_argerror(int i)
 /*
  * Generate a generic error message to indicate that the wrong number of
  * arguments have been supplied to an intrinsic function, and that it really
- * (or most commonly) takes n.  This function sets the error descriptor
+ * (or most commonly) takes 'n'.  This function sets the error descriptor
  * (ici_error) to a message like:
  *
- *   %d arguments given to %s, but it takes %d
+ *      %d arguments given to %s, but it takes %d
  *
  * and then returns 1.
  *
@@ -458,21 +449,21 @@ ici_argerror(int i)
  * from the current operand stack, which therefore should not have been
  * distured (which is normal for intrincic functions).  It takes the number of
  * arguments the function should have been supplied with (or typically is)
- * from n.  This function is typically used from C coded functions that are
+ * from 'n'.  This function is typically used from C coded functions that are
  * not using ici_typecheck() to process arguments.  For example, a function
  * that just takes a single object as an argument might start:
  *
- *  static int
- *  myfunc()
- *  {
- *      object_t   *o;
+ *      static int
+ *      myfunc()
+ *      {
+ *          object_t   *o;
  *
- *      if (NARGS() != 1)
- *          return ici_argcount(1);
- *      o = ARG(0);
- *      . . .
+ *          if (NARGS() != 1)
+ *              return ici_argcount(1);
+ *          o = ARG(0);
+ *          . . .
  *
- * This function is part of the ICI core's external API.
+ * This function forms part of ICI's exernal API --ici-api-- --func--
  */
 int
 ici_argcount(int n)
@@ -486,9 +477,9 @@ ici_argcount(int n)
 }
 
 /*
- * General way out of an intrinsic function returning the object o, but
+ * General way out of an intrinsic function returning the object 'o', but
  * the given object has a reference count which must be decref'ed on the
- * way out. Return 0 unless the given o in NULL, in which case it returns
+ * way out. Return 0 unless the given 'o' is NULL, in which case it returns
  * 1 with no other action.
  *
  * This is suitable for using as a return from an intrinsic function
@@ -496,8 +487,10 @@ ici_argcount(int n)
  *
  *      return ici_ret_with_decref(objof(ici_int_new(2)));
  *
- * (Although see ici_int_ret() below.) If the object you wish to return does
- * not have an extra reference, use ici_ret_no_decref() (see below).
+ * (Although see ici_int_ret().) If the object you wish to return does
+ * not have an extra reference, use ici_ret_no_decref().
+ *
+ * This function forms part of ICI's exernal API --ici-api-- --func--
  */
 int
 ici_ret_with_decref(object_t *o)
@@ -523,6 +516,8 @@ ici_ret_with_decref(object_t *o)
  *
  * If the object you are returning has an extra reference which must be
  * decremented as part of the return, use ici_ret_with_decref() (above).
+ *
+ * This function forms part of ICI's exernal API --ici-api-- --func--
  */
 int
 ici_ret_no_decref(object_t *o)
@@ -537,6 +532,8 @@ ici_ret_no_decref(object_t *o)
 
 /*
  * Use 'return ici_int_ret(n);' to return an integer from an intrinsic fuction.
+ *
+ * This function forms part of ICI's exernal API --ici-api-- --func--
  */
 int
 ici_int_ret(long ret)
@@ -546,6 +543,8 @@ ici_int_ret(long ret)
 
 /*
  * Use 'return ici_float_ret(n);' to return a float from an intrinsic fuction.
+ *
+ * This function forms part of ICI's exernal API --ici-api-- --func--
  */
 int
 ici_float_ret(double ret)
@@ -555,6 +554,8 @@ ici_float_ret(double ret)
 
 /*
  * Use 'return ici_str_ret(n);' to return a string from an intrinsic fuction.
+ *
+ * This function forms part of ICI's exernal API --ici-api-- --func--
  */
 int
 ici_str_ret(char *str)
@@ -3128,6 +3129,15 @@ f_strcat()
         s1->s_nchars = z;
     s1->s_chars[s1->s_nchars] = '\0';
     return ici_ret_no_decref(objof(s1));
+}
+
+/*
+ * Cleans up data structures allocated/referenced in this module.
+ * Required for a clean shutdown.
+ */
+void
+uninit_cfunc(void)
+{
 }
 
 cfunc_t std_cfuncs[] =

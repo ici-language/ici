@@ -1,6 +1,10 @@
 #ifndef ICI_EXEC_H
 #define ICI_EXEC_H
 
+#ifndef ICI_FWD_H
+#include "fwd.h"
+#endif
+
 #ifndef ICI_INT_H
 #include "array.h"
 #endif
@@ -23,13 +27,13 @@
 #include <semaphore.h>
 #endif /* ICI_USE_POSIX_THREADS */
 
-union ostemp
+union ici_ostemp
 {
     int_t       i;
     float_t     f;
 };
 
-struct exec
+struct ici_exec
 {
     object_t    o_head;
     array_t     *x_xs;
@@ -153,7 +157,7 @@ enum
  * (in idb2.c).  Debuggers will normally override the default with
  * a more useful set of functions.
  */
-struct debug
+struct ici_debug
 {
     void    (*idbg_error)(char *, src_t *);
     void    (*idbg_fncall)(object_t *, object_t **, int);

@@ -11,7 +11,7 @@
  * could give us. One use is as the 'label' on the default clause of
  * the struct that represents a switch statement.
  */
-struct marks
+struct ici_mark
 {
     object_t    o_head;
 };

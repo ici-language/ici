@@ -8,13 +8,13 @@
  * The following portion of this file exports to ici.h. --ici.h-start--
  */
 
-struct slot
+struct ici_sslot
 {
     object_t    *sl_key;
     object_t    *sl_value;
 };
 
-struct structs
+struct ici_struct
 {
     objwsup_t   o_head;
     int         s_nels;         /* How many slots used. */

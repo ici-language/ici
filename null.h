@@ -8,7 +8,7 @@
 /*
  * The following portion of this file exports to ici.h. --ici.h-start--
  */
-struct null
+struct ici_null_t
 {
     object_t    o_head;
 };

@@ -66,7 +66,9 @@ ici_fault_stack(array_t *a, ptrdiff_t i)
 }
 
 /*
- * Return the number of elements in the array.
+ * Return the number of elements in the array 'a'.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 ptrdiff_t
 ici_array_nels(array_t *a)
@@ -113,16 +115,17 @@ ici_array_span(array_t *a, int i, ptrdiff_t *np)
 }
 
 /*
- * Copy n objects of the given array, starting at index start, to b.
- * The span must cover existing elements of the array (that is, don't
+ * Copy 'n' object pointers from the given array, starting at index 'start',
+ * to 'b'.  The span must cover existing elements of the array (that is, don't
  * try to read from negative or excessive indexes).
  *
  * This function is used to copy objects out of an array into a contiguous
- * destination area. You can't easily just memcpy, because the span of elements
- * you want may wrap around he end. For example, the implementaion of interval()
- * uses this to copy the span of elements it wants into a new array.
+ * destination area.  You can't easily just memcpy, because the span of
+ * elements you want may wrap around the end.  For example, the implementaion
+ * of interval() uses this to copy the span of elements it wants into a new
+ * array.
  *
- * This function is part of the ICI core's external API.
+ * This --func-- forms part of the --ici-api--.
  */
 void
 ici_array_gather(object_t **b, array_t *a, ptrdiff_t start, ptrdiff_t n)
@@ -168,9 +171,12 @@ ici_array_grow(array_t *a)
 }
 
 /*
- * Push the object o onto the end of the array a. This is the general
+ * Push the object 'o' onto the end of the array 'a'. This is the general
  * case that works for any array whether it is a stack or a queue.
- * On return, o_top[-1] is the object pushed. Return 1 on error, else 0.
+ * On return, o_top[-1] is the object pushed. Returns 1 on error, else 0,
+ * usual error conventions.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 int
 ici_array_push(array_t *a, object_t *o)
@@ -224,8 +230,10 @@ ici_array_push(array_t *a, object_t *o)
 }
 
 /*
- * Push the object o onto the front of the array a. Return 1 on failure,
- * else 0.
+ * Push the object 'o' onto the front of the array 'a'. Return 1 on failure,
+ * else 0, usual error conventions.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 int
 ici_array_rpush(array_t *a, object_t *o)
@@ -273,7 +281,11 @@ ici_array_rpush(array_t *a, object_t *o)
 }
 
 /*
- * Pop and return the top of the given array, or ICI NULL if it is empty.
+ * Pop and return the top of the given array, or 'ici_null' if it is empty.
+ * Returns NULL on error (for example, attempting to pop and atomic array).
+ * Usual error conventions.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 object_t *
 ici_array_pop(array_t *a)
@@ -310,7 +322,11 @@ ici_array_pop(array_t *a)
 }
 
 /*
- * Pop and return the front of the given array, or ICI NULL if it is empty.
+ * Pop and return the front of the given array, or 'ici_null' if it is empty.
+ * Returns NULL on error (for example, attempting to pop and atomic array).
+ * Usual error conventions.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 object_t *
 ici_array_rpop(array_t *a)
@@ -347,9 +363,9 @@ ici_array_rpop(array_t *a)
 }
 
 /*
- * Return a pointer to the slot that does, or should contain the index i.
- * This will grow and NULL fill the array as necessary. Only positive i.
- * Returns NULL on error, usual conventions.
+ * Return a pointer to the slot in the array 'a' that does, or should contain
+ * the index 'i'.  This will grow and 'ici_null' fill the array as necessary.
+ * Only positive 'i'.  Returns NULL on error, usual conventions.
  */
 static object_t **
 ici_array_find_slot(array_t *a, ptrdiff_t i)
@@ -375,7 +391,10 @@ ici_array_find_slot(array_t *a, ptrdiff_t i)
 }
 
 /*
- * Return the element at the given index, or ICI NULL if out of range.
+ * Return the element or the array 'a' from index 'i', or 'ici_null' if out of
+ * range.  No incref is done on the object.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 object_t *
 ici_array_get(array_t *a, ptrdiff_t i)
@@ -389,9 +408,13 @@ ici_array_get(array_t *a, ptrdiff_t i)
 }
 
 /*
- * Return a new array.  It will have room for at least n elements.
- * If n is 0 an internal default will be used. Returned array has
- * ref count 1. Returns NULL on failure, usual conventions.
+ * Return a new array.  It will have room for at least 'n' elements to be
+ * pushed contigously (that is, there is no need to use ici_stk_push_chk() for
+ * objects pushed immediately, up to that limit).  If 'n' is 0 an internal
+ * default will be used.  The returned array has ref count 1.  Returns NULL on
+ * failure, usual conventions.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 array_t *
 ici_array_new(ptrdiff_t n)
@@ -595,7 +618,7 @@ fetch_array(object_t *o, object_t *k)
 /*
  * obj => array 0 (the array contains the obj)
  */
-int
+static int
 ici_op_mklvalue()
 {
     array_t     *a;

@@ -1,3 +1,16 @@
+*   After much deliberation I decided *not* to have the new 'proto'
+    mechanism in the global new(). (timl)
+
+*   Changed (any1 && any2) and (any1 || any2) so that if any1
+    caused an early return, its value forms the result of the
+    expression. Under the old behaviour it was resolved to 0 or 1.
+    This is a semantic change to the language. I think it is unlikely
+    to cause problems for old programs as it was not a useful
+    feature (remember, is any2 got evaluated, it was returned,
+    so the expression could not be expect to produce a numeric
+    result in general). It might cause problems for new programs
+    that end up getting run on old interpreters. (timl)
+
 Changes in version 4.0.3 (first beta release of ICI 4)
 
 *   Introduced a new "status" field to thread objects - values

@@ -1065,9 +1065,11 @@ ici_evaluate(object_t *code, int n_operands)
                         goto stable_stacks_continue;
                     }
                     /*
-                     * Reduce the value to 0 or 1.
+                     * This is the old behaviour of ICI 4.0.3 and before
+                     * where the value was reduced to 0 or 1 exactly. 
+                     *
+                     * ici_os.a_top[-2] = objof(c ? ici_one : ici_zero);
                      */
-                    ici_os.a_top[-2] = objof(c ? ici_one : ici_zero);
                     --ici_os.a_top;
                 }
                 goto stable_stacks_continue;

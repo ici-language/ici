@@ -12,7 +12,7 @@
 #include "object.h"
 #endif
 
-struct catchs
+struct ici_catch
 {
     object_t    o_head;
     object_t    *c_catcher;

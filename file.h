@@ -14,7 +14,7 @@
  * the stdio function of the same name. In the case were the file is
  * a stdio stream, these are the stdio functions.
  */
-struct ftype
+struct ici_ftype
 {
     int         (*ft_getch)();
     int         (*ft_ungetch)();
@@ -26,7 +26,7 @@ struct ftype
     int         (*ft_write)();
 };
 
-struct file
+struct ici_file
 {
     object_t    o_head;
     void        *f_file;

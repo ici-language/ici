@@ -8,7 +8,7 @@
 /*
  * The following portion of this file exports to ici.h. --ici.h-start--
  */
-struct func
+struct ici_func
 {
     object_t    o_head;
     array_t     *f_code;        /* The code of this function, atom. */

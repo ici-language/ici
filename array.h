@@ -34,8 +34,10 @@
  * (may, possibly, have had rpop() or rpush() done).
  *
  * Now, if an array is still a stack, you can use the functions (macros):
+ *
  *     ici_stk_push_chk(a, n)
  *     ici_stk_pop_chk(a, n)
+ *
  * to ensure that there are n spaces or objects available, then just
  * increment/decrement a_top as you push and pop things on the stack.
  * Basically you can assume that object pointers and empty slots are
@@ -69,7 +71,7 @@
  * Note that one must never take the atomic form of a stack, and
  * assume the result is still a stack.
  */
-struct array
+struct ici_array
 {
     object_t    o_head;
     object_t    **a_top;    /* The next free slot. */

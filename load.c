@@ -320,7 +320,7 @@ push_path_elements(array_t *a, char *path)
          * Don't add inaccessable dirs...
          */
         if (access(s->s_chars, 0) != 0)
-                goto skip;
+            goto skip;
         if (ici_stk_push_chk(a, 1))
         {
             ici_decref(s);

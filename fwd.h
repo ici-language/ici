@@ -56,7 +56,7 @@
  */
 #define ICI_VER_MAJOR   4
 #define ICI_VER_MINOR   0
-#define ICI_VER_RELEASE 3
+#define ICI_VER_RELEASE 4
 
 /*
  * The ICI version number composed into an 8.8.16 long for simple comparisons.
@@ -115,11 +115,11 @@
 #endif
 
 /*
- * A hash function for pointers. This is used in a few places. Notably in the
- * hash of object addresses for struct lookup. It is a balance between
- * effectiveness, speed, and machine knowledge. It may or may not be right
- * for a given machine, so we allow it to be defined in the configuration.
- * But if it wasn't, this is what we use.
+ * A hash function for pointers.  This is used in a few places.  Notably in
+ * the hash of object addresses for struct lookup.  It is a balance between
+ * effectiveness, speed, and machine knowledge.  It may or may not be right
+ * for a given machine, so we allow it to be defined in the config file.  But
+ * if it wasn't, this is what we use.
  */
 #ifndef ICI_PTR_HASH
 #define ICI_PTR_HASH(p) \
@@ -137,40 +137,74 @@
 
 #define ICI_OBJNAMEZ    30
 
-typedef struct array    array_t;
-typedef struct catchs   catch_t;
-typedef struct slot     slot_t;
-typedef struct sets     set_t;
-typedef struct structs  struct_t;
-typedef struct exec     exec_t;
-typedef struct floats   float_t;
-typedef struct file     file_t;
-typedef struct func     func_t;
-typedef struct cfunc    cfunc_t;
-typedef struct method   method_t;
-typedef struct ints     int_t;
-typedef struct marks    mark_t;
-typedef struct null     null_t;
-typedef struct object   object_t;
-typedef struct objwsup  objwsup_t;
-typedef struct op       op_t;
-typedef struct pc       pc_t;
-typedef struct ptr      ptr_t;
-typedef struct regexpo  regexp_t;
-typedef struct src      src_t;
-typedef struct string   string_t;
-typedef struct type     type_t;
-typedef struct wrap     wrap_t;
-typedef struct ftype    ftype_t;
-typedef struct forall   forall_t;
-typedef struct parse    parse_t;
-typedef struct mem      mem_t;
-typedef struct expr     expr_t;
-typedef union  ostemp   ostemp_t;
-typedef struct ici_handle ici_handle_t;
-#ifndef NODEBUGGING
-typedef struct debug    debug_t;
-#endif
+typedef struct ici_array    ici_array_t;
+typedef struct ici_catch    ici_catch_t;
+typedef struct ici_sslot    ici_sslot_t;
+typedef struct ici_set      ici_set_t;
+typedef struct ici_struct   ici_struct_t;
+typedef struct ici_exec     ici_exec_t;
+typedef struct ici_float    ici_float_t;
+typedef struct ici_file     ici_file_t;
+typedef struct ici_func     ici_func_t;
+typedef struct ici_cfunc    ici_cfunc_t;
+typedef struct ici_method   ici_method_t;
+typedef struct ici_int      ici_int_t;
+typedef struct ici_mark     ici_mark_t;
+typedef struct ici_null_t   ici_null_t;
+typedef struct ici_obj      ici_obj_t;
+typedef struct ici_objwsup  ici_objwsup_t;
+typedef struct ici_op       ici_op_t;
+typedef struct ici_pc       ici_pc_t;
+typedef struct ici_ptr      ici_ptr_t;
+typedef struct ici_regexp   ici_regexp_t;
+typedef struct ici_src      ici_src_t;
+typedef struct ici_str      ici_str_t;
+typedef struct ici_type     ici_type_t;
+typedef struct ici_wrap     ici_wrap_t;
+typedef struct ici_ftype    ici_ftype_t;
+typedef struct ici_forall   ici_forall_t;
+typedef struct ici_parse    ici_parse_t;
+typedef struct ici_mem      ici_mem_t;
+typedef union  ici_ostemp   ici_ostemp_t;
+typedef struct ici_handle   ici_handle_t;
+typedef struct ici_debug    ici_debug_t;
+
+#if !defined(ICI_NO_OLD_NAMES)
+
+#   define array_t          ici_array_t
+#   define float_t          ici_float_t
+#   define object_t         ici_obj_t
+#   define catch_t          ici_catch_t
+#   define slot_t           ici_sslot_t
+#   define set_t            ici_set_t
+#   define struct_t         ici_struct_t
+#   define exec_t           ici_exec_t
+#   define file_t           ici_file_t
+#   define func_t           ici_func_t
+#   define cfunc_t          ici_cfunc_t
+#   define method_t         ici_method_t
+#   define int_t            ici_int_t
+#   define mark_t           ici_mark_t
+#   define null_t           ici_null_t
+#   define objwsup_t        ici_objwsup_t
+#   define op_t             ici_op_t
+#   define pc_t             ici_pc_t
+#   define ptr_t            ici_ptr_t
+#   define regexp_t         ici_regexp_t
+#   define src_t            ici_src_t
+#   define string_t         ici_str_t
+#   define type_t           ici_type_t
+#   define wrap_t           ici_wrap_t
+#   define ftype_t          ici_ftype_t
+#   define forall_t         ici_forall_t
+#   define parse_t          ici_parse_t
+#   define mem_t            ici_mem_t
+#   define expr_t           ici_expr_t
+#   define debug_t          ici_debug_t
+#   define ostemp_t         ici_ostemp_t
+
+#endif /* ICI_NO_OLD_NAMES */
+
 
 extern DLI int_t        *ici_zero;
 extern DLI int_t        *ici_one;
@@ -348,6 +382,8 @@ extern void     trace_pcall(object_t *);
 /*
  * End of ici.h export. --ici.h-end--
  */
+typedef struct expr         expr_t;
+
 
 extern char             **smash(char *, int);
 extern char             **ssmash(char *, char *);
@@ -371,7 +407,6 @@ extern catch_t          *ici_unwind(void);
 extern void             collect(void);
 extern unsigned long    ici_hash_string(object_t *);
 extern int              ici_op_binop(void);
-extern int              ici_op_mklvalue(void);
 extern int              ici_op_onerror(void);
 extern int              ici_op_for(void);
 extern int              ici_op_andand(void);

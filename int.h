@@ -8,7 +8,7 @@
 /*
  * The following portion of this file exports to ici.h. --ici.h-start--
  */
-struct ints
+struct ici_int
 {
     object_t    o_head;
     long        i_value;

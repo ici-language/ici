@@ -1,3 +1,6 @@
+LIBRARY ici4.dll BASE=0x90000000
+VERSION 4.0
+
 EXPORTS ici_aborted DATA
 EXPORTS ici_alloc
 EXPORTS ici_argcount

@@ -58,15 +58,20 @@ static achunk_t         *ici_achunks;
 
 
 /*
- * Allocate an object of the given size. Return NULL on failure, usual
- * conventions. The resulting object *must* be freed with ici_nfree().
- * Note that ici_nfree() also requires to know the size of the object
- * being freed.
+ * Allocate an object of the given 'size'.  Return NULL on failure, usual
+ * conventions.  The resulting object must be freed with ici_nfree() and only
+ * ici_nfree().  Note that ici_nfree() also requires to know the size of the
+ * object being freed.
  *
  * This function is preferable to ici_alloc(). It should be used if
  * you can know the size of the allocation when the free happens so
  * you can call ici_nfree(). If this isn't the case you will have to
  * use ici_alloc().
+ *
+ * See also: 'ICIs allocation functions', ici_talloc(), ici_alloc(),
+ * ici_nfree().
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 void *
 ici_nalloc(size_t z)
@@ -144,11 +149,14 @@ fail:
 }
 
 /*
- * Free an object allocated with ici_nalloc(). The size passed here
+ * Free an object allocated with ici_nalloc(). The 'size' passed here
  * must be exactly the same size passed to ici_nalloc() when the
  * allocation was made. If you don't know the size, you should have
- * called ici_alloc() in the first place. This function is also used
- * to do the work for the ici_tfree() macro.
+ * called ici_alloc() in the first place.
+ *
+ * See also: 'ICIs allocation functions', ici_nalloc().
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 void
 ici_nfree(void *p, size_t z)
@@ -175,17 +183,22 @@ ici_nfree(void *p, size_t z)
 }
 
 /*
- * Allocate a block of size z. This just maps to a raw malloc() but
+ * Allocate a block of size 'z'. This just maps to a raw malloc() but
  * does garbage collection as necessary and attempts to track memory
- * usage to control when the garbage collector runs. Block allocated
- * with this should be freed with ici_free().
+ * usage to control when the garbage collector runs. Blocks allocated
+ * with this must be freed with ici_free().
  *
- * It is preferable to use ici_talloc(), or failing that, or ici_nalloc(),
+ * It is preferable to use ici_talloc(), or failing that, ici_nalloc(),
  * instead of this function. But both require that you can match the
  * allocation by calling ici_tfree() or ici_nalloc() with the original
  * type/size you passed in the allocation call. Those functions use
  * dense fast free lists for small objects, and track memory usage
  * better.
+ *
+ * See also: 'ICIs allocation functions', ici_free(), ici_talloc(),
+ * ici_nalloc().
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 void *
 ici_alloc(size_t z)
@@ -215,6 +228,11 @@ ici_alloc(size_t z)
 
 /*
  * Free a block allocated with ici_alloc().
+ *
+ * See also: 'ICIs allocation functions', ici_alloc(), ici_tfree(),
+ * ici_nfree().
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 void
 ici_free(void *p)

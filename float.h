@@ -8,7 +8,7 @@
 /*
  * The following portion of this file exports to ici.h. --ici.h-start--
  */
-struct floats
+struct ici_float
 {
     object_t    o_head;
     double      f_value;

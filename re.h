@@ -7,7 +7,7 @@
 
 #include "pcre/pcre.h"
 
-struct regexpo
+struct ici_regexp
 {
     object_t    o_head;
     pcre        *r_re;

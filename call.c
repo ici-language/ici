@@ -10,35 +10,41 @@
 #include "catch.h"
 
 /*
- * The core common function of the things that call ICI functions from
- * C with a simple marshalled argument list (ici_func, ici_call, ici_method).
+ * The core common function of the things that call ICI functions from C with
+ * a simple marshalled argument list (ici_func, ici_call, ici_method).
  *
- * If subject is NULL, then callable is taken to be a callable object
- * (could be a func or a method) and is called directly. If subject is
- * non-NULL, it is taken to be an instance object and callable is taken
- * to be the name of the method to be invoked on it.
+ * If 'subject' is NULL, then 'callable' is taken to be a callable object
+ * (could be a function, a method, or something else) and is called directly.
+ * If 'subject' is non-NULL, it is taken to be an instance object and callable
+ * is taken to be the name of the method to be invoked on it.
  *
  * In common with all these functions, arguments are marshalled from
  * C into ICI arguments according to a simple specification given by
- * the string types.
+ * the string 'types'.
  *
- * Types can be of the forms ".=..." or "...".  In the first case the 1st
+ * Types can be of the forms ".=..." or "...".  In the first case the first
  * extra arg is used as a pointer to store the return value through.
  *
  * Type key letters are:
- *      i       a long
- *      f       a double
- *      s       a '\0' terminated string
- *      o       an ICI object
+ *
+ * i                    a long
+ *
+ * f                    a double
+ *
+ * s                    a nul terminated string
+ *
+ * o                    an ICI object
  *
  * When a string is returned it is a pointer to the character data of an
  * internal ICI string object. It will only remain valid until the next
  * call to any ICI function because it is not necessarily held against
- * garbage collection.  When an object is returned it has been ici_incref'ed
- * (i.e. it is held against garbage collection).
+ * garbage collection.  When an object is returned it has been
+ * ici_incref()ed (i.e. it is held against garbage collection).
  *
  * There is some historical support for '@' operators, but it is deprecated
  * and may be removed in future versions.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 int
 ici_funcv(object_t *subject, object_t *callable, char *types, va_list va)
@@ -185,7 +191,9 @@ fail:
 }
 
 /*
- * Varient of ici_call() (see below) taking a variable argument list.
+ * Varient of ici_call() (see) taking a variable argument list.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 int
 ici_callv(string_t *func_name, char *types, va_list va)
@@ -217,54 +225,82 @@ ici_callv(string_t *func_name, char *types, va_list va)
 }
 
 /*
- * ici_func(func, types, args...)
+ * Call an callable ICI object 'callable' from C with simple argument types
+ * and an optional return value.  The callable object is typically a function
+ * (but not a function name, see 'ici_call' for that case).
  *
- * Call an ICI function from C with simple argument types and return value.
- *
- * Types can be of the forms ".=..." or "...".  In the first case the 1st
- * extra arg is used as a pointer to store the return value through.
+ * 'types' is a string that indicates what C values are being supplied as
+ * arguments.  It can be of the form ".=..." or "..." where each "." is a type
+ * key letter as described below.  In the first case the 1st extra argument is
+ * used as a pointer to store the return value through.  In the second case,
+ * the return value of the ICI function is not provided.
  *
  * Type key letters are:
- *      i       a long
- *      f       a double
- *      s       a '\0' terminated string
- *      o       an ici object
  *
- * When a string is returned it is a pointer to the character data of an
- * internal ICI string object. It will only remain valid until the next
- * call to any ICI function.  When an object is returned it has been ici_incref'ed
- * (i.e. it is held against garbage collection).
+ * i                    The corresponding argument should be a C long
+ *                      (a pointer to a long in the case of a return value).
+ *                      It will be converted to an ICI 'int' and passed
+ *                      to the function.
+ *
+ * f                    The corresponding argument should be a C double.
+ *                      (a pointer to a double in the case of a return value).
+ *                      It will be converted to an ICI 'float' and passed
+ *                      to the function.
+ *
+ * s                    The corresponding argument should be a nul
+ *                      terminated string (a pointer to a char * in the case
+ *                      of a return value).  It will be converted to an ICI
+ *                      'string' and passed to the function.
+ *                      
+ *                      When a string is returned it is a pointer to the
+ *                      character data of an internal ICI string object.  It
+ *                      will only remain valid until the next call to any ICI
+ *                      function.
+ *
+ * o                    The corresponding argument should be a pointer
+ *                      to an ICI object (a pointer to an object in the case
+ *                      of a return value).  It will be passed directly to the
+ *                      ICI function.
+ *
+ *                      When an object is returned it has been ici_incref()ed
+ *                      (that is, it is held against garbage collection).
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 int
-ici_func(object_t *func_obj, char *types, ...)
+ici_func(object_t *callable, char *types, ...)
 {
     va_list     va;
     int         result;
 
     va_start(va, types);
-    result = ici_funcv(NULL, func_obj, types, va);
+    result = ici_funcv(NULL, callable, types, va);
     va_end(va);
     return result;
 }
 
 /*
- * ici_func(func, types, args...)
- *
  * Call an ICI function from C with simple argument types and return value.
  *
  * Types can be of the forms ".=..." or "...".  In the first case the 1st
  * extra arg is used as a pointer to store the return value through.
  *
  * Type key letters are:
- *      i       a long
- *      f       a double
- *      s       a '\0' terminated string
- *      o       an ici object
+ *
+ * i                    a long
+ *
+ * f                    a double
+ *
+ * s                    a nul terminated string
+ *
+ * o                    an ici object
  *
  * When a string is returned it is a pointer to the character data of an
  * internal ICI string object. It will only remain valid until the next
- * call to any ICI function.  When an object is returned it has been ici_incref'ed
- * (i.e. it is held against garbage collection).
+ * call to any ICI function.  When an object is returned it has been
+ * ici_incref()ed (i.e. it is held against garbage collection).
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 int
 ici_method(object_t *inst, string_t *mname, char *types, ...)
@@ -293,15 +329,21 @@ ici_method(object_t *inst, string_t *mname, char *types, ...)
  * the second extra arg will be used for the return value.
  *
  * Type key letters are:
- *      i       a long
- *      f       a double
- *      s       a '\0' terminated string
- *      o       an ici object
+ *
+ * i                    a long
+ *
+ * f                    a double
+ *
+ * s                    a nul terminated string
+ *
+ * o                    an ici object
  *
  * When a string is returned it is a pointer to the character data of an
  * internal ICI string object. It will only remain valid until the next
  * call to any ICI function.  When an object is returned it has been ici_incref'ed
  * (i.e. it is held against garbage collection).
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 int
 ici_call(string_t *func_name, char *types, ...)

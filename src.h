@@ -8,7 +8,7 @@
  * The following portion of this file exports to ici.h. --ici.h-start--
  */
 
-struct src
+struct ici_src
 {
     object_t    s_head;
     int         s_lineno;

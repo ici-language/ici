@@ -5,9 +5,6 @@
 #include "object.h"
 #endif
 
-/*
- * The following portion of this file exports to ici.h. --ici.h-start--
- */
 typedef struct
 {
     int         t_what;         /* See TM_* and T_* below. */
@@ -27,7 +24,7 @@ typedef struct
 #define t_str   tu.tu_str
 #define t_obj   tu.tu_obj
 
-struct parse
+struct ici_parse
 {
     object_t    o_head;
     file_t      *p_file;
@@ -39,6 +36,9 @@ struct parse
     func_t      *p_func;        /* NULL when not within scope. */
     int         p_module_depth; /* Depth within module, 0 is file level. */
 };
+/*
+ * The following portion of this file exports to ici.h. --ici.h-start--
+ */
 #define isparse(o)      (objof(o)->o_tcode == TC_PARSE)
 #define parseof(o)      ((parse_t *)(o))
 /*

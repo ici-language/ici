@@ -5,7 +5,7 @@
  * The following portion of this file exports to ici.h. --ici.h-start--
  */
 
-struct wrap
+struct ici_wrap
 {
     wrap_t      *w_next;
     void        (*w_func)(void);

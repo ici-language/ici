@@ -8,7 +8,7 @@
 /*
  * The following portion of this file exports to ici.h. --ici.h-start--
  */
-struct forall
+struct ici_forall
 {
     object_t    o_head;
     int         fa_index;

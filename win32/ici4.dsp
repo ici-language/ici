@@ -397,6 +397,10 @@ SOURCE=..\file.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\float.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\forall.h
 # End Source File
 # Begin Source File

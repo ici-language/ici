@@ -8,7 +8,7 @@
 /*
  * The following portion of this file exports to ici.h. --ici.h-start--
  */
-struct ptr
+struct ici_ptr
 {
     object_t    o_head;
     object_t    *p_aggr;        /* The aggregate which contains the object. */

@@ -524,7 +524,7 @@ primary(parse_t *p, expr_t **ep, int exclude)
         break;
 
     case T_NAME:
-        if (p->p_got.t_obj == SSO(_NULL))
+        if (p->p_got.t_obj == SSO(_NULL_))
         {
             e->e_what = T_NULL;
             ici_decref(p->p_got.t_obj);

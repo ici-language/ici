@@ -8,7 +8,7 @@
 /*
  * The following portion of this file exports to ici.h. --ici.h-start--
  */
-struct mem
+struct ici_mem
 {
     object_t            o_head;
     void                *m_base;

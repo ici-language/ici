@@ -7,7 +7,7 @@
 /*
  * The following portion of this file exports to ici.h. --ici.h-start--
  */
-struct sets
+struct ici_set
 {
     object_t    o_head;
     int         s_nels;         /* How many slots used. */

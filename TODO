@@ -153,5 +153,7 @@ Add ici_atom_probe to doc. And ici_interface_check.
 
 ---
 
+Document the special variables like argv and path properly at the
+same level as the functions.
 
-
+---

@@ -3,8 +3,8 @@
 #
 FLAVOUR = osx
 VERSION = "`awk '{print $$1}' VERSION`"
-TARGET  = ici3
-LIB     = libici3.a
+TARGET  = ici4
+LIB     = libici4.a
 CC      = cc -pipe
 LIBS    = -ldl -framework Foundation
 CFLAGS  = -g -Wall -O2 -I.
