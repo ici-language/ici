@@ -87,6 +87,7 @@ free_struct(object_t *o)
     if (structof(o)->s_slots != NULL)
         ici_nfree(structof(o)->s_slots, structof(o)->s_nslots * sizeof(slot_t));
     ici_tfree(o, struct_t);
+    ++ici_vsver;
 }
 
 struct_t *

@@ -69,7 +69,7 @@ ici_handle_t *
 ici_new_handle(void *ptr, string_t *name, objwsup_t *super)
 {
     ici_handle_t         *h;
-    static ici_handle_t  proto = {OBJ(TC_HANDLE)};
+    static ici_handle_t  proto = {{OBJ(TC_HANDLE)}};
 
     proto.h_ptr = ptr;
     proto.h_name = name;

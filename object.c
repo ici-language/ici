@@ -430,8 +430,6 @@ collect(void)
     register int        ndead_atoms;
     register long       mem;    /* Total mem tied up in refed objects. */
 
-    static int          n_collects;
-
 #if 0
     long                tc_counts[16];
     memset((char *)tc_counts, 0, sizeof tc_counts);

@@ -31,6 +31,14 @@ ici_init(void)
     exec_t              *x;
     int                 i;
 
+    /*
+     * Just make sure our universal headers are really the size we
+     * hope they are. Nothing actually assumes this. But it would
+     * represent a significant inefficiency if they were padded.
+     */
+    assert(sizeof(object_t) == 4);
+    assert(offsetof(objwsup_t, o_super) == 4);
+
     if (ici_chkbuf(120))
         return 1;
     if ((atoms = (object_t **)ici_nalloc(64 * sizeof(object_t *))) == NULL)

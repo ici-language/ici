@@ -24,15 +24,16 @@ VER=4
 # /O2p- Optimisation level, and a float thing.
 #       (O2 implies /Og /Oi /Ot /Oy /Ob1 /Gs /Gf /Gy)
 # /GF   Merged and read-only strings.
+# /Wn	Warning level n.
 #
-CFLAGS  = /GB /MD /Zi /O2p-b2 /GF /DNDEBUG /I.
+CFLAGS  = /GB /MD /Zi /O2p-b2 /GF /DNDEBUG /W3 /I.
 LDFLAGS = /MD /Zi
 LIBS    = user32.lib wsock32.lib advapi32.lib winmm.lib
 
 #
 # If you want to debug...
 #
-#CFLAGS = /GB /MDd /Zi /Od /Op- -I.
+#CFLAGS = /GB /MDd /Zi /Od /Op- /W3 -I.
 #LDFLAGS = /MDd /Zi
 
 OBJS    = \

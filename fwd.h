@@ -382,6 +382,7 @@ extern object_t *ici_array_pop(array_t *);
 extern object_t *ici_array_rpop(array_t *);
 extern object_t *ici_array_get(array_t *, ptrdiff_t);
 extern void     ici_invalidate_struct_lookaside(struct_t *);
+extern void     ici_drop_all_small_allocations(void);
 
 extern exec_t   *ici_leave(void);
 extern void     ici_enter(exec_t *);

@@ -1028,7 +1028,6 @@ f_call(void)
     int         naargs;     /* Number of args comming from the array. */
     object_t    **base;
     object_t    **e;
-    object_t    *opcall;
     int         i;
     int_t       *nargso;
     object_t    *func;
@@ -2779,7 +2778,7 @@ f_sleep()
         how_long *= 1000; /* Convert to milliseconds. */
         if (how_long > LONG_MAX)
             t = LONG_MAX;
-        else if ((t = how_long) < 1)
+        else if ((t = (long)how_long) < 1)
             t = 1;
         x = ici_leave();
         Sleep(t);

@@ -17,7 +17,6 @@
 char *
 ici_funcv(object_t *func_obj, char *types, va_list va)
 {
-    catch_t             *frame;
     int                 nargs;
     int                 arg;
     object_t            *member_obj;

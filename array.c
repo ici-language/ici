@@ -341,7 +341,6 @@ static object_t **
 ici_array_find_slot(array_t *a, ptrdiff_t i)
 {
     ptrdiff_t           n;
-    ptrdiff_t           m;
 
     n = ici_array_nels(a);
     if (i < n)
@@ -503,10 +502,6 @@ copy_array(object_t *o)
     ici_array_gather(na->a_top, arrayof(o), 0, n);
     na->a_top += n;
     return objof(na);
-
-fail:
-    decref(na);
-    return NULL;
 }
 
 /*

@@ -71,9 +71,6 @@ fail:
 int WINAPI
 WinMain(HINSTANCE inst, HINSTANCE prev_inst, char *cmd_line, int cmd_show)
 {
-    int                 i;
-    char                *p;
-
     freopen("stderr.txt", "w", stderr);
     freopen("stdout.txt", "w", stdout);
 

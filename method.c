@@ -77,7 +77,7 @@ fetch_method(object_t *o, object_t *k)
 }
 
 static int
-call_method(object_t *o, object_t *subject, string_t *method)
+call_method(object_t *o, object_t *subject)
 {
     method_t            *m;
 
@@ -93,11 +93,7 @@ call_method(object_t *o, object_t *subject, string_t *method)
         ici_error = buf;
         return 1;
     }
-    return (*ici_typeof(m->m_callable)->t_call)
-    (
-        m->m_callable,
-        m->m_subject
-    );
+    return (*ici_typeof(m->m_callable)->t_call)(m->m_callable, m->m_subject);
 }
 
 type_t  ici_method_type =
