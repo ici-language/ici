@@ -110,6 +110,7 @@ install: $(TARGET) $(LIB) $(COREMODS) ici.h icistr-setup.h $(MAN1S) doc/ici.pdf
 	@echo '=========================================='
 	$(INSTALL) $(TARGET) $(PREFIX)/bin/ici-$(VERSION)
 	$(INSTALL) -m 444 $(COREMODS) $(PREFIX)/lib/ici4
+	rm -f $(PREFIX)/bin/ici
 	ln -fs ici-$(VERSION) $(PREFIX)/bin/ici
 	$(INSTALL) -m 444 $(MAN1S) $(PREFIX)/man/man1
 	@echo '=========================================='
