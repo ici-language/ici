@@ -25,7 +25,7 @@
  * End of ici.h export. --ici.h-end--
  */
 
-#define	ICI_USE_POSIX_THREADS
+#define ICI_USE_POSIX_THREADS
 #define pthread_mutexattr_settype pthread_mutexattr_setkind_np
 #define PTHREAD_MUTEX_RECURSIVE PTHREAD_MUTEX_RECURSIVE_NP
 

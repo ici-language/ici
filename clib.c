@@ -472,12 +472,12 @@ f_fclose()
     o = ARG(0);
     if (!isfile(o))
         return ici_argerror(0);
-	x = ici_leave();
-	r = ici_file_close(fileof(o));
-	ici_enter(x);
-	if (r)
-		return 1;
-	return ici_null_ret();
+    x = ici_leave();
+    r = ici_file_close(fileof(o));
+    ici_enter(x);
+    if (r)
+        return 1;
+    return ici_null_ret();
 }
 
 static int

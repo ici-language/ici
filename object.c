@@ -375,7 +375,7 @@ ici_atom(ici_obj_t *o, int lone)
 {
     ici_obj_t   **po;
 
-	assert(!(lone == 1 && o->o_nrefs == 0));
+    assert(!(lone == 1 && o->o_nrefs == 0));
 
     if (o->o_flags & O_ATOM)
         return o;
@@ -705,7 +705,7 @@ collect(void)
             if (((o = *a)->o_flags & O_MARK) == 0)
             {
                 if ((o->o_flags & O_ATOM) == 0 || unatom(o) == 0)
-                	freeo(o);
+                    freeo(o);
             }
             else
             {

@@ -26,7 +26,7 @@
 #undef  NOSIGNALS       /* ICI level signal handling */
 
 #ifdef _THREAD_SAFE
-#define	ICI_USE_POSIX_THREADS
+#define ICI_USE_POSIX_THREADS
 #endif
 
 #if defined(__FreeBSD__) && (__FreeBSD__ < 3)
