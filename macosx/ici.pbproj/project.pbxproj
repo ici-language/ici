@@ -122,7 +122,9 @@
 		A12DB6CA03E1C32900A80108 = {
 			children = (
 				A1071D9F03DF285600A80108,
-				A1AF45F00480380900A80108,
+				A1C8F58F0488C99600A80108,
+				A1C8F5900488C99600A80108,
+				A1C8F5910488C99600A80108,
 			);
 			isa = PBXGroup;
 			name = "OS X Sources";
@@ -1020,7 +1022,8 @@
 				A14440F103DF204E00A80108,
 				A14440F203DF204E00A80108,
 				A12DB6C703E1C26200A80108,
-				A1AF45F10480380900A80108,
+				A1C8F5920488C99600A80108,
+				A1C8F5940488C99600A80108,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1091,6 +1094,7 @@
 				A14440CD03DF203200A80108,
 				A14440CE03DF203300A80108,
 				A1071DA003DF285600A80108,
+				A1C8F5930488C99600A80108,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1119,8 +1123,10 @@
 			buildSettings = {
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
+				HEADER_SEARCH_PATHS = .;
 				INSTALL_PATH = /usr/local/lib;
 				LIBRARY_STYLE = STATIC;
+				OPTIMIZATION_CFLAGS = "-O3";
 				OTHER_LDFLAGS = "";
 				OTHER_LIBTOOL_FLAGS = "";
 				OTHER_REZFLAGS = "";
@@ -1787,9 +1793,10 @@
 				A1C1E01D03DF35AC00A80108,
 			);
 			buildSettings = {
+				HEADER_SEARCH_PATHS = .;
 				INSTALL_PATH = /usr/local/bin;
 				LIBRARY_SEARCH_PATHS = build;
-				OPTIMIZATION_CFLAGS = "-O2";
+				OPTIMIZATION_CFLAGS = "-O3";
 				OTHER_LDFLAGS = "-lici4";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = ici;
@@ -1984,18 +1991,6 @@
 			path = ../TODO;
 			refType = 2;
 		};
-		A1AF45F00480380900A80108 = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			path = dlfcn_simple.h;
-			refType = 2;
-		};
-		A1AF45F10480380900A80108 = {
-			fileRef = A1AF45F00480380900A80108;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		A1C1E01C03DF346E00A80108 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
@@ -2012,6 +2007,42 @@
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 1;
+		};
+		A1C8F58F0488C99600A80108 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			path = dlfcn.h;
+			refType = 2;
+		};
+		A1C8F5900488C99600A80108 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			path = semaphore.c;
+			refType = 2;
+		};
+		A1C8F5910488C99600A80108 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			path = semaphore.h;
+			refType = 2;
+		};
+		A1C8F5920488C99600A80108 = {
+			fileRef = A1C8F58F0488C99600A80108;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		A1C8F5930488C99600A80108 = {
+			fileRef = A1C8F5900488C99600A80108;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		A1C8F5940488C99600A80108 = {
+			fileRef = A1C8F5910488C99600A80108;
+			isa = PBXBuildFile;
+			settings = {
+			};
 		};
 	};
 	rootObject = A12FEAC503DF1DDB00A80108;
