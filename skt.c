@@ -1730,7 +1730,7 @@ f_sktopen(void)
         return 1;
     if ((sf = skt_open(skt, mode)) == NULL)
         return 1;
-    if ((f = new_file((char *)sf, &skt_ftype, NULL)) == NULL)
+    if ((f = new_file((char *)sf, &skt_ftype, NULL, NULL)) == NULL)
     {
         skt_fclose(sf);
         return 1;
@@ -1741,7 +1741,7 @@ f_sktopen(void)
         ici_error = "can't fdopen";
         return 1;
     }
-    if ((f = new_file((char *)stream, &stdio_ftype, NULL)) == NULL)
+    if ((f = new_file((char *)stream, &stdio_ftype, NULL, NULL)) == NULL)
     {
         fclose(stream);
         return 1;

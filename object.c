@@ -102,6 +102,15 @@ objname(char *p, object_t *o)
     return p;
 }
 
+/*
+ * Register a new type_t structure and return a new small int type code
+ * to use in the header of objects of that type. The type_t * passed to
+ * this function is retained and assumed to remain valid indefinetly
+ * (it is normally a statically initialised structure).
+ *
+ * Returns the new type code, or zero on error in which case ici_error
+ * has been set.
+ */
 int
 ici_register_type(type_t *t)
 {

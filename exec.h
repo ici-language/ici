@@ -77,7 +77,7 @@ struct exec
  * x_pc_closet          An array that shadows the execution stack. pc objects
  *                      exist only in a one-to-one relationship with a fixed
  *                      (for their life) position on the execution stack. This
- *                      cache holds pc objects that are used wheneve we need
+ *                      cache holds pc objects that are used whenever we need
  *                      a pc at that slot in the execution stack.
  *
  * x_os_temp_cache      An array of pseudo int/float objects that shadows the

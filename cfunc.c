@@ -506,11 +506,30 @@ ici_str_ret(char *str)
 }
 
 /*
+ * Return the array object that is the current value of "path" in the
+ * current scope. The array is not increfed - it is assumed to be still
+ * referenced from the scope until the caller has finished with it.
+ */
+array_t *
+ici_need_path(void)
+{
+    object_t            *o;
+
+    o = ici_fetch(ici_vs.a_top[-1], SSO(path));
+    if (!isarray(o))
+    {
+        ici_error = "path is not an array";
+        return NULL;
+    }
+    return arrayof(o);
+}
+
+/*
  * Return the file object that is the current value of the "stdin"
  * name in the current scope. Else NULL, usual conventions.
  */
 file_t *
-ici_need_stdin()
+ici_need_stdin(void)
 {
     file_t              *f;
 
@@ -523,8 +542,13 @@ ici_need_stdin()
     return f;
 }
 
+/*
+ * Return the file object that is the current value of the "stdout"
+ * name in the current scope. Else NULL, usual conventions.
+ */
+
 file_t *
-ici_need_stdout()
+ici_need_stdout(void)
 {
     file_t              *f;
 
@@ -991,7 +1015,7 @@ f_parse()
 
     if (isstring(o))
     {
-        if ((f = ici_sopen(stringof(o)->s_chars, stringof(o)->s_nchars)) == NULL)
+        if ((f = ici_sopen(stringof(o)->s_chars, stringof(o)->s_nchars, o)) == NULL)
         {
             ici_decref(a);
             return 1;
@@ -1054,7 +1078,7 @@ f_include()
     char    fname[1024];
 
     strncpy(fname, filename->s_chars, 1023);
-    if (!ici_find_on_path(ici_get_dll_path(), fname, NULL))
+    if (!ici_find_on_path(fname, NULL))
     {
         ici_error = "can't find include file";
         return 1;
@@ -1416,7 +1440,7 @@ f_sopen()
         ici_error = buf;
         return 1;
     }
-    if ((f = ici_sopen(str, stringof(ARG(0))->s_nchars)) == NULL)
+    if ((f = ici_sopen(str, stringof(ARG(0))->s_nchars, ARG(0))) == NULL)
         return 1;
     f->f_name = SS(empty_string);
     return ici_ret_with_decref(objof(f));
@@ -1447,7 +1471,7 @@ f_mopen()
         ici_error = "memory object must have access size of 1 to be opened";
         return 1;
     }
-    if ((f = ici_sopen(mem->m_base, (int)mem->m_length)) == NULL)
+    if ((f = ici_sopen(mem->m_base, (int)mem->m_length, objof(mem))) == NULL)
         return 1;
     f->f_name = SS(empty_string);
     return ici_ret_with_decref(objof(f));
@@ -1724,11 +1748,21 @@ static int
 f_currentfile()
 {
     object_t    **o;
+    int         raw;
+    file_t      *f;
 
+    raw = NARGS() > 0 && ARG(0) == SSO(raw);
     for (o = ici_xs.a_top - 1; o >= ici_xs.a_base; --o)
     {
         if (isparse(*o))
-            return ici_ret_no_decref(objof(parseof(*o)->p_file));
+        {
+            if (raw)
+                return ici_ret_no_decref(objof(parseof(*o)->p_file));
+            f = new_file(*o, &ici_parse_ftype, parseof(*o)->p_file->f_name, *o);
+            if (f == NULL)
+                return 1;
+            return ici_ret_with_decref(objof(f));
+        }
     }
     return null_ret();
 }
@@ -2123,7 +2157,7 @@ f_gettoken()
             return 1;
         if (isstring(objof(f)))
         {
-            if ((f = ici_sopen(stringof(f)->s_chars, stringof(f)->s_nchars)) == NULL)
+            if ((f = ici_sopen(stringof(f)->s_chars, stringof(f)->s_nchars, objof(f))) == NULL)
                 return 1;
             ici_decref(f);
         }
@@ -2136,7 +2170,7 @@ f_gettoken()
             return 1;
         if (isstring(objof(f)))
         {
-            if ((f = ici_sopen(stringof(f)->s_chars, stringof(f)->s_nchars)) == NULL)
+            if ((f = ici_sopen(stringof(f)->s_chars, stringof(f)->s_nchars, objof(f))) == NULL)
                 return 1;
             ici_decref(f);
         }
@@ -2288,7 +2322,7 @@ f_gettokens()
         }
         if (isstring(objof(f)))
         {
-            if ((f = ici_sopen(stringof(f)->s_chars, stringof(f)->s_nchars)) == NULL)
+            if ((f = ici_sopen(stringof(f)->s_chars, stringof(f)->s_nchars, objof(f))) == NULL)
                 return 1;
             loose_it = 1;
         }

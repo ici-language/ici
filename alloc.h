@@ -68,9 +68,9 @@
 
 #endif  /* ICI_ALLALLOC */
 
-extern char             *ici_flists[4];
-extern char             *ici_fltmp;
-extern long             ici_mem;
+extern DLI char         *ici_flists[4];
+extern DLI char         *ici_fltmp;
+extern DLI long         ici_mem;
 extern long             ici_mem_limit;
 extern void             *ici_talloc_work(int fi, size_t z);
 extern void             *ici_nalloc(size_t z);

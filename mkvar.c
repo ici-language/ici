@@ -49,7 +49,7 @@ ici_set_val(objwsup_t *s, string_t *name, int type, void *vp)
         break;
 
     case 'u':
-        o = objof(new_file((char *)vp, &stdio_ftype, name));
+        o = objof(new_file((char *)vp, &stdio_ftype, name, NULL));
         o->o_flags |= F_NOCLOSE;
         break;
 

@@ -702,3 +702,43 @@ fail:
     return T_ERROR;
 }
 
+/*
+ * Functions to support reading currentfile() in cooked mode (which
+ * tracks line numbers).
+ */
+static int
+pf_getc(parse_t *p)
+{
+    return get(p, NULL);
+}
+
+static int
+pf_ungetc(parse_t *p, int c)
+{
+    unget(p, c);
+    return c;
+}
+
+static int
+pf_eof(parse_t *p)
+{
+    return p->p_file->f_type->ft_eof(p->p_file);
+}
+
+static int
+pf_fail()
+{
+    return 0;
+}
+
+ftype_t ici_parse_ftype =
+{
+    pf_getc,
+    pf_ungetc,
+    pf_fail,    /* putc */
+    pf_fail,    /* flush */
+    pf_fail,    /* close */
+    pf_fail,    /* seek */
+    pf_eof,
+    pf_fail     /* write */
+};

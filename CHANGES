@@ -1,3 +1,30 @@
+*	Added support for [module:xxx and [module=xxx which actually
+	never made it into ICI 3. Imroved the error reporting in that
+	area. (timl)
+
+*	Changed the extension module search path to go through a 'path'
+	ICI variable (in the current scope), which is an array of dirs
+	to search. This variable is set on startup from ICIPATH and well
+	known locations (which vary with platform). It is program modifiable,
+	and used on libray loads. (timl)
+
+*	Changed the name of many functions. Mostly added ici_ prefixes.
+	This is part of the documentation of the C API (I figure if
+	there was ever a time they should get fixed, it is when they
+	get documented.) (timl)
+
+*	Made currentfile() layer on top of the parse context so that
+	line numbers don't get out of sync. Also added an options
+	"raw" argument to produce the old behaviour. (timl)
+
+*	Restored the ici4 prefix on auto-loading ici modules.
+	It turns out not to be practical to leave off the version
+	number. But I plan to add searching for the previous version
+	number to solve the problem instead. (timl)
+	
+* 	Corrected long standing ? : bug where the : was confused
+	for a method operator in some circumstances. (timl)
+
 *	Added an ici_pcre() function to avoid exposing internals
 	of PCRE in the ici.h include file. (timl)
 

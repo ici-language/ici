@@ -78,6 +78,8 @@ ici_init(void)
         return 1;
     *ici_vs.a_top++ = objof(scope);
     ici_decref(scope);
+    if (ici_init_path(externs))
+        return 1;
     for (cfp = funcs; *cfp != NULL; ++cfp)
     {
         if (ici_assign_cfuncs(scope->o_head.o_super, *cfp))

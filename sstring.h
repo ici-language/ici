@@ -75,6 +75,8 @@ SSTRING(load, "load")
 SSTRING(waitfor, "waitfor")
 SSTRING(result, "result")
 SSTRING(critsect, "critsect")
+SSTRING(raw, "raw")
+SSTRING(path, "path")
 #ifndef NOCLASSPROTO
 SSTRING(proto, "proto")
 #endif

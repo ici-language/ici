@@ -62,4 +62,52 @@ enum
     OP_CRITSECT,
     OP_WAITFOR,
 };
+
+/*
+ * Extern definitions for various statically defined op objects. They
+ * Are defined in various source files. Generally where they are
+ * implemented.
+ */
+extern op_t             o_quote;
+extern op_t             o_looper;
+extern op_t             o_loop;
+extern op_t             o_rewind;
+extern op_t             o_end;
+extern op_t             o_break;
+extern op_t             o_continue;
+extern op_t             o_offsq;
+extern op_t             o_exec;
+extern op_t             o_mkfunc;
+extern op_t             o_return;
+extern op_t             o_call;
+extern op_t             o_method_call;
+extern op_t             o_super_call;
+extern op_t             o_if;
+extern op_t             o_ifnot;
+extern op_t             o_ifnotbreak;
+extern op_t             o_ifbreak;
+extern op_t             o_ifelse;
+extern op_t             o_pop;
+extern op_t             o_colon;
+extern op_t             o_coloncaret;
+extern op_t             o_dot;
+extern op_t             o_dotkeep;
+extern op_t             o_dotrkeep;
+extern op_t             o_mkptr;
+extern op_t             o_openptr;
+extern op_t             o_fetch;
+extern op_t             o_for;
+extern op_t             o_mklvalue;
+extern op_t             o_rematch;
+extern op_t             o_renotmatch;
+extern op_t             o_reextract;
+extern op_t             o_onerror;
+extern op_t             o_andand;
+extern op_t             o_barbar;
+extern op_t             o_namelvalue;
+extern op_t             o_switch;
+extern op_t             o_switcher;
+extern op_t             o_critsect;
+extern op_t             o_waitfor;
+
 #endif /* ICI_OP_H */

@@ -15,6 +15,7 @@ struct func
     array_t     *f_args;        /* Array of argument names. */
     struct_t    *f_autos;       /* Prototype struct of autos (incl. args). */
     string_t    *f_name;        /* Some name for the function (diagnostics). */
+    int         f_nautos;       /* If !=0, a hint for auto struct alloc. */
 };
 
 #define funcof(o)       ((func_t *)(o))

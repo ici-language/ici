@@ -209,7 +209,7 @@ ici_maind(int argc, char *argv[], int debugging)
                         goto usage;
                     else
                         s = argv[i];
-                    if ((f = ici_sopen(s, strlen(s))) == NULL)
+                    if ((f = ici_sopen(s, strlen(s), NULL)) == NULL)
                         goto fail;
                     f->f_name = SS(empty_string);
                     if (parse_module(f, objwsupof(ici_vs.a_top[-1])) < 0)

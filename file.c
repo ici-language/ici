@@ -43,9 +43,13 @@ free_file(object_t *o)
  * descriptor. The name is mostly for error messages and stuff.
  * The returned object has a ref count of 1. Return NULL on error.
  * Note that files are intrinsically atomic.
+ *
+ * The ref argument is an object reference that the file object
+ * will keep in case the fp argument is an implicit reference into
+ * some object. It may be NULL if not required.
  */
 file_t *
-new_file(char *fp, ftype_t *ftype, string_t *name)
+new_file(void *fp, ftype_t *ftype, string_t *name, object_t *ref)
 {
     register file_t     *f;
     static file_t       proto = {OBJ(TC_FILE)};
@@ -53,6 +57,7 @@ new_file(char *fp, ftype_t *ftype, string_t *name)
     proto.f_file = fp;
     proto.f_type = ftype;
     proto.f_name = name;
+    proto.f_ref = ref;
     if ((f = fileof(atom_probe(objof(&proto)))) != NULL)
     {
         ici_incref(f);
@@ -90,6 +95,8 @@ mark_file(object_t *o)
     mem = sizeof(file_t);
     if (fileof(o)->f_name != NULL)
         mem += ici_mark(objof(fileof(o)->f_name));
+    if (fileof(o)->f_ref != NULL)
+        mem += ici_mark(objof(fileof(o)->f_ref));
     return mem;
 }
 

@@ -47,49 +47,58 @@ dlclose(dll_t hinst)
 #endif /* NODLOAD */
 
 /*
- * Windows version of the get_dll_path() function. Returns the seach
- * path on which ICI modules will be searched for. We try to mimic the
- * search behaviour of LoadLibrary().
+ * Push path elements specific to Windows onto the array a (which is the ICI
+ * path array used for finding dynamically loaded modules and stuff). These
+ * are in addition to the ICIPATH environment variable. We try to mimic
+ * the search behaviour of LoadLibrary() (that being the Windows thing to
+ * do).
  */
-char *
-ici_get_dll_path(void)
+static int
+push_os_path_elements(array_t *a)
 {
-    static char     *dll_path;
-    char            *env_path;
-    char            mod_path[MAX_PATH];
-    int             size;
-    int             sdz;
-    int             wdz;
-    char            *p;
-    
-    if (dll_path != NULL)
-        return dll_path;
-        
-    GetModuleFileName(NULL, mod_path, sizeof mod_path);
-    if ((p = strrchr(mod_path, '\\')) == NULL)
-        p = mod_path;
-    *p = '\0';
-    if ((env_path = getenv("PATH")) == NULL)
-        env_path = "";
-    size = strlen(mod_path)
-        + 1
-        + (sdz = GetSystemDirectory(NULL, 0))
-        + (wdz = GetWindowsDirectory(NULL, 0))
-        + strlen(env_path);
-        
-    if ((dll_path = malloc(size + 10)) == NULL)
-        goto fail;
-    p = dll_path;
-    p += sprintf(p, "%s;.;", mod_path);
-    p += GetSystemDirectory(p, sdz + 1);
-    *p++ = ';';
-    p += GetWindowsDirectory(p, wdz + 1);
-    *p++ = ';';
-    strcpy(p, env_path);
-    return dll_path;
+    char                fname[MAX_PATH];
+    char                *p;
 
-fail:
-    return ".";
+    if (GetModuleFileName(NULL, fname, sizeof fname - 10) > 0)
+    {
+        if ((p = strrchr(fname, ICI_DIR_SEP)) != NULL)
+            *p = '\0';
+        if (push_path_elements(a, fname))
+            return 1;
+        p = fname + strlen(fname);
+        *p++ = ICI_DIR_SEP;
+        strcpy(p, "ici");
+        if (push_path_elements(a, fname))
+            return 1;
+    }
+    if (push_path_elements(a, "."))
+        return 1;
+    if (GetSystemDirectory(fname, sizeof fname - 10) > 0)
+    {
+        if (push_path_elements(a, fname))
+            return 1;
+        p = fname + strlen(fname);
+        *p++ = ICI_DIR_SEP;
+        strcpy(p, "ici");
+        if (push_path_elements(a, fname))
+            return 1;
+    }
+    if (GetWindowsDirectory(fname, sizeof fname - 10) > 0)
+    {
+        if (push_path_elements(a, fname))
+            return 1;
+        p = fname + strlen(fname);
+        *p++ = ICI_DIR_SEP;
+        strcpy(p, "ici");
+        if (push_path_elements(a, fname))
+            return 1;
+    }
+    if ((p = getenv("PATH")) != NULL)
+    {
+        if (push_path_elements(a, p))
+            return 1;
+    }
+    return 0;
 }
 
 #endif /* ICI_LOAD_W32_H */

@@ -1,5 +1,6 @@
 #include "fwd.h"
 #include <windows.h>
+#include <io.h>
 
 static char             **argv;
 static int              argc;
@@ -25,7 +26,7 @@ determine_argv(HINSTANCE inst, char *cmd_line)
         &&
         stricmp(p, ".exe") == 0
         &&
-        (strcpy(p, ".ici"), _access(fname, 4) == 0)
+        (strcpy(p, ".ici"), access(fname, 4) == 0)
         &&
         (argv1 = _strdup(fname)) == NULL
     )

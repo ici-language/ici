@@ -245,6 +245,45 @@ fail:
     return NULL;
 }
 
+#ifdef  NOTYET
+struct_t *
+copy_autos(func_t *f)
+{
+    struct_t    *ns;
+    struct_t    *s;
+    int         nslots;
+
+    if (f->f_nautos == 0)
+        return structof(copy_struct(f->f_autos));
+    s = f->f_autos;
+    nslots = f->f_nautos + (f->f_nautos >> 1);
+    ns = (struct_t *)ici_nalloc(sizeof(struct_t) + nslots * sizeof(slot_t));
+    if (ns == NULL)
+        return NULL;
+    objof(ns)->o_tcode = TC_STRUCT;
+    assert(ici_typeof(ns) == &struct_type);
+    objof(ns)->o_flags = O_SUPER;
+    objof(ns)->o_nrefs = 1;
+    rego(ns);
+    ns->o_head.o_super = s->o_head.o_super;
+    ns->s_nels = 0;
+    ns->s_nslots = 0;
+    ns->s_slots = (slot_t *)(ns + 1);
+    memcpy((char *)ns->s_slots, (char *)s->s_slots, s->s_nslots*sizeof(slot_t));
+    ns->s_nels = s->s_nels;
+    ns->s_nslots = nslots;
+    if (ns->s_nslots <= 16)
+        ici_invalidate_struct_lookaside(ns);
+    else
+        ++ici_vsver;
+    return objof(ns);
+
+fail:
+    ici_decref(ns);
+    return NULL;
+}
+#endif
+
 /*
  * Grow the struct s so that it has twice as many slots.
  */

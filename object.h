@@ -11,7 +11,7 @@
 
 #define ICI_MAX_TYPES   64
 
-extern type_t           *ici_types[ICI_MAX_TYPES];
+extern DLI type_t       *ici_types[ICI_MAX_TYPES];
 
 #define ICI_OBJNAMEZ    30
 
@@ -96,7 +96,7 @@ struct type
  *              the implementation of the copy() function. On failure, NULL
  *              is returned and error is set. The returned object has been
  *              ici_incref'ed. The returned object should cmp() as being equal,
- *              but be a distinct object for object which are not
+ *              but be a distinct object for objects that are not
  *              intrinsically atomic.
  *
  *              Intrinsically atomic objects may use the existing function
@@ -273,6 +273,10 @@ struct objwsup
      */
 };
 #define objwsupof(o)    ((objwsup_t *)(o))
+/*
+ * This object supports a super type. (It may or may not have a super
+ * at any particular time).
+ */
 #define hassuper(o)     (objof(o)->o_flags & O_SUPER)
 
 #define ici_typeof(o)   (ici_types[(int)objof(o)->o_tcode])

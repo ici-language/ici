@@ -40,7 +40,7 @@ extern "C" {
 #undef  NOFASTFREELISTS /* Fast free lists: +8bytes per malloc, more speed. */
 #define NOCLASSPROTO
 
-#define	ICI_USE_WIN32_THREADS
+#define ICI_USE_WIN32_THREADS
 /*
  * Mentioned in the version string.
  */
@@ -50,6 +50,7 @@ extern "C" {
 #define pclose          _pclose
 #define access          _access
 #define ICI_PATH_SEP    ';'
+#define ICI_DIR_SEP     '\\'
 #define ICI_DLL_EXT     ".dll"
 
 /*
@@ -97,6 +98,7 @@ int ici_get_last_win32_error(void);
 #  include <signal.h>
 # endif
 #endif
+
 /*
  * DLI is defined in some configurations (Windows, in the conf include file)
  * to be a declaration modifyer which must be applied to data objects being
@@ -119,6 +121,15 @@ int ici_get_last_win32_error(void);
 #endif
 
 /*
+ * The character which seperates segments in a path on this
+ * architecture. This is the default value, it may have been set in
+ * the config file.
+ */
+#ifndef ICI_DIR_SEP
+#define ICI_DIR_SEP    '/'
+#endif
+
+/*
  * The string which is the extension of a dynamicly loaded library on this
  * architecture. This is the default value, it may have been set in
  * the config file.
@@ -126,13 +137,6 @@ int ici_get_last_win32_error(void);
 #ifndef ICI_DLL_EXT
 #define ICI_DLL_EXT     ".so"
 #endif
-
-/*
- * A 'random' value for Windows event handling functions to return
- * to give a better indication that an ICI style error has occured which
- * should be propagated back. See events.c
- */
-#define ICI_EVENT_ERROR 0x7A41B291
 
 /*
  * An integer conversion of a pointer that throws away low bits (with
@@ -238,54 +242,12 @@ extern DLI type_t       mem_type;
 
 extern DLI ftype_t      stdio_ftype;
 extern DLI ftype_t      ici_popen_ftype;
+extern DLI ftype_t      ici_parse_ftype;
 
-/*
- * ###These shouldn't really be in fwd.h. They are very specific to
- * parse/exec.
- */
-extern DLI op_t o_quote;
-extern DLI op_t o_looper;
-extern DLI op_t o_loop;
-extern DLI op_t o_rewind;
-extern DLI op_t o_end;
-extern DLI op_t o_break;
-extern DLI op_t o_continue;
-extern DLI op_t o_offsq;
-extern DLI op_t o_exec;
-extern DLI op_t o_mkfunc;
-extern DLI op_t o_return;
-extern DLI op_t o_call;
-extern DLI op_t o_method_call;
-extern DLI op_t o_super_call;
-extern DLI op_t o_if;
-extern DLI op_t o_ifnot;
-extern DLI op_t o_ifnotbreak;
-extern DLI op_t o_ifbreak;
-extern DLI op_t o_ifelse;
-extern DLI op_t o_pop;
-extern DLI op_t o_colon;
-extern DLI op_t o_coloncaret;
-extern DLI op_t o_dot;
-extern DLI op_t o_dotkeep;
-extern DLI op_t o_dotrkeep;
-extern DLI op_t o_mkptr;
-extern DLI op_t o_openptr;
-extern DLI op_t o_fetch;
-extern DLI op_t o_for;
-extern DLI op_t o_mklvalue;
-extern DLI op_t o_rematch;
-extern DLI op_t o_renotmatch;
-extern DLI op_t o_reextract;
-extern DLI op_t o_onerror;
-extern DLI op_t o_andand;
-extern DLI op_t o_barbar;
-extern DLI op_t o_namelvalue;
-extern DLI op_t o_switch;
-extern DLI op_t o_switcher;
 extern DLI null_t       o_null;
 extern DLI mark_t       o_mark;
-extern DLI op_t o_critsect;
-extern DLI op_t o_waitfor;
+
+
 #ifndef NODEBUGGING
 extern DLI debug_t *ici_debug;
 #endif
@@ -322,7 +284,7 @@ extern set_t    *ici_set_new(void);
 extern struct_t *ici_struct_new(void);
 extern exec_t   *new_exec(void);
 extern float_t  *ici_float_new(double);
-extern file_t   *new_file(char *, ftype_t *, string_t *);
+extern file_t   *new_file(void *, ftype_t *, string_t *, object_t *);
 extern func_t   *new_func(void);
 extern int_t    *ici_int_new(long);
 extern string_t *new_string(int);
@@ -333,7 +295,7 @@ extern ptr_t    *ici_ptr_new(object_t *, object_t *);
 extern src_t    *new_src(int, string_t *);
 extern regexp_t *ici_regexp_new(string_t *, int);
 extern int      ici_assign_fail(object_t *, object_t *, object_t *);
-extern file_t   *ici_sopen(char *, int);
+extern file_t   *ici_sopen(char *, int, object_t *);
 extern catch_t  *ici_unwind(void);
 extern void     collect(void);
 extern unsigned long hash_unique(object_t *);
@@ -388,6 +350,7 @@ extern int      compile_expr(array_t *, expr_t *, int);
 extern void     uninit_compile(void);
 extern file_t   *ici_need_stdin(void);
 extern file_t   *ici_need_stdout(void);
+extern array_t  *ici_need_path(void);
 extern int      set_issubset(set_t *, set_t *);
 extern int      set_ispropersubset(set_t *, set_t *);
 extern void     ici_reclaim(void);
@@ -403,8 +366,8 @@ extern int      ici_fetch_num(object_t *, object_t *, double *);
 extern int      ici_fetch_int(object_t *, object_t *, long *);
 extern long     ici_strtol(char const *, char **, int);
 extern int      ici_load(string_t *);
-extern char     *ici_get_dll_path(void);
-extern int      ici_find_on_path(char *, char [FILENAME_MAX], char *);
+extern int      ici_init_path(objwsup_t *externs);
+extern int      ici_find_on_path(char [FILENAME_MAX], char *);
 extern int      ici_assign_cfuncs(objwsup_t *, cfunc_t *);
 extern int      def_cfuncs(cfunc_t *);
 extern int      ici_main(int, char **);
@@ -445,7 +408,7 @@ extern DLI void ici_debug_respect_errors(void);
 /*
  * We let the compiler use it's sense to remove a lot of debug
  * code base on a constant expression for ici_debug_enabled. Just
- * to save on lots of idefs.
+ * to save on lots of ifdefs.
  */
 #define ici_debug_enabled 0
 #endif
@@ -491,7 +454,7 @@ extern void     trace_pcall(object_t *);
 
 #define ICI_MAX_TYPES   64
 
-extern type_t           *ici_types[ICI_MAX_TYPES];
+extern DLI type_t       *ici_types[ICI_MAX_TYPES];
 
 #define ICI_OBJNAMEZ    30
 
@@ -576,7 +539,7 @@ struct type
  *              the implementation of the copy() function. On failure, NULL
  *              is returned and error is set. The returned object has been
  *              ici_incref'ed. The returned object should cmp() as being equal,
- *              but be a distinct object for object which are not
+ *              but be a distinct object for objects that are not
  *              intrinsically atomic.
  *
  *              Intrinsically atomic objects may use the existing function
@@ -753,6 +716,10 @@ struct objwsup
      */
 };
 #define objwsupof(o)    ((objwsup_t *)(o))
+/*
+ * This object supports a super type. (It may or may not have a super
+ * at any particular time).
+ */
 #define hassuper(o)     (objof(o)->o_flags & O_SUPER)
 
 #define ici_typeof(o)   (ici_types[(int)objof(o)->o_tcode])
@@ -872,9 +839,9 @@ struct objwsup
 
 #endif  /* ICI_ALLALLOC */
 
-extern char             *ici_flists[4];
-extern char             *ici_fltmp;
-extern long             ici_mem;
+extern DLI char         *ici_flists[4];
+extern DLI char         *ici_fltmp;
+extern DLI long         ici_mem;
 extern long             ici_mem_limit;
 extern void             *ici_talloc_work(int fi, size_t z);
 extern void             *ici_nalloc(size_t z);
@@ -1118,6 +1085,11 @@ struct debug
 /* From file.h */
 
 
+/*
+ * File abstraction. Each function is assumed to be compatible with
+ * the stdio function of the same name. In the case were the file is
+ * a stdio stream, these are the stdio functions.
+ */
 struct ftype
 {
     int         (*ft_getch)();
@@ -1133,10 +1105,18 @@ struct ftype
 struct file
 {
     object_t    o_head;
-    char        *f_file;
+    void        *f_file;
     ftype_t     *f_type;
     string_t    *f_name;    /* Reasonable name to call it by. */
+    object_t    *f_ref;
 };
+/*
+ * f_ref                An object for this file object to reference.
+ *                      This is used to reference the string when we
+ *                      are treating a string as a file, and other cases,
+ *                      to keep the object referenced. Basically if f_file
+ *                      is an implicit reference to some object. May be NULL.
+ */
 #define fileof(o)   ((file_t *)(o))
 #define isfile(o)   (objof(o)->o_tcode == TC_FILE)
 
@@ -1170,6 +1150,7 @@ struct func
     array_t     *f_args;        /* Array of argument names. */
     struct_t    *f_autos;       /* Prototype struct of autos (incl. args). */
     string_t    *f_name;        /* Some name for the function (diagnostics). */
+    int         f_nautos;       /* If !=0, a hint for auto struct alloc. */
 };
 
 #define funcof(o)       ((func_t *)(o))

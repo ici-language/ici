@@ -9,6 +9,11 @@
  * The following portion of this file exports to ici.h. --ici.h-start--
  */
 
+/*
+ * File abstraction. Each function is assumed to be compatible with
+ * the stdio function of the same name. In the case were the file is
+ * a stdio stream, these are the stdio functions.
+ */
 struct ftype
 {
     int         (*ft_getch)();
@@ -24,10 +29,18 @@ struct ftype
 struct file
 {
     object_t    o_head;
-    char        *f_file;
+    void        *f_file;
     ftype_t     *f_type;
     string_t    *f_name;    /* Reasonable name to call it by. */
+    object_t    *f_ref;
 };
+/*
+ * f_ref                An object for this file object to reference.
+ *                      This is used to reference the string when we
+ *                      are treating a string as a file, and other cases,
+ *                      to keep the object referenced. Basically if f_file
+ *                      is an implicit reference to some object. May be NULL.
+ */
 #define fileof(o)   ((file_t *)(o))
 #define isfile(o)   (objof(o)->o_tcode == TC_FILE)
 

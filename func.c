@@ -122,7 +122,9 @@ fetch_func(object_t *o, object_t *k)
 int
 ici_op_return()
 {
-    register object_t   **x;
+    object_t            **x;
+    static int          occasionally;
+    object_t            *f;
 
     x = ici_xs.a_top;
     while
@@ -140,6 +142,31 @@ ici_op_return()
         return 1;
     }
     ici_xs.a_top = x;
+
+    /*
+     * If convenient, record the total nels the autos that this function
+     * ended up with, as a hint for the auto struct allocation on next
+     * call. If it isn't convenient, do it occasionally anyway.
+     */
+    if
+    (
+        objof(SS(_func_)->s_struct) == ici_vs.a_top[-1]
+        &&
+        SS(_func_)->s_vsver == ici_vsver
+        &&
+        isfunc(f = SS(_func_)->s_slot->sl_value)
+    )
+    {
+        funcof(f)->f_nautos = structof(ici_vs.a_top[-1])->s_nels;
+    }
+    else if (--occasionally <= 0)
+    {
+        occasionally = 10;
+        f = ici_fetch(ici_vs.a_top[-1], SSO(_func_));
+        if (isstruct(ici_vs.a_top[-1]) && isfunc(f))
+            funcof(f)->f_nautos = structof(ici_vs.a_top[-1])->s_nels;
+    }
+
     --ici_vs.a_top;
 #ifndef NOPROFILE
     if (ici_profile_active)

@@ -1,5 +1,5 @@
 #
-# For compiling a standard version for WIN32 with Microsoft C
+# For compiling a standard version for WIN32 with Microsoft C.
 #
 # Useful targets in this makefile are:
 #
@@ -73,13 +73,13 @@ WIDBSOURCES = \
 	
 SDKFILES = \
     ici$(VER).dll ici$(VER).lib ici$(VER).pdb \
-    icicore.ici icicore1.ici icicore2.ici icicore3.ici \
+    ici4core.ici ici4core1.ici ici4core2.ici ici4core3.ici \
     ici.exe wici.exe \
     ici.h icistr-setup.h \
     doc\ici.pdf \
     ici$(VER)widb.dll
 
-all		: ici$(VER).dll ici.h ici.exe wici.exe ici$(VER)widb.dll
+all		: ici$(VER).dll ici.h ici.exe iciw.exe ici$(VER)widb.dll
 
 sdk		: ici$(VER)-win32-sdk.zip
 
@@ -100,7 +100,7 @@ ici.exe		: main.obj ici$(VER).dll
 		$(CC) $(LDFLAGS) -Fe$@ main.obj setargv.obj ici$(VER).lib
 
 
-wici.exe:	winmain.obj ici$(VER).dll
+iciw.exe:	winmain.obj ici$(VER).dll
 		$(CC) $(LDFLAGS) -Fe$@ winmain.obj ici$(VER).lib user32.lib
 
 ici$(VER)widb.dll:	$(WIDBSOURCES)

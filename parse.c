@@ -377,7 +377,7 @@ primary(parse_t *p, expr_t **ep, int exclude)
     object_t    *o;
     char        *token_name = 0;
     int         wasfunc;
-    int         is_class;
+    object_t    *name;
 
     *ep = NULL;
     if ((e = ici_talloc(expr_t)) == NULL)
@@ -494,9 +494,11 @@ primary(parse_t *p, expr_t **ep, int exclude)
         }
         else if
         (
-            (is_class = p->p_got.t_obj == SSO(class))
+            (name = p->p_got.t_obj) == SSO(class)
             ||
-            p->p_got.t_obj == SSO(struct)
+            name == SSO(struct)
+            ||
+            name == SSO(module)
         )
         {
             struct_t    *super;
@@ -508,24 +510,25 @@ primary(parse_t *p, expr_t **ep, int exclude)
             if (next(p, NULL) == T_COLON || this == T_EQ)
             {
                 int     is_eq;
+                char    n[30];
 
                 is_eq = this == T_EQ;
                 switch (const_expression(p, &o, T_COMMA))
                 {
-                case 0: not_followed_by
-                        (
-                           is_eq ? "[stuct =" : "[struct :",
-                           an_expression
-                        );
-                case -1: goto fail;
+                case 0:
+                    sprintf(n, "[%s %c", stringof(name)->s_chars, is_eq ? '=' : ':');
+                    not_followed_by(n, an_expression);
+                case -1:
+                    goto fail;
                 }
-                if (!isstruct(o))
+                if (!hassuper(o))
                 {
+                    sprintf(buf, "attempt to do [%s %c %s",
+                        stringof(name)->s_chars,
+                        is_eq ? '=' : ':',
+                        objname(n, o));
+                    ici_error = buf;
                     ici_decref(o);
-                    if (this == T_EQ) /*### Improve error messages. */
-                        ici_error = "the object being extended is not a struct";
-                    else
-                        ici_error = "the super is not a struct";
                     goto fail;
                 }
                 if (is_eq)
@@ -544,7 +547,8 @@ primary(parse_t *p, expr_t **ep, int exclude)
                         ici_decref(super);
                    if (d != NULL)
                         ici_decref(o);
-                    not_followed_by("[struct : expr", "\",\" or \"]\"");
+                    sprintf(n, "[%s %c expr", stringof(name)->s_chars, is_eq ? '=' : ':');
+                    not_followed_by(n, "\",\" or \"]\"");
                     goto fail;
                 }
             }
@@ -554,18 +558,42 @@ primary(parse_t *p, expr_t **ep, int exclude)
             {
                 if ((d = ici_struct_new()) == NULL)
                     goto fail;
-                if ((d->o_head.o_super = objwsupof(super)) != NULL)
+                if (super == NULL)
+                {
+                    if (name != SSO(struct))
+                        d->o_head.o_super = objwsupof(ici_vs.a_top[-1])->o_super;
+                }
+                else
+                {
+                    d->o_head.o_super = objwsupof(super);
                     ici_decref(super);
+                }
             }
-            if (is_class)
+
+            if (name == SSO(module))
+            {
+                struct_t    *autos;
+
+                if ((autos = ici_struct_new()) == NULL)
+                    goto fail;
+                autos->o_head.o_super = objwsupof(d);
+                *ici_vs.a_top++ = objof(autos);
+                ici_decref(autos);
+                ++p->p_module_depth;
+                o = ici_evaluate(objof(p), 0);
+                --p->p_module_depth;
+                --ici_vs.a_top;
+                if (o == NULL)
+                    goto fail;
+                ici_decref(o);
+                e->e_what = T_CONST;
+                e->e_obj = objof(d);
+                break;
+            }
+            if (name == SSO(class))
             {
                 struct_t        *autos;
 
-                /*
-                 * If we don't have an explicit super, use the current statics.
-                 */
-                if (d->o_head.o_super == NULL)
-                    d->o_head.o_super = objwsupof(ici_vs.a_top[-1])->o_super;
                 /*
                  * A class definition operates within the scope context of
                  * the class. Create autos with the new struct as the super.
@@ -656,7 +684,7 @@ primary(parse_t *p, expr_t **ep, int exclude)
                 }
                 break;
             }
-            if (is_class)
+            if (name == SSO(class))
             {
                 /*
                  * That was a class definition. Restore the scope context.
@@ -718,36 +746,10 @@ primary(parse_t *p, expr_t **ep, int exclude)
                 goto fail;
             }
         }
-        else if (p->p_got.t_obj == SSO(module))
-        {
-            struct_t    *autos;
-
-            ici_decref(p->p_got.t_obj);
-            this = T_NONE;
-
-            if ((d = ici_struct_new()) == NULL)
-                goto fail;
-
-            d->o_head.o_super = objwsupof(ici_vs.a_top[-1])->o_super;
-            if ((autos = ici_struct_new()) == NULL)
-                goto fail;
-            autos->o_head.o_super = objwsupof(d);
-            *ici_vs.a_top++ = objof(autos);
-            ici_decref(autos);
-            ++p->p_module_depth;
-            o = ici_evaluate(objof(p), 0);
-            --p->p_module_depth;
-            --ici_vs.a_top;
-            if (o == NULL)
-                goto fail;
-            ici_decref(o);
-            e->e_what = T_CONST;
-            e->e_obj = objof(d);
-        }
         else
         {
             ici_decref(p->p_got.t_obj);
-            not_followed_by("[", "\"array\", \"struct\", \"set\", \"func\" or \"module\"");
+            not_followed_by("[", "\"array\", \"struct\", \"class\", \"set\", \"func\" or \"module\"");
             goto fail;
         }
         break;
@@ -1786,7 +1788,7 @@ parse_file(char *mname, char *file, ftype_t *ftype)
 
     a = NULL;
     f = NULL;
-    if ((f = new_file(file, ftype, ici_str_get_nul_term(mname))) == NULL)
+    if ((f = new_file(file, ftype, ici_str_get_nul_term(mname), NULL)) == NULL)
         goto fail;
 
     if ((a = objwsupof(ici_struct_new())) == NULL)

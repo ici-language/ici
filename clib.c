@@ -366,7 +366,7 @@ f_fopen()
         return ici_get_last_errno("open", name);
     }
     ici_enter(x);
-    if ((f = new_file((char *)stream, &stdio_ftype, stringof(ARG(0)))) == NULL)
+    if ((f = new_file((char *)stream, &stdio_ftype, stringof(ARG(0)), NULL)) == NULL)
     {
         fclose(stream);
         return 1;
@@ -422,7 +422,7 @@ f_popen()
         return ici_get_last_errno("popen", name);
     }
     ici_enter(x);
-    if ((f = new_file((char *)stream, &ici_popen_ftype, stringof(ARG(0)))) == NULL)
+    if ((f = new_file((char *)stream, &ici_popen_ftype, stringof(ARG(0)), NULL)) == NULL)
     {
         pclose(stream);
         return 1;

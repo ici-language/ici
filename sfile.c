@@ -7,6 +7,7 @@ typedef struct sfile
     char        *sf_ptr;
     int         sf_size;
     int         sf_eof;
+    int         sf_foreign_data;
 }
     sfile_t;
 
@@ -36,7 +37,8 @@ sungetc(int c, sfile_t *sf)
 static int
 sclose(sfile_t *sf)
 {
-    ici_free(sf->sf_data);
+    if (!sf->sf_foreign_data)
+        ici_free(sf->sf_data);
     ici_tfree(sf, sfile_t);
     return 0;
 }
@@ -77,15 +79,23 @@ ftype_t string_ftype =
 {
     sgetc,
     sungetc,
-    sfail,
-    sfail,
+    sfail,      /* putc */
+    sfail,      /* flush */
     sclose,
     sseek,
-    seof
+    seof,
+    sfail       /* write */
 };
 
+/*
+ * Create a file object that treats the given data (of length size) as
+ * a read-only file. If ref is non-NULL it is assumed to be an object
+ * that must hang around for this data to stay valid, and the data is
+ * used in-place. But if ref is NULL, it is assumed that the data must
+ * be copied.
+ */
 file_t *
-ici_sopen(char *data, int size)
+ici_sopen(char *data, int size, object_t *ref)
 {
     register file_t     *f;
     register sfile_t    *sf;
@@ -94,17 +104,28 @@ ici_sopen(char *data, int size)
         return NULL;
     sf->sf_size = size;
     sf->sf_eof = 0;
-    if ((sf->sf_data = ici_alloc(size)) == NULL)
+    if (sf->sf_foreign_data = ref != NULL)
     {
-        ici_tfree(sf, sfile_t);
-        return NULL;
+        sf->sf_data = data;
+        sf->sf_ptr = data;
     }
-    memcpy(sf->sf_data, data, size);
-    sf->sf_ptr = sf->sf_data;
-    if ((f = new_file((char *)sf, &string_ftype, NULL)) == NULL)
+    else
     {
-        ici_free(sf->sf_data);
-        ici_tfree(sf, sfile_t);
+        if ((sf->sf_data = ici_alloc(size)) == NULL)
+        {
+            ici_tfree(sf, sfile_t);
+            return NULL;
+        }
+        memcpy(sf->sf_data, data, size);
+        sf->sf_ptr = sf->sf_data;
+    }
+    if ((f = new_file((char *)sf, &string_ftype, NULL, ref)) == NULL)
+    {
+        if (ref == NULL)
+        {
+            ici_free(sf->sf_data);
+            ici_tfree(sf, sfile_t);
+        }
         return NULL;
     }
     return f;

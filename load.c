@@ -6,6 +6,8 @@
 #include "buf.h"
 #include "func.h"
 
+static int push_path_elements(array_t *a, char *path); /* Forward. */
+
 /*
  * If we're supporting loading of native code modules we need Unix-style
  * dlopen/dlsym/dlclose routines.  Pick a version according to the platform.
@@ -13,6 +15,7 @@
 
 # if defined(_WIN32)
 #  include "load-w32.h"
+#  include <io.h>
 # elif defined(__BEOS__)
 #  include "load-beos.h"
 # else /* Unix */
@@ -25,14 +28,15 @@ typedef void    *dll_t;
 #define valid_dll(dll)  ((dll) != NULL)
 #endif /* NODLOAD */
 
-char *
-ici_get_dll_path(void)
+/*
+ * Push path elements specific to UNIX-like systems onto the array a (which
+ * is the ICI path array used for finding dynamically loaded modules and
+ * stuff). These are in addition to the ICIPATH environment variable.
+ */
+static int
+push_os_path_elements(array_t *a)
 {
-    char        *path;
-
-    if ((path = getenv("ICIPATH")) == NULL)
-        path = ".:" PREFIX "/lib/ici";
-    return path ;
+    return push_path_elements(a, PREFIX "/lib/ici");
 }
 
 # endif /* _WIN32, __BEOS__ */
@@ -66,7 +70,6 @@ f_load(void)
 {
     string_t    *name;
     object_t    *result;
-    char        *path;
     char        fname[FILENAME_MAX];
     char        entry_symbol[64];
     objwsup_t   *ows;
@@ -115,8 +118,6 @@ f_load(void)
     if (name->s_nchars > sizeof entry_symbol - 20)
         return 0;
 
-    path = ici_get_dll_path();
-
 #ifndef NODLOAD
     /*
      * First of all we consider the case of a dynamically loaded native
@@ -125,7 +126,7 @@ f_load(void)
     strcpy(fname, ici_prefix);
     strcat(fname, name->s_chars);
 
-    if (ici_find_on_path(path, fname, ICI_DLL_EXT))
+    if (ici_find_on_path(fname, ICI_DLL_EXT))
     {
         dll_t           lib;
         object_t        *(*library_init)(void);
@@ -191,11 +192,11 @@ f_load(void)
 
     strcpy(fname, ici_prefix);
     strcat(fname, name->s_chars);
-    if (ici_find_on_path(path, fname, ".ici"))
+    if (ici_find_on_path(fname, ".ici"))
         goto got_file;
     strcpy(fname, old_prefix);
     strcat(fname, name->s_chars);
-    if (ici_find_on_path(path, fname, ".ici"))
+    if (ici_find_on_path(fname, ".ici"))
     {
     got_file:
         /*
@@ -205,7 +206,7 @@ f_load(void)
          */
         if ((stream = fopen(fname, "r")) == NULL)
             return ici_get_last_errno("open", fname);
-        if ((file = new_file((char *)stream, &stdio_ftype, ici_str_new_nul_term(fname))) == NULL)
+        if ((file = new_file((char *)stream, &stdio_ftype, ici_str_new_nul_term(fname), NULL)) == NULL)
         {
             fclose(stream);
             goto fail;
@@ -256,6 +257,75 @@ fail:
     if (result != NULL)
         ici_decref(result);
     return 1;
+}
+
+/*
+ * Push one or more file names from path, seperated by the local system
+ * seperator character (eg. : or ;), onto a. Usual error conventions.
+ */
+static int
+push_path_elements(array_t *a, char *path)
+{
+    char                *p;
+    char                *q;
+    string_t            *s;
+    object_t            **e;
+
+    for (p = path; *p != '\0'; p = *q == '\0' ? q : q + 1)
+    {
+        if ((q = strchr(p, ICI_PATH_SEP)) == NULL)
+            q = p + strlen(p);
+        if ((s = ici_str_new(p, q - p)) == NULL)
+            return 1;
+        /*
+         * Don't add duplicates...
+         */
+        for (e = a->a_base; e < a->a_top; ++e)
+        {
+            if (*e == objof(s))
+                goto skip;
+        }
+        /*
+         * Don't add inaccessable dirs...
+         */
+        if (access(s->s_chars, 0) != 0)
+        	goto skip;
+        if (ici_stk_push_chk(a, 1))
+        {
+            ici_decref(s);
+            return 1;
+        }
+        *a->a_top++ = objof(s);
+    skip:
+        ici_decref(s);
+    }
+    return 0;
+}
+
+/*
+ * Set the path variable in externs to be an array of all the directories
+ * that should be searched in for ICI extension modules and stuff.
+ */
+int
+ici_init_path(objwsup_t *externs)
+{
+    array_t             *a;
+    int                 r;
+    char                *path;
+
+    if ((a = ici_array_new(0)) == NULL)
+        return 1;
+    r = assign_base(externs, SSO(path), a);
+    ici_decref(a);
+    if (r)
+        return 1;
+    if ((path = getenv("ICIPATH")) != NULL)
+    {
+        if (push_path_elements(a, path))
+            return 1;
+    }
+    push_os_path_elements(a);
+    return 0;
 }
 
 cfunc_t load_cfuncs[] =
