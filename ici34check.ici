@@ -59,8 +59,11 @@ note = [struct
     chkbuf = "%s->ici_%s",
 ];
 
+edit = argv[1] == "-e";
+interactive = argv[1] == "-i";
+
 /*
- * Build a regular expression from the keys of the above struct...
+ * Build a regular expressions from the keys of the above struct...
  */
 check := strbuf("\\b(");
 forall (n, k in note)
@@ -74,6 +77,8 @@ check = regexp(check);
  */
 forall (fname in dir(#((\.[cC])|(\.[hH]))$#))
 {
+    repl = array();
+    have_simple_subs = 0;
     printf("%s...\n", fname);
     f = fopen(fname);
     lineno = 1;
@@ -82,14 +87,38 @@ forall (fname in dir(#((\.[cC])|(\.[hH]))$#))
         if (match = l ~~ check)
         {
             printf("%s, %d: ", fname, lineno);
-            if (note[match] != NULL)
+            if ((n = note[match]) != NULL)
             {
                 printf("[");
-                printf(note[match], match, match);
+                printf(n, match, match);
                 printf("] ");
+                if ((r := n ~~ #^%s->([a-zA-Z0-9_%]+)$#))
+                {
+                    l = gsub(l, "\\b" + match + "\\b", sprintf(r, match));
+                    ++have_simple_subs;
+                }
             }
             printf("%s\n", l ~~ #^[ \t]*(.*$)#);
         }
+        push(repl, l);
+        push(repl, "\n");
         ++lineno;
+    }
+    close(f);
+    if ((edit || interactive) && have_simple_subs)
+    {
+        if (interactive)
+        {
+            printf("Apply simply substitutions to %s (y or n)? ", fname);
+            if (getline() !~ #^[yY]#)
+                continue;
+        }
+        f := fopen(fname + ".bak", "w");
+        put(getfile(fname), f);
+        close(f);
+        f := fopen(fname, "w");
+        put(implode(repl), f);
+        close(f);
+        printf("%s updated. %s.bak made.\n", fname, fname);
     }
 }
