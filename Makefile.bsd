@@ -42,12 +42,10 @@ CLEANFILES =\
 	$(LIBRARY)\
 	ici.1 ici.1.gz\
 	icifuncs.1 icifuncs.1.gz\
-	icinet.1 icinet.1.gz\
 	icioo.1 icioo.1.gz\
 	iciops.1 iciops.1.gz\
 	icire.1 icire.1.gz\
 	icistmt.1 icistmt.1.gz\
-	icisys.1 icisys.1.gz\
 	icitypes.1 icitypes.1.gz
 
 .include <bsd.prog.mk>
