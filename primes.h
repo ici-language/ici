@@ -34,7 +34,3 @@
 #define FLOAT_PRIME_3   0x5D77DE21UL
 #define LIST_PRIME      0x47F46277UL
 #define PRIME24         0x0020C323UL
-
-#define SKT_PRIME       0x400036E5UL
-
-
