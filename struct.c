@@ -234,7 +234,7 @@ copy_struct(object_t *o)
     memcpy((char *)ns->s_slots, (char *)s->s_slots, s->s_nslots*sizeof(slot_t));
     ns->s_nels = s->s_nels;
     ns->s_nslots = s->s_nslots;
-    if (ns->s_nslots <= 8)
+    if (ns->s_nslots <= 16)
         ici_invalidate_struct_lookaside(ns);
     else
         ++ici_vsver;
@@ -378,9 +378,9 @@ fetch_struct(object_t *o, object_t *k)
     (
         isstring(k)
         &&
-        stringof(k)->s_vsver == ici_vsver
-        &&
         stringof(k)->s_struct == structof(o)
+        &&
+        stringof(k)->s_vsver == ici_vsver
     )
     {
         assert(fetch_super_struct(o, k, &v, NULL) == 1);
@@ -479,9 +479,9 @@ assign_struct(object_t *o, object_t *k, object_t *v)
     (
         isstring(k)
         &&
-        stringof(k)->s_vsver == ici_vsver
-        &&
         stringof(k)->s_struct == structof(o)
+        &&
+        stringof(k)->s_vsver == ici_vsver
         &&
         (k->o_flags & S_LOOKASIDE_IS_ATOM) == 0
     )

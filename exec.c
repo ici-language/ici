@@ -250,6 +250,12 @@ ici_evaluate(object_t *code, int n_operands)
     int                 flags;
     catch_t             frame;
     static src_t        default_src = {OBJ(TC_SRC), 0, NULL};
+#define FETCH(s, k) \
+                        isstring(objof(k)) \
+                            && stringof(k)->s_struct == structof(s) \
+                            && stringof(k)->s_vsver == ici_vsver \
+                        ? stringof(k)->s_slot->sl_value \
+                        : fetch(s, k)
 
     if (isarray(code))
     {
@@ -572,7 +578,7 @@ ici_evaluate(object_t *code, int n_operands)
                     o1 = o;
                     if (flags & OPC_COLON_CARET)
                     {
-                        if ((o = fetch(ici_vs.a_top[-1], SS(class))) == NULL)
+                        if ((o = FETCH(ici_vs.a_top[-1], SS(class))) == NULL)
                             goto fail;
                         if (!hassuper(o))
                         {
@@ -586,12 +592,12 @@ ici_evaluate(object_t *code, int n_operands)
                             ici_error = "class has no super class in :^ operation";
                             goto fail;
                         }
-                        if ((o = fetch(objwsupof(o)->o_super, ici_os.a_top[-1])) == NULL)
+                        if ((o = FETCH(objwsupof(o)->o_super, ici_os.a_top[-1])) == NULL)
                             goto fail;
                     }
                     else
                     {
-                        if ((o = fetch(ici_os.a_top[-2], ici_os.a_top[-1])) == NULL)
+                        if ((o = FETCH(ici_os.a_top[-2], ici_os.a_top[-1])) == NULL)
                             goto fail;
                     }
                     if ((flags & OPC_COLON_CALL) == 0)
@@ -674,7 +680,7 @@ ici_evaluate(object_t *code, int n_operands)
                 /*
                  * aggr key => value (os)
                  */
-                if ((o = fetch(ici_os.a_top[-2], ici_os.a_top[-1])) == NULL)
+                if ((o = FETCH(ici_os.a_top[-2], ici_os.a_top[-1])) == NULL)
                     goto fail;
                 --ici_os.a_top;
                 ici_os.a_top[-1] = o;
@@ -684,7 +690,7 @@ ici_evaluate(object_t *code, int n_operands)
                 /*
                  * aggr key => aggr key value (os)
                  */
-                if ((o = fetch(ici_os.a_top[-2], ici_os.a_top[-1])) == NULL)
+                if ((o = FETCH(ici_os.a_top[-2], ici_os.a_top[-1])) == NULL)
                     goto fail;
                 *ici_os.a_top++ = o;
                 continue;
@@ -695,7 +701,7 @@ ici_evaluate(object_t *code, int n_operands)
                  *
                  * Used in postfix ++/-- for value.
                  */
-                if ((o = fetch(ici_os.a_top[-2], ici_os.a_top[-1])) == NULL)
+                if ((o = FETCH(ici_os.a_top[-2], ici_os.a_top[-1])) == NULL)
                     goto fail;
                 ici_os.a_top += 2;
                 ici_os.a_top[-1] = o;
@@ -740,6 +746,20 @@ ici_evaluate(object_t *code, int n_operands)
                  */
                 if (ici_debug_enabled)
                     ici_debug->idbg_watch(ici_os.a_top[-3], ici_os.a_top[-2], ici_os.a_top[-1]);
+                if
+                (
+                    isstring(ici_os.a_top[-2])
+                    &&
+                    stringof(ici_os.a_top[-2])->s_struct == structof(ici_os.a_top[-3])
+                    &&
+                    stringof(ici_os.a_top[-2])->s_vsver == ici_vsver
+                    &&
+                    (objof(ici_os.a_top[-2])->o_flags & S_LOOKASIDE_IS_ATOM) == 0
+                )
+                {
+                    stringof(ici_os.a_top[-2])->s_slot->sl_value = ici_os.a_top[-1];
+                    goto assign_finish;
+                }
                 if (assign(ici_os.a_top[-3], ici_os.a_top[-2], ici_os.a_top[-1]))
                     goto fail;
                 goto assign_finish;
