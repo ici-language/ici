@@ -1,4 +1,4 @@
-Changes in version 4.0.0
+Changes in version 4.0.0 (an alpha release)
 
 *	Added stuff to build a Windows installer with a script based
 	on NullSoft's free installer system. (timl)
