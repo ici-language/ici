@@ -25,10 +25,8 @@ LDFLAGS = -export-dynamic -g
 RANLIB  = ranlib
 RM      = rm -f
 
-#INSDIR  = /usr/local
-INSDIR  = /home/users/t/ti/timl/linux
-BINDIR  = $(INSDIR)/bin
-MANDIR  = $(INSDIR)/man/man1
+PREFIX  = /usr/local
+#PREFIX  = /home/users/t/ti/timl/linux
 INSTALL = install -C
 
 #
@@ -101,32 +99,32 @@ install: $(TARGET) $(LIB) $(COREMODS) ici.h icistr-setup.h $(MAN1S) doc/ici.pdf
 	@echo '=========================================='
 	@echo 'Creating installation directories'
 	@echo '=========================================='
-	-mkdir -p $(INSDIR)/lib/ici4
-	-mkdir -p $(INSDIR)/include
-	-mkdir -p $(INSDIR)/share/doc/ici4
-	-mkdir -p $(INSDIR)/bin
-	-mkdir -p $(MANDIR)
+	-mkdir -p $(PREFIX)/lib/ici4
+	-mkdir -p $(PREFIX)/include
+	-mkdir -p $(PREFIX)/share/doc/ici4
+	-mkdir -p $(PREFIX)/bin
+	-mkdir -p $(PREFIX)/man/man1
 	@echo '=========================================='
 	@echo 'Installing ici interpreter and manual page'
 	@echo '=========================================='
-	$(INSTALL) $(TARGET) $(BINDIR)/ici-$(VERSION)
-	$(INSTALL) -m 444 $(COREMODS) $(INSDIR)/lib/ici4
-	ln -fs ici-$(VERSION) $(BINDIR)/ici
-	$(INSTALL) -m 444 $(MAN1S) $(MANDIR)
+	$(INSTALL) $(TARGET) $(PREFIX)/bin/ici-$(VERSION)
+	$(INSTALL) -m 444 $(COREMODS) $(PREFIX)/lib/ici4
+	ln -fs ici-$(VERSION) $(PREFIX)/bin/ici
+	$(INSTALL) -m 444 $(MAN1S) $(PREFIX)/man/man1
 	@echo '=========================================='
 	@echo 'Installing ici library'
 	@echo '=========================================='
-	$(INSTALL) -m 444 $(LIB) $(INSDIR)/lib/libici4.a
-	ranlib $(INSDIR)/lib/libici4.a
+	$(INSTALL) -m 444 $(LIB) $(PREFIX)/lib/libici4.a
+	ranlib $(PREFIX)/lib/libici4.a
 	@echo '=========================================='
 	@echo 'Headers'
 	@echo '=========================================='
-	$(INSTALL) -m 444 ici.h  $(INSDIR)/include
-	$(INSTALL) -m 444 icistr-setup.h $(INSDIR)/include
+	$(INSTALL) -m 444 ici.h  $(PREFIX)/include
+	$(INSTALL) -m 444 icistr-setup.h $(PREFIX)/include
 	@echo '=========================================='
 	@echo 'Documentation'
 	@echo '=========================================='
-	$(INSTALL) -m 444 doc/ici.pdf $(INSDIR)/share/doc/ici4
+	$(INSTALL) -m 444 doc/ici.pdf $(PREFIX)/share/doc/ici4
 	@echo '=========================================='
 	@echo 'Install done'
 	@echo '=========================================='
