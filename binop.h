@@ -402,7 +402,7 @@
         {
             if (re_bra[i*2] == -1)
             {
-                if ((*arrayof(o)->a_top = objof(new_string(0))) == NULL)
+                if ((*arrayof(o)->a_top = objof(ici_str_alloc(0))) == NULL)
                 {
                     goto fail;
                 }
@@ -474,7 +474,7 @@
 
     case TRI(TC_STRING, TC_STRING, T_PLUS):
     case TRI(TC_STRING, TC_STRING, T_PLUSEQ):
-        if ((o = objof(new_string(stringof(o1)->s_nchars
+        if ((o = objof(ici_str_alloc(stringof(o1)->s_nchars
             + stringof(o0)->s_nchars))) == NULL)
             goto fail;
         memcpy

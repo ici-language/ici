@@ -21,8 +21,13 @@ cmp_file(object_t *o1, object_t *o2)
 static void
 free_file(object_t *o)
 {
-    if (!(o->o_flags & (F_CLOSED|F_NOCLOSE)))
-        ici_file_close(fileof(o));
+    if ((o->o_flags & F_CLOSED) == 0)
+    {
+        if (o->o_flags & F_NOCLOSE)
+            (*fileof(o)->f_type->ft_flush)(fileof(o)->f_file);
+        else
+            ici_file_close(fileof(o));
+    }
     ici_tfree(o, file_t);
 }
 

@@ -257,6 +257,7 @@ extern object_t *ici_atom(object_t *, int);
 extern int      ici_parse_file(char *, char *, ftype_t *);
 extern array_t  *ici_array_new(ptrdiff_t);
 extern mem_t    *ici_mem_new(void *, size_t, int, void (*)());
+extern string_t *ici_str_alloc(int);
 extern string_t *ici_str_new_nul_term(char *);
 extern string_t *ici_str_get_nul_term(char *);
 extern set_t    *ici_set_new(void);
@@ -826,7 +827,7 @@ struct cfunc
 
 /*
  * Return the cf_arg1 and cf_arg2 fields of the current C function.
- * The first is a function pointer, the second a char *.
+ * They are both (void *) (CF_ARG1 used to be a function pointer.)
  */
 #define CF_ARG1()       (cfuncof(ici_os.a_top[-1])->cf_arg1)
 #define CF_ARG2()       (cfuncof(ici_os.a_top[-1])->cf_arg2)

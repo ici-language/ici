@@ -196,7 +196,7 @@ do_smash
             if (ici_stk_push_chk(a, 1))
                goto fail;
             size = do_repl(s, repls[-i]->s_chars, repls[-i]->s_nchars, NULL);
-            if ((ns = new_string(size)) == NULL)
+            if ((ns = ici_str_alloc(size)) == NULL)
                 goto fail;
             do_repl(s, repls[-i]->s_chars, repls[-i]->s_nchars, ns->s_chars);
             if ((ns = stringof(ici_atom(objof(ns), 1))) == NULL)
@@ -477,7 +477,7 @@ f_gsub()
         goto fail;
     for (p = a->a_base, size = 0; p < a->a_top; ++p)
         size += stringof(*p)->s_nchars;
-    if ((ns = new_string(size)) == NULL)
+    if ((ns = ici_str_alloc(size)) == NULL)
         goto fail;
     for (p = a->a_base, s = ns->s_chars; p < a->a_top; ++p)
     {

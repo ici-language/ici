@@ -54,7 +54,7 @@ struct cfunc
 
 /*
  * Return the cf_arg1 and cf_arg2 fields of the current C function.
- * The first is a function pointer, the second a char *.
+ * They are both (void *) (CF_ARG1 used to be a function pointer.)
  */
 #define CF_ARG1()       (cfuncof(ici_os.a_top[-1])->cf_arg1)
 #define CF_ARG2()       (cfuncof(ici_os.a_top[-1])->cf_arg2)

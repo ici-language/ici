@@ -16,9 +16,12 @@
  * Allocate a new string object (single allocation) large enough to hold
  * nchars characters, and register it with the garbage collector.  Note: This
  * string is not yet an atom, but must become so as it is *not* mutable.
+ *
+ * WARINING: This is *not* the normal way to make a string object. See other
+ * functions below.
  */
 string_t *
-new_string(int nchars)
+ici_str_alloc(int nchars)
 {
     register string_t   *s;
     size_t              az;

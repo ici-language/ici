@@ -50,6 +50,7 @@ note = [struct
     parse_file = "%s->ici_%s",
     rego = "%s->ici_%s",
     stdio_ftype = "%s->ici_%s",
+    new_string = "%s->ici_str_alloc",
 ];
 
 /*

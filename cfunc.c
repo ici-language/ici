@@ -1484,7 +1484,7 @@ f_implode()
             break;
         }
     }
-    if ((s = new_string(i)) == NULL)
+    if ((s = ici_str_alloc(i)) == NULL)
         return 1;
     p = s->s_chars;
     for (o = ici_astart(a); o != ici_alimit(a); o = ici_anext(a, o))
