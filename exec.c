@@ -349,42 +349,31 @@ ici_evaluate(object_t *code, int n_operands)
 #endif
         if (ispc(o = ici_xs.a_top[-1]))
         {
-            if (pcof(o)->pc_next < pcof(o)->pc_limit)
-            {
-                object_t   *tmp;
+            object_t   *tmp;
 
-                tmp = *pcof(o)->pc_next++;
-                o = tmp;
-                if (isop(o))
-                    goto an_op;
-                *ici_xs.a_top++ = o;
-            }
-            else
-            {
-                extern int      ici_op_looper();
-
-                --ici_xs.a_top;
-                if (isop(ici_xs.a_top[-1]) && opof(ici_xs.a_top[-1])->op_func == ici_op_looper)
-                {
-                    /*
-                     * End of that code array, but if this is a looper pc,
-                     * just rewind it (a sort of in-line expansion of
-                     * ici_op_looper).
-                     */
-                    ++ici_xs.a_top;
-                    pcof(o)->pc_next = pcof(o)->pc_code->a_base;
-                }
-                goto stable_stacks_continue;
-            }
+            tmp = *pcof(o)->pc_next++;
+            o = tmp;
+            if (isop(o))
+                goto an_op;
         }
+        else
+            --ici_xs.a_top;
 
+        /*
+         * Formally, the thing being executed should be on top of the
+         * execution stack when we do this switch. But the value is
+         * known to be pointed to by o, and most things pop it off.
+         * We get a net gain if we assume it is pre-popped, because we
+         * can avoid pushing things that are comming out of code arrays
+         * on at all. Some of the cases below must push it on to restore
+         * the formal model.
+         */
         switch (o->o_tcode)
         {
         case TC_SRC:
             decref(src);
             src = srcof(o);
             incref(src);
-            --ici_xs.a_top;
 #ifndef NODEBUGGING
             if (ici_debug_enabled)
                 ici_debug->idbg_src(srcof(o));
@@ -402,6 +391,7 @@ ici_evaluate(object_t *code, int n_operands)
             goto stable_stacks_continue;
 
         case TC_PARSE:
+            *ici_xs.a_top++ = o;
             if (parse_exec())
                 goto fail;
             continue;
@@ -463,8 +453,10 @@ ici_evaluate(object_t *code, int n_operands)
                      */
                     if ((f = fetch(ici_vs.a_top[-1], SSO(load))) == objof(&o_null))
                         goto undefined;
+                    *ici_xs.a_top++ = o; /* Temp restore formal state. */
                     if (ici_func(f, "o", o) != NULL)
                         goto fail;
+                    --ici_xs.a_top;
                     switch
                     (
                         fetch_super
@@ -490,7 +482,6 @@ ici_evaluate(object_t *code, int n_operands)
                 }
                 ++ici_os.a_top;
             }
-            --ici_xs.a_top;
             continue;
 
         case TC_CATCH:
@@ -504,6 +495,7 @@ ici_evaluate(object_t *code, int n_operands)
              * on it, it becomes the return value, else we return &o_null.
              * The caller knows if there is really a value to return.
              */
+            *ici_xs.a_top++ = o; /* Restore formal state. */
             if (o->o_flags & CF_EVAL_BASE)
             {
                 /*
@@ -525,26 +517,16 @@ ici_evaluate(object_t *code, int n_operands)
             goto stable_stacks_continue;
 
         case TC_FORALL:
+            *ici_xs.a_top++ = o; /* Restore formal state. */
             if (exec_forall())
                 goto fail;
             continue;
 
         default:
-            *ici_os.a_top++ = *--ici_xs.a_top;
+            *ici_os.a_top++ = o;
             continue;
 
         case TC_OP:
-            /*
-             * We pre-decrement the execution stack for operators as the
-             * operator which is currently on top of the execution stack
-             * is known to be pointed to by o, it can't be garbage collected
-             * because it is in the code array which is pointed to by the
-             * pc, and most of the time we arrive at an_op: which has
-             * avoided ever pushing it on the stack anyway. For a few
-             * cases below we must restore the stack for consistency in
-             * called functions.
-             */
-            --ici_xs.a_top;
         an_op:
             switch (opof(o)->op_ecode)
             {
@@ -940,6 +922,21 @@ ici_evaluate(object_t *code, int n_operands)
                 ici_error = "break not within loop or switch";
                 goto fail;
 
+            case OP_REWIND:
+                /*
+                 * This is the end of a code array that is the subject
+                 * of a loop. Rewind the pc back to its start.
+                 */
+                pcof(ici_xs.a_top[-1])->pc_next = pcof(ici_xs.a_top[-1])->pc_code->a_base;
+                goto stable_stacks_continue;
+
+            case OP_ENDCODE:
+                /*
+                 * pc => - (xs)
+                 */
+                --ici_xs.a_top;
+                goto stable_stacks_continue;
+
             case OP_LOOP:
                 /*
                  *      => obj looper pc (xs)
@@ -953,7 +950,6 @@ ici_evaluate(object_t *code, int n_operands)
                  * array => - (os)
                  *       => pc (xs)
                  */
-
                 if (new_pc(arrayof(ici_os.a_top[-1]), ici_xs.a_top))
                     goto fail;
                 ++ici_xs.a_top;

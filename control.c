@@ -161,4 +161,6 @@ op_t    o_switch        = {OBJ(TC_OP), ici_op_switch};
 op_t    o_switcher      = {OBJ(TC_OP), ici_op_switcher};
 op_t    o_critsect      = {OBJ(TC_OP), NULL, OP_CRITSECT};
 op_t    o_waitfor       = {OBJ(TC_OP), NULL, OP_WAITFOR};
+op_t    o_rewind        = {OBJ(TC_OP), NULL, OP_REWIND};
+op_t    o_end           = {OBJ(TC_OP), NULL, OP_ENDCODE};
 

@@ -244,6 +244,8 @@ extern DLI ftype_t      ici_popen_ftype;
 extern DLI op_t o_quote;
 extern DLI op_t o_looper;
 extern DLI op_t o_loop;
+extern DLI op_t o_rewind;
+extern DLI op_t o_end;
 extern DLI op_t o_break;
 extern DLI op_t o_continue;
 extern DLI op_t o_offsq;

@@ -1360,6 +1360,12 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m)
             *a1->a_top++ = objof(&o_ifnotbreak);
             if (statement(p, a1, NULL, "while (expr)") == -1)
                 return -1;
+            if (ici_stk_push_chk(a1, 1))
+            {
+                decref(a1);
+                return -1;
+            }
+            *a1->a_top++ = objof(&o_rewind);
             if (ici_stk_push_chk(a, 2))
                 return -1;
             *a->a_top++ = objof(a1);
@@ -1389,9 +1395,10 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m)
                 decref(a1);
                 return not_followed_by("do statement while (expr", "\");\"");
             }
-            if (ici_stk_push_chk(a1, 1))
+            if (ici_stk_push_chk(a1, 2))
                 return -1;
             *a1->a_top++ = objof(&o_ifnotbreak);
+            *a1->a_top++ = objof(&o_rewind);
 
             if (ici_stk_push_chk(a, 2))
                 return -1;
@@ -1501,6 +1508,9 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m)
                 return not_followed_by("for (expr; expr; expr", "\")\"");
             if (statement(p, a1, NULL, "for (expr; expr; expr)") == -1)
                 return -1;
+            if (ici_stk_push_chk(a1, 1))
+                return -1;
+            *a1->a_top++ = objof(&o_rewind);
             if (ici_stk_push_chk(a, 2))
                 return -1;
             *a->a_top++ = objof(a1);
@@ -1667,9 +1677,10 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m)
             case 0: not_followed_by("waitfor (expr;", an_expression);
             case -1: return -1;
             }
-            if (ici_stk_push_chk(a2, 1))
+            if (ici_stk_push_chk(a2, 2))
                 return -1;
             *a2->a_top++ = objof(&o_waitfor);
+            *a2->a_top++ = objof(&o_rewind);
             /*
              * After we break out of the loop, we execute the statement,
              * but it is still on top of the critical section. After the
@@ -1795,10 +1806,6 @@ parse_exec(void)
     parse_t     *p;
     array_t     *a;
 
-/*printf("parse_exec entering os %d, xs %d, vs %d\n",
-ici_array_nels(&ici_os),
-ici_array_nels(&ici_xs),
-ici_array_nels(&ici_vs)); ###*/
     if ((a = new_array(0)) == NULL)
         return 1;
 
@@ -1818,10 +1825,6 @@ ici_array_nels(&ici_vs)); ###*/
             }
             ++ici_xs.a_top;
             decref(a);
-/*printf("parse_exec returning os %d, xs %d, vs %d\n",
-ici_array_nels(&ici_os),
-ici_array_nels(&ici_xs),
-ici_array_nels(&ici_vs)); ###*/
             return 0;
 
         case 0:
@@ -1841,10 +1844,6 @@ ici_array_nels(&ici_vs)); ###*/
             }
             --ici_xs.a_top;
             decref(a);
-/*printf("parse_exec leaving os %d, xs %d, vs %d\n",
-ici_array_nels(&ici_os),
-ici_array_nels(&ici_xs),
-ici_array_nels(&ici_vs)); ###*/
             return 0;
 
         default:
