@@ -124,6 +124,11 @@ free_exec(object_t *o)
     if (x->x_thread_handle != NULL)
         CloseHandle(x->x_thread_handle);
 #endif
+#ifdef _THREAD_SAFE
+    if (x->x_thread_handle != NULL)
+	    pthread_exit(NULL);
+    (void)sem_destroy(&x->x_semaphore);
+#endif
     ici_tfree(o, exec_t);
 }
 
@@ -201,6 +206,13 @@ ici_new_exec(void)
         goto fail;
     }
 #endif
+#ifdef _THREAD_SAFE
+    if (sem_init(&x->x_semaphore, 0, 0) == -1)
+    {
+	    syserr();
+	    goto fail;
+    }
+#endif
     x->x_state = XS_ACTIVE;
     x->x_count = 20;
     x->x_next = ici_execs;
@@ -264,7 +276,7 @@ ici_evaluate(object_t *code, int n_operands)
      * be able to have a reference to it after we return. It will get
      * poped off before we do. It's not registered with the garbage
      * collector, so after that, it's just gone. We do this to save
-     * allocation/collection of an oject on every call from C to ICI.
+     * allocation/collection of an object on every call from C to ICI.
      */
     frame.o_head.o_tcode = TC_CATCH;
     frame.o_head.o_flags = CF_EVAL_BASE;

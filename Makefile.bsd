@@ -1,7 +1,7 @@
 #
-# For compiling a standard version on FreeBSD {2,3}.x
+# For compiling a standard version on FreeBSD {2,3,4}.x
 #
-PROG	= ici3
+PROG	= ici4
 VERSION	= "`awk '{print $$1}' VERSION`"
 PREFIX	?= /usr/local
 # Keep all symbol information please.  Used by bsd.prog.mk's install target
@@ -10,7 +10,7 @@ BINDIR	= $(PREFIX)/bin
 OPTIM	= -O2
 LDFLAGS = -g
 LDADD	= -lm
-DEFS	= -DCONFIG_FILE='"conf-bsd.h"' -DPREFIX='"$(PREFIX)"'
+DEFS	= -DCONFIG_FILE='"conf-bsd.h"' -DPREFIX='"$(PREFIX)"' -D_THREAD_SAFE -pthread
 LDEXTRA != osv=`uname -r`; [ `expr "$osv" : "'^2'"` = 0 ] && echo ' -export-dynamic'
 LDFLAGS	+= $(LDEXTRA)
 CFLAGS	+= $(OPTIM) -g -Wall -ansi -I. $(DEFS)
@@ -60,7 +60,7 @@ PCREHDRS=\
 DOCS=\
 	doc/ici-a4.ps doc/ici-ltr.ps doc/ici.txt
 
-beforeinstall: ici3.1.gz
+beforeinstall:
 	@echo '=========================================='
 	@echo 'Installing ici interpreter and manual page'
 	@echo '=========================================='

@@ -9,11 +9,15 @@
 #ifdef _WIN32
 HANDLE                  ici_mutex;
 #endif
+#ifdef _THREAD_SAFE
+pthread_mutex_t		ici_mutex;
+static pthread_mutex_t	n_active_threads_mutex;
+#endif
 
 long                    ici_n_active_threads;
 
 /*
- * Leave code that uses ICI data. ICI data referrs to *any* ICI objects
+ * Leave code that uses ICI data. ICI data refers to *any* ICI objects
  * or static variables. You would want to call this because you are
  * about to do something that uses a lot of CPU time or blocks for
  * any real time. But you must not even sniff any of ICI's data until
@@ -52,10 +56,18 @@ ici_leave(void)
         InterlockedDecrement(&ici_n_active_threads);
         ReleaseMutex(ici_mutex);
 #else
+# ifdef _THREAD_SAFE
+	pthread_mutex_lock(&n_active_threads_mutex);
+	--ici_n_active_threads;
+	pthread_mutex_unlock(&n_active_threads_mutex);
+
+	pthread_mutex_unlock(&ici_mutex);
+# else
         /*
          * It is ok to do ici_leave in implementations with
          * no thread support.
          */
+# endif
 #endif
     }
     return x;
@@ -82,10 +94,19 @@ ici_enter(exec_t *x)
         InterlockedIncrement(&ici_n_active_threads);
         WaitForSingleObject(ici_mutex, INFINITE);
 #else
+# ifdef _THREAD_SAFE
+	pthread_mutex_lock(&n_active_threads_mutex);
+	++ici_n_active_threads;
+	pthread_mutex_unlock(&n_active_threads_mutex);
+
+	if (pthread_mutex_lock(&ici_mutex) == -1)
+		perror("ici_mutex");
+# else
         /*
          * It is ok to do ici_enter in implementations with
          * no thread support.
          */
+# endif
 #endif
         if (x != ici_exec)
         {
@@ -119,7 +140,7 @@ ici_yield(void)
     exec_t              *x;
 
     x = ici_exec;
-    if (ici_n_active_threads > 1 && x->x_critsect == 0)
+    if (ici_n_active_threads > 1 && x->x_critsect == 0) 
     {
         decref(&ici_os);
         decref(&ici_xs);
@@ -131,10 +152,17 @@ ici_yield(void)
         ReleaseMutex(ici_mutex);
         WaitForSingleObject(ici_mutex, INFINITE);
 #else
+# ifdef _THREAD_SAFE
+	pthread_mutex_unlock(&ici_mutex);
+	pthread_yield();
+	if (pthread_mutex_lock(&ici_mutex) == -1)
+		perror("ici_mutex");
+# else
         /*
          * It is ok to do ici_yield in implementations with
          * no thread support.
          */
+# endif
 #endif
         if (x != ici_exec)
         {
@@ -184,7 +212,12 @@ ici_waitfor(object_t *o)
     if (WaitForSingleObject(x->x_semaphore, INFINITE) == WAIT_FAILED)
         e = "wait failed";
 #else
+# ifdef _THREAD_SAFE
+    if (sem_wait(&x->x_semaphore) == -1)
+	    e = "wait failed";
+# else
     e = "attempt to wait in waitfor, but no thread support";
+# endif
 #endif
     ici_enter(x);
     ++ici_exec->x_critsect;
@@ -213,10 +246,14 @@ ici_wakeup(object_t *o)
 #ifdef _WIN32
             ReleaseSemaphore(x->x_semaphore, 1, NULL);
 #else
+# ifdef _THREAD_SAFE
+	    sem_post(&x->x_semaphore);
+# else
             /*
              * It is ok to do wakeup calls in implementations
              * with no thread support.
              */
+# endif
 #endif
         }
     }
@@ -230,12 +267,19 @@ ici_wakeup(object_t *o)
  * of the new context has the ICI function to be called configured on
  * it.
  */
-static long
+static
 #ifdef _WIN32
+long
 WINAPI /* Ensure correct Win32 calling convention. */
-#endif
 ici_thread_base(exec_t *x)
 {
+#endif
+#ifdef _THREAD_SAFE
+void *
+ici_thread_base(void *arg)
+{
+    exec_t		*x = arg;
+#endif
     int                 n_ops;
 
     ici_enter(x);
@@ -285,7 +329,7 @@ f_thread()
     if ((*x->x_os->a_top = objof(new_int(NARGS() - 1))) == NULL)
         goto fail;
     decref(*x->x_os->a_top);
-	++x->x_os->a_top;
+    ++x->x_os->a_top;
     *x->x_os->a_top++ = ARG(0);
     /*
      * Create the native machine thread. We incref x to give the new thread
@@ -307,8 +351,25 @@ f_thread()
         x->x_thread_handle = thread_h;
     }
 #else
+# ifdef _THREAD_SAFE
+    {
+	pthread_attr_t	thread_attr;
+
+	pthread_attr_init(&thread_attr);
+	pthread_attr_setschedpolicy(&thread_attr, SCHED_RR);
+	if (pthread_create(&x->x_thread_handle, NULL, ici_thread_base, x) == -1)
+	{
+	    syserr();
+	    decref(x);
+	    goto fail;
+	}
+	pthread_detach(x->x_thread_handle);
+	pthread_attr_destroy(&thread_attr);
+    }
+# else
     ici_error = "this implementation does not support thread creation";
     goto fail;
+# endif
 #endif
     return ici_ret_with_decref(objof(x));
 
@@ -341,6 +402,31 @@ ici_init_thread_stuff(void)
     if ((ici_mutex = CreateMutex(NULL, 0, NULL)) == NULL)
         return ici_get_last_win32_error();
 #endif
+#ifdef _THREAD_SAFE
+    pthread_mutexattr_t	mutex_attr;
+
+    if (pthread_mutexattr_init(&mutex_attr) == -1)
+    {
+	perror("pthread_mutexattr_init");
+	syserr();
+	return 1;
+    }
+    pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE);
+    if (pthread_mutex_init(&ici_mutex, &mutex_attr) == -1)
+    {
+        syserr();
+	pthread_mutexattr_destroy(&mutex_attr);
+        return 1;
+    }
+    if (pthread_mutex_init(&n_active_threads_mutex, &mutex_attr) == -1)
+    {
+        syserr();
+        pthread_mutexattr_destroy(&mutex_attr);
+        (void)pthread_mutex_destroy(&ici_mutex);
+        return 1;
+    }
+    pthread_mutexattr_destroy(&mutex_attr);
+#endif
     return 0;
 }
 
@@ -350,3 +436,4 @@ cfunc_t ici_thread_cfuncs[] =
     {CF_OBJ,    "wakeup",        f_wakeup},
     {CF_OBJ}
 };
+

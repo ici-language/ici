@@ -42,6 +42,7 @@
 #include <sys/types.h>
 
 #ifdef  BSD
+#include <unistd.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 #else
@@ -2093,7 +2094,7 @@ f_waitfor()
     ici_error = "no file selected";
     return 1;
 }
-#endif /* ndef NOWAITFOR */
+#endif /* ifndef NOWAITFOR */
 
 static int
 f_gettoken()

@@ -17,6 +17,12 @@
 #include <windows.h>
 #endif
 
+#ifdef _THREAD_SAFE
+#include <sched.h>
+#include <pthread.h>
+#include <semaphore.h>
+#endif
+
 union ostemp
 {
     int_t       i;
@@ -41,6 +47,10 @@ struct exec
 #ifdef _WIN32
     HANDLE      x_semaphore;
     HANDLE      x_thread_handle;
+#endif
+#ifdef _THREAD_SAFE
+    sem_t	x_semaphore;
+    pthread_t	x_thread_handle;
 #endif
 };
 #define execof(o)        ((exec_t *)(o))
