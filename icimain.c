@@ -42,6 +42,16 @@ ici_main(int argc, char *argv[])
     FILE                *stream;
     ici_file_t          *f;
 
+#   ifndef NDEBUG
+        /*
+         * There is an alarming tendancy to forget the NDEBUG define for
+         * release builds of ICI.  This printf is an attempt to stop it.
+         * Debug builds are *VERY* inefficient due to some very expensive
+         * asserts in the main interpreter loop.
+         */
+        fprintf(stderr, "%s: Warning - this is a debug build.\n", argv[0]);
+#   endif
+
     if (ici_init())
         goto fail;
 
