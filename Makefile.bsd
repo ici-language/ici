@@ -77,6 +77,14 @@ beforeinstall: ici.h all-man
 	@echo '=========================================='
 	@echo 'Installing ici interpreter and manual page'
 	@echo '=========================================='
+	@echo '=========================================='
+	@echo 'Creating installation directories'
+	@echo '=========================================='
+	-mkdir -p $(BINDIR)
+	-mkdir -p $(PREFIX)/include
+	-mkdir -p $(PREFIX)/man/man1
+	-mkdir -p $(PREFIX)/lib/ici4
+	-mkdir -p $(PREFIX)/share/doc/ici4
 
 $(LIBRARY): $(OBJS)
 	$(AR) r $(LIBRARY) $(OBJS)
@@ -86,12 +94,6 @@ $(PROG) : $(LIBRARY)
 
 # Install the init file, headers and docs.
 afterinstall:
-	@echo '=========================================='
-	@echo 'Creating installation directories'
-	@echo '=========================================='
-	-mkdir -p $(PREFIX)/include
-	-mkdir -p $(PREFIX)/lib/ici4
-	-mkdir -p $(PREFIX)/share/doc/ici4
 	@echo '=========================================='
 	@echo 'Installing ici library'
 	@echo '=========================================='
