@@ -299,6 +299,8 @@ ici_wakeup(ici_obj_t *o)
     return 0;
 }
 
+
+#if defined(ICI_USE_WIN32_THREADS) || defined(ICI_USE_POSIX_THREADS)
 /*
  * Entry point for a new thread. The passed argument is the pointer
  * to the execution context (ici_exec_t *). It has one ref count that is
@@ -313,18 +315,15 @@ long
 WINAPI /* Ensure correct Win32 calling convention. */
 ici_thread_base(ici_exec_t *x)
 {
-#else
-# ifdef ICI_USE_POSIX_THREADS
+#endif
+
+#ifdef ICI_USE_POSIX_THREADS
 void *
 ici_thread_base(void *arg)
 {
     ici_exec_t      *x = arg;
-# else
-int
-ici_thread_base(exec_t *x)
-{
-# endif
 #endif
+
     int                 n_ops;
 
     ici_enter(x);
@@ -345,6 +344,7 @@ ici_thread_base(exec_t *x)
     (void)ici_leave();
     return 0;
 }
+#endif /* #if defined(ICI_USE_WIN32_THREADS) || defined(ICI_USE_POSIX_THREADS) */
 
 /*
  * From ICI: exec = thread(callable, arg1, arg2, ...)
