@@ -122,8 +122,8 @@ m_respondsto(object_t *o)
 
 cfunc_t ici_oo_funcs[] =
 {
-    {CF_OBJ,    "new",          m_new},
-    {CF_OBJ,    "isa",          m_isa},
-    {CF_OBJ,    "respondsto",   m_respondsto},
+    {CF_OBJ,    (char *)SS(new),          m_new},
+    {CF_OBJ,    (char *)SS(isa),          m_isa},
+    {CF_OBJ,    (char *)SS(respondsto),   m_respondsto},
     {CF_OBJ}
 };

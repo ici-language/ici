@@ -82,7 +82,7 @@ struct sstring
     long        s_vsver;        /* The vs version at that time. */
     unsigned long s_hash;       /* String hash code or 0 if not yet computed */
     int         s_nchars;
-    char        s_chars[16];    /* And following bytes. */
+    char        s_chars[12];    /* Longest string in sstring.h */
 };
 
 #define SSTRING(name, str)    extern sstring_t ici_ss_##name;

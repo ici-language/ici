@@ -2,15 +2,6 @@
 #include <fwd.h>
 
 /*
- * The following define is useful during debug and testing. It will
- * cause every call to an allocation function to garbage collect.
- * It will be very slow, but problems with memory will be tripped
- * over sooner. To be effective, you really also need to set
- * ICI_ALLALLOC in alloc.h.
- */
-#define ALLCOLLECT      0       /* Collect on every alloc call. */
-
-/*
  * A chunk of memory in which to keep dense allocations of small
  * objects to avoid boundary word overheads and allow simple fast
  * free lists.
@@ -27,15 +18,15 @@ struct achunk
  * When we reach the limit, a garbage collection is triggered (which
  * will presumably reduce ici_mem and re-evaluate the limit).
  */
-unsigned long           ici_mem;
-unsigned long           ici_mem_limit;
+long                    ici_mem;
+long                    ici_mem_limit;
 
 /*
  * A count and estimated total size of outstanding allocs done through
  * ici_alloc and yet freed with ici_free.
  */
 int                     ici_n_allocs;
-unsigned long           ici_alloc_mem;
+long                    ici_alloc_mem;
 
 /*
  * Temporary pointer used in the ici_talloc/ici_tfree macros.
@@ -232,7 +223,7 @@ ici_alloc(size_t z)
 void
 ici_free(void *p)
 {
-    size_t              z;
+    ptrdiff_t           z;
 
     /*
      * This makes a really dodgy attempt to track memory usage. Because

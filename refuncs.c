@@ -619,10 +619,10 @@ f_smash()
 
 cfunc_t ici_re_funcs[] =
 {
-    {CF_OBJ,    "regexp",       f_regexp,       NULL,   NULL},
-    {CF_OBJ,    "regexpi",      f_regexp,       NULL,   ""},
-    {CF_OBJ,    "sub",          f_sub},
-    {CF_OBJ,    "gsub",         f_gsub},
-    {CF_OBJ,    "smash",        f_smash},
+    {CF_OBJ,    (char *)SS(regexp),       f_regexp,       NULL,   NULL},
+    {CF_OBJ,    (char *)SS(regexpi),      f_regexp,       NULL,   ""},
+    {CF_OBJ,    (char *)SS(sub),          f_sub},
+    {CF_OBJ,    (char *)SS(gsub),         f_gsub},
+    {CF_OBJ,    (char *)SS(smash),        f_smash},
     {CF_OBJ}
 };

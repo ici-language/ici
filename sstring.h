@@ -10,6 +10,10 @@
  *
  * This file is included with variying definitions of SSTRING()
  * from str.h (for global extern defines), and twice from sstring.c.
+ *
+ * NB: The declaraction of the static string structur in str.h must
+ * have an s_chars[] field of large enough size to cover the longest
+ * string in this file.
  */
 SSTRING(struct, "struct")
 SSTRING(float, "float")
@@ -37,7 +41,7 @@ SSTRING(static, "static")
 SSTRING(switch, "switch")
 SSTRING(while, "while")
 SSTRING(try, "try")
-SSTRING(_funcname_, "_funcname_")
+SSTRING(_func_, "_func_")
 SSTRING(_stdin, "stdin")
 SSTRING(_stdout, "stdout")
 SSTRING(_stderr, "stderr")
@@ -74,3 +78,112 @@ SSTRING(critsect, "critsect")
 #ifndef NOCLASSPROTO
 SSTRING(proto, "proto")
 #endif
+
+
+/*
+ * Names of intrinsic functions (that aren't already mentioned above).
+ */
+SSTRING(copy, "copy")
+SSTRING(exit, "exit")
+SSTRING(fail, "fail")
+SSTRING(int, "int")
+SSTRING(eq, "eq")
+SSTRING(parse, "parse")
+SSTRING(string, "string")
+SSTRING(typeof, "typeof")
+SSTRING(push, "push")
+SSTRING(pop, "pop")
+SSTRING(rpush, "rpush")
+SSTRING(rpop, "rpop")
+SSTRING(call, "call")
+SSTRING(keys, "keys")
+SSTRING(vstack, "vstack")
+SSTRING(tochar, "tochar")
+SSTRING(toint, "toint")
+SSTRING(rand, "rand")
+SSTRING(interval, "interval")
+SSTRING(explode, "explode")
+SSTRING(implode, "implode")
+SSTRING(sopen, "sopen")
+SSTRING(mopen, "mopen")
+SSTRING(sprintf, "sprintf")
+SSTRING(currentfile, "currentfile")
+SSTRING(del, "del")
+SSTRING(alloc, "alloc")
+SSTRING(mem, "mem")
+SSTRING(nels, "nels")
+SSTRING(super, "super")
+SSTRING(scope, "scope")
+SSTRING(isatom, "isatom")
+SSTRING(gettoken, "gettoken")
+SSTRING(gettokens, "gettokens")
+SSTRING(num, "num")
+SSTRING(assign, "assign")
+SSTRING(fetch, "fetch")
+SSTRING(abs, "abs")
+#ifndef NOMATH
+SSTRING(sin, "sin")
+SSTRING(cos, "cos")
+SSTRING(tan, "tan")
+SSTRING(asin, "asin")
+SSTRING(acos, "acos")
+SSTRING(atan, "atan")
+SSTRING(atan2, "atan2")
+SSTRING(exp, "exp")
+SSTRING(log, "log")
+SSTRING(log10, "log10")
+SSTRING(pow, "pow")
+SSTRING(sqrt, "sqrt")
+SSTRING(floor, "floor")
+SSTRING(ceil, "ceil")
+SSTRING(fmod, "fmod")
+#endif
+SSTRING(top, "top")
+SSTRING(include, "include")
+SSTRING(sort, "sort")
+#ifdef  WHOALLOC
+SSTRING(reclaim, "reclaim")
+#endif
+SSTRING(now, "now")
+SSTRING(calendar, "calendar")
+SSTRING(version, "version")
+SSTRING(cputime, "cputime")
+SSTRING(sleep, "sleep")
+SSTRING(build, "build")
+SSTRING(printf, "printf")
+SSTRING(getchar, "getchar")
+SSTRING(getfile, "getfile")
+SSTRING(getline, "getline")
+SSTRING(fopen, "fopen")
+#ifndef NOPIPES
+SSTRING(_popen, "popen")
+#endif
+SSTRING(put, "put")
+SSTRING(flush, "flush")
+SSTRING(close, "close")
+SSTRING(seek, "seek")
+#ifndef NOSYSTEM
+SSTRING(system, "system")
+#endif
+SSTRING(eof, "eof")
+SSTRING(remove, "remove")
+#ifndef NODIR
+SSTRING(dir, "dir")
+#endif
+SSTRING(getcwd, "getcwd")
+SSTRING(chdir, "chdir")
+SSTRING(rename, "rename")
+SSTRING(eventloop, "eventloop")
+SSTRING(debug, "debug")
+SSTRING(new, "new")
+SSTRING(isa, "isa")
+SSTRING(respondsto, "respondsto")
+SSTRING(profile, "profile")
+SSTRING(regexp, "regexp")
+SSTRING(regexpi, "regexpi")
+SSTRING(sub, "sub")
+SSTRING(gsub, "gsub")
+SSTRING(smash, "smash")
+SSTRING(signal, "signal")
+SSTRING(signam, "signam")
+

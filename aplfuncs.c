@@ -181,6 +181,6 @@ f_build()
 
 cfunc_t ici_apl_funcs[] =
 {
-    {CF_OBJ,    "build",        f_build},
+    {CF_OBJ,    (char *)SS(build),        f_build},
     {CF_OBJ}
 };

@@ -148,7 +148,7 @@ function(parse_t *p, string_t *name)
     if ((f->f_autos = new_struct()) == NULL)
         goto fail;
     decref(f->f_autos);
-    if (assign(f->f_autos, SS(_funcname_), objof(name)))
+    if (assign(f->f_autos, SS(_func_), objof(f)))
         goto fail;
     for (fp = a->a_base; fp < a->a_top; ++fp)
     {

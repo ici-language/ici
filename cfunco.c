@@ -75,8 +75,20 @@ ici_assign_cfuncs(objwsup_t *s, cfunc_t *cf)
     while (cf->cf_name != NULL)
     {
         assert(ici_typeof(cf) == &ici_cfunc_type);
-        if ((n = new_cname(cf->cf_name)) == NULL)
-            return 1;
+        if (cf->cf_name[0] == TC_STRING)
+        {
+            /*
+             * Temporary migration hack while we change over
+             * to using static strings in these initialisations.
+             */
+            n = (string_t *)cf->cf_name;
+            cf->cf_name = n->s_chars;
+        }
+        else
+        {
+            if ((n = new_cname(cf->cf_name)) == NULL)
+                return 1;
+        }
         if (assign_base(s, n, cf))
         {
             decref(n);

@@ -469,8 +469,8 @@ f_signam(void)
  */
 cfunc_t     ici_signals_cfuncs[] =
 {
-    {CF_OBJ,    "signal",   f_signal},
-    {CF_OBJ,    "signam",   f_signam},
+    {CF_OBJ,    (char *)SS(signal),   f_signal},
+    {CF_OBJ,    (char *)SS(signam),   f_signam},
     {CF_OBJ}
 };
 

@@ -856,29 +856,29 @@ f_getcwd(void)
 
 cfunc_t clib_cfuncs[] =
 {
-    {CF_OBJ,    "printf",       f_sprintf,      (int (*)())1},
-    {CF_OBJ,    "getchar",      f_getchar},
-    {CF_OBJ,    "getfile",      f_getfile},
-    {CF_OBJ,    "getline",      f_getline},
-    {CF_OBJ,    "fopen",        f_fopen},
+    {CF_OBJ,    (char *)SS(printf),       f_sprintf,      (int (*)())1},
+    {CF_OBJ,    (char *)SS(getchar),      f_getchar},
+    {CF_OBJ,    (char *)SS(getfile),      f_getfile},
+    {CF_OBJ,    (char *)SS(getline),      f_getline},
+    {CF_OBJ,    (char *)SS(fopen),        f_fopen},
 #ifndef NOPIPES
-    {CF_OBJ,    "popen",        f_popen},
+    {CF_OBJ,    (char *)SS(_popen),        f_popen},
 #endif
-    {CF_OBJ,    "put",          f_put},
-    {CF_OBJ,    "flush",        f_fflush},
-    {CF_OBJ,    "close",        f_fclose},
-    {CF_OBJ,    "seek",         f_fseek},
+    {CF_OBJ,    (char *)SS(put),          f_put},
+    {CF_OBJ,    (char *)SS(flush),        f_fflush},
+    {CF_OBJ,    (char *)SS(close),        f_fclose},
+    {CF_OBJ,    (char *)SS(seek),         f_fseek},
 #ifndef NOSYSTEM
-    {CF_OBJ,    "system",       f_system},
+    {CF_OBJ,    (char *)SS(system),       f_system},
 #endif
-    {CF_OBJ,    "eof",          f_eof},
-    {CF_OBJ,    "remove",       f_remove},
+    {CF_OBJ,    (char *)SS(eof),          f_eof},
+    {CF_OBJ,    (char *)SS(remove),       f_remove},
 #ifndef NODIR
-    {CF_OBJ,    "dir",          f_dir},
+    {CF_OBJ,    (char *)SS(dir),          f_dir},
 #endif
-    {CF_OBJ,    "getcwd",       f_getcwd},
-    {CF_OBJ,    "chdir",        f_chdir},
-    {CF_OBJ,    "rename",       f_rename},
+    {CF_OBJ,    (char *)SS(getcwd),       f_getcwd},
+    {CF_OBJ,    (char *)SS(chdir),        f_chdir},
+    {CF_OBJ,    (char *)SS(rename),       f_rename},
 
     {CF_OBJ}
 };

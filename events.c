@@ -1,5 +1,6 @@
 #define ICI_CORE
 #include "fwd.h"
+#include "str.h"
 #ifndef NOEVENTS
 #include "exec.h"
 #include "func.h"
@@ -38,7 +39,7 @@ f_eventloop()
 
 cfunc_t ici_event_cfuncs[] =
 {
-    {CF_OBJ,    "eventloop",       f_eventloop},
+    {CF_OBJ,    (char *)SS(eventloop),       f_eventloop},
     {CF_OBJ}
 };
 #endif /* NOEVENTS */

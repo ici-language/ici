@@ -405,9 +405,9 @@ ici_evaluate(object_t *code, int n_operands)
              */
             if
             (
-                stringof(o)->s_vsver == ici_vsver
-                &&
                 stringof(o)->s_struct == structof(ici_vs.a_top[-1])
+                &&
+                stringof(o)->s_vsver == ici_vsver
             )
             {
                 /*
@@ -628,10 +628,8 @@ ici_evaluate(object_t *code, int n_operands)
                         decref(o);
                     goto fail;
                 }
-#ifndef NODEBUGGING
                 if (ici_debug_enabled)
                     ici_debug->idbg_fncall(ici_os.a_top[-1], ARGS(), NARGS());
-#endif
                 if ((*ici_typeof(ici_os.a_top[-1])->t_call)(ici_os.a_top[-1], o))
                 {
                     if (o != NULL)

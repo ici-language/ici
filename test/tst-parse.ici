@@ -6,11 +6,16 @@
 static
 func1()
 {
-    return _funcname_;
+    return _func_;
 }
 
-if (func1() != "func1")
-    fail("_funcname_ not set correctly");
+if (func1() != func1)
+    fail("_func_ not set correctly");
+if (func1.autos._func_ != func1)
+    fail("func.auto incorrect");
+if (func1.name != "func1")
+    fail("func.name incorrect");
+
 
 static x = [array #abc#];
 if (x[0] != #abc#)

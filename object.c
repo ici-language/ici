@@ -10,7 +10,14 @@
 
 #include <limits.h>
 
-#define VERBOSE 0
+/*
+ * The following define is useful during debug and testing. It will
+ * cause every call to an allocation function to garbage collect.
+ * It will be very slow, but problems with memory will be tripped
+ * over sooner. To be effective, you really also need to set
+ * ICI_ALLALLOC in alloc.h.
+ */
+#define ALLCOLLECT      0       /* Collect on every alloc call. */
 
 /*
  * The global error message pointer.
@@ -197,18 +204,18 @@ hash_unique(object_t *o)
 }
 
 /*
- * Grow the hash table of atoms to be four times as big, plus three.
+ * Grow the hash table of atoms to the given size, which *must* be a
+ * power of 2.
  */
 static void
-grow_atoms(void)
+grow_atoms(ptrdiff_t newz)
 {
     register object_t   **o;
     register int        i;
     object_t            **olda;
-    unsigned long       newz;
     ptrdiff_t           oldz;
 
-    newz = atomsz * 2;
+    assert(((newz - 1) & newz) == 0); /* Assert power of 2. */
     oldz = atomsz;
     if ((o = (object_t **)ici_nalloc(newz * sizeof(object_t *))) == NULL)
         return;
@@ -276,7 +283,7 @@ atom(object_t *o, int lone)
     *po = o;
     o->o_flags |= O_ATOM;
     if (++natoms > atomsz / 2)
-        grow_atoms();
+        grow_atoms(atomsz * 2);
     if (!lone)
         decref(o);
     return o;
@@ -351,7 +358,7 @@ unatom(object_t *o)
         if (o == *ss)
            goto delete;
     }
-    /*printf("Warning: could not find atom being deleted\n");*/
+    assert(0);
     return;
 
 delete:
@@ -468,27 +475,33 @@ collect(void)
      * as adding one.  Use this to determine which is quicker; rebuilding
      * the atom pool or deleting dead ones.
      */
-    if (1 * ndead_atoms > (natoms - ndead_atoms))
+    if (ndead_atoms > (natoms - ndead_atoms))
     {
         /*
-         * Rebuilding the atom pool is a better idea.
+         * Rebuilding the atom pool is a better idea. Zap the dead
+         * atoms in the atom pool (thus breaking it) then rebuild
+         * it (which doesn't care it isn't a hash table any more).
          */
-        memset((char *)atoms, 0, atomsz * sizeof(object_t *));
-        natoms = 0;
-        b = objs;
-        for (a = objs; a < objs_top; ++a)
+        a = &atoms[atomsz];
+        while (--a >= atoms)
+        {
+            if ((o = *a) != NULL && o->o_nrefs == 0 && (o->o_flags & O_MARK) == 0)
+                *a = NULL;
+        }
+        natoms -= ndead_atoms;
+        ici_mem_limit = LONG_MAX; /* Prevent recursive collects. */
+        grow_atoms(atomsz); /* No actual size change. Should we? */
+
+        for (a = b = objs; a < objs_top; ++a)
         {
             if (((o = *a)->o_flags & O_MARK) == 0)
+            {
                 freeo(o);
+            }
             else
             {
                 o->o_flags &= ~O_MARK;
                 *b++ = o;
-                if (o->o_flags & O_ATOM)
-                {
-                    o->o_flags &= ~O_ATOM;
-                    atom(o, 1);
-                }
             }
         }
         objs_top = b;
@@ -498,8 +511,7 @@ collect(void)
         /*
          * Faster to delete dead atoms as we go.
          */
-        b = objs;
-        for (a = objs; a < objs_top; ++a)
+        for (a = b = objs; a < objs_top; ++a)
         {
             if (((o = *a)->o_flags & O_MARK) == 0)
             {
@@ -515,7 +527,6 @@ collect(void)
         }
         objs_top = b;
     }
-
 /*printf("mem=%ld vs. %ld, nobjects=%d, natoms=%d\n", mem, ici_mem, objs_top - objs, natoms);*/
 
     /*
@@ -525,12 +536,14 @@ collect(void)
      */
     if (ici_mem < 0)
         ici_mem = 0;
+#if ALLCOLLECT
+    ici_mem_limit = 0;
+#else
     if (ici_mem < 16 * 1024)
         ici_mem_limit = 32 * 1024;
-    else if (ici_mem > 128 * 1024)
-        ici_mem_limit = ici_mem + 128 * 1024;
     else
         ici_mem_limit = ici_mem * 2;
+#endif
 
 #if 0
     {

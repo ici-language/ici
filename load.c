@@ -261,6 +261,6 @@ fail:
 
 cfunc_t load_cfuncs[] =
 {
-    {CF_OBJ, "load", f_load},
+    {CF_OBJ, (char *)SS(load), f_load},
     {CF_OBJ}
 };

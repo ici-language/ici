@@ -1,6 +1,16 @@
 #
 # For compiling a standard version for WIN32 with Microsoft C
 #
+# Useful targets in this makefile are:
+#
+#    all		The default. Builds executables.
+#
+#    sdk		Makes a zip archive of files suitable for export
+#			as an ICI software development kit.
+#
+#    clean		Removes (almost) all generated files.
+#
+#
 CC  = cl /nologo
 RM  = del
 SAFEICI = ici
@@ -9,6 +19,7 @@ SAFEICI = ici
 # The major ICI version number.
 #
 VER=4
+SDK=ici4-win32-sdk
 
 #
 # And as MS's NMAKE doesn't know about library dependencies there's
@@ -61,7 +72,8 @@ WIDBSOURCES = \
     widb/widb_wnd.c widb/widb.res
 	
 SDKFILES = \
-    ici$(VER).dll icicore.ici icicore1.ici icicore2.ici icicore3.ici \
+    ici$(VER).dll ici$(VER).lib ici$(VER).pdb \
+    icicore.ici icicore1.ici icicore2.ici icicore3.ici \
     ici.exe wici.exe \
     ici.h icistr-setup.h \
     doc\ici.pdf \
@@ -71,8 +83,12 @@ all		: ici$(VER).dll ici.h ici.exe wici.exe ici$(VER)widb.dll
 
 sdk		: ici$(VER)-win32-sdk.zip
 
-ici$(VER)-win32-sdk.zip : $(SDKFILES)
-		zip -o $@ $(SDKFILES)
+$(SDK).zip 	: $(SDKFILES)
+		-del $(SDK).zip
+		-del /Q $(SDK)\*
+		-mkdir $(SDK)
+		@-for %%f in ( $(SDKFILES) ) do copy %%f $(SDK)
+		zip -o -r $@ $(SDK)
 
 ici$(VER).dll:	$(OBJS) $(PCREOBJS) ici.def
 		$(CC) $(LDFLAGS) -Fe$@ $(OBJS) $(PCREOBJS) $(LIBS) /link /DEBUG /DEBUGTYPE:BOTH /DLL /def:ici.def
@@ -107,7 +123,8 @@ pcre.obj	: pcre/pcre.c
 		$(CC) -c -Fo$@ $(CFLAGS) pcre/pcre.c
 
 clean:
-		@-for %%f in ( $(OBJS) $(PCREOBJS) $(TARGET) *.ilk *.pdb ici$(VER).lib ici.exp ) do $(RM) %%f
+		@-for %%f in ( $(OBJS) $(PCREOBJS) $(TARGET) *.ilk *.pdb ici$(VER).lib ici$(VER).exp ) do $(RM) %%f
+		rmdir /s /q $(SDK)
 
 ici.h : conf-w32.h fwd.h object.h alloc.h buf.h catch.h \
     cfunc.h array.h int.h float.h exec.h file.h forall.h func.h \

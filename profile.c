@@ -388,7 +388,7 @@ ici_profile_return()
  */
 cfunc_t ici_profile_cfuncs[] =
 {
-    {CF_OBJ,    "profile",       f_profile},
+    {CF_OBJ,    (char *)SS(profile),       f_profile},
     {CF_OBJ}
 };
 

@@ -21,7 +21,7 @@ int     ici_debug_enabled = 0;
 /*
  * Flag indicating if error trapping should be ignored.
  */
-int	ici_debug_ign_err = 0;
+int ici_debug_ign_err = 0;
 
 /*
  * Ignore errors within exec loop. Used by internal calls to
@@ -73,7 +73,7 @@ f_debug(void)
 
 cfunc_t ici_debug_cfuncs[] =
 {
-    {CF_OBJ,    "debug",        f_debug},
+    {CF_OBJ,    (char *)SS(debug),        f_debug},
     {CF_OBJ}
 };
 
