@@ -457,7 +457,7 @@ struct ici_objwsup
 /*
  * Register the object 'o' with the garbage collector.  Object that are
  * registered with the garbage collector can get collected.  This is typically
- * done after allocaton and initialisation of basic fields when make a new
+ * done after allocaton and initialisation of basic fields when making a new
  * object.  Once an object has been registered with the garbage collector, it
  * can *only* be freed by the garbage collector.
  *

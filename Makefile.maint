@@ -30,7 +30,7 @@
 #   version     Create the VERSION file with the current date.
 #
 
-RELEASE = 4.0.5
+RELEASE = 4.1.0
 
 FILES   = \
 	BUILDING CHANGES CREDITS README PLATFORM TODO VERSION\

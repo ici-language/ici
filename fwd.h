@@ -63,8 +63,8 @@
  * ICI version number. Note that this occurs in a string in conf.c too.
  */
 #define ICI_VER_MAJOR   4
-#define ICI_VER_MINOR   0
-#define ICI_VER_RELEASE 5
+#define ICI_VER_MINOR   1
+#define ICI_VER_RELEASE 0
 
 /*
  * The ICI version number composed into an 8.8.16 unsigned long for simple
@@ -152,6 +152,13 @@
 */
 #endif
 
+/*
+ * A 'random' value for Windows event handling functions to return
+ * to give a better indication that an ICI style error has occured which
+ * should be propagated back. See events.c
+ */
+#define ICI_EVENT_ERROR 0x7A41B291
+
 #ifndef nels
 #define nels(a)         (sizeof a / sizeof a[0])
 #endif
@@ -189,6 +196,7 @@ typedef struct ici_mem      ici_mem_t;
 typedef struct ici_handle   ici_handle_t;
 typedef struct ici_debug    ici_debug_t;
 typedef struct ici_code     ici_code_t;
+typedef struct ici_name_id  ici_name_id_t;
 
 /*
  * This define may be made before an include of 'ici.h' to suppress a group
@@ -379,6 +387,8 @@ extern int              ici_str_need_size(ici_str_t *, int);
 extern ici_str_t        *ici_str_buf_new(int);
 extern int              ici_parse(ici_file_t *, ici_objwsup_t *);
 extern ici_obj_t        *ici_eval(ici_str_t *);
+extern ici_obj_t        *ici_make_handle_member_map(ici_name_id_t *);
+extern int              ici_parse_fname(char *);
 
 extern ici_exec_t       *ici_leave(void);
 extern void             ici_enter(ici_exec_t *);
@@ -497,6 +507,7 @@ extern void             ici_drop_all_small_allocations(void);
 extern void             get_pc(ici_array_t *code, ici_obj_t **xs);
 extern ici_objwsup_t    *ici_outermost_writeable_struct(void);
 extern ici_code_t       *ici_code_new(ici_array_t *);
+extern ici_cfunc_t      *ici_cfunc_new(char *, int (*)(), void *, void *);
 extern DLI ici_mark_t   o_mark;
 
 extern ici_obj_t        **objs;

@@ -1,10 +1,25 @@
+Changes in version 4.1.0 (a beta release)
+
+*   Added support in handles to allow fetch, assign and method
+    invocation. This has two interfaces, one cooked where the key
+    is first converted to an integer ID, the other raw. One, or the
+    other, or both may be used.
+    
+    There is a new function, ici_make_handle_method_map, and
+    in a handle there are three new pointers: h_member_map, and
+    the function pointers h_member_intf and h_generic_intf.
+    See documentation. (timl)
+
+*   Added 'ici_parse_fname' function to parse a named file
+    directly (because it's such a common case). (timl)
+
 *   Added user-parsed literals and support functions. User-parsed
     literals allow things like:
 
         [ident stuff...]
 
     to be defined for things other than the built-in ones. The
-    stuff... can be any syntax, build variously from low level
+    stuff... can be any syntax, built variously from low level
     character data, from standard ICI tokens, or from full ICI
     expressions.
     

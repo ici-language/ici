@@ -50,6 +50,41 @@ fetch_cfunc(ici_obj_t *o, ici_obj_t *k)
     return objof(&o_null);
 }
 
+    ici_obj_t   o_head;
+    char        *cf_name;
+    int         (*cf_cfunc)();
+    void        *cf_arg1;
+    void        *cf_arg2;
+
+void
+free_cfunc(ici_obj_t *o)
+{
+    ici_tfree(o, ici_cfunc_t);
+}
+
+/*
+ * Create a new cfunc.  This is not common, because cfuncs are almost always
+ * defined statically.  The name must be a static null terminated string, the
+ * pointer will be retained.  The func is the C function and arg1 and arg2 are
+ * assigned to cf_arg1 and cf_arg2 respectively.  The returned object has a
+ * refernce of 1.
+ */
+ici_cfunc_t *
+ici_cfunc_new(char *name, int (*func)(), void *arg1, void *arg2)
+{
+    ici_cfunc_t         *cf;
+
+    if ((cf = ici_talloc(ici_cfunc_t)) == NULL)
+        return NULL;
+    ICI_OBJ_SET_TFNZ(cf, TC_CFUNC, 0, 1, sizeof(ici_cfunc_t));
+    cf->cf_name = name;
+    cf->cf_cfunc = func;
+    cf->cf_arg1 = arg1;
+    cf->cf_arg2 = arg2;
+    ici_rego(cf);
+    return cf;
+}
+
 /*
  * Assign into the structure 's' all the intrinsic functions listed in the
  * array of 'ici_cfunc_t' structures pointed to by 'cf'.  The array must be
@@ -176,7 +211,7 @@ call_cfunc(ici_obj_t *o, ici_obj_t *subject)
 ici_type_t  ici_cfunc_type =
 {
     mark_cfunc,
-    NULL, /* No free. Only statically declared, not allocated. */
+    free_cfunc,
     ici_hash_unique,
     ici_cmp_unique,
     ici_copy_simple,

@@ -2154,6 +2154,30 @@ fail:
 }
 
 /*
+ * Parse a file as a new top-level module.  This function create new auto and
+ * static scopes, and makes the current static scope the exern scope of the
+ * new module.  This function takes a file name which it opens with fopen (as
+ * opposed to 'ici_parse_file' which can be used to parse more generic data
+ * sources).
+ *
+ * Return 0 if ok, else -1, usual conventions.
+ *
+ * This --func-- forms part of the --ici-api--.
+ */
+int
+ici_parse_fname(char *fname)
+{
+    FILE                *stream;
+    int                 r;
+
+    if ((stream = fopen(fname, "r")) == NULL)
+        return ici_get_last_errno("fopen", fname);
+    r = ici_parse_file(fname, (char *)stream, &ici_stdio_ftype);
+    fclose(stream);
+    return r;
+}
+
+/*
  * Mark this and referenced unmarked objects, return memory costs.
  * See comments on t_mark() in object.h.
  */

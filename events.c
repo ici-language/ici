@@ -32,7 +32,9 @@ f_eventloop()
         }
         ici_enter(x);
         TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        ici_error = NULL;
+        if (DispatchMessage(&msg) == ICI_EVENT_ERROR && ici_error != NULL)
+            return 1;
         x = ici_leave();
     }
 }

@@ -1,10 +1,9 @@
 /*
  * Apply certain cleanups to all the FrameMaker produced HTML files in a
  * given directory.
- *
- * - Remove unreferenced paragraph anchors.
  */
-base = pop(argv);
+if ((base = argv[1]) == NULL)
+    base = "../../../web-site/book";
 fnames = dir(base, #.html?#);
 html = struct();
 used_pgfIds = set();

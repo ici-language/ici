@@ -6,6 +6,8 @@
 #include "buf.h"
 #include "array.h"
 #include "str.h"
+#include "cfunc.h"
+#include "int.h"
 
 /*
  * Format a human readable version of the object in less than 30 chars.
@@ -85,35 +87,42 @@ static ici_handle_t ici_handle_proto = {{{TC_HANDLE, 0, 1, 0}, NULL}};
  * object if that handle already exists.
  *
  * Handle's will, of course, be garbage collected as usual.  If your C data is
- * one-to-one with the handle, you should store a pointer to a free function
+ * dependent on the handle, you should store a pointer to a free function
  * for your data in the 'h_pre_free' field of the handle.  It will be called
  * just before the gardbage collector frees the memory of the handle.
  *
  * If, on the other hand, your C data structure is the master structure and it
  * might be freed by some other aspect of your code, you must consider that
- * its handle object may still be referenced from ICI code.  You don't want
- * to have it passed back to you and inadvertently try to access your freed
- * data.  To prevent this you can set the H_CLOSED flag in the handle's object
- * header when you free the C data (see 'ici_handle_probe()').  Note that you
- * are reponsible to checking H_CLOSED when you are passed a handle.  Also,
- * once you use this mechanism, you must *clear* the H_CLOSED field after a
- * real new handle allocation (because you might be reusing the old
- * memory, and this function might be returning to you a zombie handle).
+ * its handle object may still be referenced from ICI code.  You don't want to
+ * have it passed back to you and inadvertently try to access your freed data.
+ * To prevent this you can set the H_CLOSED flag in the handle's object header
+ * when you free the C data (see 'ici_handle_probe()').  Note that in
+ * callbacks where you are passed the handle object directly, you are
+ * reponsible to checking H_CLOSED.  Also, once you use this mechanism, you
+ * must *clear* the H_CLOSED field after a real new handle allocation (because
+ * you might be reusing the old memory, and this function might be returning
+ * to you a zombie handle).
  *
  * Handles can support assignment to fields "just like a struct" by
  * the automatic creation of a private struct to store such values in upon
  * first assignment. This mechanism is, by default, only enabled if you
  * supply a non-NULL super. But you can enable it even with a NULL super
- * by setting O_SUPER in the handle's object header at any time.
+ * by setting O_SUPER in the handle's object header at any time. (Actually,
+ * it is an historical accident that 'super' was ever an argument to this
+ * function.)
  *
- * Handles can be used as instances of a class.  Typically the class will have
- * the methods that operate on the handle.  In this case you will pass the
- * class in 'super'.  Instance variables will be supported by the automatic
- * creation of the private struct to hold them (which allows the class to be
- * extended in ICI with additional instance data that is not part of your C
- * code).  However, note that these instance variables are not "magic".  Your
- * C code does not notice them getting fetched or assigned to (to do that you
- * should make your own ICI data type).
+ * Handles can support an interface function that allows C code to implement
+ * fetch and assign operations, as well as method invocation on fields of the
+ * handle.  See the 'h_member_intf' in the 'ici_handle_t' type description
+ * (and the 'Common tasks' section of this chapter.)
+ *
+ * Handles can also be used as instances of an ICI class.  Typically the class
+ * will have the methods that operate on the handle.  In this case you will
+ * pass the class in 'super'.  Instance variables will be supported by the
+ * automatic creation of the private struct to hold them (which allows the
+ * class to be extended in ICI with additional instance data that is not part
+ * of your C code).  However, note that these instance variables are not
+ * "magic".  Your C code does not notice them getting fetched or assigned to.
  *
  * This --func-- forms part of the --ici-api--.
  */
@@ -138,6 +147,10 @@ ici_handle_new(void *ptr, ici_str_t *name, ici_objwsup_t *super)
     h->h_ptr = ptr;
     h->h_name = name;
     h->o_head.o_super = super;
+    h->h_pre_free = NULL;
+    h->h_member_map = NULL;
+    h->h_member_intf = NULL;
+    h->h_general_intf = NULL;
     ici_rego(h);
     --ici_supress_collect;
     ICI_STORE_ATOM_AND_COUNT(po, h);
@@ -176,9 +189,36 @@ ici_handle_probe(void *ptr, ici_str_t *name)
 ici_obj_t *
 fetch_handle(ici_obj_t *o, ici_obj_t *k)
 {
-    if (!hassuper(o))
-        return ici_fetch_fail(o, k);
-    if (handleof(o)->o_head.o_super == NULL)
+    ici_handle_t        *h;
+    ici_obj_t           *r;
+
+    h = handleof(o);
+    if (h->h_member_map != NULL && (o->o_flags & H_CLOSED) == 0)
+    {
+        ici_obj_t       *id;
+
+        if ((id = ici_fetch(h->h_member_map, k)) == NULL)
+            return NULL;
+        if (iscfunc(id))
+            return id;
+        if (isint(id))
+        {
+            r = NULL;
+            if ((*h->h_member_intf)(h->h_ptr, intof(id)->i_value, NULL, &r))
+                return NULL;
+            if (r != NULL)
+                return r;
+        }
+    }
+    if (h->h_general_intf != NULL)
+    {
+        r = NULL;
+        if ((*h->h_general_intf)(h, k, NULL, &r))
+            return NULL;
+        if (r != NULL)
+            return r;
+    }
+    if (!hassuper(o) || handleof(o)->o_head.o_super == NULL)
         return ici_fetch_fail(o, k);
     return ici_fetch(handleof(o)->o_head.o_super, k);
 }
@@ -208,11 +248,40 @@ fetch_super_handle(ici_obj_t *o, ici_obj_t *k, ici_obj_t **v, ici_struct_t *b)
 static ici_obj_t *
 fetch_base_handle(ici_obj_t *o, ici_obj_t *k)
 {
+    ici_handle_t        *h;
+    ici_obj_t           *r;
+
+    h = handleof(o);
+    if (h->h_member_map != NULL && (o->o_flags & H_CLOSED) == 0)
+    {
+        ici_obj_t       *id;
+
+        if ((id = ici_fetch(h->h_member_map, k)) == NULL)
+            return NULL;
+        if (iscfunc(id))
+            return id;
+        if (isint(id))
+        {
+            r = NULL;
+            if ((*h->h_member_intf)(h->h_ptr, intof(id)->i_value, NULL, &r))
+                return NULL;
+            if (r != NULL)
+                return r;
+        }
+    }
+    if (h->h_general_intf != NULL)
+    {
+        r = NULL;
+        if ((*h->h_general_intf)(h, k, NULL, &r))
+            return NULL;
+        if (r != NULL)
+            return r;
+    }
     if (!hassuper(o))
         return ici_fetch_fail(o, k);
     if ((o->o_flags & H_HAS_PRIV_STRUCT) == 0)
         return objof(&o_null);
-    return fetch_base(handleof(o)->o_head.o_super, k);
+    return fetch_base(h->o_head.o_super, k);
 }
 
 /*
@@ -222,6 +291,33 @@ fetch_base_handle(ici_obj_t *o, ici_obj_t *k)
 static int
 assign_base_handle(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v)
 {
+    ici_handle_t        *h;
+    ici_obj_t           *r;
+
+    h = handleof(o);
+    if (h->h_member_map != NULL && (o->o_flags & H_CLOSED) == 0)
+    {
+        ici_obj_t       *id;
+
+        if ((id = ici_fetch(h->h_member_map, k)) == NULL)
+            return 1;
+        if (isint(id))
+        {
+            r = NULL;
+            if ((*h->h_member_intf)(h->h_ptr, intof(id)->i_value, v, &r))
+                return 1;
+            if (r != NULL)
+                return 0;
+        }
+    }
+    if (h->h_general_intf != NULL)
+    {
+        r = NULL;
+        if ((*h->h_general_intf)(h, k, v, &r))
+            return 1;
+        if (r != NULL)
+            return 0;
+    }
     if (!hassuper(o))
         return ici_assign_fail(o, k, v);
     if ((o->o_flags & H_HAS_PRIV_STRUCT) == 0)
@@ -252,16 +348,43 @@ assign_base_handle(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v)
 static int
 assign_handle(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v)
 {
+    ici_handle_t        *h;
+    ici_obj_t           *r;
+
+    h = handleof(o);
+    r = NULL;
+    if (h->h_member_map != NULL && (o->o_flags & H_CLOSED) == 0)
+    {
+        ici_obj_t       *id;
+
+        if ((id = ici_fetch(h->h_member_map, k)) == NULL)
+            return 1;
+        if (isint(id))
+        {
+            if ((*h->h_member_intf)(h->h_ptr, intof(id)->i_value, v, &r))
+                return 1;
+            if (r != NULL)
+                return 0;
+        }
+    }
+    if (h->h_general_intf != NULL)
+    {
+        r = NULL;
+        if ((*h->h_general_intf)(h, k, v, &r))
+            return 1;
+        if (r != NULL)
+            return 0;
+    }
     if (!hassuper(o))
         return ici_assign_fail(o, k, v);
     if (o->o_flags & H_HAS_PRIV_STRUCT)
-        return ici_assign(handleof(o)->o_head.o_super, k, v);
+        return ici_assign(h->o_head.o_super, k, v);
     /*
      * We don't have a base struct of our own yet. Try the super.
      */
     if (handleof(o)->o_head.o_super != NULL)
     {
-        switch (assign_super(handleof(o)->o_head.o_super, k, v, NULL))
+        switch (assign_super(h->o_head.o_super, k, v, NULL))
         {
         case -1: return 1;
         case 1:  return 0;
@@ -358,6 +481,125 @@ ici_handle_method_check(ici_obj_t *inst, ici_str_t *name, ici_handle_t **h, void
     if (p != NULL)
         *p = handleof(inst)->h_ptr;
     return 0;
+}
+
+/*
+ * The function used to field method calls that go through the memeber map
+ * mechanism.  Checks conditions and transfers to the h_memeber_intf function
+ * of the handle.
+ */
+static int
+ici_handle_method(ici_obj_t *inst)
+{
+    ici_obj_t           *r;
+    char                n1[30];
+    char                n2[30];
+
+    if (ici_method_check(inst, TC_HANDLE))
+        return 1;
+    if (inst->o_flags & H_CLOSED)
+    {
+        sprintf(buf, "attempt to apply method %s to %s which is dead",
+            ici_objname(n1, ici_os.a_top[-1]),
+            ici_objname(n2, inst));
+        ici_error = buf;
+        return 1;
+    }
+    r = NULL;
+    if ((*handleof(inst)->h_member_intf)(handleof(inst)->h_ptr,
+            (int)cfuncof(ici_os.a_top[-1])->cf_arg1, NULL, &r))
+        return 1;
+    if (r == NULL)
+    {
+        sprintf(buf, "attempt to apply method %s to %s",
+            ici_objname(n1, ici_os.a_top[-1]),
+            ici_objname(n2, inst));
+        ici_error = buf;
+        return 1;
+    }
+    return ici_ret_no_decref(r);
+}
+
+/*
+ * Build the map that 'ici_handle_t' objects use to map a member name (used in
+ * ICI code) to an integer ID (used in the C code). The returned map is actually
+ * an ICI struct. It is returned with 1 refernce count.
+ *
+ * The argument 'ni' should be a pointer to the first element of an arrary
+ * of 'ici_name_id_t' structs that contain the names of members and the integer
+ * IDs that your code would like to refere to them by. All members that are
+ * to be invoked as methods calls must include the flag H_METHOD in the ID.
+ * (This flag is removed from the ID when it is passed back to your code. H_METHOD
+ * is the most significant bit in the 32 bit ID.) The list is terminated by an
+ * entry with a name of NULL.
+ *
+ * For example:
+ *
+ *  enum {P_Property1, P_Property2, M_Method1, M_Method2, ...};
+ *
+ *  static ici_name_id_t member_name_ids[] =
+ *  {
+ *      {"Property1",        P_Property1},
+ *      {"Property2",        P_Property1},
+ *      {"Method1",          M_Method1},
+ *      {"Method2",          M_Method2},
+ *      {NULL},
+ *  }
+ *
+ *  ici_obj_t   *ici_member_map;
+ *
+ *  ...
+ *      ici_member_map = ici_make_handle_member_map(member_name_ids)
+ *      if (ici_member_map == NULL)
+ *          ...
+ *
+ * This --func-- forms part of the --ici-api--.
+ */
+ici_obj_t *
+ici_make_handle_member_map(ici_name_id_t *ni)
+{
+    ici_obj_t           *m;
+    ici_obj_t           *n;
+    ici_obj_t           *id;
+
+    if ((m = objof(ici_struct_new())) == NULL)
+        return NULL;
+    for (; ni->ni_name != NULL; ++ni)
+    {
+        id = NULL;
+        if ((n = objof(ici_str_new_nul_term(ni->ni_name))) == NULL)
+            goto fail;
+        if (ni->ni_id & H_METHOD)
+        {
+            id = (ici_obj_t *)ici_cfunc_new
+            (
+                ni->ni_name,
+                ici_handle_method,
+                (void *)(ni->ni_id & ~H_METHOD),
+                NULL
+            );
+            if (id == NULL)
+                goto fail;
+        }
+        else
+        {
+            if ((id = objof(ici_int_new(ni->ni_id))) == NULL)
+                goto fail;
+        }
+        if (ici_assign(m, n, id))
+            goto fail;
+        ici_decref(n);
+        ici_decref(id);
+    }
+    return m;
+
+fail:
+    if (n != NULL)
+        ici_decref(n);
+    if (id != NULL)
+        ici_decref(id);
+    ici_decref(m);
+    return NULL;
 }
 
 

@@ -249,7 +249,7 @@ forall (file in files)
                  */
                 para = font_subs(para);
                 para = trim_off_space(para);
-                strcatf(mml, "<%s><Tab>%s", tag, para);
+                strcatf(mml, "<%s>%s", tag, para);
             }
             else if (para ~ #^\S#)
             {

@@ -532,11 +532,11 @@ second case, the return value of the ICI function is not provided.<Body>Type key
          double in the case of a return value).  It will be converted to an
          ICI <italic>float<noitalic> and passed to the function.<DefnTerm>s<DefnIn2cm>The corresponding argument should be a nul terminated string (a
          pointer to a char * in the case of a return value).  It will be
-         converted to an ICI <italic>string<noitalic> and passed to the function.<DefnIn2cm><Tab>When a string is returned it is a pointer to the character data of
+         converted to an ICI <italic>string<noitalic> and passed to the function.<DefnIn2cm>When a string is returned it is a pointer to the character data of
          an internal ICI string object.  It will only remain valid until
          the next call to any ICI function.<DefnTerm>o<DefnIn2cm>The corresponding argument should be a pointer to an ICI object (a
          pointer to an object in the case of a return value).  It will be
-         passed directly to the ICI function.<DefnIn2cm><Tab>When an object is returned it has been ici_incref()ed (that is, it
+         passed directly to the ICI function.<DefnIn2cm>When an object is returned it has been ici_incref()ed (that is, it
          is held against garbage collection).<Body>Returns 0 on success, else 1, in which case ici_error has been set.<Body>See also: ici_callv(), ici_method(), ici_call(), ici_funcv().<Heading2><Marker <MType 2> <MText `ici_funcv, C API function'> >ici_funcv
 <CodeIn1cm><bold>int\ ici_funcv(ici_obj_t\ *subject,\ ici_obj_t\ *callable,\ char\ *types,\ va_list\ va)
 <nobold>
@@ -606,29 +606,34 @@ to prevent the ICI program from giving you some other data type's handle.
 except other native code mimicing your type name.)<Body>Handles are intrinsicly atomic with respect to the <italic>ptr<noitalic> and <italic>name<noitalic>. So
 this function actually just finds the existing handle of the given data
 object if that handle already exists.<Body>Handle's will, of course, be garbage collected as usual.  If your C data is
-one-to-one with the handle, you should store a pointer to a free function
+dependent on the handle, you should store a pointer to a free function
 for your data in the <italic>h_pre_free<noitalic> field of the handle.  It will be called
 just before the gardbage collector frees the memory of the handle.<Body>If, on the other hand, your C data structure is the master structure and it
 might be freed by some other aspect of your code, you must consider that
-its handle object may still be referenced from ICI code.  You don't want
-to have it passed back to you and inadvertently try to access your freed
-data.  To prevent this you can set the H_CLOSED flag in the handle's object
-header when you free the C data (see <italic>ici_handle_probe()<noitalic>).  Note that you
-are reponsible to checking H_CLOSED when you are passed a handle.  Also,
-once you use this mechanism, you must *clear* the H_CLOSED field after a
-real new handle allocation (because you might be reusing the old
-memory, and this function might be returning to you a zombie handle).<Body>Handles can support assignment to fields "just like a struct" by
+its handle object may still be referenced from ICI code.  You don't want to
+have it passed back to you and inadvertently try to access your freed data.
+To prevent this you can set the H_CLOSED flag in the handle's object header
+when you free the C data (see <italic>ici_handle_probe()<noitalic>).  Note that in
+callbacks where you are passed the handle object directly, you are
+reponsible to checking H_CLOSED.  Also, once you use this mechanism, you
+must *clear* the H_CLOSED field after a real new handle allocation (because
+you might be reusing the old memory, and this function might be returning
+to you a zombie handle).<Body>Handles can support assignment to fields "just like a struct" by
 the automatic creation of a private struct to store such values in upon
 first assignment. This mechanism is, by default, only enabled if you
 supply a non-NULL super. But you can enable it even with a NULL super
-by setting O_SUPER in the handle's object header at any time.<Body>Handles can be used as instances of a class.  Typically the class will have
-the methods that operate on the handle.  In this case you will pass the
-class in <italic>super<noitalic>.  Instance variables will be supported by the automatic
-creation of the private struct to hold them (which allows the class to be
-extended in ICI with additional instance data that is not part of your C
-code).  However, note that these instance variables are not "magic".  Your
-C code does not notice them getting fetched or assigned to (to do that you
-should make your own ICI data type).<Heading2><Marker <MType 2> <MText `ici_handle_probe, C API function'> >ici_handle_probe
+by setting O_SUPER in the handle's object header at any time. (Actually,
+it is an historical accident that <italic>super<noitalic> was ever an argument to this
+function.)<Body>Handles can support an interface function that allows C code to implement
+fetch and assign operations, as well as method invocation on fields of the
+handle.  See the <italic>h_member_intf<noitalic> in the <italic>ici_handle_t<noitalic> type description
+(and the <italic>Common tasks<noitalic> section of this chapter.)<Body>Handles can also be used as instances of an ICI class.  Typically the class
+will have the methods that operate on the handle.  In this case you will
+pass the class in <italic>super<noitalic>.  Instance variables will be supported by the
+automatic creation of the private struct to hold them (which allows the
+class to be extended in ICI with additional instance data that is not part
+of your C code).  However, note that these instance variables are not
+"magic".  Your C code does not notice them getting fetched or assigned to.<Heading2><Marker <MType 2> <MText `ici_handle_probe, C API function'> >ici_handle_probe
 <CodeIn1cm><bold>ici_handle_t\ *\ ici_handle_probe(void\ *ptr,\ ici_str_t\ *name)
 <nobold>
 <Comment From handle.c>
@@ -645,6 +650,9 @@ reference to the data by setting H_CLOSED in the handle's object header.<Heading
 \ \ \ \ void\ \ \ \ \ \ \ \ \ \ \ \ *h_ptr;<HardReturn>
 \ \ \ \ ici_str_t\ \ \ \ \ \ \ *h_name;<HardReturn>
 \ \ \ \ void\ \ \ \ \ \ \ \ \ \ \ \ (*h_pre_free)(ici_handle_t\ *h);<HardReturn>
+\ \ \ \ ici_obj_t\ \ \ \ \ \ \ *h_member_map;<HardReturn>
+\ \ \ \ int\ \ \ \ \ \ \ \ \ \ \ \ \ (*h_member_intf)(void\ *ptr,\ int\ id,\ ici_obj_t\ *setv,\ ici_obj_t\ **retv);<HardReturn>
+\ \ \ \ int\ \ \ \ \ \ \ \ \ \ \ \ \ (*h_general_intf)(ici_handle_t\ *h,\ ici_obj_t\ *k,\ ici_obj_t\ *setv,\ ici_obj_t\ **retv);<HardReturn>
 }<nobold>
 <Comment From handle.h>
 <Body>The C struct which is the ICI handle object.  A handle is a generic object
@@ -653,7 +661,49 @@ that can be used to refer to some C data object.  Handles support an
 type checking, reporting, and diagnostic support.  The handle object
 provides most of the generic machinery of ICI objects.  An optional
 pre-free function pointer can be supplied to handle cleanup on final
-collection of the handle.<Body>See <italic>ici_handle_new()<noitalic>.<Heading2><Marker <MType 2> <MText `ici_hash_unique, C API function'> >ici_hash_unique
+collection of the handle.<Body>See also <italic>ici_handle_new()<noitalic>.<DefnTerm>o_head<DefnIn4cm>The object header for objects that (can) support super
+                     pointers.<DefnTerm>h_ptr<DefnIn4cm>The pointer to the primitive data object that his
+                     handle is associated with.<DefnTerm>h_name<DefnIn4cm>The type name this handle will appear to have from ICI
+                     script code, and for type checking in interfacing with
+                     C.<DefnTerm>h_pre_free<DefnIn4cm>An optional function that will be called just before
+                     this handle object is freed by the garbage collector.
+                     NULL if not needed.<DefnTerm>h_member_map<DefnIn4cm>An optional map (NULL if not needed) as made by
+                     <italic>ici_make_handle_member_map()<noitalic> and used internally
+                     when the <italic>h_member_intf<noitalic> function is used.<DefnTerm>h_member_intf<DefnIn4cm>An optional function (NULL if not needed) to implement
+                     property access and method invocation on the object.
+                     <italic>ptr<noitalic> is the <italic>h_ptr<noitalic> field of the handle.  The
+                     implementation must know which <italic>id<noitalic> values apply to
+                     methods, and which to properties.  When the <italic>id<noitalic>
+                     refers to a method, the usual environment for
+                     intrinsic function invocations can be assumed (e.g.
+                     <italic>ici_typecheck()<noitalic> is available) except the return
+                     value should be stored through <italic>*retv<noitalic> without any
+                     extra reference count.<DefnIn4cm>When the <italic>id<noitalic> refers to a property, if <italic>setv<noitalic> is
+                     non-NULL, this is an assignment of <italic>setv<noitalic> to the
+                     property.  If the assignment is possible and proceeds
+                     without error, <italic>setv<noitalic> should be assigned to <italic>*retv<noitalic>
+                     prior to return (else <italic>*retv<noitalic> should be unmodified).<DefnIn4cm>When the <italic>id<noitalic> refers to a property and <italic>setv<noitalic> is NULL,
+                     this is a fetch, and <italic>*retv<noitalic> should be set to the
+                     value, without any extra reference count.<DefnIn4cm>In all cases, 0 indicates a successful return
+                     (although if <italic>*retv<noitalic> has not been updated, it will be
+                     assumed that the <italic>id<noitalic> was not actually a member of
+                     this object and an error may be raised by the calling
+                     code).  Non-zero on error, usual conventions.<DefnTerm>h_general_intf<DefnIn4cm>An optional function (NULL if not needed) to implement
+                     general fetch and assign processing on the handle,
+                     even when the keys are not known in advance (as might
+                     happen, for example, if the object could be indexed by
+                     integers).  If <italic>h_member_intf<noitalic> is non-NULL, and
+                     satisfied a fetch or assign first, this function is
+                     not called.<DefnIn4cm>If <italic>setv<noitalic> is non-NULL, this is an assignment.  If the
+                     assignment is to a key (<italic>k<noitalic>) that is valid and the
+                     assignment is successful, <italic>*retv<noitalic> should be updated
+                     with <italic>setv<noitalic>.<DefnIn4cm>If <italic>setv<noitalic> is NULL, this is a fetch, and <italic>*retv<noitalic> should
+                     be set to the fetched value.<DefnIn4cm>In both cases, no extra reference should be given to
+                     the returned object.<DefnIn4cm>In both cases, 0 indicates a successful return
+                     (although if <italic>*retv<noitalic> has not been updated, it will be
+                     assumed that the key was not actually a member of
+                     this object and an error may be raised by the calling
+                     code).  Non-zero on error, usual conventions.<Heading2><Marker <MType 2> <MText `ici_hash_unique, C API function'> >ici_hash_unique
 <CodeIn1cm><bold>unsigned\ long\ ici_hash_unique(ici_obj_t\ *o)
 <nobold>
 <Comment From object.c>
@@ -741,7 +791,36 @@ the usual ICI manner.  However it will have already printed an error
 message on standard error, so no further action need be taken.<Body><italic>ici_main<noitalic> handles all calls to <italic>ici_init()<noitalic> and <italic>ici_uninit()<noitalic> within its
 scope.  A program calling <italic>ici_main<noitalic> should *not* call <italic>ici_init()<noitalic>.<Body><italic>argc<noitalic> and <italic>argv<noitalic> are as standard for C <italic>main<noitalic> functions.  For details on
 the interpretation of the arguments, see documentation on normal command
-line invocation of the ICI interpreter.<Heading2><Marker <MType 2> <MText `ici_mem_new, C API function'> >ici_mem_new
+line invocation of the ICI interpreter.<Heading2><Marker <MType 2> <MText `ici_make_handle_member_map, C API function'> >ici_make_handle_member_map
+<CodeIn1cm><bold>ici_obj_t\ *\ ici_make_handle_member_map(ici_name_id_t\ *ni)
+<nobold>
+<Comment From handle.c>
+<Body>Build the map that <italic>ici_handle_t<noitalic> objects use to map a member name (used in
+ICI code) to an integer ID (used in the C code). The returned map is actually
+an ICI struct. It is returned with 1 refernce count.<Body>The argument <italic>ni<noitalic> should be a pointer to the first element of an arrary
+of <italic>ici_name_id_t<noitalic> structs that contain the names of members and the integer
+IDs that your code would like to refere to them by. All members that are
+to be invoked as methods calls must include the flag H_METHOD in the ID.
+(This flag is removed from the ID when it is passed back to your code. H_METHOD
+is the most significant bit in the 32 bit ID.) The list is terminated by an
+entry with a name of NULL.<Body>For example:<CodeIn1cm><pts 9>\ enum\ {P_Property1,\ P_Property2,\ M_Method1,\ M_Method2,\ ...};
+<HardReturn><HardReturn>
+static\ ici_name_id_t\ member_name_ids[]\ =<HardReturn>
+{<HardReturn>
+\ \ \ \ {"Property1",\ \ \ \ \ \ \ \ P_Property1},<HardReturn>
+\ \ \ \ {"Property2",\ \ \ \ \ \ \ \ P_Property1},<HardReturn>
+\ \ \ \ {"Method1",\ \ \ \ \ \ \ \ \ \ M_Method1},<HardReturn>
+\ \ \ \ {"Method2",\ \ \ \ \ \ \ \ \ \ M_Method2},<HardReturn>
+\ \ \ \ {NULL},<HardReturn>
+}
+<HardReturn><HardReturn>
+ici_obj_t\ \ \ *ici_member_map;
+<HardReturn><HardReturn>
+...<HardReturn>
+\ \ \ \ ici_member_map\ =\ ici_make_handle_member_map(member_name_ids)<HardReturn>
+\ \ \ \ if\ (ici_member_map\ ==\ NULL)<HardReturn>
+\ \ \ \ \ \ \ \ ...
+<Heading2><Marker <MType 2> <MText `ici_mem_new, C API function'> >ici_mem_new
 <CodeIn1cm><bold>ici_mem_t\ *\ ici_mem_new(void\ *base,\ size_t\ length,\ int\ accessz,\ void\ (*free_func)())
 <nobold>
 <Comment From mem.c>
@@ -829,7 +908,7 @@ specific stuff follows<Comment From object.h>
                      this object. Standard core types have well known
                      codes identified by the TC_* defines. Other
                      types are registered at run-time and are given
-                     the next available code.<DefnIn4cm><Tab>This code can be used to index ici_types[] to discover
+                     the next available code.<DefnIn4cm>This code can be used to index ici_types[] to discover
                      a pointer to the type structure.<DefnTerm>o_flags<DefnIn4cm>Some boolean flags. Well known flags that apply to
                      all objects occupy the lower 4 bits of this byte.
                      The upper four bits are available for object specific
@@ -882,7 +961,15 @@ stream is identified by <italic>file<noitalic> and the stdio-like access functio
 to read it are contained in the structure pointed to by <italic>ftype<noitalic>.  A name
 for the module, for use in error messages, is supplied in <italic>mname<noitalic>
 (typically the name of the file).<Body>This function can be used when the source of data to be parsed is not a
-real file, but some other source like a resource.<Body>The file is closed prior to a successful return, but not a failure.<Body>Return 0 if ok, else -1, usual conventions.<Heading2><Marker <MType 2> <MText `ici_ptr_new, C API function'> >ici_ptr_new
+real file, but some other source like a resource.<Body>The file is closed prior to a successful return, but not a failure.<Body>Return 0 if ok, else -1, usual conventions.<Heading2><Marker <MType 2> <MText `ici_parse_fname, C API function'> >ici_parse_fname
+<CodeIn1cm><bold>int\ ici_parse_fname(char\ *fname)
+<nobold>
+<Comment From parse.c>
+<Body>Parse a file as a new top-level module.  This function create new auto and
+static scopes, and makes the current static scope the exern scope of the
+new module.  This function takes a file name which it opens with fopen (as
+opposed to <italic>ici_parse_file<noitalic> which can be used to parse more generic data
+sources).<Body>Return 0 if ok, else -1, usual conventions.<Heading2><Marker <MType 2> <MText `ici_ptr_new, C API function'> >ici_ptr_new
 <CodeIn1cm><bold>ici_ptr_t\ *\ ici_ptr_new(ici_obj_t\ *a,\ ici_obj_t\ *k)
 <nobold>
 <Comment From ptr.c>
@@ -900,7 +987,7 @@ has been set.<Heading2><Marker <MType 2> <MText `ici_rego, C API macro'> >ici_re
 <Comment From object.h>
 <Body>Register the object <italic>o<noitalic> with the garbage collector.  Object that are
 registered with the garbage collector can get collected.  This is typically
-done after allocaton and initialisation of basic fields when make a new
+done after allocaton and initialisation of basic fields when making a new
 object.  Once an object has been registered with the garbage collector, it
 can *only* be freed by the garbage collector.<Body>(Not all objects are registered with the garabage collector. The main
 exception is staticly defined objects. For example, the <italic>ici_cfunt_t<noitalic>
@@ -1054,10 +1141,10 @@ and should be left zero.)<Comment From object.h>
                      objects which don't already have O_MARK set (this
                      recursion is a potential problem due to the
                      uncontrolled stack depth it can create).  This is only
-                     used in the marking phase of garbage collection.<DefnIn4cm><Tab>The macro ici_mark() calls the t_mark function of the
+                     used in the marking phase of garbage collection.<DefnIn4cm>The macro ici_mark() calls the t_mark function of the
                      object (based on object type) if the O_MARK flag of
                      the object is clear, else it returns 0.  This is the
-                     usual interface to an object's mark function.<DefnIn4cm><Tab>The mark function implemantation of objects can assume
+                     usual interface to an object's mark function.<DefnIn4cm>The mark function implemantation of objects can assume
                      the O_MARK flag of the object they are being invoked
                      on is clear.<DefnTerm>t_free(o)<DefnIn4cm>Must free the object o and all associated data, but not
                      other objects which are referenced from it.  This is
@@ -1067,18 +1154,18 @@ and should be left zero.)<Comment From object.h>
                      free a partially allocated object.<DefnTerm>t_cmp(o1, o2)<DefnIn4cm>Must compare o1 and o2 and return 0 if they are the
                      same, else non zero.  This similarity is the basis for
                      merging objects into single atomic objects and the
-                     implementation of the == operator.<DefnIn4cm><Tab>Currently only zero versus non-zero results are
+                     implementation of the == operator.<DefnIn4cm>Currently only zero versus non-zero results are
                      significant.  However in future versions the t_cmp()
                      function may be generalised to return less than, equal
                      to, or greater than zero depending if <italic>o1<noitalic> is less
                      than, equal to, or greater than <italic>o2<noitalic>.  New
-                     implementations would be wise to adopt this usage now.<DefnIn4cm><Tab>Some objects are by nature both unique and
+                     implementations would be wise to adopt this usage now.<DefnIn4cm>Some objects are by nature both unique and
                      intrinsically atomic (for example, objects which are
                      one-to-one with some other allocated data which they
                      alloc when the are created and free when they die).
                      For these objects the existing function
                      ici_cmp_unique() can be used as their implementation
-                     of this function.<DefnIn4cm><Tab>It is very important in implementing this function not
+                     of this function.<DefnIn4cm>It is very important in implementing this function not
                      to miss any fields which may otherwise distinguish two
                      obejcts.  The cmp, hash and copy operations of an
                      object are all related.  It is useful to check that
@@ -1088,41 +1175,41 @@ and should be left zero.)<Comment From object.h>
                      On failure, NULL is returned and error is set.  The
                      returned object has been ici_incref'ed.  The returned
                      object should cmp() as being equal, but be a distinct
-                     object for objects that are not intrinsically atomic.<DefnIn4cm><Tab>Intrinsically atomic objects may use the existing
+                     object for objects that are not intrinsically atomic.<DefnIn4cm>Intrinsically atomic objects may use the existing
                      function ici_copy_simple() as their implemenation of
-                     this function.<DefnIn4cm><Tab>Return NULL on failure, usual conventions.<DefnTerm>t_hash(o)<DefnIn4cm>Must return an unsigned long hash which is sensitive
+                     this function.<DefnIn4cm>Return NULL on failure, usual conventions.<DefnTerm>t_hash(o)<DefnIn4cm>Must return an unsigned long hash which is sensitive
                      to the value of the object.  Two objects which cmp()
-                     equal should return the same hash.<DefnIn4cm><Tab>The returned hash is used in a hash table shared by
+                     equal should return the same hash.<DefnIn4cm>The returned hash is used in a hash table shared by
                      objects of all types.  So, somewhat problematically,
                      it is desireable to generate hashes which have good
-                     spread and seperation across all objects.<DefnIn4cm><Tab>Some objects are by nature both unique and
+                     spread and seperation across all objects.<DefnIn4cm>Some objects are by nature both unique and
                      intrinsically atomic (for example, objects which are
                      one-to-one with some other allocated data which they
                      alloc when the are created and free when they die).
                      For these objects the existing function
                      <italic>ici_hash_unique()<noitalic> can be used as their
                      implementation of this function.<DefnTerm>t_assign(o, k, v)<DefnIn4cm>Must assign to key <italic>k<noitalic> of the object <italic>o<noitalic> the value
-                     <italic>v<noitalic>.  Return 1 on error, else 0.<DefnIn4cm><Tab>The existing function <italic>ici_assign_fail()<noitalic> may be used
+                     <italic>v<noitalic>.  Return 1 on error, else 0.<DefnIn4cm>The existing function <italic>ici_assign_fail()<noitalic> may be used
                      both as the implementation of this function for object
                      types which do not support any assignment, and as a
                      simple method of generating an error for particular
-                     assignments which break some rule of the object.<DefnIn4cm><Tab>Not that it is not necessarilly wrong for an
+                     assignments which break some rule of the object.<DefnIn4cm>Not that it is not necessarilly wrong for an
                      intrinsically atomic object to support some form of
                      assignment.  Only for the modified field to be
                      significant in a <italic>t_cmp()<noitalic> operation.  Objects which
                      are intrinsically unique and atomic often support
-                     assignments.<DefnIn4cm><Tab>Return non-zero on failure, usual conventions.<DefnTerm>t_fetch(o, k)<DefnIn4cm>Fetch the value of key <italic>k<noitalic> of the object <italic>o<noitalic>.  Return
-                     NULL on error.<DefnIn4cm><Tab>Note that the returned object does not have any extra
+                     assignments.<DefnIn4cm>Return non-zero on failure, usual conventions.<DefnTerm>t_fetch(o, k)<DefnIn4cm>Fetch the value of key <italic>k<noitalic> of the object <italic>o<noitalic>.  Return
+                     NULL on error.<DefnIn4cm>Note that the returned object does not have any extra
                      reference count; however, in some circumstances it may
                      not have any garbage collector visible references to
                      it.  That is, it may be vunerable to a garbage
                      collection if it is not either incref()ed or hooked
                      into a referenced object immediately.  Callers are
-                     responsible for taking care.<DefnIn4cm><Tab>The existing function <italic>ici_fetch_fail()<noitalic> may be used
+                     responsible for taking care.<DefnIn4cm>The existing function <italic>ici_fetch_fail()<noitalic> may be used
                      both as the implementation of this function for object
                      types which do not support any assignment, and as a
                      simple method of generating an error for particular
-                     fetches which break some rule of the object.<DefnIn4cm><Tab>Return NULL on failure, usual conventions.<DefnTerm>t_name<DefnIn4cm>The name of this type. Use for the implementation of
+                     fetches which break some rule of the object.<DefnIn4cm>Return NULL on failure, usual conventions.<DefnTerm>t_name<DefnIn4cm>The name of this type. Use for the implementation of
                      <italic>typeof()<noitalic> and in error messages.  But apart from that,
                      type names have no fundamental importance in the
                      langauge and need not even be unique.<DefnTerm>t_objname(o, p)<DefnIn4cm>Must place a short (less than 30 chars) human readable
@@ -1155,7 +1242,7 @@ and should be left zero.)<Comment From object.h>
                      fetch operation is supposed to perform the COM get/set
                      property operation, or return a callable object for a
                      future method call.  Most objects will leave this
-                     NULL.<DefnIn4cm><Tab>Return NULL on failure, usual conventions.<Heading2><Marker <MType 2> <MText `ici_typecheck, C API function'> >ici_typecheck
+                     NULL.<DefnIn4cm>Return NULL on failure, usual conventions.<Heading2><Marker <MType 2> <MText `ici_typecheck, C API function'> >ici_typecheck
 <CodeIn1cm><bold>int\ ici_typecheck(char\ *types,\ ...)
 <nobold>
 <Comment From cfunc.c>

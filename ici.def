@@ -61,6 +61,7 @@ EXPORTS ici_int_ret
 EXPORTS ici_interface_check
 EXPORTS ici_leave
 EXPORTS ici_main
+EXPORTS ici_make_handle_member_map
 EXPORTS ici_mem_new
 EXPORTS ici_method
 EXPORTS ici_method_check
@@ -76,6 +77,7 @@ EXPORTS ici_one DATA
 EXPORTS ici_os DATA
 EXPORTS ici_parse_file
 EXPORTS ici_parse
+EXPORTS ici_parse_fname
 EXPORTS ici_pcre
 EXPORTS ici_pcre_exec
 EXPORTS ici_profile_set_done_callback

@@ -35,7 +35,7 @@ ici_method_check(ici_obj_t *o, int tcode)
         ici_error = buf;
         return 1;
     }
-    if (!hassuper(o) || (tcode != 0 && o->o_tcode != tcode))
+    if (tcode != 0 && o->o_tcode != tcode)
     {
         sprintf(buf, "attempt to apply method %s to %s",
             ici_objname(n1, ici_os.a_top[-1]),
