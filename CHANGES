@@ -5,7 +5,7 @@
     as CGI scripts under a web server, e.g. Apache.  The default
     location is based on the value of PREFIX as specified in the
     Unix makefiles and passed as a macro when building, i.e. the
-    directory PREFIX/lib/ici4 is added to path[].
+    directory PREFIX/lib/ici4 is added to path[]. (andy)
 
 *   Makefile.osx updated for ici4 and a ProjectBuilder project,
     macosx/ici.pbproj, added to build a static library and
