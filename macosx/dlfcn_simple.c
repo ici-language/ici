@@ -37,7 +37,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <stdarg.h>
 #include <limits.h>
 #include <mach-o/dyld.h>
-#include "dlfcn_simple.h"
+#include <dlfcn.h>
 
 #define ERR_STR_LEN 256
 

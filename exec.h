@@ -55,7 +55,7 @@ struct ici_exec
     HANDLE      x_thread_handle;
 #endif
 #ifdef ICI_USE_POSIX_THREADS
-    sem_t   x_semaphore;
+    sem_t       x_semaphore;
     pthread_t   x_thread_handle;
 #endif
 };

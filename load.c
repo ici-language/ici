@@ -21,11 +21,7 @@ static int push_path_elements(ici_array_t *a, char *path); /* Forward. */
 # else /* Unix */
 #  include <sys/types.h>
 #  include <unistd.h>
-#  if defined(__MACH__) && defined(__APPLE__)
-#   include <macosx/dlfcn_simple.h>
-#  else
-#   include <dlfcn.h>
-#endif
+#  include <dlfcn.h>
 
 #ifndef NODLOAD
 typedef void    *dll_t;

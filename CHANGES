@@ -1,5 +1,9 @@
 Changes in version 4.1.0 (a beta release)
 
+*   Mac OS X ICI now supports threading using a minimal
+    implementation of pthreads semaphores to avoid problems
+    with the native Mac OS X pthreads. (andy)
+
 *   Small fix for MacOSX from Albert Chang at Canon incoporated
     to allow building without the dlcompat library. (andy)
 

@@ -223,10 +223,7 @@ ici_new_exec(void)
 #endif
 #ifdef ICI_USE_POSIX_THREADS
     if (sem_init(&x->x_semaphore, 0, 0) == -1)
-    {
-        ici_get_last_errno("sem_init", NULL);
         goto fail;
-    }
 #endif
     x->x_state = XS_ACTIVE;
     x->x_count = 20;

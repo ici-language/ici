@@ -29,10 +29,7 @@
 
 #define ICI_DLL_EXT     ".bundle"
 
-#if 0
-/* Need to wait until sem_init replacement exists */
-# define ICI_USE_POSIX_THREADS
-#endif
+#define ICI_USE_POSIX_THREADS
 
 #include <crt_externs.h>
 #define environ *_NSGetEnviron()

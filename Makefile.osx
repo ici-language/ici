@@ -7,7 +7,7 @@ LIB     = libici4.a
 CC      = cc -pipe
 LIBS    = -framework Foundation
 COPT	?= -Os
-CFLAGS  = -g -Wall $(COPT) -I. -DNDEBUG
+CFLAGS  = -g -Wall $(COPT) -I. -Imacosx -DNDEBUG
 LDFLAGS = -g
 RM      = rm -f
 
@@ -53,7 +53,8 @@ OBJS    = \
 	idb.o idb2.o profile.o
 
 OSXOBJS=\
-	dlfcn_simple.o
+	dlfcn_simple.o \
+	semaphore.o
 
 PCREOBJS=\
 	study.o maketables.o pcre.o
@@ -81,6 +82,9 @@ pcre.o  : pcre/pcre.c
 
 dlfcn_simple.o : macosx/dlfcn_simple.c
 	$(CC) -c -o $@ $(CFLAGS) macosx/dlfcn_simple.c
+
+semaphore.o : macosx/semaphore.c
+	$(CC) -c -o $@ $(CFLAGS) macosx/semaphore.c
 
 # Headers that are potentially used in module writing are made public
 ICIHDRS= ici.h icistr-setup.h

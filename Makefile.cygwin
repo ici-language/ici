@@ -108,7 +108,7 @@ PCREHDRS=\
 
 ici.h	: $(PROG)
 	ICIPATH=. PATH=".:$$PATH" $(PROG) mk-ici-h.ici $(CONFIG)
-	
+
 # Core modules
 COREMODS=\
 	ici4core.ici\
