@@ -1,3 +1,5 @@
+Changes in version 4.0.0
+
 *	Added stuff to build a Windows installer with a script based
 	on NullSoft's free installer system. (timl)
 
@@ -47,7 +49,7 @@
 	It turns out not to be practical to leave off the version
 	number. But I plan to add searching for the previous version
 	number to solve the problem instead. (timl)
-	
+
 * 	Corrected long standing ? : bug where the : was confused
 	for a method operator in some circumstances. (timl)
 
@@ -67,20 +69,20 @@
 	as their header. This includes the super poiner. They must
 	then also set the O_SUPER flag in their header. They must also
 	support some extra fetch/assign functions.
-	
+
 	There are quiet a few place where struct_t types became
 	objwsup_t types as a consequence of this. (timl)
 
 *	Removed the version number from the naming of auto-loading
 	ICI modules (but not native code modules). Thus, for example,
 	the version 3 startup file was called:
-	
+
 	   ici3core.ici
-	   
+
 	but it will now be called
-	
+
 	   icicore.ici
-	
+
 	I think the ICI language (as opposed to its internal APIs)
 	is sufficiently stable that it is not really required.
 	I found it an unnecessary inconvenience. (timl)
@@ -124,14 +126,14 @@
 	    ici_nfree(x, size);
 
 	98% of the time this is really easy because the place you
-	free the data knows exectly how big it is. For the occasions 
+	free the data knows exectly how big it is. For the occasions
 	where this is not convenient, you can use the completely
 	malloc/free equivalent:
 
 	    x = ici_alloc(size);
 	    ...
 	    ici_free(x);
-	
+
 	(timl)
 
 *	Added a small array (32) of pre-generated small ints to allow
@@ -185,7 +187,7 @@
 	they should remember and use when making new objects. After this
 	change, the next release will move to version 4 to keep extension
 	modules with the new smaller objects seperate.
-	
+
 	The overall effect on CPU time seems to be neutral or a
 	slight improvement. (timl)
 
@@ -195,18 +197,18 @@
 	for the ICI execution engine will not take advantage of multiple
 	processors (but they will if they spend their time in functions
 	that release the mutex while running).
-	
+
 	It was a little difficult to achieve this without slowing things
 	down. Introducing a single extra indirection in top-of-stack
 	accesses (the obvious way) adds up to 20% to the execution time
 	of some programs. But I managed it.
-	
+
 	New language contructs "waitfor (expr; obj) stmt" and
 	"critsetc stmt" have been added. As well as the "wakeup(obj)"
 	and "sleep(num)" functions. All I/O routines in the core
 	release the mutex around the low level I/O - except the parser.
 	(See new documentation.)
-	
+
 	In the process, o_top, x_top and v_top macros got removed.
 	Use ici_os.a_top instead. (timl)
 
@@ -304,7 +306,7 @@ Changes in version 3.0.1
 *	Modified the call() function to allow:
 
             call(func, arg1, arg2... array);
-            
+
         because call(func, array(arg1, arg2...) + array); seems to
         be very common (and inefficient). The last arg must be an
         array or NULL. (timl)
@@ -321,7 +323,7 @@ Changes in version 3.0.1
 *	Expanded the assign() function to work on any type (not just
 	structs). Just does a plain assignment for non-structs. Also
 	made the 3rd argument optional; NULL assumed if absent. (timl)
-	
+
 *	Expanded the del() function to work on sets and arrays (not
 	just structs). Del from a set is just like a struct. Del from
 	an array removes the first occurence of the given object from
@@ -332,30 +334,30 @@ Changes in version 3.0.1
 *	Allowed "abbreviated function definitions" in [struct...]
 	literals (as well as [class...] literals) and made the
 	'= expr' optional (meaning '= NULL'). Thus one may say:
-	
+
 	x = [struct
 	    a = 10,
 	    f(z){return z + 1;},
 	    b,
 	    c
 	]
-	
+
 	printf("%d, %d\n", x.a, x.f(2));
-	
+
 	See updated documentation for details. (timl)
 
 *	Introduced the ability to parse sub-modules in-line
 	with [module...] syntax (as well as extend modules in
 	the same manner). Thus one may say:
-	
+
 	sub_module = [module
 	    static x = 5;
 	    extern fred(a, b){return a + b + x};
 	    printf("Hello world.\n");
 	];
-	
+
 	c = fred(1, 2);
-	
+
 	See updated documentation for details. (timl)
 
 *	Allowed C++ style // comments.
@@ -382,7 +384,7 @@ Changes in version 3.0.1
 	of a function and a subject object, and : and :^
 	operators that generate methods for calls to base
 	class and super class methods.
-	
+
 	See updated documentation for details. (timl)
 
 *	Expanded the type_t structure to include (a) a cached
@@ -394,8 +396,8 @@ Changes in version 3.0.1
 	well as indexing). NOTE: this change means that extension
 	modules will need re-compilation. No source changes should
 	be necessary.
-	
-	Associated with the change is the splitting of 'user' level 
+
+	Associated with the change is the splitting of 'user' level
 	ICI functions, from C implemented functions, from method
 	calls, from ptr calls. (timl)
 
@@ -406,15 +408,15 @@ Changes in version 3.0.1
 	language to have statically declared strings (provided
 	they are atomised at init time). This means that string
 	references in core language source can now just look like, say:
-	
+
 	    *a->a_top++ = SSO(fred);
-	    
+
 	instead of, say:
-	
+
 	    if ((*a->a_top = objof(get_cname("fred"))) == NULL)
 	    	goto fail;
 	    ++a->a_top;
-	    	
+
 	lots of code was simplified with this. See sstring.h in
 	which each desired string must be mentioned. Note that
 	this is *only* available in core language files. It can
@@ -439,7 +441,7 @@ Changes in version 3.0.1
 	reused from a store kept in parallel with the execution stack.
 	This greatly reduces small object churn through the garbage
 	collector. (timl)
-	
+
 *	Improved integer and float calculation performance by
 	introducing a shadow stack of the operand stack that
 	holds strictly temporary mutable ints and floats. These
@@ -450,15 +452,15 @@ Changes in version 3.0.1
 	the compiler has determined that the result is used strictly
 	by value in a single subsequent operation. The net result of
 	this is that expressions like:
-	
+
 	    x = a + 1.2 * c - 10;
-	    
+
 	only perform a single resolution to atomic form when the
 	final result is produced (as opposed to the three the above
 	example would previously have done). This can result in
 	less churn of small objects and so less garbage collections.
 	It certainly results in less atom pool look-ups. (timl)
-	
+
 *	Added a define of ICI_CORE to each of the core language
 	files prior to any includes. This allows the include files
 	to know if they are being included in a build of the core
@@ -466,13 +468,13 @@ Changes in version 3.0.1
 	is only required to adjust some Windows specific declarations.
 	It means that builds of extensions modules under Windows no
 	longer need to define ICI_DLL in their makefile. (timl)
-	
+
 *	Expanded tabs to spaces in most files. Four space indents
 	implemented with spaces rather than tabs is now the preferred
 	ICI C source fomatting convention. Mostly because it is
 	a hassle to convince Windows tools that tabs are 8 columns
 	apart. (timl)
-	
+
 *	Changed the parser so that code arrays are no longer reduced
 	to atoms. This has been a waste of time ever since source
 	markers went in. This speeds up parseing. (timl)
@@ -630,7 +632,7 @@ Changes in version 2.1.1 of ICI
          - calls any function specified by calling
            ici_profile_set_done_callback() (for example,
            the Windows ICI debugger uses this function to register
-           an ICI object viewer). 
+           an ICI object viewer).
 
 *       The objname() function has been fixed so that it correctly
         outputs the names of functions.
@@ -723,7 +725,7 @@ Changes in version 2.1 of ICI
 *	Unix makefiles now have a "fancy" install target that
 	installs the binary, man page, library, headers, documentation
 	and some startup code. Primarially of benefit to module
-	writers who can point the compiler at the standard ICI headers 
+	writers who can point the compiler at the standard ICI headers
 	directory. Also defines a standard place to install ICI modules.
 
 *	More functions have been exported for the benefit of some
