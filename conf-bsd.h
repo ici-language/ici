@@ -4,6 +4,8 @@
 #include <sys/param.h>
 #undef isset
 
+#include <math.h>
+
 #ifndef BSD4_4
 /*
  * Prior to 4.4BSD sprintf didn't return a count of the characters
