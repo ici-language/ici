@@ -194,6 +194,7 @@ extern DLI char *ici_buf;                       /* See buf.h */
 extern DLI int  ici_bufz;                       /* See buf.h */
 
 extern DLI ftype_t      ici_stdio_ftype;
+extern DLI ftype_t      ici_popen_ftype;
 
 extern DLI null_t       o_null;
 

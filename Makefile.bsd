@@ -36,6 +36,9 @@ MAN1    = doc/ici3.1
 
 .include <bsd.prog.mk>
 
+ici.h	: $(PROG)
+	./$(PROG) mk-ici-h.ici conf-bsd.h
+
 study.o : pcre/study.c
 	$(CC) -c -o $@ $(CFLAGS) pcre/study.c
 
