@@ -112,10 +112,10 @@ call_ptr(object_t *o, object_t *subject)
      * Replace ourselves on the operand stack with 'self' (our aggr) and
      * push on the new object being called.
      */
-    ici_os.a_top[-2] = ptrof(o)->p_aggr;
     if ((ici_os.a_top[-1] = objof(ici_int_new(NARGS() + 1))) == NULL)
         return 1;
     ici_decref(ici_os.a_top[-1]);
+    ici_os.a_top[-2] = ptrof(o)->p_aggr;
     if (ici_stk_push_chk(&ici_os, 1))
         return 1;
     *ici_os.a_top++ = f;
