@@ -723,7 +723,7 @@ pf_ungetc(parse_t *p, int c)
 static int
 pf_eof(parse_t *p)
 {
-    return p->p_file->f_type->ft_eof(p->p_file);
+    return p->p_file->f_type->ft_eof(p->p_file->f_file);
 }
 
 static int

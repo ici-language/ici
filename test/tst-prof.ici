@@ -23,13 +23,15 @@ prof()
     count2000();
 }
 
-prof();
+if (version() ~ #prof#)
+{
+    prof();
 
-include(fname);
-remove(fname);
-
-if (typeof(profile.total) != "int")
+    include(fname);
+    remove(fname);
+    if (typeof(profile.total) != "int")
 	fail("profile total absent");
 
-if (typeof(profile.calls) != "struct")
+    if (typeof(profile.calls) != "struct")
 	fail("profile sub-calls absent");
+}

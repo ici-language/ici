@@ -1002,10 +1002,9 @@ if (version() !~ #ICI#)
 
 if (version() ~ #pipes#)
 {
-	a := popen("ici -e \"printf(\\\"hello\\n\\\");", "r");
+	a := popen("echo hello", "r");
 	if (typeof(a) != "file")
 		fail("failed to popen");
-	put(getfile(a));
 	if (getfile(a) !~ #hello#)
 		fail("failed to popen and read expected data");
 	close(a);

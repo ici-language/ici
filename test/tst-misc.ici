@@ -109,19 +109,23 @@ if ("abc"[1] != "b")
 if ("abc"[5] != "")
 	fail("failed to index a string");
 
-if (typeof(a := trace()) != "int")
-	fail("trace() didn't return in");
+if (version() ~ #trace#)
+{
+    if (typeof(a := trace()) != "int")
+	    fail("trace() didn't return in");
 
-error = NULL; try trace("bozo"); onerror;
-if (error !~ #unrecognised#)
-	fail("failed to fail on bad trace");
+    error = NULL; try trace("bozo"); onerror;
+    if (error !~ #unrecognised#)
+	    fail("failed to fail on bad trace");
 
-if (trace("off none") != 0)
-	fail("trace returned wrong value");
+    if (trace("off none") != 0)
+	    fail("trace returned wrong value");
 
-trace("lexer expr calls funcs all mem src gc");
+    trace("lexer expr calls funcs all mem src gc");
 
-if (trace("on all") != 1)
-	fail("trace returned wrong value");
+    if (trace("on all") != 1)
+	    fail("trace returned wrong value");
 
-trace("off");
+    trace("off");
+
+}
