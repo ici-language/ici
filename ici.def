@@ -33,7 +33,7 @@ EXPORTS ici_debug_respect_errors
 EXPORTS ici_dont_record_line_nums DATA
 EXPORTS ici_enter
 EXPORTS ici_error DATA
-EXPORTS ici_evaluate
+EXPORTS ici_eval
 EXPORTS ici_exec DATA
 EXPORTS ici_fetch_fail
 EXPORTS ici_file_close

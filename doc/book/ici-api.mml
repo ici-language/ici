@@ -421,7 +421,15 @@ function. In these implemnetations it has no effect.<Heading2><Marker <MType 2> 
 <Body>The global error message pointer. The ICI error return convention
 dictacts that the originator of an error sets this to point to a
 short human readable string, in addition to returning the functions
-error condition. See <italic>The error return convention<noitalic> for more details.<Heading2><Marker <MType 2> <MText `ici_fetch, C API macro'> >ici_fetch
+error condition. See <italic>The error return convention<noitalic> for more details.<Heading2><Marker <MType 2> <MText `ici_eval, C API function'> >ici_eval
+<CodeIn1cm><bold>ici_obj_t\ *\ ici_eval(ici_str_t\ *name)
+<nobold>
+<Comment From exec.c>
+<Body>Evaluate <italic>name<noitalic> as if it was a variable in a script in the currently
+prevailing scope, and return its value. If the name is undefined, this
+will attempt to load extension modules in an attemot to get it defined.<Body>This is slightly different from fetching the name from the top element
+of the scope stack (i.e. <italic>ici_vs.a_top[-1]<noitalic>) because it will attempt to
+auto-load, and fail if the name is not defined.<Body>The returned object has had it's reference count incremented.<Body>Returns NULL on error, usual conventions.<Heading2><Marker <MType 2> <MText `ici_fetch, C API macro'> >ici_fetch
 <CodeIn1cm>\ <bold>#define\ ici_fetch(o,k)<HardSpace><HardSpace>...<nobold>
 <Comment From object.h>
 <Body>Fetch the value of the key <italic>k<noitalic> from the object <italic>o<noitalic>.  This macro just calls
@@ -1133,7 +1141,9 @@ and should be left zero.)<Comment From object.h>
                      the same as that for intrinsic functions. Functions
                      and techniques that can be used in intrinsic function
                      implementations can be used in the implementation of
-                     this function.<TagIn4cm><italic>t_ici_name<noitalic><Tab>A <italic>ici_str_t<noitalic> copy of <italic>t_name<noitalic>. This is just a cached
+                     this function. The object being called can be assumed
+                     to be on top of the operand stack
+                     (i.e. ici_os.a_top[-1])<TagIn4cm><italic>t_ici_name<noitalic><Tab>A <italic>ici_str_t<noitalic> copy of <italic>t_name<noitalic>. This is just a cached
                      version so that typeof() doesn't keep re-computing the
                      string.<TagIn4cm><italic>t_fetch_method<noitalic><Tab>An optional alternative to the basic <italic>t_fetch()<noitalic> that
                      will be called (if supplied) when doing a fetch for

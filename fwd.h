@@ -296,7 +296,6 @@ extern int              ici_exec_count;
 #define ici_null_ret()  ici_ret_no_decref(objof(&o_null))
 
 extern ici_obj_t        *ici_atom_probe(ici_obj_t *o);
-extern ici_obj_t        *ici_evaluate(ici_obj_t *, int);
 extern ici_obj_t        *ici_copy_simple(ici_obj_t *);
 extern ici_obj_t        *ici_fetch_fail(ici_obj_t *, ici_obj_t *);
 extern ici_obj_t        *ici_atom(ici_obj_t *, int);
@@ -443,6 +442,7 @@ extern void     trace_pcall(ici_obj_t *);
 typedef struct expr         expr_t;
 typedef union ici_ostemp    ici_ostemp_t;
 
+extern ici_obj_t        *ici_evaluate(ici_obj_t *, int);
 extern char             **smash(char *, int);
 extern char             **ssmash(char *, char *);
 extern int              ici_natoms;
