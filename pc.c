@@ -50,13 +50,15 @@ new_pc(array_t *c, object_t **xs)
         rego(pc);
         ici_exec->x_xs_pc_cache->a_base[n] = objof(pc);
     }
-    if (c->a_top[-1] != objof(&o_end))
+    pc->pc_code = c;
+    if (c->a_top == c->a_base || c->a_top[-1] != objof(&o_end))
     {
+        incref(pc);
         if (ici_stk_push_chk(c, 1))
             return 1;
         *c->a_top++ = objof(&o_end);
+        decref(pc);
     }
-    pc->pc_code = c;
     pc->pc_next = c->a_base;
     pc->pc_limit = c->a_top;
     *xs = objof(pc);

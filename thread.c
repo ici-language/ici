@@ -10,8 +10,8 @@
 HANDLE                  ici_mutex;
 #endif
 #ifdef ICI_USE_POSIX_THREADS
-pthread_mutex_t		ici_mutex;
-static pthread_mutex_t	n_active_threads_mutex;
+pthread_mutex_t     ici_mutex;
+static pthread_mutex_t  n_active_threads_mutex;
 #endif
 
 long                    ici_n_active_threads;
@@ -57,11 +57,11 @@ ici_leave(void)
         ReleaseMutex(ici_mutex);
 #else
 # ifdef ICI_USE_POSIX_THREADS
-	pthread_mutex_lock(&n_active_threads_mutex);
-	--ici_n_active_threads;
-	pthread_mutex_unlock(&n_active_threads_mutex);
+        pthread_mutex_lock(&n_active_threads_mutex);
+        --ici_n_active_threads;
+        pthread_mutex_unlock(&n_active_threads_mutex);
 
-	pthread_mutex_unlock(&ici_mutex);
+        pthread_mutex_unlock(&ici_mutex);
 # else
         /*
          * It is ok to do ici_leave in implementations with
@@ -95,12 +95,12 @@ ici_enter(exec_t *x)
         WaitForSingleObject(ici_mutex, INFINITE);
 #else
 # ifdef ICI_USE_POSIX_THREADS
-	pthread_mutex_lock(&n_active_threads_mutex);
-	++ici_n_active_threads;
-	pthread_mutex_unlock(&n_active_threads_mutex);
+        pthread_mutex_lock(&n_active_threads_mutex);
+        ++ici_n_active_threads;
+        pthread_mutex_unlock(&n_active_threads_mutex);
 
-	if (pthread_mutex_lock(&ici_mutex) == -1)
-		perror("ici_mutex");
+        if (pthread_mutex_lock(&ici_mutex) == -1)
+            perror("ici_mutex");
 # else
         /*
          * It is ok to do ici_enter in implementations with
@@ -140,7 +140,7 @@ ici_yield(void)
     exec_t              *x;
 
     x = ici_exec;
-    if (ici_n_active_threads > 1 && x->x_critsect == 0) 
+    if (ici_n_active_threads > 1 && x->x_critsect == 0)
     {
         decref(&ici_os);
         decref(&ici_xs);
@@ -153,10 +153,10 @@ ici_yield(void)
         WaitForSingleObject(ici_mutex, INFINITE);
 #else
 # ifdef ICI_USE_POSIX_THREADS
-	pthread_mutex_unlock(&ici_mutex);
-	/*pthread_yield();*/
-	if (pthread_mutex_lock(&ici_mutex) == -1)
-	    perror("ici_mutex");
+        pthread_mutex_unlock(&ici_mutex);
+        /*pthread_yield();*/
+        if (pthread_mutex_lock(&ici_mutex) == -1)
+            perror("ici_mutex");
 # else
         /*
          * It is ok to do ici_yield in implementations with
@@ -214,7 +214,7 @@ ici_waitfor(object_t *o)
 #else
 # ifdef ICI_USE_POSIX_THREADS
     if (sem_wait(&x->x_semaphore) == -1)
-	    e = "wait failed";
+        e = "wait failed";
 # else
     e = "attempt to wait in waitfor, but no thread support";
 # endif
@@ -247,7 +247,7 @@ ici_wakeup(object_t *o)
             ReleaseSemaphore(x->x_semaphore, 1, NULL);
 #else
 # ifdef ICI_USE_POSIX_THREADS
-	    sem_post(&x->x_semaphore);
+            sem_post(&x->x_semaphore);
 # else
             /*
              * It is ok to do wakeup calls in implementations
@@ -278,7 +278,7 @@ ici_thread_base(exec_t *x)
 void *
 ici_thread_base(void *arg)
 {
-    exec_t		*x = arg;
+    exec_t      *x = arg;
 #endif
     int                 n_ops;
 
@@ -345,7 +345,7 @@ f_thread()
         if (thread_h == NULL)
         {
             ici_get_last_win32_error();
-            decref(x); /* The ref the thread was goint to own. */
+            decref(x); /* The ref the thread was going to own. */
             goto fail;
         }
         x->x_thread_handle = thread_h;
@@ -353,18 +353,18 @@ f_thread()
 #else
 # ifdef ICI_USE_POSIX_THREADS
     {
-	pthread_attr_t	thread_attr;
+        pthread_attr_t  thread_attr;
 
-	pthread_attr_init(&thread_attr);
-	pthread_attr_setschedpolicy(&thread_attr, SCHED_RR);
-	if (pthread_create(&x->x_thread_handle, NULL, ici_thread_base, x) == -1)
-	{
-	    syserr();
-	    decref(x);
-	    goto fail;
-	}
-	pthread_detach(x->x_thread_handle);
-	pthread_attr_destroy(&thread_attr);
+        pthread_attr_init(&thread_attr);
+        pthread_attr_setschedpolicy(&thread_attr, SCHED_RR);
+        if (pthread_create(&x->x_thread_handle, NULL, ici_thread_base, x) == -1)
+        {
+            syserr();
+            decref(x);
+            goto fail;
+        }
+        pthread_detach(x->x_thread_handle);
+        pthread_attr_destroy(&thread_attr);
     }
 # else
     ici_error = "this implementation does not support thread creation";
@@ -381,11 +381,9 @@ fail:
 static int
 f_wakeup()
 {
-    object_t            *o;
-
-    if (ici_typecheck("o", &o))
-        return 1;
-    if (ici_wakeup(o))
+    if (NARGS() != 1)
+        return ici_argcount(1);
+    if (ici_wakeup(ARG(0)))
         return 1;
     return null_ret();
 }
@@ -403,19 +401,19 @@ ici_init_thread_stuff(void)
         return ici_get_last_win32_error();
 #endif
 #ifdef ICI_USE_POSIX_THREADS
-    pthread_mutexattr_t	mutex_attr;
+    pthread_mutexattr_t mutex_attr;
 
     if (pthread_mutexattr_init(&mutex_attr) == -1)
     {
-	perror("pthread_mutexattr_init");
-	syserr();
-	return 1;
+        perror("pthread_mutexattr_init");
+        syserr();
+        return 1;
     }
     pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE);
     if (pthread_mutex_init(&ici_mutex, &mutex_attr) == -1)
     {
         syserr();
-	pthread_mutexattr_destroy(&mutex_attr);
+        pthread_mutexattr_destroy(&mutex_attr);
         return 1;
     }
     if (pthread_mutex_init(&n_active_threads_mutex, &mutex_attr) == -1)

@@ -39,6 +39,8 @@ extern "C" {
 #define NOSIGNALS       /* ICI level signal handling */
 #undef  NOFASTFREELISTS /* Fast free lists: +8bytes per malloc, more speed. */
 #define NOCLASSPROTO
+
+#define	ICI_USE_WIN32_THREADS
 /*
  * Mentioned in the version string.
  */

@@ -59,9 +59,7 @@ t1()
 static
 t2()
 {
-    auto    i;
-
-    for (i = 0; ; ++i)
+    for (;;)
     {
         waitfor (state == "pong" && typeof(state) != "int"; "pong")
         {

@@ -44,13 +44,13 @@ struct exec
     object_t    *x_waitfor;
     int         x_state;
     object_t    *x_result;
-#ifdef ICI_USE_WIN32_HANDLE
+#ifdef ICI_USE_WIN32_THREADS
     HANDLE      x_semaphore;
     HANDLE      x_thread_handle;
 #endif
 #ifdef ICI_USE_POSIX_THREADS
-    sem_t	x_semaphore;
-    pthread_t	x_thread_handle;
+    sem_t   x_semaphore;
+    pthread_t   x_thread_handle;
 #endif
 };
 #define execof(o)        ((exec_t *)(o))

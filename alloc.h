@@ -9,7 +9,7 @@
  * along with ALLCOLLECT in alloc.c, during debug and test.
  */
 #if     !ICI_ALLALLOC
-#define ICI_ALLALLOC    0       /* Always call malloc, no caches. */
+#define ICI_ALLALLOC    0   /* Always call malloc, no caches. */
 #endif
 
 /*
