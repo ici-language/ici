@@ -120,8 +120,12 @@ ici_uninit(void)
     ici_dump_refs();
 #endif
 
-    /* Free the general purpose buffer. */
-    ici_nfree(ici_buf, ici_bufz + 1);
+    if (ici_buf != ici_error)
+    {
+        /* Free the general purpose buffer. ### Hmm... If we do this we can't
+        return ici_error from ici_main.*/
+        ici_nfree(ici_buf, ici_bufz + 1);
+    }
     ici_buf = NULL;
     ici_bufz = 0;
 

@@ -644,7 +644,7 @@ ici_evaluate(ici_obj_t *code, int n_operands)
                     }
                     if (ici_typeof(t)->t_fetch_method != NULL)
                     {
-                        if ((*ici_typeof(t)->t_fetch_method)(t, ici_os.a_top[-1]) == NULL)
+                        if ((o = (*ici_typeof(t)->t_fetch_method)(t, ici_os.a_top[-1])) == NULL)
                             goto fail;
                     }
                     else

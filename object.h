@@ -198,7 +198,9 @@ struct ici_type
  *                      the same as that for intrinsic functions. Functions
  *                      and techniques that can be used in intrinsic function
  *                      implementations can be used in the implementation of
- *                      this function.
+ *                      this function. The object being called can be assumed
+ *                      to be on top of the operand stack
+ *                      (i.e. ici_os.a_top[-1])
  *
  * t_ici_name           A 'ici_str_t' copy of 't_name'. This is just a cached
  *                      version so that typeof() doesn't keep re-computing the

@@ -7,8 +7,11 @@
     headers and builds ici.h.  doc/ici.pdf is now installed as
     the the documentation. (andy)
 
+Changes in version 4.0.5
+
 *   Added *lots* more API comments, which get extracted into
-    the manual. (timl)
+    the manual. The API documentation in the PDF manul
+    is now complete, although not fully proofed. (timl)
 
 *   A number of minor corrections to faults discovered in the
     previous release. Mostly make issues. (timl)
@@ -20,7 +23,7 @@ Changes in version 4.0.4 (first normal release of ICI 4)
     directories called <wahtever>/lib/ici4 that parallel PATH
     elements that end in <whatever>/bin. This, at last, means that
     UNIX-like systems should reliably find extension modules without
-    setting environment variables. (timl) 
+    setting environment variables. (timl)
 
 *   Started adding a lot more API documentation. Much of it will
     now be extracted from the source comments. (timl)
@@ -54,7 +57,7 @@ Changes in version 4.0.3 (first beta release of ICI 4)
     shouldn't. Some things that are done as macros in the core,
     are now done with functions for external modules to stop them
     being fragile with respect to internal implemenation. This
-    all cause the backwards compatibale version to be set to 4.0.3
+    all caused the backwards compatibale version to be set to 4.0.3
     (timl)
 
 *   Allowed literal regular expressions (#...#) to be broken up as

@@ -311,10 +311,10 @@ ici_wakeup(ici_obj_t *o)
 static
 
 #ifdef ICI_USE_WIN32_THREADS
-long
-WINAPI /* Ensure correct Win32 calling convention. */
-ici_thread_base(ici_exec_t *x)
+DWORD WINAPI /* Ensure correct Win32 calling convention. */
+ici_thread_base(void *arg)
 {
+    ici_exec_t      *x = arg;
 #endif
 
 #ifdef ICI_USE_POSIX_THREADS
