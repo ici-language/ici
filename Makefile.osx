@@ -3,7 +3,7 @@
 #
 FLAVOUR = osx
 VERSION = "`awk '{print $$1}' VERSION`"
-TARGET  = ici4
+PROG    = ici4
 LIB     = libici4.a
 CC      = cc -pipe
 LIBS    = -framework Foundation
@@ -44,10 +44,12 @@ OBJS    = \
 PCREOBJS=\
 	study.o maketables.o pcre.o
 
-$(TARGET): $(LIB)
+default: $(PROG) ici.h
+
+$(PROG): $(LIB)
 	$(CC) $(LDFLAGS) -o $@ $(LIB) $(LIBS)
 
-all:    $(TARGET)
+all:    $(PROG)
 
 .PRECIOUS: $(LIB)
 
@@ -80,13 +82,16 @@ PCREHDRS=\
 DOCS=\
 	doc/ici.pdf
 
+ici.h: $(PROG)
+	ICIPATH=. ./$(PROG) mk-ici-h.ici conf-osx.h
+
 # Install the init file, headers and docs.
-install: $(TARGET) $(LIB)
+install: $(PROG) $(LIB) ici.h
 	@echo '=========================================='
 	@echo 'Installing ici interpreter and manual page'
 	@echo '=========================================='
 	-mkdir -p $(PREFIX)/bin
-	$(INSTALL) $(TARGET) $(BINDIR)
+	$(INSTALL) $(PROG) $(BINDIR)
 	-mkdir -p $(MANDIR)
 	$(INSTALL) doc/ici.1 $(MANDIR)
 	@echo '=========================================='
@@ -122,7 +127,7 @@ install: $(TARGET) $(LIB)
 	@echo '=========================================='
 
 clean:
-	$(RM) $(TARGET) $(LIB) $(OBJS) $(PCREOBJS)
+	$(RM) $(PROG) $(LIB) $(OBJS) $(PCREOBJS) ici.h
 
 #
 # No mention of fwd.h or alloc.h, 3but everything depends on it.
