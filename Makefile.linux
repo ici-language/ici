@@ -25,9 +25,9 @@ LDFLAGS = -export-dynamic -g
 RANLIB  = ranlib
 RM      = rm -f
 
-PREFIX  = /usr/local
-#PREFIX  = /home/users/t/ti/timl/linux
-INSTALL = install -C
+#PREFIX  = /usr/local
+PREFIX  = /home/users/t/ti/timl/linux
+INSTALL = install
 
 #
 # The remainder of this makefile is pretty well generic...
