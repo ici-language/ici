@@ -329,7 +329,7 @@ extern int              ici_assign_fail(ici_obj_t *, ici_obj_t *, ici_obj_t *);
 extern ici_file_t       *ici_sopen(char *, int, ici_obj_t *);
 extern unsigned long    ici_hash_unique(ici_obj_t *);
 extern int              ici_cmp_unique(ici_obj_t *, ici_obj_t *);
-extern int              ici_get_last_errno(char *, char *);
+extern int              ici_get_last_errno(const char *, const char *);
 extern int              ici_argcount(int);
 extern int              ici_argerror(int);
 extern void             ici_struct_unassign(ici_struct_t *, ici_obj_t *);

@@ -55,7 +55,7 @@ extern char     *sys_errlist[];
  * This --func-- forms part of the --ici-api--.
  */
 int
-ici_get_last_errno(char *dothis, char *tothis)
+ici_get_last_errno(const char *dothis, const char *tothis)
 {
     char                *e;
     size_t              z;
