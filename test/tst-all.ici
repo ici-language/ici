@@ -5,6 +5,7 @@ auto tests =
 [array
     "parse", "stmt", "bino", "sets", "del", "many", "func", "regexp",
     "math",
+    "thread",
     "oner",
 ];
 
