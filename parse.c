@@ -1194,7 +1194,7 @@ expr(ici_parse_t *p, expr_t **ep, int exclude)
 
     /*
      * This expression parser is neither state stack based nor recursive
-     * descent. It maintains an epression tree, and re-forms it each time
+     * descent. It maintains an expression tree, and re-forms it each time
      * it finds a subsequent binary operator and following factor. In
      * practice this is probably faster than either the other two methods.
      * It handles all the precedence and right/left associativity and
