@@ -568,7 +568,7 @@ ici_evaluate(object_t *code, int n_operands)
                 /*
                  * Force a check for a yield (see top of loop). If we
                  * don't do this, there is a chance a loop that spends
-                 * much of its time in critsects could beat with the
+                 * much of its time in critsects could sync with the
                  * stack check countdown and never yield.
                  */
                 ici_exec->x_count = 1;

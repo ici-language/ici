@@ -20,3 +20,24 @@ if (func1.name != "func1")
 static x = [array #abc#];
 if (x[0] != #abc#)
     fail("const regexp incorrectly parsed");
+    
+    
+static
+method(this, arg1)
+{
+	return this.value + arg1;
+}
+
+static c = struct();
+
+c.method :=
+[func(this, arg1)
+	{
+		return this.value + arg1;
+	}
+];
+
+static o = struct(c, "value", 2);
+
+if (o@method(3) != 5)
+	fail("object@method() returned incorrect value");
