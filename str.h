@@ -23,21 +23,21 @@
 
 struct ici_str
 {
-    ici_obj_t   o_head;
+    ici_obj_t       o_head;
     ici_struct_t    *s_struct;      /* Where we were last found on the vs. */
-    ici_sslot_t *s_slot;        /* And our slot. */
-    long        s_vsver;        /* The vs version at that time. */
+    ici_sslot_t     *s_slot;        /* And our slot. */
+    long            s_vsver;        /* The vs version at that time. */
 #   if KEEP_STRING_HASH
         unsigned long s_hash;  /* String hash code or 0 if not yet computed */
 #   endif
-    int         s_nchars;
-    char        *s_chars;
+    int             s_nchars;
+    char            *s_chars;
     union
     {
-        int     su_nalloc;
-        char    su_inline_chars[1]; /* And following bytes. */
+        int         su_nalloc;
+        char        su_inline_chars[1]; /* And following bytes. */
     }
-                s_u;
+                    s_u;
 };
 /*
  * s_nchars             The actual number of characters in the string. Note

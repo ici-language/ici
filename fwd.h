@@ -65,7 +65,11 @@
 #define ICI_VER_RELEASE 4
 
 /*
- * The ICI version number composed into an 8.8.16 long for simple comparisons.
+ * The ICI version number composed into an 8.8.16 unsigned long for simple
+ * comparisons. The components of this are also available as 'ICI_VER_MAJOR',
+ * 'ICI_VER_MINOR', and 'ICI_VER_RELEASE'.
+ *
+ * This --macro-- forms part of the --ici-api--.
  */
 #define ICI_VER \
     (((unsigned long)ICI_VER_MAJOR << 24) \
@@ -74,12 +78,13 @@
 
 /*
  * The oldet version number for which the binary interface for seperately
- * compiled modules is backwards compatible. This must be updated whenever
+ * compiled modules is backwards compatible. This is updated whenever
  * the exernal interface changes in a way that could break already compiled
- * modules. See ici_interface_check().
+ * modules. We aim to never to do that again. See 'ici_interface_check()'.
+ *
+ * This --macro-- forms part of the --ici-api--.
  */
 #define ICI_BACK_COMPAT_VER ((4UL << 24) | (0UL << 16) | 3)
-
 
 /*
  * DLI is defined in some configurations (Windows, in the conf include file)
@@ -93,13 +98,14 @@
 #define DLI
 #endif
 
+#ifndef ICI_PATH_SEP
 /*
  * The character which seperates directories in a path list on this
- * architecture. This is the default value, it may have been set in
- * the config file.
+ * architecture.
+ *
+ * This --macro-- forms part of the --ici-api--.
  */
-#ifndef ICI_PATH_SEP
-#define ICI_PATH_SEP    ':'
+#define ICI_PATH_SEP    ':' /* Default, may have been set in config file */
 #endif
 
 /*
@@ -108,16 +114,23 @@
  * the config file.
  */
 #ifndef ICI_DIR_SEP
-#define ICI_DIR_SEP    '/'
+/*
+ * The character which seperates segments in a path on this
+ * architecture.
+ *
+ * This --macro-- forms part of the --ici-api--.
+ */
+#define ICI_DIR_SEP    '/' /* Default, may have been set in config file */
 #endif
 
+#ifndef ICI_DLL_EXT
 /*
  * The string which is the extension of a dynamicly loaded library on this
- * architecture. This is the default value, it may have been set in
- * the config file.
+ * architecture.
+ *
+ * This --macro-- forms part of the --ici-api--.
  */
-#ifndef ICI_DLL_EXT
-#define ICI_DLL_EXT     ".so"
+#define ICI_DLL_EXT     ".so" /* Default, may have been set in config file */
 #endif
 
 /*
@@ -260,6 +273,11 @@ extern DLI ici_ftype_t  ici_popen_ftype;
 
 extern DLI ici_null_t   o_null;
 
+/*
+ * This ICI NULL object. It is of type '(ici_obj_t *)'.
+ *
+ * This --macro-- forms part of the --ici-api--.
+ */
 #define ici_null        (objof(&o_null))
 
 extern DLI ici_debug_t *ici_debug;
@@ -269,6 +287,12 @@ extern char             ici_version_string[];
 extern unsigned long const ici_crc_table[256];
 extern int              ici_exec_count;
 
+/*
+ * Use 'return ici_null_ret();' to return a ICI NULL from an intrinsic
+ * fuction.
+ *
+ * This --macro-- forms part of the --ici-api--.
+ */
 #define ici_null_ret()  ici_ret_no_decref(objof(&o_null))
 
 extern ici_obj_t        *ici_atom_probe(ici_obj_t *o);

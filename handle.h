@@ -4,20 +4,26 @@
 /*
  * The following portion of this file exports to ici.h. --ici.h-start--
  */
+
 /*
- * A handle is a generic object that can be used to refer to some C data
- * object. Handles support an (optional) super pointer. Handles are named
- * with an ICI string to give type checking, reporting, and diagnostic
- * support. The handle object provides most of the generic machinery
- * of ICI objects. An optional pre-free function pointer can be supplied
- * to handle cleanup on final collection of the handle.
+ * The C struct which is the ICI handle object.  A handle is a generic object
+ * that can be used to refer to some C data object.  Handles support an
+ * (optional) super pointer.  Handles are named with an ICI string to give
+ * type checking, reporting, and diagnostic support.  The handle object
+ * provides most of the generic machinery of ICI objects.  An optional
+ * pre-free function pointer can be supplied to handle cleanup on final
+ * collection of the handle.
+ *
+ * See 'ici_handle_new()'.
+ *
+ * This --struct-- forms part of the --ici-api--.
  */
 struct ici_handle
 {
     ici_objwsup_t   o_head;
-    void        *h_ptr;
-    ici_str_t   *h_name;
-    void        (*h_pre_free)(ici_handle_t *h);
+    void            *h_ptr;
+    ici_str_t       *h_name;
+    void            (*h_pre_free)(ici_handle_t *h);
 };
 #define handleof(o)        ((ici_handle_t *)(o))
 #define ishandle(o)        (objof(o)->o_tcode == TC_HANDLE)

@@ -22,8 +22,15 @@ extern DLI ici_type_t   *ici_types[ICI_MAX_TYPES];
 /*
  * Every object has a header. In the header the o_tcode (type code) field
  * can be used to index the ici_types[] array to discover the obejct's
- * type structure. This is the type structure. See detailed comments below.
- * --ici-api-- --struct--
+ * type structure. This is the type structure.
+ *
+ * Implemantations of new types typically declare one of these strutures
+ * statically and initialise its members with the functions that determine the
+ * nature of the new type.  (Actually, most of the time it is only initialised
+ * as far as the 't_name' field.  The remainder is mostly for intenal ICI use
+ * and should be left zero.)
+ *
+ * This --struct-- forms part of the --ici-api--.
  */
 struct ici_type
 {
@@ -48,15 +55,15 @@ struct ici_type
     void        *t_reserved4;   /* Must be zero. */
 };
 /*
- * t_mark(o)            Sets the O_MARK flag in o->o_flags of this object and
- *                      all objects referenced by this one which don't already
- *                      have O_MARK set.  Returns the approximate memory cost
- *                      of this and all other objects it sets the O_MARK of.
- *                      Typically recurses on all referenced objects which
- *                      don't already have O_MARK set (this recursion is a
- *                      potential problem due to the uncontrolled stack depth
- *                      it can create).  This is used in the marking phase of
- *                      garbage collection.
+ * t_mark(o)            Must sets the O_MARK flag in o->o_flags of this object
+ *                      and all objects referenced by this one which don't
+ *                      already have O_MARK set.  Returns the approximate
+ *                      memory cost of this and all other objects it sets the
+ *                      O_MARK of.  Typically recurses on all referenced
+ *                      objects which don't already have O_MARK set (this
+ *                      recursion is a potential problem due to the
+ *                      uncontrolled stack depth it can create).  This is only
+ *                      used in the marking phase of garbage collection.
  *
  *                      The macro ici_mark() calls the t_mark function of the
  *                      object (based on object type) if the O_MARK flag of
@@ -67,17 +74,24 @@ struct ici_type
  *                      the O_MARK flag of the object they are being invoked
  *                      on is clear.
  *
- * t_free(o)            Frees the object o and all associated data, but not
+ * t_free(o)            Must free the object o and all associated data, but not
  *                      other objects which are referenced from it.  This is
  *                      only called from garbage collection.  Care should be
  *                      taken to remember that errors can occur during object
  *                      creation and that the free function might be asked to
  *                      free a partially allocated object.
  *
- * t_cmp(o1, o2)        Compare o1 and o2 and return 0 if they are the same,
- *                      else non zero.  This similarity is the basis for
+ * t_cmp(o1, o2)        Must compare o1 and o2 and return 0 if they are the
+ *                      same, else non zero.  This similarity is the basis for
  *                      merging objects into single atomic objects and the
  *                      implementation of the == operator.
+ *
+ *                      Currently only zero versus non-zero results are
+ *                      significant.  However in future versions the t_cmp()
+ *                      function may be generalised to return less than, equal
+ *                      to, or greater than zero depending if 'o1' is less
+ *                      than, equal to, or greater than 'o2'.  New
+ *                      implementations would be wise to adopt this usage now.
  *
  *                      Some objects are by nature both unique and
  *                      intrinsically atomic (for example, objects which are
@@ -94,9 +108,9 @@ struct ici_type
  *                      they all regard the same data fields as significant in
  *                      performing their operation.
  *
- * t_copy(o)            Returns a copy of the given object. This is the basis
- *                      for the implementation of the copy() function.  On
- *                      failure, NULL is returned and error is set.  The
+ * t_copy(o)            Must returns a copy of the given object.  This is the
+ *                      basis for the implementation of the copy() function.
+ *                      On failure, NULL is returned and error is set.  The
  *                      returned object has been ici_incref'ed.  The returned
  *                      object should cmp() as being equal, but be a distinct
  *                      object for objects that are not intrinsically atomic.
@@ -105,9 +119,11 @@ struct ici_type
  *                      function ici_copy_simple() as their implemenation of
  *                      this function.
  *
- * t_hash(o)            Return an unsigned long hash which is sensitive to the
- *                      value of the object.  Two objects which cmp() equal
- *                      should return the same hash.
+ *                      Return NULL on failure, usual conventions.
+ *
+ * t_hash(o)            Must return an unsigned long hash which is sensitive
+ *                      to the value of the object.  Two objects which cmp()
+ *                      equal should return the same hash.
  *
  *                      The returned hash is used in a hash table shared by
  *                      objects of all types.  So, somewhat problematically,
@@ -118,13 +134,14 @@ struct ici_type
  *                      intrinsically atomic (for example, objects which are
  *                      one-to-one with some other allocated data which they
  *                      alloc when the are created and free when they die).
- *                      For these objects the existing function hash_unique()
- *                      can be used as their implementation of this function.
+ *                      For these objects the existing function
+ *                      'ici_hash_unique()' can be used as their
+ *                      implementation of this function.
  *
- * t_assign(o, k, v)    Assign to key k of the object o the value v. Return
- *                      1 on error, else 0.
+ * t_assign(o, k, v)    Must assign to key 'k' of the object 'o' the value
+ *                      'v'.  Return 1 on error, else 0.
  *
- *                      The existing function ici_assign_fail() may be used
+ *                      The existing function 'ici_assign_fail()' may be used
  *                      both as the implementation of this function for object
  *                      types which do not support any assignment, and as a
  *                      simple method of generating an error for particular
@@ -133,11 +150,13 @@ struct ici_type
  *                      Not that it is not necessarilly wrong for an
  *                      intrinsically atomic object to support some form of
  *                      assignment.  Only for the modified field to be
- *                      significant in a cmp() operation.  Objects which are
- *                      intrinsically unique and atomic often support
+ *                      significant in a 't_cmp()' operation.  Objects which
+ *                      are intrinsically unique and atomic often support
  *                      assignments.
  *
- * t_fetch(o, k)        Fetch the value of key k of the object o.  Return
+ *                      Return non-zero on failure, usual conventions.
+ *
+ * t_fetch(o, k)        Fetch the value of key 'k' of the object 'o'.  Return
  *                      NULL on error.
  *              
  *                      Note that the returned object does not have any extra
@@ -148,36 +167,44 @@ struct ici_type
  *                      into a referenced object immediately.  Callers are
  *                      responsible for taking care.
  *
- *                      The existing function ici_fetch_fail() may be used
+ *                      The existing function 'ici_fetch_fail()' may be used
  *                      both as the implementation of this function for object
  *                      types which do not support any assignment, and as a
  *                      simple method of generating an error for particular
  *                      fetches which break some rule of the object.
  *
+ *                      Return NULL on failure, usual conventions.
+ *
  * t_name               The name of this type. Use for the implementation of
- *                      typeof() and in error messages.  But apart from that,
+ *                      'typeof()' and in error messages.  But apart from that,
  *                      type names have no fundamental importance in the
  *                      langauge and need not even be unique.
  *
- * t_objname(o, p)      Place a short (30 chars or less) human readable
+ * t_objname(o, p)      Must place a short (less than 30 chars) human readable
  *                      representation of the object in the given buffer.
  *                      This is not intended as a basis for re-parsing or
  *                      serialisation.  It is just for diagnostics and debug.
- *                      An implementation of t_objname() must not allocate
+ *                      An implementation of 't_objname()' must not allocate
  *                      memory or otherwise allow the garbage collector to
  *                      run.  It is often used to generate formatted failure
  *                      messages after an error has occured, but before
  *                      cleanup has completed.
  *
- * t_call(o, s)         Call the object o. If s is non-NULL this is a method
- *                      call and s is the subject object of the call.  Return
- *                      1 on error, else 0.
+ * t_call(o, s)         Must call the object 'o'.  If the object does not
+ *                      support being called, this should be NULL.  If 's' is
+ *                      non-NULL this is a method call and s is the subject
+ *                      object of the call.  Return 1 on error, else 0.
+ *                      The environment upon calling this function is
+ *                      the same as that for intrinsic functions. Functions
+ *                      and techniques that can be used in intrinsic function
+ *                      implementations can be used in the implementation of
+ *                      this function.
  *
- * t_ici_name           A ici_str_t copy of the name. This is just a cached
+ * t_ici_name           A 'ici_str_t' copy of 't_name'. This is just a cached
  *                      version so that typeof() doesn't keep re-computing the
  *                      string.
  *
- * t_fetch_method       An optional alternative to the basic t_fetch() that
+ * t_fetch_method       An optional alternative to the basic 't_fetch()' that
  *                      will be called (if supplied) when doing a fetch for
  *                      the purpose of forming a method.  This is really only
  *                      a hack to support COM under Windows.  COM allows
@@ -188,6 +215,8 @@ struct ici_type
  *                      property operation, or return a callable object for a
  *                      future method call.  Most objects will leave this
  *                      NULL.
+ *
+ *                      Return NULL on failure, usual conventions.
  * --ici-api--
  */
 
@@ -200,6 +229,8 @@ struct ici_type
  * expensive. So we take pains to cut short function calls wherever possible.
  * Thus the size of this macro. The o_leafz field of an object tells us it
  * doesn't reference any other objects and is of small (ie o_leafz) size.
+ *
+ * Note that the argument 'o' is subject to multiple expansions.
  */
 #define ici_mark(o)         ((objof(o)->o_flags & O_MARK) == 0 \
                             ? (objof(o)->o_leafz != 0 \
@@ -207,35 +238,98 @@ struct ici_type
                                 : (*ici_typeof(o)->t_mark)(objof(o))) \
                             : 0L)
 
+/*
+ * Fetch the value of the key 'k' from the object 'o'.  This macro just calls
+ * the particular object's 't_fetch()' function.
+ *
+ * Note that the returned object does not have any extra reference count;
+ * however, in some circumstances it may not have any garbage collector
+ * visible references to it.  That is, it may be vunerable to a garbage
+ * collection if it is not either incref()ed or hooked into a referenced
+ * object immediately.  Callers are responsible for taking care.
+ *
+ * Note that the argument 'o' is subject to multiple expansions.
+ *
+ * Returns NULL on failure, usual conventions.
+ *
+ * This --macro-- forms part of the --ici-api--.
+ */
 #define ici_fetch(o,k)      ((*ici_typeof(o)->t_fetch)(objof(o), objof(k)))
+
+/*
+ * Assign the value 'v' to key 'k' of the object 'o'. This macro just calls
+ * the particular object's 't_assign()' function.
+ *
+ * Note that the argument 'o' is subject to multiple expansions.
+ *
+ * Returns non-zero on error, usual conventions.
+ *
+ * This --macro-- forms part of the --ici-api--.
+ */
 #define ici_assign(o,k,v)   ((*ici_typeof(o)->t_assign)(objof(o), objof(k), objof(v)))
 
-#define freeo(o)        ((*ici_typeof(o)->t_free)(objof(o)))
-#define hash(o)         ((*ici_typeof(o)->t_hash)(objof(o)))
-#define cmp(o1,o2)      ((*ici_typeof(o1)->t_cmp)(objof(o1), objof(o2)))
-#define copy(o)         ((*ici_typeof(o)->t_copy)(objof(o)))
-#define assign_super(o,k,v,b) ((*ici_typeof(o)->t_assign_super)(objof(o), objof(k), objof(v), b))
-#define fetch_super(o,k,v,b) ((*ici_typeof(o)->t_fetch_super)(objof(o), objof(k), v, b))
+/*
+ * Assign the value 'v' to key 'k' of the object 'o', but only assign into
+ * the base object, even if there is a super chain. This may only be called
+ * on objects that support supers.
+ *
+ * Note that the argument 'o' is subject to multiple expansions.
+ *
+ * Returns non-zero on error, usual conventions.
+ *
+ * This --macro-- forms part of the --ici-api--.
+ */
+#define ici_assign_base(o,k,v) ((*ici_typeof(o)->t_assign_base)(objof(o), objof(k), objof(v)))
+/*
+ * This version retained for backwards compatibility.
+ */
 #define assign_base(o,k,v) ((*ici_typeof(o)->t_assign_base)(objof(o), objof(k), objof(v)))
+
+/*
+ * Fetch the value of the key 'k' from the object 'o', but only consider
+ * the base object, even if there is a super chain. See the notes on
+ * 'ici_fetch()', which also apply here.
+ *
+ * This --macro-- forms part of the --ici-api--.
+ */
+#define ici_fetch_base(o,k) ((*ici_typeof(o)->t_fetch_base)(objof(o), objof(k)))
+/*
+ * This version retained for backwards compatibility.
+ */
 #define fetch_base(o,k) ((*ici_typeof(o)->t_fetch_base)(objof(o), objof(k)))
 
 /*
- * References from ordinary machine data objects (ie. variables and stuff,
- * not other objects) are invisible to the garbage collector.  These refs
- * must be accounted for if there is a possibility of garbage collection.
- * Note that most routines that make objects (new_*(), copy() etc...)
- * return objects with 1 ref.  The caller is expected to ici_decref() it when
- * they attach it into wherever it is going.
- * --ici-api-- --macro--
+ * Increment the object 'o's reference count.  References from ordinary
+ * machine data objects (ie.  variables and stuff, not other objects) are
+ * invisible to the garbage collector.  These refs must be accounted for if
+ * there is a possibility of garbage collection.  Note that most routines that
+ * make objects (new_*(), copy() etc...) return objects with 1 ref.  The
+ * caller is expected to ici_decref() it when they attach it into wherever it
+ * is going.
+ *
+ * This --macro-- forms part of the --ici-api--.
  */
 #define ici_incref(o)       (++objof(o)->o_nrefs)
+
+/*
+ * Decrement the object 'o's reference count.  References from ordinary
+ * machine data objects (ie.  variables and stuff, not other objects) are
+ * invisible to the garbage collector.  These refs must be accounted for if
+ * there is a possibility of garbage collection.  Note that most routines that
+ * make objects (new_*(), copy() etc...) return objects with 1 ref.  The
+ * caller is expected to ici_decref() it when they attach it into wherever it
+ * is going.
+ *
+ * This --macro-- forms part of the --ici-api--.
+ */
 #define ici_decref(o)       (--objof(o)->o_nrefs)
 
 /*
  * This is the universal header of all objects.  Each object includes this as
- * a header.  In the real structures associated with each object type the type
+ * its first element.  In the real structures associated with each object type the type
  * specific stuff follows
- * --ici-api-- --struct--
+ *
+ * This --struct-- forms part of the --ici-api--.
  */
 struct ici_obj
 {
@@ -255,7 +349,7 @@ struct ici_obj
  *                      a pointer to the type structure.
  *
  * o_flags              Some boolean flags. Well known flags that apply to
- *                      all object occupy the lower 4 bits of this byte.
+ *                      all objects occupy the lower 4 bits of this byte.
  *                      The upper four bits are available for object specific
  *                      use. See O_* below.
  *
@@ -270,33 +364,63 @@ struct ici_obj
  *                      to accelerate the marking phase of the garbage
  *                      collector. Else it must be zero.
  *
- * --ici-api--
+ * --ici-api-- continued.
  */
+
+/*
+ * The generic flags that may appear in the lower 4 bits of o_flags are:
+ *
+ * O_MARK               The garbage collection mark flag.
+ *
+ * O_ATOM               Indicates that this object is the read-only
+ *                      atomic form of all objects of the same type with
+ *                      the same value. Any attempt to change an object
+ *                      in a way that would change its value with respect
+ *                      to the 't_cmp()' function (see 'ici_type_t') must
+ *                      check for this flag and fail the attempt if it is
+ *                      set.
+ *
+ * O_SUPER              This object can support a super.
+ *
+ * --ici-api-- continued.
+ */
+#define O_MARK          0x01    /* Garbage collection mark. */
+#define O_ATOM          0x02    /* Is a member of the atom pool. */
+#define O_TEMP          0x04    /* Is a re-usable temp (flag for asserts). */
+#define O_SUPER         0x08    /* Has super (is ici_objwsup_t derived). */
+
+
 #define objof(x)        ((ici_obj_t *)(x))
 
 /*
- * "Object with super." This is a specialised header for all objects
- * that support a super pointer. All such objects must have the
- * O_SUPER flag set in o_flags and provide the t_fetch_super() and
- * t_assign_super() functions.
+ * "Object with super." This is a specialised header for all objects that
+ * support a super pointer.  All such objects must have the O_SUPER flag set
+ * in o_flags and provide the 't_fetch_super()' and 't_assign_super()'
+ * functions in their type structure.  The actual 'o_super' pointer will be
+ * NULL if there is no actual super, which is different from O_SUPER being
+ * clear (which would mean there could not be a super, ever).
+ *
+ * This --struct-- forms part of the --ici-api--.
  */
 struct ici_objwsup
 {
-    ici_obj_t   o_head;         /* Universal header. */
-    ici_objwsup_t   *o_super;       /* Out super. May be NULL. */
-    /*
-     * Each object that supports a super type includes this as a
-     * header. In the real structures associated with each such object
-     * the type specific stuff follows...
-     */
+    ici_obj_t       o_head;
+    ici_objwsup_t   *o_super;
 };
 #define objwsupof(o)    ((ici_objwsup_t *)(o))
 /*
- * This object supports a super type. (It may or may not have a super
+ * Test if this object supports a super type.  (It may or may not have a super
  * at any particular time).
+ *
+ * This --macro-- forms part of the --ici-api--.
  */
 #define hassuper(o)     (objof(o)->o_flags & O_SUPER)
 
+/*
+ * Return a pointer to the 'ici_type_t' struct of the given object.
+ *
+ * This --macro-- forms part of the --ici-api--.
+ */
 #define ici_typeof(o)   (ici_types[(int)objof(o)->o_tcode])
 
 /*
@@ -329,20 +453,22 @@ struct ici_objwsup
  */
 
 /*
- * Append an object onto the list of all objects visible to the garbage
- * collector.  Object that are registered with the garbage collector can get
- * collected.
+ * Register the object 'o' with the garbage collector.  Object that are
+ * registered with the garbage collector can get collected.  This is typically
+ * done after allocaton and initialisation of basic fields when make a new
+ * object.  Once an object has been registered with the garbage collector, it
+ * can *only* be freed by the garbage collector.
+ *
+ * (Not all objects are registered with the garabage collector. The main
+ * exception is staticly defined objects. For example, the 'ici_cfunt_t'
+ * objects that are the ICI objects representing functions coded in C
+ * are typically staticly defined and never registered. However there
+ * are problems with unregistered objects that reference other objects,
+ * so this should be used with caution.)
+ *
+ * This --macro-- forms part of the --ici-api--.
  */
 #define ici_rego(o)     ici_rego_work(objof(o))
-
-/*
- * Flags that may appear in o_flags. The upper nibble is considered available
- * for type specific use.
- */
-#define O_MARK          0x01    /* Garbage collection mark. */
-#define O_ATOM          0x02    /* Is a member of the atom pool. */
-#define O_TEMP          0x04    /* Is a re-usable temp (flag for asserts). */
-#define O_SUPER         0x08    /* Has super (is ici_objwsup_t derived). */
 
 /*
  * The o_tcode field is a small int. These are the "well known" core
@@ -386,6 +512,13 @@ struct ici_objwsup
 /*
  * End of ici.h export. --ici.h-end--
  */
+
+#define freeo(o)        ((*ici_typeof(o)->t_free)(objof(o)))
+#define hash(o)         ((*ici_typeof(o)->t_hash)(objof(o)))
+#define cmp(o1,o2)      ((*ici_typeof(o1)->t_cmp)(objof(o1), objof(o2)))
+#define copy(o)         ((*ici_typeof(o)->t_copy)(objof(o)))
+#define assign_super(o,k,v,b) ((*ici_typeof(o)->t_assign_super)(objof(o), objof(k), objof(v), b))
+#define fetch_super(o,k,v,b) ((*ici_typeof(o)->t_fetch_super)(objof(o), objof(k), v, b))
 
 #ifndef BUGHUNT
 

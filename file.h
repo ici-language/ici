@@ -10,9 +10,16 @@
  */
 
 /*
- * File abstraction. Each function is assumed to be compatible with
- * the stdio function of the same name. In the case were the file is
- * a stdio stream, these are the stdio functions.
+ * A set of function pointers for simple file abstraction.  ICI file objects
+ * are implemented on top of this simple file abstraction in order to allow
+ * several different types of file-like entities.  Each different type of file
+ * uses one of these structures with specific functions.  Each function is
+ * assumed to be compatible with the stdio function of the same name.  In the
+ * case were the file is a stdio stream, these *are* the stdio functions.
+ *
+ * See also: 'ici_stdio_ftype'.
+ *
+ * This --struct-- forms part of the --ici-api--.
  */
 struct ici_ftype
 {

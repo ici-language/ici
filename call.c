@@ -217,33 +217,28 @@ ici_callv(ici_str_t *func_name, char *types, va_list va)
  *
  * Type key letters are:
  *
- * i                    The corresponding argument should be a C long
- *                      (a pointer to a long in the case of a return value).
- *                      It will be converted to an ICI 'int' and passed
- *                      to the function.
+ * i        The corresponding argument should be a C long (a pointer to a long
+ *          in the case of a return value).  It will be converted to an ICI
+ *          'int' and passed to the function.
  *
- * f                    The corresponding argument should be a C double.
- *                      (a pointer to a double in the case of a return value).
- *                      It will be converted to an ICI 'float' and passed
- *                      to the function.
+ * f        The corresponding argument should be a C double.  (a pointer to a
+ *          double in the case of a return value).  It will be converted to an
+ *          ICI 'float' and passed to the function.
  *
- * s                    The corresponding argument should be a nul
- *                      terminated string (a pointer to a char * in the case
- *                      of a return value).  It will be converted to an ICI
- *                      'string' and passed to the function.
+ * s        The corresponding argument should be a nul terminated string (a
+ *          pointer to a char * in the case of a return value).  It will be
+ *          converted to an ICI 'string' and passed to the function.
  *                      
- *                      When a string is returned it is a pointer to the
- *                      character data of an internal ICI string object.  It
- *                      will only remain valid until the next call to any ICI
- *                      function.
+ *          When a string is returned it is a pointer to the character data of
+ *          an internal ICI string object.  It will only remain valid until
+ *          the next call to any ICI function.
  *
- * o                    The corresponding argument should be a pointer
- *                      to an ICI object (a pointer to an object in the case
- *                      of a return value).  It will be passed directly to the
- *                      ICI function.
+ * o        The corresponding argument should be a pointer to an ICI object (a
+ *          pointer to an object in the case of a return value).  It will be
+ *          passed directly to the ICI function.
  *
- *                      When an object is returned it has been ici_incref()ed
- *                      (that is, it is held against garbage collection).
+ *          When an object is returned it has been ici_incref()ed (that is, it
+ *          is held against garbage collection).
  *
  * Returns 0 on success, else 1, in which case ici_error has been set.
  *

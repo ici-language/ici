@@ -1,3 +1,9 @@
+*   Added *lots* more API comments, which get extracted into
+    the manual. (timl)
+
+*   A number of minor corrections to faults discovered in the
+    previous release. Mostly make issues. (timl)
+
 Changes in version 4.0.4 (first normal release of ICI 4)
 
 *   Changed the default path[] initilialisation for UNIX-like

@@ -8,6 +8,12 @@
 /*
  * The following portion of this file exports to ici.h. --ici.h-start--
  */
+
+/*
+ * The C struct that is the ICI float object.
+ *
+ * This --struct-- forms part of the --ici-api--.
+ */
 struct ici_float
 {
     ici_obj_t   o_head;

@@ -116,7 +116,7 @@ forall (file in files)
              * Extract its name and print a Heading2 with it, and its
              * declaraction as code.
              */
-            name = head ~~ #(\w*)\n#;
+            name = (head ~~ #(\w*)\n#) + "_t";
             strcatf(mml, "<Heading2>%s%s\n", index(name, "C API struct"), name);
             head = gsub(head, # #, "\\ ");
             head = gsub(head, #\n#, "<HardReturn>\n");

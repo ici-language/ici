@@ -8,6 +8,11 @@
 /*
  * The following portion of this file exports to ici.h. --ici.h-start--
  */
+/*
+ * The C struct that is the ICI int object.
+ *
+ * This --struct-- forms part of the --ici-api--.
+ */
 struct ici_int
 {
     ici_obj_t   o_head;
