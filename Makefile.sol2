@@ -9,7 +9,7 @@ LIB     = lib$(FLAVOUR).a
 CONFIG  = conf-$(FLAVOUR).h
 
 CC      = gcc -pipe
-LIBS    = -lm -ltermcap -lnsl -lsocket -ldl
+LIBS    = -lm -ltermcap -lnsl -lsocket -ldl -lrt
 OPTIM   = -O2
 CFLAGS  = -g -Wall $(OPTIM) -DCONFIG_FILE='"$(CONFIG)"' -DPREFIX='"$(PREFIX)"' -I.
 LDFLAGS = -g
@@ -42,7 +42,7 @@ OBJS    = \
 	signals.o smash.o src.o sstring.o string.o \
 	struct.o syserr.o \
 	thread.o trace.o unary.o uninit.o \
-	wrap.o buf.o strtol.o \
+	buf.o strtol.o \
 	idb.o idb2.o profile.o
 
 PCREOBJS=\
