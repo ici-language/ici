@@ -148,7 +148,7 @@ enum
 /*
  * The following portion of this file exports to ici.h. --ici.h-start--
  */
-#ifndef NODEBUGGING
+/*#ifndef NODEBUGGING*/
 
 /*
  * ICI debug interface.  exec() calls the functions in this interface
@@ -166,7 +166,7 @@ struct ici_debug
     void    (*idbg_watch)(ici_obj_t *, ici_obj_t *, ici_obj_t *);
 };
 
-#endif
+/*#endif*/
 /*
  * End of ici.h export. --ici.h-end--
  */

@@ -20,6 +20,8 @@ extern ici_cfunc_t  *funcs[];
  *
  * In systems supporting threads, on exit, the global ICI mutex has been
  * acquired (with ici_enter()). 
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 int
 ici_init(void)
@@ -134,6 +136,8 @@ ici_init(void)
  * at the time that module was compiled.  This functions compares the values
  * passed from the external modules with the values the core was compiled
  * with, and fails (usual conventions) if there is any incompatibility.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 int
 ici_interface_check(unsigned long mver, unsigned long bver, char const *name)

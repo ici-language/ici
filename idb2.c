@@ -1,16 +1,9 @@
 #define ICI_CORE
 #include "fwd.h"
-#ifndef NODEBUGGING
-
 #include "exec.h"
 
 /*
- * Stub functions for the debugging interface. These are linked by
- * default with the interpreter and may be overriden when linking
- * against the ICI library. Debuggers simply implement whatever user
- * interface they wish and link against the ICI library. This ensures
- * that all debuggers match the interpreter being used (as long as they
- * are all built at the same time).
+ * Stub functions for the debugging interface.
  */
 
 /*
@@ -94,5 +87,3 @@ ici_debug_t ici_debug_stubs =
 };
 
 ici_debug_t *ici_debug = &ici_debug_stubs;
-
-#endif

@@ -103,7 +103,7 @@ ici_uninit(void)
     ici_nfree(ici_os.a_base, (ici_os.a_limit - ici_os.a_base) * sizeof(ici_obj_t *));
     ici_nfree(ici_xs.a_base, (ici_xs.a_limit - ici_xs.a_base) * sizeof(ici_obj_t *));
 
-#if 1 && !defined(NDEBUG)
+#if 0 && !defined(NDEBUG)
     ici_decref(&ici_vs);
     ici_decref(&ici_os);
     ici_decref(&ici_xs);
@@ -126,7 +126,7 @@ ici_uninit(void)
     ici_drop_all_small_allocations();
     /*fprintf(stderr, "ici_mem = %ld, n = %d\n", ici_mem, ici_n_allocs);*/
 
-#if 1 && defined(_WIN32) && !defined(NDEBUG)
+#if 0 && defined(_WIN32) && !defined(NDEBUG)
     _CrtDumpMemoryLeaks();
 #endif
 /*    {

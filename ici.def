@@ -60,7 +60,6 @@ EXPORTS ici_int_ret
 EXPORTS ici_interface_check
 EXPORTS ici_leave
 EXPORTS ici_main
-EXPORTS ici_maind
 EXPORTS ici_mem_new
 EXPORTS ici_method
 EXPORTS ici_method_check

@@ -13,15 +13,6 @@
 
 int
 ici_main(int argc, char *argv[])
-#ifndef NODEBUGGING
-{
-    int ici_maind(int, char *[], int);
-    return ici_maind(argc, argv, 0);
-}
-
-int
-ici_maind(int argc, char *argv[], int debugging)
-#endif
 {
     int                 i;
     int                 j;
@@ -164,11 +155,6 @@ ici_maind(int argc, char *argv[], int debugging)
         ici_decref(av);
      }
 
-#ifndef NODEBUGGING
-    if (debugging)
-        ici_debug_enabled = 1;
-#endif
-
     /*
      * Pass two over the arguments; actually parse the modules.
      */
@@ -216,6 +202,17 @@ ici_maind(int argc, char *argv[], int debugging)
                     if (parse_module(f, objwsupof(ici_vs.a_top[-1])) < 0)
                         goto fail;
                     ici_decref(f);
+                    break;
+
+                case 'l':
+                    if (argv[i][++j] != '\0')
+                        s = &argv[i][j];
+                    else if (++i >= argc)
+                        goto usage;
+                    else
+                        s = argv[i];
+                    if (ici_call(SS(load), "s", s))
+                        goto fail;
                     break;
 
                 case 'f':

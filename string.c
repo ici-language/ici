@@ -17,8 +17,10 @@
  * nchars characters, and register it with the garbage collector.  Note: This
  * string is not yet an atom, but must become so as it is *not* mutable.
  *
- * WARINING: This is *not* the normal way to make a string object. See other
- * functions below.
+ * WARINING: This is *not* the normal way to make a string object. See
+ * ici_str_new().
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 ici_str_t *
 ici_str_alloc(int nchars)
@@ -49,6 +51,13 @@ ici_str_alloc(int nchars)
  * Note that the memory allocated to a string is always at least one byte
  * larger than the listed size and the extra byte contains a '\0'.  For
  * when a C string is needed.
+ *
+ * The returned string has a reference count of 1 (which is caller is
+ * expected to decrement, eventually).
+ *
+ * Returns NULL on error, usual conventions.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 ici_str_t *
 ici_str_new(char *p, int nchars)
@@ -109,6 +118,16 @@ ici_str_new(char *p, int nchars)
     return stringof(ici_atom(objof(s), 1));
 }
 
+/*
+ * Make a new atomic immutable string from the given characters.
+ *
+ * The returned string has a reference count of 1 (which is caller is
+ * expected to decrement, eventually).
+ *
+ * Returns NULL on error, usual conventions.
+ *
+ * This --func-- forms part of the --ici-api--.
+ */
 ici_str_t *
 ici_str_new_nul_term(char *p)
 {
@@ -120,7 +139,14 @@ ici_str_new_nul_term(char *p)
 }
 
 /*
- * Same as ici_str_new_nul_term(), except the result is decref.
+ * Make a new atomic immutable string from the given characters.
+ *
+ * The returned string has a reference count of 0, unlike
+ * ici_str_new_nul_term() which is exactly the same in other respects.
+ *
+ * Returns NULL on error, usual conventions.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 ici_str_t *
 ici_str_get_nul_term(char *p)
@@ -137,6 +163,13 @@ ici_str_get_nul_term(char *p)
  * Return a new mutable string (i.e. one with a seperate growable allocation).
  * The initially allocated space is n, but the length is 0 until it has been
  * set by the caller.
+ *
+ * The returned string has a reference count of 1 (which is caller is
+ * expected to decrement, eventually).
+ *
+ * Returns NULL on error, usual conventions.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 ici_str_t *
 ici_str_buf_new(int n)
@@ -165,6 +198,8 @@ ici_str_buf_new(int n)
  * of n characters (and a guard '\0' which this routine stores).  Grows ths
  * string as necessary.  Returns 0 on success, 1 on error, usual conventions.
  * Checks that the string is mutable and not atomic.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 int
 ici_str_need_size(ici_str_t *s, int n)

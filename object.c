@@ -107,6 +107,9 @@ int             ici_supress_collect;
 
 /*
  * Format a human readable version of the object in less than 30 chars.
+ * Returns 'p'.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 char *
 ici_objname(char p[ICI_OBJNAMEZ], ici_obj_t *o)
@@ -136,13 +139,15 @@ ici_objname(char p[ICI_OBJNAMEZ], ici_obj_t *o)
 }
 
 /*
- * Register a new ici_type_t structure and return a new small int type code
- * to use in the header of objects of that type. The ici_type_t * passed to
+ * Register a new 'ici_type_t' structure and return a new small int type code
+ * to use in the header of objects of that type. The pointer 't' passed to
  * this function is retained and assumed to remain valid indefinetly
  * (it is normally a statically initialised structure).
  *
  * Returns the new type code, or zero on error in which case ici_error
  * has been set.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 int
 ici_register_type(ici_type_t *t)

@@ -124,6 +124,9 @@ ici_op_return()
     static int          occasionally;
     ici_obj_t           *f;
 
+    if (ici_debug_active)
+        ici_debug->idbg_fnresult(ici_os.a_top[-1]);
+
     x = ici_xs.a_top - 1;
     while
     (

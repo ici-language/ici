@@ -262,9 +262,7 @@ extern DLI ici_null_t   o_null;
 
 #define ici_null        (objof(&o_null))
 
-#ifndef NODEBUGGING
 extern DLI ici_debug_t *ici_debug;
-#endif
 
 extern char             ici_version_string[];
 
@@ -361,19 +359,24 @@ extern int              ici_waitfor(ici_obj_t *);
 extern int              ici_wakeup(ici_obj_t *);
 extern int              ici_init_thread_stuff(void);
 
-#ifndef NODEBUGGING
-extern int              ici_maind(int, char **, int);
 extern DLI int          ici_debug_enabled;
 extern int              ici_debug_ign_err;
 extern DLI void         ici_debug_ignore_errors(void);
 extern DLI void         ici_debug_respect_errors(void);
+
+#ifdef NODEBUGGING
+    /*
+     * If debug is not compiled in, we let the compiler use it's sense to
+     * remove a lot of the debug code in performance critical areas.
+     * Just to save on lots of ifdefs.
+     */
+#   define ici_debug_active 0
 #else
-/*
- * We let the compiler use it's sense to remove a lot of debug
- * code base on a constant expression for ici_debug_enabled. Just
- * to save on lots of ifdefs.
- */
-#define ici_debug_enabled 0
+    /*
+     * Debugging is compiled-in. It is active if it is enabled at
+     * run-time.
+     */
+#   define ici_debug_active     ici_debug_enabled
 #endif
 
 #ifndef NOSIGNALS

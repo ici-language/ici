@@ -1,3 +1,12 @@
+Changes in version 4.0.4 (first normal release of ICI 4)
+
+*   Changed the default path[] initilialisation for UNIX-like
+    systems. In addition to ICIPATH, it now adds any accessable
+    directories called <wahtever>/lib/ici4 that parallel PATH
+    elements that end in <whatever>/bin. This, at last, means that
+    UNIX-like systems should reliably find extension modules without
+    setting environment variables. (timl) 
+
 *   Started adding a lot more API documentation. Much of it will
     now be extracted from the source comments. (timl)
 
@@ -80,7 +89,7 @@ Changes in version 4.0.2 (an alpha release - binary interface not final)
 *   Added __TIME__ to the version string.
 
 *   Changed a few compiled-form operators to have things in-line in
-    the code array rather than haveing them pushed on the operand
+    the code array rather than having them pushed on the operand
     stack first. This saves a few main loop iterations. (timl)
 
 *   Added macro ICI_OBJ_SET_TFNZ() to initialise the header of new

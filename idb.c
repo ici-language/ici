@@ -10,8 +10,6 @@
 #include "buf.h"
 #include "file.h"
 
-#ifndef NODEBUGGING
-
 /*
  * Flag indicating if the user wants debugging enabled. Could be used
  * as a bit set to control which things get debugged.
@@ -76,5 +74,3 @@ ici_cfunc_t ici_debug_cfuncs[] =
     {CF_OBJ,    (char *)SS(debug),        f_debug},
     {CF_OBJ}
 };
-
-#endif /* NODEBUGGING */

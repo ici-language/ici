@@ -10,39 +10,16 @@
 #include "catch.h"
 
 /*
- * The core common function of the things that call ICI functions from C with
- * a simple marshalled argument list (ici_func, ici_call, ici_method).
+ * This function is a variation on 'ici_func()'. See that function for details
+ * on the meaning of the 'types' argument.
+ *
+ * 'va' is a va_list (variable argument list) passed from an outer var-args
+ * function.
  *
  * If 'subject' is NULL, then 'callable' is taken to be a callable object
  * (could be a function, a method, or something else) and is called directly.
- * If 'subject' is non-NULL, it is taken to be an instance object and callable
- * is taken to be the name of the method to be invoked on it.
- *
- * In common with all these functions, arguments are marshalled from
- * C into ICI arguments according to a simple specification given by
- * the string 'types'.
- *
- * Types can be of the forms ".=..." or "...".  In the first case the first
- * extra arg is used as a pointer to store the return value through.
- *
- * Type key letters are:
- *
- * i                    a long
- *
- * f                    a double
- *
- * s                    a nul terminated string
- *
- * o                    an ICI object
- *
- * When a string is returned it is a pointer to the character data of an
- * internal ICI string object. It will only remain valid until the next
- * call to any ICI function because it is not necessarily held against
- * garbage collection.  When an object is returned it has been
- * ici_incref()ed (i.e. it is held against garbage collection).
- *
- * There is some historical support for '@' operators, but it is deprecated
- * and may be removed in future versions.
+ * If 'subject' is non-NULL, it is taken to be an instance object and 
+ * 'callable' should be the name of one of its methods (i.e. an 'ici_str_t *').
  *
  * This --func-- forms part of the --ici-api--.
  */
@@ -191,7 +168,10 @@ fail:
 }
 
 /*
- * Varient of ici_call() (see) taking a variable argument list.
+ * Varient of 'ici_call()' (see) taking a variable argument list.
+ *
+ * There is some historical support for '@' operators, but it is deprecated
+ * and may be removed in future versions.
  *
  * This --func-- forms part of the --ici-api--.
  */
@@ -225,15 +205,15 @@ ici_callv(ici_str_t *func_name, char *types, va_list va)
 }
 
 /*
- * Call an callable ICI object 'callable' from C with simple argument types
- * and an optional return value.  The callable object is typically a function
- * (but not a function name, see 'ici_call' for that case).
+ * Call a callable ICI object 'callable' from C with simple argument
+ * marshalling and an optional return value.  The callable object is typically
+ * a function (but not a function name, see 'ici_call' for that case).
  *
  * 'types' is a string that indicates what C values are being supplied as
- * arguments.  It can be of the form ".=..." or "..." where each "." is a type
- * key letter as described below.  In the first case the 1st extra argument is
- * used as a pointer to store the return value through.  In the second case,
- * the return value of the ICI function is not provided.
+ * arguments.  It can be of the form ".=..." or "..." where the dots represent
+ * type key letters as described below.  In the first case the 1st extra
+ * argument is used as a pointer to store the return value through.  In the
+ * second case, the return value of the ICI function is not provided.
  *
  * Type key letters are:
  *
@@ -265,6 +245,10 @@ ici_callv(ici_str_t *func_name, char *types, va_list va)
  *                      When an object is returned it has been ici_incref()ed
  *                      (that is, it is held against garbage collection).
  *
+ * Returns 0 on success, else 1, in which case ici_error has been set.
+ *
+ * See also: ici_callv(), ici_method(), ici_call(), ici_funcv().
+ *
  * This --func-- forms part of the --ici-api--.
  */
 int
@@ -280,25 +264,11 @@ ici_func(ici_obj_t *callable, char *types, ...)
 }
 
 /*
- * Call an ICI function from C with simple argument types and return value.
+ * Call the method 'mname' of the object 'inst' with simple argument
+ * marshalling.
  *
- * Types can be of the forms ".=..." or "...".  In the first case the 1st
- * extra arg is used as a pointer to store the return value through.
- *
- * Type key letters are:
- *
- * i                    a long
- *
- * f                    a double
- *
- * s                    a nul terminated string
- *
- * o                    an ici object
- *
- * When a string is returned it is a pointer to the character data of an
- * internal ICI string object. It will only remain valid until the next
- * call to any ICI function.  When an object is returned it has been
- * ici_incref()ed (i.e. it is held against garbage collection).
+ * See 'ici_func()' for an explanation of 'types'. Apart from calling
+ * a method, this function behaves in the same manner as 'ici_func()'.
  *
  * This --func-- forms part of the --ici-api--.
  */
@@ -315,33 +285,15 @@ ici_method(ici_obj_t *inst, ici_str_t *mname, char *types, ...)
 }
 
 /*
- * ici_call(name, types, args...)
+ * Call an ICI function by name from C with simple argument types and
+ * return value.  The name ('func_name') is looked up in the current scope.
  *
- * Call an ici function by name from C with simple argument types and
- * return value.  The named is looked up in the current scope or in
- * a supplied struct.
+ * See 'ici_func()' for an explanation of 'types'. Apart from taking a name,
+ * rather than an ICI function object, this function behaves in the same
+ * manner as 'ici_func()'.
  *
- * Types can be of the forms ".=...", ".@.=...", ".@..." or "...".
- * In the first case the 1st extra arg is used as a pointer to store the
- * return value through. In the second and third cases the first extra
- * arg is a struct from which the function is fetched; this object
- * will be passed as the first parameter to the function. In the second case
- * the second extra arg will be used for the return value.
- *
- * Type key letters are:
- *
- * i                    a long
- *
- * f                    a double
- *
- * s                    a nul terminated string
- *
- * o                    an ici object
- *
- * When a string is returned it is a pointer to the character data of an
- * internal ICI string object. It will only remain valid until the next
- * call to any ICI function.  When an object is returned it has been ici_incref'ed
- * (i.e. it is held against garbage collection).
+ * There is some historical support for '@' operators, but it is deprecated
+ * and may be removed in future versions.
  *
  * This --func-- forms part of the --ici-api--.
  */

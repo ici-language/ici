@@ -13,7 +13,7 @@
  * possibly even work) for the particular port of ICI.
  */
 #undef  NOMATH          /* Trig and etc. */
-#undef  NOTRACE         /* For debugging. */
+#define NOTRACE         /* For debugging. */
 #define NOWAITFOR       /* Requires select() or similar system primitive. */
 #undef  NOSYSTEM        /* Command interpreter (shell) escape. */
 #define NOPIPES         /* Requires popen(). */

@@ -71,46 +71,67 @@ extern int      fgetc();
 #endif
 
 /*
- * ici_typecheck(argspec, &arg1, &arg2...)
- *
- * Check ICI/C function argument types and translate into normal C data types.
- * The argspec is a character string.  Each character corresponds to
- * an actual argument to the ICI function which will (may) be assigned
- * through the corresponding pointer taken from the subsequent arguments.
- * Any detected type mismatches result in a non-zero return.  If all types
- * match, all assignments will be made and zero will be returned.
+ * Marshall function argument in a call from ICI to C.  The argspec is a
+ * character string.  Each character corresponds to an actual argument to the
+ * ICI function which will (may) be assigned through the corresponding pointer
+ * taken from the subsequent arguments.  Any detected type mismatches result
+ * in a non-zero return.  If all types match, all assignments will be made and
+ * zero will be returned.
  *
  * The argspec key letters and their meaning are:
  *
- * o    Any ICI object is required in the actuals, the corresponding pointer
- *      must be a pointer to a (ici_obj_t *); which will be set to the actual
- *      argument.
- * h    An ICI handle object, that has the name given by the corresponding
- *      argument, is required. The next argument is a pointer to store the
- *      handle_t * through.
- * p    An ICI ptr object is required in the actuals, then as for o.
- * d    An ICI struct object is required in the actuals, then as for o.
- * a    An ICI array object is required in the actuals, then as for o.
- * u    An ICI file object is required in the actuals, then as for o.
- * r    An ICI regexp object is required in the actuals, then as for o.
- * m    An ICI mem object is required in the actuals, then as for o.
- * i    An ICI int object is required in the actuals, the value of this int
- *      will be stored through the corresponding pointer which must be
- *      a (long *).
- * f    An ICI float object is required in the actuals, the value of this float
- *      will be stored through the corresponding pointer which must be
- *      a (double *).
- * n    An ICI float or int object is required in the actuals, the value of
- *      this float or int will be stored through the corresponding pointer
- *      which must be a (double *).
- * s    An ICI string object is required in the actuals, the corresponding
- *      pointer must be a (char **).  A pointer to the raw characters of
- *      the string will be stored through this (this will be '\0' terminated
- *      by virtue of all ICI strings having a gratuitous '\0' just past
- *      their real end).
- * -    The acutal parameter at this position is skipped, but it must be
- *      present.
- * *    All remaining actual parametes are ignored (even if there aren't any).
+ * o                    Any ICI object is required in the actuals, the
+ *                      corresponding pointer must be a pointer to an
+ *                      '(ici_obj_t *)'; which will be set to the actual
+ *                      argument.
+ *
+ * h                    An ICI handle object, that has the name given by
+ *                      the corresponding argument, is required. The next
+ *                      argument is a pointer to store the '(handle_t *)'
+ *                      through.
+ *
+ * p                    An ICI ptr object is required in the actuals, then as
+ *                      for o.
+ *
+ * d                    An ICI struct object is required in the actuals, then
+ *                      as for o.
+ *
+ * a                    An ICI array object is required in the actuals, then
+ *                      as for o.
+ *
+ * u                    An ICI file object is required in the actuals, then as
+ *                      for o.
+ *
+ * r                    An ICI regexp object is required in the actuals, then
+ *                      as for o.
+ *
+ * m                    An ICI mem object is required in the actuals, then as
+ *                      for o.
+ *
+ * i                    An ICI int object is required in the actuals, the
+ *                      value of this int will be stored through the
+ *                      corresponding pointer which must be a (long *).
+ *
+ * f                    An ICI float object is required in the actuals, the
+ *                      value of this float will be stored through the
+ *                      corresponding pointer which must be a (double *).
+ *
+ * n                    An ICI float or int object is required in the actuals,
+ *                      the value of this float or int will be stored through
+ *                      the corresponding pointer which must be a (double *).
+ *
+ * s                    An ICI string object is required in the actuals, the
+ *                      corresponding pointer must be a (char **).  A pointer
+ *                      to the raw characters of the string will be stored
+ *                      through this (this will be '\0' terminated by virtue
+ *                      of all ICI strings having a gratuitous '\0' just past
+ *                      their real end).
+ *
+ * -                    The acutal parameter at this position is skipped, but
+ *                      it must be present.
+ *
+ * *                    All remaining actual parametes are ignored (even if
+ *                      there aren't any).
  *
  * The capitalisation of any of the alphabetic key letters above changes
  * their meaning.  The acutal must be an ICI ptr type.  The value this
@@ -121,6 +142,8 @@ extern int      fgetc();
  * the last key letter is a *.
  *
  * Error returns have the usual ICI error conventions.
+ *
+ * This --func-- forms part or the --ici-api--.
  */
 int
 ici_typecheck(char *types, ...)
@@ -257,24 +280,26 @@ fail:
 }
 
 /*
- * ici_retcheck(retspec, &arg1, &arg2...)
- *
  * Perform storage of values through pointers in the actual arguments to
- * an ICI/C function.
+ * an ICI to C function. Typically in preparation for returning values
+ * back to the calling ICI code.
  *
- * The retspec is a character string consisting of key letters which
+ * 'types' is a character string consisting of key letters which
  * correspond to actual arguments of the current ICI/C function.
  * Each of the characters in the retspec has the following meaning.
  *
- * o    The actual argument must be a ptr, the corresponding pointer is
- *      assumed to be an (ici_obj_t **).  The location indicated by the
- *      ptr object is updated with the (ici_obj_t *).
+ * o                    The actual ICI argument must be a ptr, the corresponding
+ *                      pointer is assumed to be an (ici_obj_t **).  The
+ *                      location indicated by the ptr object is updated with
+ *                      the (ici_obj_t *).
+ *
  * d
  * a
  * u    Likwise for types as per ici_typecheck() above.
  * ...
  * -    The acutal argument is skipped.
  * *    ...
+ *
  */
 int
 ici_retcheck(char *types, ...)
@@ -1139,7 +1164,9 @@ f_include()
         strncpy(fname, filename->s_chars, 1023);
         if (!ici_find_on_path(fname, NULL))
         {
+#ifndef NODEBUGGING
             ici_debug_respect_errors();
+#endif
             if (ici_chkbuf(filename->s_nchars + 80))
                 return 1;
             sprintf(ici_buf, "could not find \"%s\" on path", fname);

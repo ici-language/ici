@@ -69,13 +69,6 @@ ici_int_t       *ici_one;
  */
 volatile int    ici_aborted;
 
-#ifndef NODEBUGGING
-/*
- * When non-zero this enables calls to the debugger functions (see idb2.c).
- */
-extern int      ici_debug_enabled;
-#endif
-
 #ifndef NOSIGNALS
 # ifdef SUNOS5
 int sigisempty(sigset_t *s) {
@@ -326,6 +319,7 @@ ici_obj_t *
 ici_evaluate(ici_obj_t *code, int n_operands)
 {
     register ici_obj_t  *o;
+    ici_obj_t           *pc;
     int                 flags;
     ici_catch_t         frame;
 #define FETCH(s, k) \
@@ -425,18 +419,18 @@ ici_evaluate(ici_obj_t *code, int n_operands)
             ici_signals_invoke_handlers();
 #endif
         assert(ici_os.a_top >= ici_os.a_base);
-        if (ispc(o = ici_xs.a_top[-1]))
+        if (ispc(pc = ici_xs.a_top[-1]))
         {
-            ici_obj_t  *tmp;
-
-    o_is_a_pc_and_continue:
-            tmp = *pcof(o)->pc_next++;
-            o = tmp;
+    continue_with_same_pc:
+            o = *pcof(pc)->pc_next++;
             if (isop(o))
                 goto an_op;
         }
         else
+        {
+            o = pc;
             --ici_xs.a_top;
+        }
 
         /*
          * Formally, the thing being executed should be on top of the
@@ -452,21 +446,9 @@ ici_evaluate(ici_obj_t *code, int n_operands)
         {
         case TC_SRC:
             ici_exec->x_src = srcof(o);
-#ifndef NODEBUGGING
-            if (ici_debug_enabled)
-                ici_debug->idbg_src(ici_exec->x_src);
-#endif
-#ifndef NOTRACE
-            if (trace_yes && (trace_flags & TRACE_SRC))
-            {
-                if (ici_exec->x_src->s_filename == NULL)
-                    fprintf(stderr, "%d\n", ici_exec->x_src->s_lineno);
-                else
-                    fprintf(stderr, "%s:%d\n", ici_exec->x_src->s_filename->s_chars,
-                        ici_exec->x_src->s_lineno);
-            }
-#endif
-            goto stable_stacks_continue;
+            if (ici_debug_active)
+                ici_debug->idbg_src(srcof(o));
+            goto continue_with_same_pc;
 
         case TC_PARSE:
             *ici_xs.a_top++ = o; /* Restore formal state. */
@@ -619,15 +601,7 @@ ici_evaluate(ici_obj_t *code, int n_operands)
             switch (opof(o)->op_ecode)
             {
             case OP_OTHER:
-#ifndef NODEBUGGING
-                if (ici_debug_enabled)
-                {
-                    extern int  op_return();
-                    if (opof(o)->op_func == ici_op_return)
-                        ici_debug->idbg_fnresult(ici_os.a_top[-1]);
-                }
-#endif
-                *ici_xs.a_top++ = o;
+                *ici_xs.a_top++ = o; /* Restore to formal state. */
                 if ((*opof(o)->op_func)())
                     goto fail;
                 continue;
@@ -716,7 +690,7 @@ ici_evaluate(ici_obj_t *code, int n_operands)
                         ici_decref(o);
                     goto fail;
                 }
-                if (ici_debug_enabled)
+                if (ici_debug_active)
                     ici_debug->idbg_fncall(ici_os.a_top[-1], ARGS(), NARGS());
                 if ((*ici_typeof(ici_os.a_top[-1])->t_call)(ici_os.a_top[-1], o))
                 {
@@ -726,10 +700,6 @@ ici_evaluate(ici_obj_t *code, int n_operands)
                 }
                 if (o != NULL)
                     ici_decref(o);
-#if 0
-                if (ici_debug_enabled)
-                    ici_debug->idbg_fnresult(ici_os.a_top[-1]);
-#endif
                 continue;
 
             case OP_QUOTE:
@@ -799,7 +769,7 @@ ici_evaluate(ici_obj_t *code, int n_operands)
                  *                => value (os, for value)
                  *                => aggr key (os, for lvalue)
                  */
-                if (ici_debug_enabled)
+                if (ici_debug_active)
                     ici_debug->idbg_watch(ici_vs.a_top[-1], ici_os.a_top[-2], ici_os.a_top[-1]);
                 if (assign_base(ici_vs.a_top[-1], ici_os.a_top[-2],ici_os.a_top[-1]))
                     goto fail;
@@ -836,7 +806,7 @@ ici_evaluate(ici_obj_t *code, int n_operands)
                  *                => value (os, for value)
                  *                => aggr key (os, for lvalue)
                  */
-                if (ici_debug_enabled)
+                if (ici_debug_active)
                     ici_debug->idbg_watch(ici_os.a_top[-3], ici_os.a_top[-2], ici_os.a_top[-1]);
                 if
                 (
@@ -862,7 +832,7 @@ ici_evaluate(ici_obj_t *code, int n_operands)
                  *                => value (os, for value)
                  *                => aggr key (os, for lvalue)
                  */
-                if (ici_debug_enabled)
+                if (ici_debug_active)
                     ici_debug->idbg_watch(ici_os.a_top[-3], ici_os.a_top[-2], ici_os.a_top[-1]);
                 if (hassuper(ici_os.a_top[-3]))
                 {
@@ -1110,7 +1080,7 @@ ici_evaluate(ici_obj_t *code, int n_operands)
                  */
                 o = ici_xs.a_top[-1];
                 pcof(o)->pc_next = pcof(o)->pc_code->a_base;
-                goto o_is_a_pc_and_continue;
+                goto continue_with_same_pc;
 
             case OP_LOOPER:
                 /*
@@ -1232,7 +1202,7 @@ ici_evaluate(ici_obj_t *code, int n_operands)
                 if (ici_op_binop(o))
                     goto fail;
 #endif
-                goto stable_stacks_continue;
+                goto continue_with_same_pc;
 
             default:
                 assert(0);
@@ -1277,7 +1247,7 @@ ici_evaluate(ici_obj_t *code, int n_operands)
              * scope for debugging is very limited. But if it was earlier, we
              * would be breaking on every type of error, even caught ones.
              */
-            if (ici_debug_enabled && !ici_debug_ign_err)
+            if (ici_debug_active && !ici_debug_ign_err)
                 ici_debug->idbg_error(ici_error, ici_exec->x_src);
 #endif
             expand_error(ici_exec->x_src->s_lineno, ici_exec->x_src->s_filename);
