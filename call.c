@@ -47,20 +47,20 @@
  * This --func-- forms part of the --ici-api--.
  */
 int
-ici_funcv(object_t *subject, object_t *callable, char *types, va_list va)
+ici_funcv(ici_obj_t *subject, ici_obj_t *callable, char *types, va_list va)
 {
     int                 nargs;
     int                 arg;
-    object_t            *member_obj;
-    object_t            *ret_obj;
+    ici_obj_t           *member_obj;
+    ici_obj_t           *ret_obj;
     char                ret_type;
     char                *ret_ptr;
     ptrdiff_t           os_depth;
-    op_t                *call_op;
+    ici_op_t            *call_op;
 
     if (types[0] != '\0' && types[1] == '@')
     {
-        member_obj = va_arg(va, object_t *);
+        member_obj = va_arg(va, ici_obj_t *);
         types += 2;
     }
     else
@@ -94,7 +94,7 @@ ici_funcv(object_t *subject, object_t *callable, char *types, va_list va)
         switch (*types++)
         {
         case 'o':
-            ici_os.a_top[arg] = va_arg(va, object_t *);
+            ici_os.a_top[arg] = va_arg(va, ici_obj_t *);
             break;
 
         case 'i':
@@ -154,7 +154,7 @@ ici_funcv(object_t *subject, object_t *callable, char *types, va_list va)
         break;
 
     case 'o':
-        *(object_t **)ret_ptr = ret_obj;
+        *(ici_obj_t **)ret_ptr = ret_obj;
         break;
 
     case 'i':
@@ -196,17 +196,17 @@ fail:
  * This --func-- forms part of the --ici-api--.
  */
 int
-ici_callv(string_t *func_name, char *types, va_list va)
+ici_callv(ici_str_t *func_name, char *types, va_list va)
 {
-    object_t            *func_obj;
-    object_t            *member_obj;
+    ici_obj_t           *func_obj;
+    ici_obj_t           *member_obj;
 
     func_obj = NULL;
     if (types[0] != '\0' && types[1] == '@')
     {
         va_list tmp;
         tmp = va;
-        member_obj = va_arg(tmp, object_t *);
+        member_obj = va_arg(tmp, ici_obj_t *);
         if ((func_obj = ici_fetch(member_obj, func_name)) == objof(&o_null))
         {
             sprintf(buf, "\"%s\" undefined in object", func_name->s_chars);
@@ -268,7 +268,7 @@ ici_callv(string_t *func_name, char *types, va_list va)
  * This --func-- forms part of the --ici-api--.
  */
 int
-ici_func(object_t *callable, char *types, ...)
+ici_func(ici_obj_t *callable, char *types, ...)
 {
     va_list     va;
     int         result;
@@ -303,7 +303,7 @@ ici_func(object_t *callable, char *types, ...)
  * This --func-- forms part of the --ici-api--.
  */
 int
-ici_method(object_t *inst, string_t *mname, char *types, ...)
+ici_method(ici_obj_t *inst, ici_str_t *mname, char *types, ...)
 {
     va_list     va;
     int         result;
@@ -346,10 +346,10 @@ ici_method(object_t *inst, string_t *mname, char *types, ...)
  * This --func-- forms part of the --ici-api--.
  */
 int
-ici_call(string_t *func_name, char *types, ...)
+ici_call(ici_str_t *func_name, char *types, ...)
 {
-    object_t            *func_obj;
-    object_t            *member_obj;
+    ici_obj_t           *func_obj;
+    ici_obj_t           *member_obj;
     va_list             va;
     int                 result;
 
@@ -357,7 +357,7 @@ ici_call(string_t *func_name, char *types, ...)
     if (types[0] != '\0' && types[1] == '@')
     {
         va_start(va, types);
-        member_obj = va_arg(va, object_t *);
+        member_obj = va_arg(va, ici_obj_t *);
         if ((func_obj = ici_fetch(member_obj, func_name)) == objof(&o_null))
         {
             sprintf(buf, "\"%s\" undefined in object", func_name->s_chars);

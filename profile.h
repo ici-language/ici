@@ -11,7 +11,7 @@
 
 typedef struct profilecall profilecall_t;
 extern int ici_profile_active;
-void ici_profile_call(func_t *f);
+void ici_profile_call(ici_func_t *f);
 void ici_profile_return();
 void ici_profile_set_done_callback(void (*)(profilecall_t *));
 profilecall_t *ici_profilecall_new(profilecall_t *called_by);
@@ -26,9 +26,9 @@ profilecall_t *ici_profilecall_new(profilecall_t *called_by);
  */
 struct profilecall
 {
-    object_t        o_head;
+    ici_obj_t       o_head;
     profilecall_t   *pc_calledby;
-    struct_t        *pc_calls;
+    ici_struct_t    *pc_calls;
     long            pc_total;
     long            pc_laststart;
     long            pc_call_count;

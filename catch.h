@@ -14,12 +14,12 @@
 
 struct ici_catch
 {
-    object_t    o_head;
-    object_t    *c_catcher;
+    ici_obj_t   o_head;
+    ici_obj_t   *c_catcher;
     short       c_odepth;       /* Operand stack depth. */
     short       c_vdepth;       /* Variable stack depth. */
 };
-#define catchof(o)      ((catch_t *)(o))
+#define catchof(o)      ((ici_catch_t *)(o))
 #define iscatch(o)      ((o)->o_tcode == TC_CATCH)
 
 /*

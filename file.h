@@ -28,11 +28,11 @@ struct ici_ftype
 
 struct ici_file
 {
-    object_t    o_head;
+    ici_obj_t   o_head;
     void        *f_file;
-    ftype_t     *f_type;
-    string_t    *f_name;    /* Reasonable name to call it by. */
-    object_t    *f_ref;
+    ici_ftype_t *f_type;
+    ici_str_t   *f_name;    /* Reasonable name to call it by. */
+    ici_obj_t   *f_ref;
 };
 /*
  * f_ref                An object for this file object to reference.
@@ -41,7 +41,7 @@ struct ici_file
  *                      to keep the object referenced. Basically if f_file
  *                      is an implicit reference to some object. May be NULL.
  */
-#define fileof(o)   ((file_t *)(o))
+#define fileof(o)   ((ici_file_t *)(o))
 #define isfile(o)   (objof(o)->o_tcode == TC_FILE)
 
 #define F_CLOSED    0x10    /* File is closed. */

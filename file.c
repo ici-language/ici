@@ -7,7 +7,7 @@
  * See the comments on t_cmp() in object.h.
  */
 static int
-cmp_file(object_t *o1, object_t *o2)
+cmp_file(ici_obj_t *o1, ici_obj_t *o2)
 {
     return fileof(o1)->f_file != fileof(o2)->f_file
         || fileof(o1)->f_type != fileof(o2)->f_type
@@ -19,7 +19,7 @@ cmp_file(object_t *o1, object_t *o2)
  * See the comments on t_free() in object.h.
  */
 static void
-free_file(object_t *o)
+free_file(ici_obj_t *o)
 {
     if ((o->o_flags & F_CLOSED) == 0)
     {
@@ -28,7 +28,7 @@ free_file(object_t *o)
         else
             ici_file_close(fileof(o));
     }
-    ici_tfree(o, file_t);
+    ici_tfree(o, ici_file_t);
 }
 
 /*
@@ -42,12 +42,12 @@ free_file(object_t *o)
  * will keep in case the fp argument is an implicit reference into
  * some object. It may be NULL if not required.
  */
-file_t *
-ici_file_new(void *fp, ftype_t *ftype, string_t *name, object_t *ref)
+ici_file_t *
+ici_file_new(void *fp, ici_ftype_t *ftype, ici_str_t *name, ici_obj_t *ref)
 {
-    register file_t     *f;
+    register ici_file_t *f;
 
-    if ((f = ici_talloc(file_t)) == NULL)
+    if ((f = ici_talloc(ici_file_t)) == NULL)
         return NULL;
     ICI_OBJ_SET_TFNZ(f, TC_FILE, 0, 1, 0);
     f->f_file = fp;
@@ -59,7 +59,7 @@ ici_file_new(void *fp, ftype_t *ftype, string_t *name, object_t *ref)
 }
 
 int
-ici_file_close(file_t *f)
+ici_file_close(ici_file_t *f)
 {
     if (objof(f)->o_flags & F_CLOSED)
     {
@@ -75,12 +75,12 @@ ici_file_close(file_t *f)
  * See comments on t_mark() in object.h.
  */
 static unsigned long
-mark_file(object_t *o)
+mark_file(ici_obj_t *o)
 {
     long        mem;
 
     o->o_flags |= O_MARK;
-    mem = sizeof(file_t);
+    mem = sizeof(ici_file_t);
     if (fileof(o)->f_name != NULL)
         mem += ici_mark(objof(fileof(o)->f_name));
     if (fileof(o)->f_ref != NULL)
@@ -88,7 +88,7 @@ mark_file(object_t *o)
     return mem;
 }
 
-type_t  file_type =
+ici_type_t  file_type =
 {
     mark_file,
     free_file,

@@ -12,10 +12,10 @@
 /*
  * Find the set slot which does, or should, contain the key k.
  */
-object_t **
-find_set_slot(set_t *s, object_t *k)
+ici_obj_t **
+find_set_slot(ici_set_t *s, ici_obj_t *k)
 {
-    register object_t   **e;
+    register ici_obj_t  **e;
 
     e = &s->s_slots[SET_HASHINDEX(k, s)];
     while (*e != NULL)
@@ -33,13 +33,13 @@ find_set_slot(set_t *s, object_t *k)
  * See comments on t_mark() in object.h.
  */
 static unsigned long
-mark_set(object_t *o)
+mark_set(ici_obj_t *o)
 {
-    register object_t   **e;
+    register ici_obj_t  **e;
     long                mem;
 
     o->o_flags |= O_MARK;
-    mem = sizeof(set_t) + setof(o)->s_nslots * sizeof(object_t *);
+    mem = sizeof(ici_set_t) + setof(o)->s_nslots * sizeof(ici_obj_t *);
     if (setof(o)->s_nels == 0)
         return mem;
     for
@@ -60,32 +60,32 @@ mark_set(object_t *o)
  * See the comments on t_free() in object.h.
  */
 static void
-free_set(object_t *o)
+free_set(ici_obj_t *o)
 {
     if (setof(o)->s_slots != NULL)
-        ici_nfree(setof(o)->s_slots, setof(o)->s_nslots * sizeof(object_t *));
-    ici_tfree(o, set_t);
+        ici_nfree(setof(o)->s_slots, setof(o)->s_nslots * sizeof(ici_obj_t *));
+    ici_tfree(o, ici_set_t);
 }
 
-set_t *
+ici_set_t *
 ici_set_new()
 {
-    register set_t      *s;
+    register ici_set_t  *s;
 
     /*
      * NB: there is a copy of this sequence in copy_set.
      */
-    if ((s = ici_talloc(set_t)) == NULL)
+    if ((s = ici_talloc(ici_set_t)) == NULL)
         return NULL;
     ICI_OBJ_SET_TFNZ(s, TC_SET, 0, 1, 0);
     s->s_nels = 0;
     s->s_nslots = 4; /* Must be power of 2. */
-    if ((s->s_slots = (object_t **)ici_nalloc(4 * sizeof(object_t *))) == NULL)
+    if ((s->s_slots = (ici_obj_t **)ici_nalloc(4 * sizeof(ici_obj_t *))) == NULL)
     {
-        ici_tfree(s, set_t);
+        ici_tfree(s, ici_set_t);
         return NULL;
     }
-    memset(s->s_slots, 0, 4 * sizeof(object_t *));
+    memset(s->s_slots, 0, 4 * sizeof(ici_obj_t *));
     ici_rego(s);
     return s;
 }
@@ -95,10 +95,10 @@ ici_set_new()
  * See the comments on t_cmp() in object.h.
  */
 static int
-cmp_set(object_t *o1, object_t *o2)
+cmp_set(ici_obj_t *o1, ici_obj_t *o2)
 {
     register int        i;
-    register object_t   **e;
+    register ici_obj_t  **e;
 
     if (o1 == o2)
         return 0;
@@ -120,11 +120,11 @@ cmp_set(object_t *o1, object_t *o2)
  * See the comment on t_hash() in object.h
  */
 static unsigned long
-hash_set(object_t *o)
+hash_set(ici_obj_t *o)
 {
     int                         i;
     unsigned long               h;
-    object_t                    **po;
+    ici_obj_t                   **po;
 
     h = 0;
     po = setof(o)->s_slots;
@@ -141,22 +141,22 @@ hash_set(object_t *o)
  * Return a copy of the given object, or NULL on error.
  * See the comment on t_copy() in object.h.
  */
-static object_t *
-copy_set(object_t *o)
+static ici_obj_t *
+copy_set(ici_obj_t *o)
 {
-    set_t       *s;
-    set_t       *ns;
+    ici_set_t   *s;
+    ici_set_t   *ns;
 
     s = setof(o);
-    if ((ns = ici_talloc(set_t)) == NULL)
+    if ((ns = ici_talloc(ici_set_t)) == NULL)
         return NULL;
     ICI_OBJ_SET_TFNZ(ns, TC_SET, 0, 1, 0);
     ns->s_nels = 0;
     ns->s_nslots = 0;
     ici_rego(ns);
-    if ((ns->s_slots = (object_t **)ici_nalloc(s->s_nslots * sizeof(object_t *))) == NULL)
+    if ((ns->s_slots = (ici_obj_t **)ici_nalloc(s->s_nslots * sizeof(ici_obj_t *))) == NULL)
         goto fail;
-    memcpy(ns->s_slots, s->s_slots, s->s_nslots*sizeof(object_t *));
+    memcpy(ns->s_slots, s->s_slots, s->s_nslots*sizeof(ici_obj_t *));
     ns->s_nels = s->s_nels;
     ns->s_nslots = s->s_nslots;
     return objof(ns);
@@ -170,16 +170,16 @@ fail:
  * Grow the set s so that it has twice as many slots.
  */
 static int
-grow_set(set_t *s)
+grow_set(ici_set_t *s)
 {
-    object_t            **e;
-    object_t            **oldslots;
+    ici_obj_t           **e;
+    ici_obj_t           **oldslots;
     int                 i;
     ptrdiff_t           oldn;
 
     oldn = s->s_nslots;
-    i = (oldn * 2) * sizeof(object_t *);
-    if ((e = (object_t **)ici_nalloc(i)) == NULL)
+    i = (oldn * 2) * sizeof(ici_obj_t *);
+    if ((e = (ici_obj_t **)ici_nalloc(i)) == NULL)
         return 1;
     memset((char *)e, 0, i);
     oldslots = s->s_slots;
@@ -191,7 +191,7 @@ grow_set(set_t *s)
         if (oldslots[i] != NULL)
             *find_set_slot(s, oldslots[i]) = oldslots[i];
     }
-    ici_nfree(oldslots, oldn * sizeof(object_t *));
+    ici_nfree(oldslots, oldn * sizeof(ici_obj_t *));
     return 0;
 }
 
@@ -199,11 +199,11 @@ grow_set(set_t *s)
  * Remove the key from the set.
  */
 int
-ici_set_unassign(set_t *s, object_t *k)
+ici_set_unassign(ici_set_t *s, ici_obj_t *k)
 {
-    register object_t   **sl;
-    register object_t   **ss;
-    register object_t   **ws;   /* Wanted position. */
+    register ici_obj_t  **sl;
+    register ici_obj_t  **ss;
+    register ici_obj_t  **ws;   /* Wanted position. */
 
     if (*(ss = find_set_slot(s, k)) == NULL)
         return 0;
@@ -247,9 +247,9 @@ ici_set_unassign(set_t *s, object_t *k)
  * Add or delete the key k from the set based on the value of v.
  */
 static int
-assign_set(object_t *o, object_t *k, object_t *v)
+assign_set(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v)
 {
-    register object_t   **e;
+    register ici_obj_t  **e;
 
     if (o->o_flags & O_ATOM)
     {
@@ -284,13 +284,13 @@ assign_set(object_t *o, object_t *k, object_t *v)
  * Return the object at key k of the obejct o, or NULL on error.
  * See the comment on t_fetch in object.h.
  */
-static object_t *
-fetch_set(object_t *o, object_t *k)
+static ici_obj_t *
+fetch_set(ici_obj_t *o, ici_obj_t *k)
 {
     return *find_set_slot(setof(o), k) == NULL ? objof(&o_null) : objof(ici_one);
 }
 
-type_t  set_type =
+ici_type_t  set_type =
 {
     mark_set,
     free_set,
@@ -306,9 +306,9 @@ type_t  set_type =
  * Return 1 if a is a subset of b, else 0.
  */
 int
-set_issubset(set_t *a, set_t *b) /* a is a subset of b */
+set_issubset(ici_set_t *a, ici_set_t *b) /* a is a subset of b */
 {
-    register object_t   **sl;
+    register ici_obj_t  **sl;
     register int        i;
 
     for (sl = a->s_slots, i = 0; i < a->s_nslots; ++i, ++sl)
@@ -326,7 +326,7 @@ set_issubset(set_t *a, set_t *b) /* a is a subset of b */
  * and not equal.
  */
 int
-set_ispropersubset(set_t *a, set_t *b) /* a is a proper subset of b */
+set_ispropersubset(ici_set_t *a, ici_set_t *b) /* a is a proper subset of b */
 {
     return a->s_nels < b->s_nels && set_issubset(a, b);
 }

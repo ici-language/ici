@@ -6,7 +6,7 @@
 #include "str.h"
 #include "pcre/pcre.h"
 
-extern cfunc_t  *funcs[];
+extern ici_cfunc_t  *funcs[];
 
 /*
  * Perform basic interpreter setup. Return non-zero on failure, usual
@@ -24,10 +24,10 @@ extern cfunc_t  *funcs[];
 int
 ici_init(void)
 {
-    cfunc_t             **cfp;
-    struct_t            *scope;
-    objwsup_t           *externs;
-    exec_t              *x;
+    ici_cfunc_t         **cfp;
+    ici_struct_t        *scope;
+    ici_objwsup_t       *externs;
+    ici_exec_t          *x;
     int                 i;
     double              pi = 3.1415926535897932;
 
@@ -36,8 +36,8 @@ ici_init(void)
      * hope they are. Nothing actually assumes this. But it would
      * represent a significant inefficiency if they were padded.
      */
-    assert(sizeof(object_t) == 4);
-    assert(offsetof(objwsup_t, o_super) == 4);
+    assert(sizeof(ici_obj_t) == 4);
+    assert(offsetof(ici_objwsup_t, o_super) == 4);
 
 #   ifndef NDEBUG
     {
@@ -54,13 +54,13 @@ ici_init(void)
 
     if (ici_chkbuf(120))
         return 1;
-    if ((atoms = (object_t **)ici_nalloc(64 * sizeof(object_t *))) == NULL)
+    if ((atoms = (ici_obj_t **)ici_nalloc(64 * sizeof(ici_obj_t *))) == NULL)
         return 1;
     atomsz = 64; /* Must be power of two. */
-    memset((char *)atoms, 0, atomsz * sizeof(object_t *));
-    if ((objs = (object_t **)ici_nalloc(256 * sizeof(object_t *))) == NULL)
+    memset((char *)atoms, 0, atomsz * sizeof(ici_obj_t *));
+    if ((objs = (ici_obj_t **)ici_nalloc(256 * sizeof(ici_obj_t *))) == NULL)
         return 1;
-    memset((char *)objs, 0, 256 * sizeof(object_t *));
+    memset((char *)objs, 0, 256 * sizeof(ici_obj_t *));
     objs_limit = objs + 256;
     objs_top = objs;
     for (i = 0; i < nels(ici_small_ints); ++i)

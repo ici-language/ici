@@ -146,12 +146,12 @@ do_repl
  *
  * Return an array, or NULL on error. The array has been increfed.
  */
-static array_t *
+static ici_array_t *
 do_smash
 (
-    string_t    *str,
-    regexp_t    *re,
-    string_t    **repls,
+    ici_str_t   *str,
+    ici_regexp_t    *re,
+    ici_str_t   **repls,
     int         n_repls,
     int         include_remainder
 )
@@ -159,8 +159,8 @@ do_smash
     char        *s;         /* Where we are up to in the string. */
     char        *se;        /* The end of the string. */
     int         i;
-    array_t     *a;
-    string_t    *ns;
+    ici_array_t *a;
+    ici_str_t   *ns;
     int         size;
 
     if ((a = ici_array_new(0)) == NULL)
@@ -239,13 +239,13 @@ fail:
  *              matching what it has replaced (which can cause infinite
  *              loops).
  */
-static string_t *
-do_sub(string_t *str, regexp_t *re, char *repl, int *ofs)
+static ici_str_t *
+do_sub(ici_str_t *str, ici_regexp_t *re, char *repl, int *ofs)
 {
     char        *dst;
     int         normal;
     char        *p;
-    string_t    *rc;
+    ici_str_t   *rc;
     int         len;
     char        *d;
     char        *s;
@@ -326,7 +326,7 @@ do_sub(string_t *str, regexp_t *re, char *repl, int *ofs)
      * the NUL character at the end of the string.
      */
     if ((dst = ici_alloc(len + 1)) == NULL)
-        return (string_t *)-1;
+        return (ici_str_t *)-1;
 
     /*
      * Copy across the part of the source as far as the start of the match.
@@ -389,7 +389,7 @@ do_sub(string_t *str, regexp_t *re, char *repl, int *ofs)
     rc = ici_str_new_nul_term(dst);
     ici_free(dst);
     if (rc == NULL)
-        return (string_t *)-1;
+        return (ici_str_t *)-1;
     return rc;
 }
 
@@ -399,11 +399,11 @@ do_sub(string_t *str, regexp_t *re, char *repl, int *ofs)
 static int
 f_sub()
 {
-    object_t    *str;
-    object_t    *o;
-    regexp_t    *re;
+    ici_obj_t   *str;
+    ici_obj_t   *o;
+    ici_regexp_t    *re;
     char        *repl;
-    string_t    *rc;
+    ici_str_t   *rc;
     int         ofs = 0;
 
     /*
@@ -421,7 +421,7 @@ f_sub()
         return 1;
     if ((rc = do_sub(stringof(str), re, repl, &ofs)) == NULL)
         rc = stringof(str);
-    else if (rc == (string_t*)-1)
+    else if (rc == (ici_str_t*)-1)
     {
         if (regexpof(o) != re)
             ici_decref(re);
@@ -439,15 +439,15 @@ f_sub()
 static int
 f_gsub()
 {
-    string_t    *str;
-    regexp_t    *re;
-    string_t    *repl;
-    string_t    *repls[2];
+    ici_str_t   *str;
+    ici_regexp_t    *re;
+    ici_str_t   *repl;
+    ici_str_t   *repls[2];
     char        *s;
-    object_t    **p;
+    ici_obj_t   **p;
     int         size;
-    string_t    *ns;
-    array_t     *a;
+    ici_str_t   *ns;
+    ici_array_t *a;
 
     /*
      * Get the ICI arguments.
@@ -522,7 +522,7 @@ f_old_smash()
     char                *s;
     char                *delim;
     register char       **p;
-    register array_t    *sa;
+    register ici_array_t    *sa;
     register char       **strs;
 
     if (ici_typecheck("ss", &s, &delim))
@@ -556,7 +556,7 @@ fail:
     return 1;
 }
 
-regexp_t     *ici_smash_default_re;
+ici_regexp_t *ici_smash_default_re;
 
 /*
  * f_smash()
@@ -566,12 +566,12 @@ regexp_t     *ici_smash_default_re;
 static int
 f_smash()
 {
-    string_t            *str;
-    regexp_t            *re;
-    string_t            **repls;
+    ici_str_t           *str;
+    ici_regexp_t        *re;
+    ici_str_t           **repls;
     int                 n_repls;
-    array_t             *a;
-    string_t            *default_repl[2];
+    ici_array_t         *a;
+    ici_str_t           *default_repl[2];
     int                 i;
     int                 include_remainder;
     int                 nargs;
@@ -620,7 +620,7 @@ f_smash()
     else
     {
         n_repls = nargs - 2;
-        repls = (string_t **)(ARGS() - 2);
+        repls = (ici_str_t **)(ARGS() - 2);
         for (i = 0; i < n_repls; ++i)
         {
             if (!isstring(objof(repls[-i])))
@@ -632,7 +632,7 @@ f_smash()
     return ici_ret_with_decref(objof(a));
 }
 
-cfunc_t ici_re_funcs[] =
+ici_cfunc_t ici_re_funcs[] =
 {
     {CF_OBJ,    (char *)SS(regexp),       f_regexp,       NULL,   NULL},
     {CF_OBJ,    (char *)SS(regexpi),      f_regexp,       NULL,   ""},

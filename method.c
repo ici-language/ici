@@ -9,7 +9,7 @@
 #endif
 
 static void
-objname_method(object_t *o, char p[ICI_OBJNAMEZ])
+objname_method(ici_obj_t *o, char p[ICI_OBJNAMEZ])
 {
     char    n1[ICI_OBJNAMEZ];
     char    n2[ICI_OBJNAMEZ];
@@ -24,19 +24,19 @@ objname_method(object_t *o, char p[ICI_OBJNAMEZ])
  * See comments on t_mark() in object.h.
  */
 static unsigned long
-mark_method(object_t *o)
+mark_method(ici_obj_t *o)
 {
     o->o_flags |= O_MARK;
     return ici_mark(methodof(o)->m_subject)
         + ici_mark(methodof(o)->m_callable);
 }
 
-method_t *
-ici_method_new(object_t *subject, object_t *callable)
+ici_method_t *
+ici_method_new(ici_obj_t *subject, ici_obj_t *callable)
 {
-    register method_t   *m;
+    register ici_method_t   *m;
 
-    if ((m = ici_talloc(method_t)) == NULL)
+    if ((m = ici_talloc(ici_method_t)) == NULL)
         return NULL;
     ICI_OBJ_SET_TFNZ(m, TC_METHOD, 0, 1, 0);
     m->m_subject = subject;
@@ -50,19 +50,19 @@ ici_method_new(object_t *subject, object_t *callable)
  * See the comments on t_free() in object.h.
  */
 static void
-free_method(object_t *o)
+free_method(ici_obj_t *o)
 {
-    ici_tfree(o, method_t);
+    ici_tfree(o, ici_method_t);
 }
 
 /*
  * Return the object which at key k of the obejct o, or NULL on error.
  * See the comment on t_fetch in object.h.
  */
-static object_t *
-fetch_method(object_t *o, object_t *k)
+static ici_obj_t *
+fetch_method(ici_obj_t *o, ici_obj_t *k)
 {
-    method_t            *m;
+    ici_method_t        *m;
 
     m = methodof(o);
     if (k == SSO(subject))
@@ -73,9 +73,9 @@ fetch_method(object_t *o, object_t *k)
 }
 
 static int
-call_method(object_t *o, object_t *subject)
+call_method(ici_obj_t *o, ici_obj_t *subject)
 {
-    method_t            *m;
+    ici_method_t        *m;
 
     m = methodof(o);
     if (ici_typeof(m->m_callable)->t_call == NULL)
@@ -92,7 +92,7 @@ call_method(object_t *o, object_t *subject)
     return (*ici_typeof(m->m_callable)->t_call)(m->m_callable, m->m_subject);
 }
 
-type_t  ici_method_type =
+ici_type_t  ici_method_type =
 {
     mark_method,
     free_method,

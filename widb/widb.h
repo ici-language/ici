@@ -75,7 +75,7 @@
 
 void WIDB_set_dialog_parent(HWND dialog_parent);
 void WIDB_set_resources(HINSTANCE resources);
-void WIDB_view_object(object_t *p, HWND parent);
+void WIDB_view_object(ici_obj_t *p, HWND parent);
 void WIDB_enable_profiling_display();
 
 #ifdef __cplusplus

@@ -31,7 +31,7 @@ int     ici_dont_record_line_nums;
  * flag (p_sol) in the parse context.
  */
 int
-get(parse_t *p, array_t *a)
+get(ici_parse_t *p, ici_array_t *a)
 {
     int         c;
 
@@ -104,7 +104,7 @@ get(parse_t *p, array_t *a)
  * the character had never been fetched.
  */
 void
-unget(parse_t *p, int c)
+unget(ici_parse_t *p, int c)
 {
     (*p->p_file->f_type->ft_ungetch)(c, p->p_file->f_file);
     if (c == '\n')
@@ -121,7 +121,7 @@ unget(parse_t *p, int c)
  * on error, in which case error is set.
  */
 int
-lex(parse_t *p, array_t *a)
+lex(ici_parse_t *p, ici_array_t *a)
 {
     register int        c;
     register int        t = 0; /* init to shut up compiler */
@@ -699,20 +699,20 @@ fail:
  * tracks line numbers).
  */
 static int
-pf_getc(parse_t *p)
+pf_getc(ici_parse_t *p)
 {
     return get(p, NULL);
 }
 
 static int
-pf_ungetc(parse_t *p, int c)
+pf_ungetc(ici_parse_t *p, int c)
 {
     unget(p, c);
     return c;
 }
 
 static int
-pf_eof(parse_t *p)
+pf_eof(ici_parse_t *p)
 {
     return p->p_file->f_type->ft_eof(p->p_file->f_file);
 }
@@ -723,7 +723,7 @@ pf_fail()
     return 0;
 }
 
-ftype_t ici_parse_ftype =
+ici_ftype_t ici_parse_ftype =
 {
     pf_getc,
     pf_ungetc,

@@ -80,7 +80,7 @@ volatile long   ici_signal_count[NSIG];
  *      occurs rather than postponing the call to within the execution
  *      loop.
  */
-static object_t *signal_handler[NSIG];
+static ici_obj_t *signal_handler[NSIG];
 static int  currently_blocked;
 
 
@@ -92,10 +92,10 @@ static int  currently_blocked;
  * Returns non-zero on error, zero if okay.
  */
 static int
-call_signal_handler(object_t *func, int signo)
+call_signal_handler(ici_obj_t *func, int signo)
 {
-    int_t               *isigno;
-    object_t            *ret_obj;
+    ici_int_t           *isigno;
+    ici_obj_t           *ret_obj;
 
     if (ici_stk_push_chk(&ici_os, 3 + 80)) /* see comment in ici/call.c */
         return 1;
@@ -209,7 +209,7 @@ signo_to_signam(int signo)
 static void
 ici_signal_handler(int signo)
 {
-    object_t    *func;
+    ici_obj_t   *func;
 
     if (currently_blocked)
     {
@@ -275,7 +275,7 @@ ici_signals_invoke_handlers(void)
 {
     int     signo;
     long    mask;
-    object_t    *fn;
+    ici_obj_t   *fn;
 
     for (signo = 1; signo <= NSIG; ++signo)
     {
@@ -317,13 +317,13 @@ ici_signals_invoke_handlers(void)
 static int
 f_signal(void)
 {
-    object_t    *sigo;
-    object_t    *handlero;
+    ici_obj_t   *sigo;
+    ici_obj_t   *handlero;
     int     signo;
     void    (*handler)(int);
     void    (*rc)(int);
-    object_t    *prev_handler;
-    object_t    *result;
+    ici_obj_t   *prev_handler;
+    ici_obj_t   *result;
 
     handlero = NULL;
     if (NARGS() == 1)
@@ -451,7 +451,7 @@ f_signam(void)
 /*
  * Our C-funcs
  */
-cfunc_t     ici_signals_cfuncs[] =
+ici_cfunc_t ici_signals_cfuncs[] =
 {
     {CF_OBJ,    (char *)SS(signal),   f_signal},
     {CF_OBJ,    (char *)SS(signam),   f_signam},

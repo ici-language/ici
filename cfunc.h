@@ -11,18 +11,18 @@
 
 struct ici_cfunc
 {
-    object_t    o_head;
+    ici_obj_t   o_head;
     char        *cf_name;
     int         (*cf_cfunc)();
     void        *cf_arg1;
     void        *cf_arg2;
 };
-#define cfuncof(o)      ((cfunc_t *)(o))
+#define cfuncof(o)      ((ici_cfunc_t *)(o))
 #define iscfunc(o)      (objof(o)->o_tcode == TC_CFUNC)
 
 /*
  * Convienience macro for the object header for use in static
- * initialisations of cfunc_t objects.
+ * initialisations of ici_cfunc_t objects.
  */
 #define CF_OBJ          {TC_CFUNC, 0, 1, 0}
 

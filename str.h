@@ -23,9 +23,9 @@
 
 struct ici_str
 {
-    object_t    o_head;
-    struct_t    *s_struct;      /* Where we were last found on the vs. */
-    slot_t      *s_slot;        /* And our slot. */
+    ici_obj_t   o_head;
+    ici_struct_t    *s_struct;      /* Where we were last found on the vs. */
+    ici_sslot_t *s_slot;        /* And our slot. */
     long        s_vsver;        /* The vs version at that time. */
 #   if KEEP_STRING_HASH
         unsigned long s_hash;  /* String hash code or 0 if not yet computed */
@@ -56,7 +56,7 @@ struct ici_str
  * su.su_inline_chars   If ICI_S_SEP_ALLOC is *not* set, this is where s_chars will
  *                      be pointing. The actual string chars follow on from this.
  */
-#define stringof(o)     ((string_t *)o)
+#define stringof(o)     ((ici_str_t *)o)
 #define isstring(o)     ((o)->o_tcode == TC_STRING)
 
 /*
@@ -83,7 +83,7 @@ struct ici_str
  *
  * etc. Include that file in any files that access ICI strings.
  * Access them with either ICIS(fred) or ICISO(fred) which return
- * string_t* and object_t* pointers respectively. For example:
+ * ici_str_t* and ici_obj_t* pointers respectively. For example:
  *
  *  o = ici_fetch(s, ICIS(fred));
  *
@@ -96,8 +96,8 @@ struct ici_str
  */
 #define ICIS(name)              (ici_str_##name)
 #define ICISO(name)             (objof(ICIS(name)))
-#define ICI_STR_NORM(name, str) extern string_t *ici_str_##name;
-#define ICI_STR_DECL(name, str) string_t *ici_str_##name;
+#define ICI_STR_NORM(name, str) extern ici_str_t *ici_str_##name;
+#define ICI_STR_DECL(name, str) ici_str_t *ici_str_##name;
 #define ICI_STR_MAKE(name, str) (ICIS(name) = ici_str_new_nul_term(str)) == NULL ||
 #define ICI_STR_REL(name, str)  ici_decref(ICIS(name));
 #define ICI_STR                 ICI_STR_NORM
@@ -120,9 +120,9 @@ struct ici_str
 typedef struct sstring  sstring_t;
 struct sstring
 {
-    object_t    o_head;
-    struct_t    *s_struct;      /* Where we were last found on the vs. */
-    slot_t      *s_slot;        /* And our slot. */
+    ici_obj_t   o_head;
+    ici_struct_t    *s_struct;      /* Where we were last found on the vs. */
+    ici_sslot_t *s_slot;        /* And our slot. */
     long        s_vsver;        /* The vs version at that time. */
 #   if KEEP_STRING_HASH
         unsigned long s_hash;   /* String hash code or 0 if not yet computed */
@@ -136,8 +136,8 @@ struct sstring
 #include "sstring.h"
 #undef SSTRING
 
-#define SS(name)         ((string_t *)&ici_ss_##name)
-#define SSO(name)        ((object_t *)&ici_ss_##name)
+#define SS(name)         ((ici_str_t *)&ici_ss_##name)
+#define SSO(name)        ((ici_obj_t *)&ici_ss_##name)
 
 #endif /* ICI_CORE */
 

@@ -54,7 +54,7 @@ dlclose(dll_t hinst)
  * do).
  */
 static int
-push_os_path_elements(array_t *a)
+push_os_path_elements(ici_array_t *a)
 {
     char                fname[MAX_PATH];
     char                *p;

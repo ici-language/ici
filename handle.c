@@ -11,7 +11,7 @@
  * Format a human readable version of the object in less than 30 chars.
  */
 static void
-objname_handle(object_t *o, char p[ICI_OBJNAMEZ])
+objname_handle(ici_obj_t *o, char p[ICI_OBJNAMEZ])
 {
     if (handleof(o)->h_name == NULL)
         strcpy(p, "handle");
@@ -29,7 +29,7 @@ objname_handle(object_t *o, char p[ICI_OBJNAMEZ])
  * See comments on t_mark() in object.h.
  */
 static unsigned long
-mark_handle(object_t *o)
+mark_handle(ici_obj_t *o)
 {
     unsigned long       mem;
 
@@ -47,7 +47,7 @@ mark_handle(object_t *o)
  * See the comments on t_cmp() in object.h.
  */
 static int
-cmp_handle(object_t *o1, object_t *o2)
+cmp_handle(ici_obj_t *o1, ici_obj_t *o2)
 {
     return handleof(o1)->h_ptr != handleof(o2)->h_ptr
         || handleof(o1)->h_name != handleof(o2)->h_name;
@@ -58,7 +58,7 @@ cmp_handle(object_t *o1, object_t *o2)
  * See the comment on t_hash() in object.h
  */
 static unsigned long
-hash_handle(object_t *o)
+hash_handle(ici_obj_t *o)
 {
     return ICI_PTR_HASH(handleof(o)->h_ptr)
          ^ ICI_PTR_HASH(handleof(o)->h_name);
@@ -71,10 +71,10 @@ hash_handle(object_t *o)
  * reference count inceremented.
  */
 ici_handle_t *
-ici_handle_new(void *ptr, string_t *name, objwsup_t *super)
+ici_handle_new(void *ptr, ici_str_t *name, ici_objwsup_t *super)
 {
     ici_handle_t        *h;
-    object_t            **po;
+    ici_obj_t           **po;
     static ici_handle_t proto = {{{TC_HANDLE, O_SUPER, 1, 0}, NULL}};
 
     proto.h_ptr = ptr;
@@ -102,8 +102,8 @@ ici_handle_new(void *ptr, string_t *name, objwsup_t *super)
  * Return the object at key k of the obejct o, or NULL on error.
  * See the comment on t_fetch in object.h.
  */
-object_t *
-fetch_handle(object_t *o, object_t *k)
+ici_obj_t *
+fetch_handle(ici_obj_t *o, ici_obj_t *k)
 {
     if (!hassuper(o))
         return ici_fetch_fail(o, k);
@@ -122,7 +122,7 @@ fetch_handle(object_t *o, object_t *k)
  * assignment. This is used to mantain the lookup lookaside mechanism.
  */
 static int
-fetch_super_handle(object_t *o, object_t *k, object_t **v, struct_t *b)
+fetch_super_handle(ici_obj_t *o, ici_obj_t *k, ici_obj_t **v, ici_struct_t *b)
 {
     if (!hassuper(o))
     {
@@ -134,8 +134,8 @@ fetch_super_handle(object_t *o, object_t *k, object_t **v, struct_t *b)
     return fetch_super(handleof(o)->o_head.o_super, k, v, b);
 }
 
-static object_t *
-fetch_base_handle(object_t *o, object_t *k)
+static ici_obj_t *
+fetch_base_handle(ici_obj_t *o, ici_obj_t *k)
 {
     if (!hassuper(o))
         return ici_fetch_fail(o, k);
@@ -149,13 +149,13 @@ fetch_base_handle(object_t *o, object_t *k)
  * That is, always assign into the lowest level. Usual error coventions.
  */
 static int
-assign_base_handle(object_t *o, object_t *k, object_t *v)
+assign_base_handle(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v)
 {
     if (!hassuper(o))
         return ici_assign_fail(o, k, v);
     if ((o->o_flags & H_HAS_PRIV_STRUCT) == 0)
     {
-        objwsup_t       *s;
+        ici_objwsup_t   *s;
 
         /*
          * We don't yet have a private struct to hold our values.
@@ -179,7 +179,7 @@ assign_base_handle(object_t *o, object_t *k, object_t *v)
  * See the comment on t_assign() in object.h.
  */
 static int
-assign_handle(object_t *o, object_t *k, object_t *v)
+assign_handle(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v)
 {
     if (!hassuper(o))
         return ici_assign_fail(o, k, v);
@@ -217,7 +217,7 @@ assign_handle(object_t *o, object_t *k, object_t *v)
  * assignment. This is used to mantain the lookup lookaside mechanism.
  */
 static int
-assign_super_handle(object_t *o, object_t *k, object_t *v, struct_t *b)
+assign_super_handle(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v, ici_struct_t *b)
 {
     if (!hassuper(o))
         return ici_assign_fail(o, k, v);
@@ -231,7 +231,7 @@ assign_super_handle(object_t *o, object_t *k, object_t *v, struct_t *b)
  * See the comments on t_free() in object.h.
  */
 static void
-free_handle(object_t *o)
+free_handle(ici_obj_t *o)
 {
     if (handleof(o)->h_pre_free != NULL)
         (*handleof(o)->h_pre_free)(handleof(o));
@@ -246,7 +246,7 @@ free_handle(object_t *o)
  * sets ici_error, else 0.
  */
 int
-ici_handle_method_check(object_t *inst, string_t *name, ici_handle_t **h, void **p)
+ici_handle_method_check(ici_obj_t *inst, ici_str_t *name, ici_handle_t **h, void **p)
 {
     char                n1[30];
     char                n2[30];
@@ -269,7 +269,7 @@ ici_handle_method_check(object_t *inst, string_t *name, ici_handle_t **h, void *
 }
 
 
-type_t  ici_handle_type =
+ici_type_t  ici_handle_type =
 {
     mark_handle,
     free_handle,

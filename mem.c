@@ -9,10 +9,10 @@
  * See comments on t_mark() in object.h.
  */
 static unsigned long
-mark_mem(object_t *o)
+mark_mem(ici_obj_t *o)
 {
     o->o_flags |= O_MARK;
-    return sizeof(mem_t);
+    return sizeof(ici_mem_t);
 }
 
 /*
@@ -20,7 +20,7 @@ mark_mem(object_t *o)
  * See the comments on t_cmp() in object.h.
  */
 static int
-cmp_mem(object_t *o1, object_t *o2)
+cmp_mem(ici_obj_t *o1, ici_obj_t *o2)
 {
     return memof(o1)->m_base != memof(o2)->m_base
         || memof(o1)->m_length != memof(o2)->m_length
@@ -33,7 +33,7 @@ cmp_mem(object_t *o1, object_t *o2)
  * See the comment on t_hash() in object.h
  */
 static unsigned long
-hash_mem(object_t *o)
+hash_mem(ici_obj_t *o)
 {
     return (unsigned long)memof(o)->m_base * MEM_PRIME_0
         + (unsigned long)memof(o)->m_length * MEM_PRIME_1
@@ -45,7 +45,7 @@ hash_mem(object_t *o)
  * See the comment on t_assign() in object.h.
  */
 static int
-assign_mem(object_t *o, object_t *k, object_t *v)
+assign_mem(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v)
 {
     register long       i;
 
@@ -79,8 +79,8 @@ assign_mem(object_t *o, object_t *k, object_t *v)
  * Return the object at key k of the obejct o, or NULL on error.
  * See the comment on t_fetch in object.h.
  */
-static object_t *
-fetch_mem(object_t *o, object_t *k)
+static ici_obj_t *
+fetch_mem(ici_obj_t *o, ici_obj_t *k)
 {
     long        i;
 
@@ -108,14 +108,14 @@ fetch_mem(object_t *o, object_t *k)
     return o;
 }
 
-mem_t *
+ici_mem_t *
 ici_mem_new(void *base, size_t length, int accessz, void (*free_func)())
 {
-    register mem_t      *m;
+    register ici_mem_t  *m;
 
-    if ((m = ici_talloc(mem_t)) == NULL)
+    if ((m = ici_talloc(ici_mem_t)) == NULL)
         return NULL;
-    ICI_OBJ_SET_TFNZ(m, TC_MEM, 0, 1, sizeof(mem_t));
+    ICI_OBJ_SET_TFNZ(m, TC_MEM, 0, 1, sizeof(ici_mem_t));
     ici_rego(m);
     m->m_base = base;
     m->m_length = length;
@@ -129,14 +129,14 @@ ici_mem_new(void *base, size_t length, int accessz, void (*free_func)())
  * See the comments on t_free() in object.h.
  */
 static void
-free_mem(object_t *o)
+free_mem(ici_obj_t *o)
 {
     if (memof(o)->m_free != NULL)
         (*memof(o)->m_free)(memof(o)->m_base);
-    ici_tfree(o, mem_t);
+    ici_tfree(o, ici_mem_t);
 }
 
-type_t  mem_type =
+ici_type_t  mem_type =
 {
     mark_mem,
     free_mem,

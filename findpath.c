@@ -18,12 +18,12 @@
 int
 ici_find_on_path(char name[FILENAME_MAX], char *ext)
 {
-    array_t             *a;
+    ici_array_t         *a;
     char                *p;
     char                realname[FILENAME_MAX];
     int                 xlen;
-    object_t            **e;
-    string_t            *s;
+    ici_obj_t           **e;
+    ici_str_t           *s;
 
     if ((a = ici_need_path()) == NULL)
         return 0;

@@ -58,7 +58,7 @@ int widb_step_over_depth = 99999;
 /*
  * The most recent scope we've encountered.
  */
-object_t *widb_scope;
+ici_obj_t *widb_scope;
 
 /*
  * The directory that was current when we were initialised.
@@ -196,7 +196,7 @@ debug_thread_proc(LPVOID lpParameter)
  *
  */
 void
-widb_debug(src_t *src)
+widb_debug(ici_src_t *src)
 {
     DWORD result;
     static HANDLE thread;

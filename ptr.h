@@ -10,11 +10,11 @@
  */
 struct ici_ptr
 {
-    object_t    o_head;
-    object_t    *p_aggr;        /* The aggregate which contains the object. */
-    object_t    *p_key;         /* The key which references it. */
+    ici_obj_t   o_head;
+    ici_obj_t   *p_aggr;        /* The aggregate which contains the object. */
+    ici_obj_t   *p_key;         /* The key which references it. */
 };
-#define ptrof(o)        ((ptr_t *)o)
+#define ptrof(o)        ((ici_ptr_t *)o)
 #define isptr(o)        ((o)->o_tcode == TC_PTR)
 /*
  * End of ici.h export. --ici.h-end--

@@ -16,7 +16,7 @@
 #endif
 
 static void
-objname_cfunc(object_t *o, char p[ICI_OBJNAMEZ])
+objname_cfunc(ici_obj_t *o, char p[ICI_OBJNAMEZ])
 {
     char    *n;
 
@@ -32,18 +32,18 @@ objname_cfunc(object_t *o, char p[ICI_OBJNAMEZ])
  * See comments on t_mark() in object.h.
  */
 static unsigned long
-mark_cfunc(object_t *o)
+mark_cfunc(ici_obj_t *o)
 {
     o->o_flags |= O_MARK;
-    return sizeof(cfunc_t);
+    return sizeof(ici_cfunc_t);
 }
 
 /*
  * Return the object at key k of the obejct o, or NULL on error.
  * See the comment on t_fetch in object.h.
  */
-static object_t *
-fetch_cfunc(object_t *o, object_t *k)
+static ici_obj_t *
+fetch_cfunc(ici_obj_t *o, ici_obj_t *k)
 {
     if (k == SSO(name))
         return objof(ici_str_get_nul_term(cfuncof(o)->cf_name));
@@ -54,7 +54,7 @@ fetch_cfunc(object_t *o, object_t *k)
  * ici_assign_cfuncs
  *
  * Assign the structure s all the intrinsic functions listed in the array
- * of cfunc_t structures pointed to by cf. The array must be terminated by
+ * of ici_cfunc_t structures pointed to by cf. The array must be terminated by
  * an entry with a cf_name of NULL. Typically, entries in the array are
  * formated as:
  *
@@ -68,9 +68,9 @@ fetch_cfunc(object_t *o, object_t *k)
  * Returns non-zero on error, in which case error is set, else zero.
  */
 int
-ici_assign_cfuncs(objwsup_t *s, cfunc_t *cf)
+ici_assign_cfuncs(ici_objwsup_t *s, ici_cfunc_t *cf)
 {
-    string_t    *n;
+    ici_str_t   *n;
 
     while (cf->cf_name != NULL)
     {
@@ -82,7 +82,7 @@ ici_assign_cfuncs(objwsup_t *s, cfunc_t *cf)
              * to using static strings in these initialisations
              * in the ICI core.
              */
-            n = (string_t *)cf->cf_name;
+            n = (ici_str_t *)cf->cf_name;
             cf->cf_name = n->s_chars;
             /* ### should be a decref here? ### */
         }
@@ -111,7 +111,7 @@ ici_assign_cfuncs(objwsup_t *s, cfunc_t *cf)
  * Returns non-zero on error, in which case error is set, else zero.
  */
 int
-ici_def_cfuncs(cfunc_t *cf)
+ici_def_cfuncs(ici_cfunc_t *cf)
 {
     return ici_assign_cfuncs(objwsupof(ici_vs.a_top[-1])->o_super, cf);
 }
@@ -125,10 +125,10 @@ ici_def_cfuncs(cfunc_t *cf)
  * and is used directly as the super. Returns NULL on error, usual
  * conventions. The returned struct has an incref the caller owns.
  */
-objwsup_t *
-ici_class_new(cfunc_t *cf, objwsup_t *super)
+ici_objwsup_t *
+ici_class_new(ici_cfunc_t *cf, ici_objwsup_t *super)
 {
-    objwsup_t           *s;
+    ici_objwsup_t       *s;
 
     if ((s = objwsupof(ici_struct_new())) == NULL)
         return NULL;
@@ -143,14 +143,14 @@ ici_class_new(cfunc_t *cf, objwsup_t *super)
     return s;
 }
 
-objwsup_t *
-ici_module_new(cfunc_t *cf)
+ici_objwsup_t *
+ici_module_new(ici_cfunc_t *cf)
 {
     return ici_class_new(cf, NULL);
 }
 
 static int
-call_cfunc(object_t *o, object_t *subject)
+call_cfunc(ici_obj_t *o, ici_obj_t *subject)
 {
     int                 result;
 
@@ -166,7 +166,7 @@ call_cfunc(object_t *o, object_t *subject)
     return result;
 }
 
-type_t  ici_cfunc_type =
+ici_type_t  ici_cfunc_type =
 {
     mark_cfunc,
     NULL, /* No free. Only statically declared, not allocated. */

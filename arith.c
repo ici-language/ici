@@ -79,7 +79,7 @@ ici_binop_name(int op)
  * See the comment in binop.h.
  */
 int
-ici_op_binop(object_t *o)
+ici_op_binop(ici_obj_t *o)
 {
 #include "binop.h"
     return 0;

@@ -1,8 +1,8 @@
 #ifndef ICI_CONF_H
 #define ICI_CONF_H
 
-#define float_t ici_float_t
-#define int_t ici_int_t
+#define ici_float_t ici_float_t
+#define ici_int_t ici_int_t
 
 #include <sys/param.h>
 #undef isset

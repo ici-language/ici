@@ -34,7 +34,7 @@
 /*
  * The ICI object that this dialog displays.
  */
-object_t *root_object;
+ici_obj_t *root_object;
 
 
 /*
@@ -42,7 +42,7 @@ object_t *root_object;
  * in the future), then this points to it.  Yucky global variables are kind
  * of necessary with C Win32 programming.
  */
-object_t *to_edit;
+ici_obj_t *to_edit;
 
 
 /*
@@ -55,9 +55,9 @@ HWND widb_dialog_parent;
 /*
  * Prototypes for functions defined within this file.
  */
-static void add_item_children(HWND hDlg, HTREEITEM parent, object_t *parent_o);
-static void display_mem_use(object_t *o, HWND hDlg, HWND tree, HTREEITEM tv_item);
-static void edit_object(object_t *o, HWND parent);
+static void add_item_children(HWND hDlg, HTREEITEM parent, ici_obj_t *parent_o);
+static void display_mem_use(ici_obj_t *o, HWND hDlg, HWND tree, HTREEITEM tv_item);
+static void edit_object(ici_obj_t *o, HWND parent);
 static LRESULT CALLBACK edit_string_wnd_proc
 (
     HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
@@ -69,20 +69,20 @@ static LRESULT CALLBACK edit_string_wnd_proc
  * and its children.
  *
  * Parameters:
- *  funcs       A struct that maps func_t's to profilecall_t's.
+ *  funcs       A struct that maps ici_func_t's to profilecall_t's.
  *  pc          The call graph.  This function recursively calls itself
  *              and this is the tree being traversed.
  */
 static void
-func_totals(struct_t *funcs, profilecall_t *pc)
+func_totals(ici_struct_t *funcs, profilecall_t *pc)
 {
     /* Iterate through the functions called from this function, looking
      * for primitives and recursing. */
     int i;
     for (i = 0; i < pc->pc_calls->s_nslots; ++ i)
     {
-        slot_t *sl;
-        func_t *f;
+        ici_sslot_t*sl;
+        ici_func_t *f;
 
         /* Does this slot have anything in it? */
         sl = &pc->pc_calls->s_slots[i];
@@ -139,7 +139,7 @@ func_totals(struct_t *funcs, profilecall_t *pc)
  * excluding that taken by its children.
  *
  * Parameters:
- *  funcs       A profilecall_t that maps func_t's to profilecall_t's.
+ *  funcs       A profilecall_t that maps ici_func_t's to profilecall_t's.
  *  pc          The call graph.  This function recursively calls itself
  *              and this is the tree being traversed.
  */
@@ -151,8 +151,8 @@ func_intrinsic_totals(profilecall_t *funcs, profilecall_t *pc)
     int i;
     for (i = 0; i < pc->pc_calls->s_nslots; ++ i)
     {
-        slot_t *sl;
-        func_t *f;
+        ici_sslot_t*sl;
+        ici_func_t *f;
 
         /* Does this slot have anything in it? */
         sl = &pc->pc_calls->s_slots[i];
@@ -183,7 +183,7 @@ func_intrinsic_totals(profilecall_t *funcs, profilecall_t *pc)
             /* Remove any time taken by functions it called. */
             for (j = 0; j < called->pc_calls->s_nslots; ++ j)
             {
-                slot_t *j_sl;
+                ici_sslot_t*j_sl;
 
                 /* Does this slot have anything in it? */
                 j_sl = &called->pc_calls->s_slots[j];
@@ -207,8 +207,8 @@ func_intrinsic_totals(profilecall_t *funcs, profilecall_t *pc)
 static void
 profile_done_callback(profilecall_t *pc)
 {
-    object_t *profile, *name;
-    struct_t *totals;
+    ici_obj_t *profile, *name;
+    ici_struct_t *totals;
     profilecall_t *intrinsic_totals;
 
     /* Create a struct that will hold the different versions of the
@@ -246,7 +246,7 @@ profile_done_callback(profilecall_t *pc)
         int i;
         for (i = 0; i < intrinsic_totals->pc_calls->s_nslots; ++ i)
         {
-            slot_t *sl;
+            ici_sslot_t*sl;
 
             /* Does this slot have anything in it? */
             sl = &intrinsic_totals->pc_calls->s_slots[i];
@@ -317,7 +317,7 @@ WIDB_set_dialog_parent(HWND dialog_parent)
  * Returns a text representation of a simple ICI data type.
  */
 static char const *
-get_simple_value(object_t *o)
+get_simple_value(ici_obj_t *o)
 {
     static char retval[256];
 
@@ -388,11 +388,11 @@ safe_strncpy(char *target, char const *source, size_t count)
  * Recursively fills a tree view control with the contents of an ICI object.
  */
 static void
-add_item(HWND hDlg, HTREEITEM parent, object_t *o, int expand)
+add_item(HWND hDlg, HTREEITEM parent, ici_obj_t *o, int expand)
 {
     char value[256];
     TV_INSERTSTRUCT insert;
-    object_t *object_to_expand;
+    ici_obj_t *object_to_expand;
     HTREEITEM new_item;
     BOOL has_children;
 
@@ -404,7 +404,7 @@ add_item(HWND hDlg, HTREEITEM parent, object_t *o, int expand)
     //  name = value (the name portion can't be expanded).
     if (isptr(o))
     {
-        ptr_t *p = ptrof(o);
+        ici_ptr_t *p = ptrof(o);
         safe_strncpy(value, get_simple_value(p->p_key), sizeof(value));
         strncat(value, " = ", sizeof(value) - strlen(value) - 1);
         object_to_expand = ici_fetch(p->p_aggr, p->p_key);
@@ -457,16 +457,16 @@ add_item(HWND hDlg, HTREEITEM parent, object_t *o, int expand)
 
 
 /*
- * Comparison function used by qsort().  Compares two object_t's.
+ * Comparison function used by qsort().  Compares two ici_obj_t's.
  *
- * Non-strings sort first by object_t*, strings sort alphabetically.
+ * Non-strings sort first by ici_obj_t*, strings sort alphabetically.
  */
 static int
 objcmp(void const *elem1, void const *elem2)
 {
     int type1, type2;
-    object_t *o1 = *(object_t **)elem1;
-    object_t *o2 = *(object_t **)elem2;
+    ici_obj_t *o1 = *(ici_obj_t **)elem1;
+    ici_obj_t *o2 = *(ici_obj_t **)elem2;
     char        n1[30];
     char        n2[30];
 
@@ -518,7 +518,7 @@ objcmp(void const *elem1, void const *elem2)
  * See add_item();
  */
 static void
-add_item_children(HWND hDlg, HTREEITEM parent, object_t *parent_o)
+add_item_children(HWND hDlg, HTREEITEM parent, ici_obj_t *parent_o)
 {
     // If its children have already been added then stop here,
     // otherwise there will be extra copies.
@@ -537,9 +537,9 @@ add_item_children(HWND hDlg, HTREEITEM parent, object_t *parent_o)
 
     if (isstruct(parent_o))
     {
-        struct_t *s;
+        ici_struct_t *s;
         int i, nels_sorted = 0, sorted_i;
-        object_t **sorted;
+        ici_obj_t **sorted;
 
         // This is a structure, we must create pointer objects for every
         // member and recursively add them.
@@ -552,22 +552,22 @@ add_item_children(HWND hDlg, HTREEITEM parent, object_t *parent_o)
         }
 
         // Make an array containing everything in the struct.
-        sorted = (object_t **)malloc(sizeof(object_t *) * s->s_nslots);
+        sorted = (ici_obj_t **)malloc(sizeof(ici_obj_t *) * s->s_nslots);
         for (i = 0; i < s->s_nslots; i ++)
         {
             // Only add hash elements that actually exist.
-            object_t *element = s->s_slots[i].sl_key;
+            ici_obj_t *element = s->s_slots[i].sl_key;
             if (element != NULL)
                 sorted[nels_sorted ++] = element;
         }
 
         // Sort the array.
-        qsort(sorted, nels_sorted, sizeof(object_t *), objcmp);
+        qsort(sorted, nels_sorted, sizeof(ici_obj_t *), objcmp);
 
         // Add the items to the control.
         for (sorted_i = 0; sorted_i < nels_sorted; ++ sorted_i)
         {
-            object_t *element = objof(ici_ptr_new(parent_o, sorted[sorted_i]));
+            ici_obj_t *element = objof(ici_ptr_new(parent_o, sorted[sorted_i]));
             _ASSERT(element != NULL);
             add_item(hDlg, parent, element, FALSE);
             ici_decref(element);
@@ -576,8 +576,8 @@ add_item_children(HWND hDlg, HTREEITEM parent, object_t *parent_o)
     }
     else if (isarray(parent_o))
     {
-        array_t *a;
-        object_t **e;
+        ici_array_t *a;
+        ici_obj_t **e;
 
         // This is an array, we can simply add every element in it.
         a = arrayof(parent_o);
@@ -588,22 +588,22 @@ add_item_children(HWND hDlg, HTREEITEM parent, object_t *parent_o)
     }
     else if (isset(parent_o))
     {
-        set_t *s;
+        ici_set_t *s;
         int i, nels_sorted = 0, sorted_i;
-        object_t **sorted;
+        ici_obj_t **sorted;
 
         // Make an array containing everything in the set.
         s = setof(parent_o);
-        sorted = (object_t **)malloc(sizeof(object_t *) * s->s_nslots);
+        sorted = (ici_obj_t **)malloc(sizeof(ici_obj_t *) * s->s_nslots);
         for (i = 0; i < s->s_nslots; i ++)
         {
-            object_t *element = s->s_slots[i];
+            ici_obj_t *element = s->s_slots[i];
             if (element != NULL)
                 sorted[nels_sorted ++] = element;
         }
 
         // Sort the array.
-        qsort(sorted, nels_sorted, sizeof(object_t *), objcmp);
+        qsort(sorted, nels_sorted, sizeof(ici_obj_t *), objcmp);
 
         // Add the items to the control.
         for (sorted_i = 0; sorted_i < nels_sorted; ++ sorted_i)
@@ -612,8 +612,8 @@ add_item_children(HWND hDlg, HTREEITEM parent, object_t *parent_o)
     }
     else if (isfunc(parent_o))
     {
-        object_t *name;
-        object_t *element;
+        ici_obj_t *name;
+        ici_obj_t *element;
 
         name = objof(ici_str_new_nul_term("autos"));
         _ASSERT(name != NULL);
@@ -635,22 +635,22 @@ add_item_children(HWND hDlg, HTREEITEM parent, object_t *parent_o)
     {
         // Profile data is display like a structure, but sorted according to
         // totals.
-        struct_t *s;
+        ici_struct_t *s;
         int i, nels_sorted = 0, sorted_i;
-        object_t **sorted;
+        ici_obj_t **sorted;
 
         // This is a structure, we must create pointer objects for every
         // member and recursively add them.
         s = structof(profilecallof(parent_o)->pc_calls);
 
         // Make an containing pairs.  The first item is the profilecall_t,
-        // this is sorted on.  The second item is the func_t, this is added
+        // this is sorted on.  The second item is the ici_func_t, this is added
         // to this branch of the list for expansion after sorting.
-        sorted = (object_t **)malloc(sizeof(object_t *) * 2 * s->s_nslots);
+        sorted = (ici_obj_t **)malloc(sizeof(ici_obj_t *) * 2 * s->s_nslots);
         for (i = 0; i < s->s_nslots; i ++)
         {
             // Only add hash elements that actually exist.
-            object_t *element = s->s_slots[i].sl_key;
+            ici_obj_t *element = s->s_slots[i].sl_key;
             if (element != NULL)
             {
                 sorted[nels_sorted * 2] = s->s_slots[i].sl_value;
@@ -660,12 +660,12 @@ add_item_children(HWND hDlg, HTREEITEM parent, object_t *parent_o)
         }
 
         // Sort the array.
-        qsort(sorted, nels_sorted, sizeof(object_t *) * 2, objcmp);
+        qsort(sorted, nels_sorted, sizeof(ici_obj_t *) * 2, objcmp);
 
         // Add the items to the control.
         for (sorted_i = 0; sorted_i < nels_sorted; ++ sorted_i)
         {
-            object_t *element = objof
+            ici_obj_t *element = objof
                                 (
                                     ici_ptr_new(objof(s),
                                     sorted[sorted_i * 2 + 1])
@@ -683,17 +683,17 @@ add_item_children(HWND hDlg, HTREEITEM parent, object_t *parent_o)
  * Returns:
  *  The ICI object associated with a particular node in the tree view control.
  */
-static object_t *
+static ici_obj_t *
 get_obj_from_tv_item(HWND tree, HTREEITEM tv_item)
 {
     TVITEM item;
-    object_t *o;
+    ici_obj_t *o;
 
     _ASSERT(tree != NULL && tv_item != NULL);
     item.hItem = tv_item;
     item.mask = TVIF_PARAM;
     VERIFY(TreeView_GetItem(tree, &item));
-    o = (object_t *)item.lParam;
+    o = (ici_obj_t *)item.lParam;
     _ASSERT(o != NULL);
     return o;
 }
@@ -718,7 +718,7 @@ static LRESULT CALLBACK tree_wnd_proc
                 case 'm':
                 {
                     HTREEITEM sel;
-                    object_t *sel_obj;
+                    ici_obj_t *sel_obj;
 
                     // Which object is currently selected?
                     sel = TreeView_GetSelection(hWnd);
@@ -734,7 +734,7 @@ static LRESULT CALLBACK tree_wnd_proc
                 {
                     unsigned long used_mem, uncollected_mem;
                     char usage[100];
-                    object_t **a;
+                    ici_obj_t **a;
 
                     // What's the total memory used by ICI structures?
                     // Find out how much memory is in this object.
@@ -830,15 +830,15 @@ static LRESULT CALLBACK view_object_wnd_proc
                     case TVN_ITEMEXPANDING:
                     {
                         NMTREEVIEW *pnmtv;
-                        object_t *to_expand;
+                        ici_obj_t *to_expand;
 
                         pnmtv = (NMTREEVIEW *)lParam;
-                        to_expand = (object_t *)pnmtv->itemNew.lParam;
+                        to_expand = (ici_obj_t *)pnmtv->itemNew.lParam;
                         if (isptr(to_expand))
                         {
                             // We choose to expand the thing being pointed
                             // to, this is the commonly useful case.
-                            ptr_t *p = ptrof(to_expand);
+                            ici_ptr_t *p = ptrof(to_expand);
                             to_expand = ici_fetch(p->p_aggr, p->p_key);
                             _ASSERT(to_expand != NULL && !isnull(to_expand));
                         }
@@ -888,7 +888,7 @@ static LRESULT CALLBACK view_object_wnd_proc
  *              NULL if WIDB_set_dialog_parent() has previously been called.
  */
 void
-WIDB_view_object(object_t *o, HWND parent)
+WIDB_view_object(ici_obj_t *o, HWND parent)
 {
     int result;
 
@@ -933,11 +933,11 @@ WIDB_view_object(object_t *o, HWND parent)
  *  tv_item     The selected item in the tree view.
  */
 static void
-display_mem_use(object_t *o, HWND hDlg, HWND tree, HTREEITEM tv_item)
+display_mem_use(ici_obj_t *o, HWND hDlg, HWND tree, HTREEITEM tv_item)
 {
     unsigned long obj_mem, atomic_mem;
     char usage[100];
-    object_t **a;
+    ici_obj_t **a;
 
     //
     // Show memory usage.
@@ -952,10 +952,10 @@ display_mem_use(object_t *o, HWND hDlg, HWND tree, HTREEITEM tv_item)
         parent = tv_item;
         while ((parent = TreeView_GetParent(tree, parent)) != NULL)
         {
-            object_t *parent_o = get_obj_from_tv_item(tree, parent);
+            ici_obj_t *parent_o = get_obj_from_tv_item(tree, parent);
             if (isptr(parent_o))
             {
-                ptr_t *p = ptrof(parent_o);
+                ici_ptr_t *p = ptrof(parent_o);
                 parent_o = ici_fetch(p->p_aggr, p->p_key);
             }
             parent_o->o_flags |= O_MARK;
@@ -967,7 +967,7 @@ display_mem_use(object_t *o, HWND hDlg, HWND tree, HTREEITEM tv_item)
     // being pointed at.
     if (isptr(o))
     {
-        ptr_t *p = ptrof(o);
+        ici_ptr_t *p = ptrof(o);
         o = ici_fetch(p->p_aggr, p->p_key);
     }
 
@@ -1018,13 +1018,13 @@ display_mem_use(object_t *o, HWND hDlg, HWND tree, HTREEITEM tv_item)
  *  parent      The parent for any dialogs we raise.
  */
 static void
-edit_object(object_t *o, HWND parent)
+edit_object(ici_obj_t *o, HWND parent)
 {
     // We can only edit strings, and they're always
     // embedded in some struct as a pointer.
     if (isptr(o))
     {
-        ptr_t *p;
+        ici_ptr_t *p;
 
         p = ptrof(o);
         to_edit = ici_fetch(p->p_aggr, p->p_key);

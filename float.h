@@ -10,10 +10,10 @@
  */
 struct ici_float
 {
-    object_t    o_head;
+    ici_obj_t   o_head;
     double      f_value;
 };
-#define floatof(o)      ((float_t *)o)
+#define floatof(o)      ((ici_float_t *)o)
 #define isfloat(o)      ((o)->o_tcode == TC_FLOAT)
 /*
  * End of ici.h export. --ici.h-end--

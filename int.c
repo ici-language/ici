@@ -2,17 +2,17 @@
 #include "int.h"
 #include "primes.h"
 
-int_t                       *ici_small_ints[32];
+ici_int_t                   *ici_small_ints[32];
 
 /*
  * Mark this and referenced unmarked objects, return memory costs.
  * See comments on t_mark() in object.h.
  */
 static unsigned long
-mark_int(object_t *o)
+mark_int(ici_obj_t *o)
 {
     o->o_flags |= O_MARK;
-    return sizeof(int_t);
+    return sizeof(ici_int_t);
 }
 
 /*
@@ -20,7 +20,7 @@ mark_int(object_t *o)
  * See the comments on t_cmp() in object.h.
  */
 static int
-cmp_int(object_t *o1, object_t *o2)
+cmp_int(ici_obj_t *o1, ici_obj_t *o2)
 {
     return intof(o1)->i_value != intof(o2)->i_value;
 }
@@ -30,7 +30,7 @@ cmp_int(object_t *o1, object_t *o2)
  * See the comment on t_hash() in object.h
  */
 static unsigned long
-hash_int(object_t *o)
+hash_int(ici_obj_t *o)
 {
     /*
      * There are in-line versions of this in object.c and binop.h.
@@ -43,9 +43,9 @@ hash_int(object_t *o)
  * See the comments on t_free() in object.h.
  */
 static void
-free_int(object_t *o)
+free_int(ici_obj_t *o)
 {
-    ici_tfree(o, int_t);
+    ici_tfree(o, ici_int_t);
 }
 
 
@@ -53,11 +53,11 @@ free_int(object_t *o)
  * Return the int object with the value v. The returned object has had
  * its ref count incremented.
  */
-int_t *
+ici_int_t *
 ici_int_new(long i)
 {
-    object_t            *o;
-    object_t            **po;
+    ici_obj_t           *o;
+    ici_obj_t           **po;
 
     if ((i & ~ICI_SMALL_INT_MASK) == 0 && (o = objof(ici_small_ints[i])) != NULL)
     {
@@ -78,12 +78,12 @@ ici_int_new(long i)
         }
     }
     ++ici_supress_collect;
-    if ((o = objof(ici_talloc(int_t))) == NULL)
+    if ((o = objof(ici_talloc(ici_int_t))) == NULL)
     {
         --ici_supress_collect;
         return NULL;
     }
-    ICI_OBJ_SET_TFNZ(o, TC_INT, O_ATOM, 1, sizeof(int_t));
+    ICI_OBJ_SET_TFNZ(o, TC_INT, O_ATOM, 1, sizeof(ici_int_t));
     ici_rego(o);
     intof(o)->i_value = i;
     --ici_supress_collect;
@@ -91,7 +91,7 @@ ici_int_new(long i)
     return intof(o);
 }
 
-type_t  int_type =
+ici_type_t  int_type =
 {
     mark_int,
     free_int,

@@ -15,12 +15,12 @@
  */
 struct context
 {
-    object_t    **c_dlimit;
+    ici_obj_t   **c_dlimit;
     int         c_dstep;
     char        c_option;
-    object_t    **c_cstart;
-    object_t    **c_climit;
-    object_t    **c_cnext;
+    ici_obj_t   **c_cstart;
+    ici_obj_t   **c_climit;
+    ici_obj_t   **c_cnext;
     long        c_ccount;
     long        c_cstep;
 };
@@ -54,7 +54,7 @@ struct context
  * independent of the recursion. See above.
  */
 static int
-buildxx(object_t **r, object_t **dnext, struct context *c)
+buildxx(ici_obj_t **r, ici_obj_t **dnext, struct context *c)
 {
     int         i;
     char        n1[30];
@@ -125,7 +125,7 @@ buildxx(object_t **r, object_t **dnext, struct context *c)
     }
     if (isint(*dnext))
     {
-        array_t         *a;
+        ici_array_t     *a;
         int             n;
 
         /*
@@ -149,10 +149,10 @@ buildxx(object_t **r, object_t **dnext, struct context *c)
     }
     else if (isarray(*dnext))
     {
-        array_t         *a;
-        struct_t        *s;
-        object_t        **e;
-        object_t        *o;
+        ici_array_t     *a;
+        ici_struct_t    *s;
+        ici_obj_t       **e;
+        ici_obj_t       *o;
 
         /*
          * We have an array dimension. This means a struct with the elements
@@ -193,10 +193,10 @@ buildxx(object_t **r, object_t **dnext, struct context *c)
 static int
 f_build()
 {
-    object_t            **dstart;
+    ici_obj_t           **dstart;
     int                 i;
-    object_t            *r;
-    object_t            *default_content;
+    ici_obj_t           *r;
+    ici_obj_t           *default_content;
     char                n1[30];
     struct context      c;
 
@@ -266,7 +266,7 @@ f_build()
     return ici_ret_with_decref(r);
 }
 
-cfunc_t ici_apl_funcs[] =
+ici_cfunc_t ici_apl_funcs[] =
 {
     {CF_OBJ,    (char *)SS(build),        f_build},
     {CF_OBJ}

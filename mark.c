@@ -6,13 +6,13 @@
  * See comments on t_mark() in object.h.
  */
 static unsigned long
-mark_mark(object_t *o)
+mark_mark(ici_obj_t *o)
 {
     o->o_flags |= O_MARK;
-    return sizeof(mark_t);
+    return sizeof(ici_mark_t);
 }
 
-type_t  mark_type =
+ici_type_t  mark_type =
 {
     mark_mark,
     NULL,
@@ -24,4 +24,4 @@ type_t  mark_type =
     "mark"
 };
 
-mark_t  o_mark  = {OBJ(TC_MARK)};
+ici_mark_t  o_mark  = {OBJ(TC_MARK)};

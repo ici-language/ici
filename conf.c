@@ -2,32 +2,32 @@
 #include "fwd.h"
 #include "func.h"
 
-extern cfunc_t  std_cfuncs[];
-extern cfunc_t  ici_re_funcs[];
-extern cfunc_t  ici_oo_funcs[];
-extern cfunc_t  ici_apl_funcs[];
-extern cfunc_t  clib_cfuncs[];
-extern cfunc_t  extra_cfuncs[];
-extern cfunc_t  load_cfuncs[];
+extern ici_cfunc_t  std_cfuncs[];
+extern ici_cfunc_t  ici_re_funcs[];
+extern ici_cfunc_t  ici_oo_funcs[];
+extern ici_cfunc_t  ici_apl_funcs[];
+extern ici_cfunc_t  clib_cfuncs[];
+extern ici_cfunc_t  extra_cfuncs[];
+extern ici_cfunc_t  load_cfuncs[];
 
 #ifndef NOTRACE
-extern cfunc_t  trace_cfuncs[];
+extern ici_cfunc_t  trace_cfuncs[];
 #endif
 #ifndef NOEVENTS
-extern cfunc_t  ici_event_cfuncs[];
+extern ici_cfunc_t  ici_event_cfuncs[];
 #endif
 #ifndef NOPROFILE
-extern cfunc_t  ici_profile_cfuncs[];
+extern ici_cfunc_t  ici_profile_cfuncs[];
 #endif
 #ifndef NOSIGNALS
-extern cfunc_t  ici_signals_cfuncs[];
+extern ici_cfunc_t  ici_signals_cfuncs[];
 #endif
 #ifndef NODEBUGGING
-extern cfunc_t  ici_debug_cfuncs[];
+extern ici_cfunc_t  ici_debug_cfuncs[];
 #endif
-extern cfunc_t  ici_thread_cfuncs[];
+extern ici_cfunc_t  ici_thread_cfuncs[];
 
-cfunc_t *funcs[] =
+ici_cfunc_t *funcs[] =
 {
     std_cfuncs,
     ici_re_funcs,

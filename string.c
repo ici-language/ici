@@ -10,7 +10,7 @@
  * How many bytes of memory we need for a string of n chars (single
  * allocation).
  */
-#define STR_ALLOCZ(n)   (offsetof(string_t, s_u) + (n) + 1)
+#define STR_ALLOCZ(n)   (offsetof(ici_str_t, s_u) + (n) + 1)
 
 /*
  * Allocate a new string object (single allocation) large enough to hold
@@ -20,14 +20,14 @@
  * WARINING: This is *not* the normal way to make a string object. See other
  * functions below.
  */
-string_t *
+ici_str_t *
 ici_str_alloc(int nchars)
 {
-    register string_t   *s;
+    register ici_str_t  *s;
     size_t              az;
 
     az = STR_ALLOCZ(nchars);
-    if ((s = (string_t *)ici_nalloc(az)) == NULL)
+    if ((s = (ici_str_t *)ici_nalloc(az)) == NULL)
         return NULL;
     ICI_OBJ_SET_TFNZ(s, TC_STRING, 0, 1, az <= 127 ? az : 0);
     s->s_chars = s->s_u.su_inline_chars;
@@ -50,14 +50,14 @@ ici_str_alloc(int nchars)
  * larger than the listed size and the extra byte contains a '\0'.  For
  * when a C string is needed.
  */
-string_t *
+ici_str_t *
 ici_str_new(char *p, int nchars)
 {
-    string_t            *s;
+    ici_str_t           *s;
     size_t              az;
     static struct
     {
-        string_t        s;
+        ici_str_t       s;
         char            d[40];
     }
         proto   = {{OBJ(TC_STRING)}};
@@ -66,7 +66,7 @@ ici_str_new(char *p, int nchars)
     az = STR_ALLOCZ(nchars);
     if ((size_t)nchars < sizeof proto.d)
     {
-        object_t        **po;
+        ici_obj_t       **po;
 
         proto.s.s_nchars = nchars;
         proto.s.s_chars = proto.s.s_u.su_inline_chars;
@@ -82,7 +82,7 @@ ici_str_new(char *p, int nchars)
         }
         ++ici_supress_collect;
         az = STR_ALLOCZ(nchars);
-        if ((s = (string_t *)ici_nalloc(az)) == NULL)
+        if ((s = (ici_str_t *)ici_nalloc(az)) == NULL)
             return NULL;
         memcpy((char *)s, (char *)&proto.s, az);
         ICI_OBJ_SET_TFNZ(s, TC_STRING, O_ATOM, 1, az);
@@ -92,7 +92,7 @@ ici_str_new(char *p, int nchars)
         ICI_STORE_ATOM_AND_COUNT(po, s);
         return s;
     }
-    if ((s = (string_t *)ici_nalloc(az)) == NULL)
+    if ((s = (ici_str_t *)ici_nalloc(az)) == NULL)
         return NULL;
     ICI_OBJ_SET_TFNZ(s, TC_STRING, 0, 1, az <= 127 ? az : 0);
     s->s_chars = s->s_u.su_inline_chars;
@@ -109,10 +109,10 @@ ici_str_new(char *p, int nchars)
     return stringof(ici_atom(objof(s), 1));
 }
 
-string_t *
+ici_str_t *
 ici_str_new_nul_term(char *p)
 {
-    register string_t   *s;
+    register ici_str_t  *s;
 
     if ((s = ici_str_new(p, strlen(p))) == NULL)
         return NULL;
@@ -122,10 +122,10 @@ ici_str_new_nul_term(char *p)
 /*
  * Same as ici_str_new_nul_term(), except the result is decref.
  */
-string_t *
+ici_str_t *
 ici_str_get_nul_term(char *p)
 {
-    string_t    *s;
+    ici_str_t   *s;
 
     if ((s = ici_str_new(p, strlen(p))) == NULL)
         return NULL;
@@ -138,16 +138,16 @@ ici_str_get_nul_term(char *p)
  * The initially allocated space is n, but the length is 0 until it has been
  * set by the caller.
  */
-string_t *
+ici_str_t *
 ici_str_buf_new(int n)
 {
-    string_t            *s;
+    ici_str_t           *s;
 
-    if ((s = ici_talloc(string_t)) == NULL)
+    if ((s = ici_talloc(ici_str_t)) == NULL)
         return NULL;
     if ((s->s_chars = ici_nalloc(n)) == NULL)
     {
-        ici_tfree(s, string_t);
+        ici_tfree(s, ici_str_t);
         return NULL;
     }
     ICI_OBJ_SET_TFNZ(s, TC_STRING, ICI_S_SEP_ALLOC, 1, 0);
@@ -167,7 +167,7 @@ ici_str_buf_new(int n)
  * Checks that the string is mutable and not atomic.
  */
 int
-ici_str_need_size(string_t *s, int n)
+ici_str_need_size(ici_str_t *s, int n)
 {
     char                *chars;
     char                n1[30];
@@ -196,7 +196,7 @@ ici_str_need_size(string_t *s, int n)
  * See comments on t_mark() in object.h.
  */
 static unsigned long
-mark_string(object_t *o)
+mark_string(ici_obj_t *o)
 {
     o->o_flags |= O_MARK;
     return STR_ALLOCZ(stringof(o)->s_nchars);
@@ -207,7 +207,7 @@ mark_string(object_t *o)
  * See the comments on t_cmp() in object.h.
  */
 static int
-cmp_string(object_t *o1, object_t *o2)
+cmp_string(ici_obj_t *o1, ici_obj_t *o2)
 {
     if (stringof(o1)->s_nchars != stringof(o2)->s_nchars)
         return 1;
@@ -223,10 +223,10 @@ cmp_string(object_t *o1, object_t *o2)
  * Return a copy of the given object, or NULL on error.
  * See the comment on t_copy() in object.h.
  */
-static object_t *
-copy_string(object_t *o)
+static ici_obj_t *
+copy_string(ici_obj_t *o)
 {
-    string_t            *ns;
+    ici_str_t           *ns;
 
     if ((ns = ici_str_buf_new(stringof(o)->s_nchars + 1)) == NULL)
         return NULL;
@@ -241,7 +241,7 @@ copy_string(object_t *o)
  * See the comments on t_free() in object.h.
  */
 static void
-free_string(object_t *o)
+free_string(ici_obj_t *o)
 {
     if (o->o_flags & ICI_S_SEP_ALLOC)
         ici_nfree(stringof(o)->s_chars, stringof(o)->s_u.su_nalloc);
@@ -253,7 +253,7 @@ free_string(object_t *o)
  * See the comment on t_hash() in object.h
  */
 unsigned long
-ici_hash_string(object_t *o)
+ici_hash_string(ici_obj_t *o)
 {
     unsigned long       h;
 
@@ -272,8 +272,8 @@ ici_hash_string(object_t *o)
  * Return the object at key k of the obejct o, or NULL on error.
  * See the comment on t_fetch in object.h.
  */
-static object_t *
-fetch_string(object_t *o, object_t *k)
+static ici_obj_t *
+fetch_string(ici_obj_t *o, ici_obj_t *k)
 {
     register int        i;
 
@@ -296,11 +296,11 @@ fetch_string(object_t *o, object_t *k)
  * to accomodate the new index as necessary.
  */
 static int
-assign_string(object_t *o, object_t *k, object_t *v)
+assign_string(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v)
 {
     long        i;
     long        n;
-    string_t    *s;
+    ici_str_t   *s;
 
     if (o->o_flags & O_ATOM)
     {
@@ -330,7 +330,7 @@ assign_string(object_t *o, object_t *k, object_t *v)
 }
 
 
-type_t  string_type =
+ici_type_t  string_type =
 {
     mark_string,
     free_string,

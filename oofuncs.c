@@ -21,7 +21,7 @@
  * code. Else return 1 and set error appropriately.
  */
 int
-ici_method_check(object_t *o, int tcode)
+ici_method_check(ici_obj_t *o, int tcode)
 {
     char        n1[30];
     char        n2[30];
@@ -48,9 +48,9 @@ ici_method_check(object_t *o, int tcode)
  * Implemantation of the ICI new method.
  */
 static int
-m_new(object_t *o)
+m_new(ici_obj_t *o)
 {
-    struct_t    *s;
+    ici_struct_t    *s;
 
     if (ici_method_check(o, 0))
         return 1;
@@ -61,10 +61,10 @@ m_new(object_t *o)
 }
 
 static int
-m_isa(object_t *o)
+m_isa(ici_obj_t *o)
 {
-    objwsup_t   *s;
-    object_t    *class;
+    ici_objwsup_t   *s;
+    ici_obj_t   *class;
 
     if (ici_method_check(o, 0))
         return 1;
@@ -79,10 +79,10 @@ m_isa(object_t *o)
 }
 
 static int
-m_respondsto(object_t *o)
+m_respondsto(ici_obj_t *o)
 {
-    object_t    *classname;
-    object_t    *v;
+    ici_obj_t   *classname;
+    ici_obj_t   *v;
 
     if (ici_method_check(o, 0))
         return 1;
@@ -95,7 +95,7 @@ m_respondsto(object_t *o)
     return ici_ret_no_decref(objof(ici_zero));
 }
 
-cfunc_t ici_oo_funcs[] =
+ici_cfunc_t ici_oo_funcs[] =
 {
     {CF_OBJ,    (char *)SS(new),          m_new},
     {CF_OBJ,    (char *)SS(isa),          m_isa},

@@ -73,13 +73,13 @@
  */
 struct ici_array
 {
-    object_t    o_head;
-    object_t    **a_top;    /* The next free slot. */
-    object_t    **a_bot;    /* The first used slot. */
-    object_t    **a_base;   /* The base of allocation. */
-    object_t    **a_limit;  /* Allocation limit, first one you can't use. */
+    ici_obj_t   o_head;
+    ici_obj_t   **a_top;    /* The next free slot. */
+    ici_obj_t   **a_bot;    /* The first used slot. */
+    ici_obj_t   **a_base;   /* The base of allocation. */
+    ici_obj_t   **a_limit;  /* Allocation limit, first one you can't use. */
 };
-#define arrayof(o)  ((array_t *)(o))
+#define arrayof(o)  ((ici_array_t *)(o))
 #define isarray(o)  ((o)->o_tcode == TC_ARRAY)
 
 /*

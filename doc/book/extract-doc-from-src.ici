@@ -12,9 +12,9 @@
  * Rules:
  * * No tabs, only spaces.
  */
-//widb.break();
+static verbose = argv[1] == "-v";
 srcdir := "../..";
-files := dir(srcdir, #.*\.[chCH]#);
+files := dir(srcdir, #.*\.[chCH]$#);
 
 static
 strcatf(str)
@@ -27,7 +27,19 @@ strcatf(str)
 static
 index(entry, subtext)
 {
+    if (verbose)
+        printf("%s\n", entry);
     return sprintf("<Marker <MType 2> <MText `%s, %s'> >", entry, subtext);
+}
+
+static
+font_subs(s)
+{
+    /*
+     * <non-word>'...'<non-word> changes ... to italic and removes the 's.
+     */
+    s = gsub(s, #(^|\n|\W)'([^']+)'(?=(\W|\n|$))#, "\\1<italic>\\2<noitalic>");
+    return s;
 }
 
 mmls := array();
@@ -35,6 +47,8 @@ mml := strbuf();
 
 forall (file in files)
 {
+    if (file == "ici.h")
+        continue;
     src := getfile(srcdir + "/" + file);
     if (src !~ #--ici-api--#)
     {
@@ -88,7 +102,7 @@ forall (file in files)
             head = gsub(head, # #, "\\ ");
             head = gsub(head, #\n#, "<HardReturn>\n");
             head = gsub(head, #<HardReturn>\n$#, "\n"); /* But not at end. */
-            strcatf(mml, "<CodeIn1cm>\\ <bold>%s<nobold>", head);     
+            strcatf(mml, "<CodeIn1cm>\\ <bold>%s<nobold>\n", head);     
         }
         else if (text ~ #--struct--#)
         {
@@ -108,30 +122,37 @@ forall (file in files)
             head = gsub(head, # #, "\\ ");
             head = gsub(head, #\n#, "<HardReturn>\n");
             head = gsub(head, #<HardReturn>\n$#, "\n"); /* But not at end. */
-            strcatf(mml, "<CodeIn1cm>\\ <bold>%s<nobold>", head);     
+            strcatf(mml, "<CodeIn1cm>\\ <bold>%s<nobold>\n", head);     
         }
         else if (text ~ #--macro--#)
         {
             push(mmls, mml);
             mml := strbuf();
             /*
-             * This is a comment on a maco. Pick up the trailing
+             * This is a comment on a macro. Pick up the trailing
              * macro name (with args, if any). (?s) for dotall, .*? for
              * non-greedy.
+             *
+             * We don't care what the following preprocesor line is (i.e.
+             * it could be an ifdef or a define) as lone as the name is
+             * the next thing.
              */
-            name = src[texti + 1] ~~ #(?s)[ \n]*define *(.*?( |\([^)]*\)))#;
+            name = src[texti + 1] ~~
+                #(?s)\w+ +#                     /* Next word, define or etc. */
+                #(.*?((?=[\n ])|\([^)]*\)))#;    /* name or name(...) */
             head = "#define " + name + "<HardSpace><HardSpace>...";
             name = name ~~ #(\w+)#;
             /*
              * Extract its name and print a Heading2 with it, and its
              * declaraction as code.
              */
-            strcatf(mml, "<Heading2>%s%s\n", index(name, "C API maco"), name);
+            strcatf(mml, "<Heading2>%s%s\n", index(name, "C API macro"), name);
             head = gsub(head, # #, "\\ ");
             head = gsub(head, #\n#, "<HardReturn>\n");
             head = gsub(head, #<HardReturn>\n$#, "\n"); /* But not at end. */
-            strcatf(mml, "<CodeIn1cm>\\ <bold>%s<nobold>", head);     
+            strcatf(mml, "<CodeIn1cm>\\ <bold>%s<nobold>\n", head);     
         }
+        strcatf(mml, "<Comment From %s>\n", file);
         /*
          * Strip the comment text down to its body. This is defined as
          * the lines that start with space then a star, minus the space,
@@ -168,7 +189,7 @@ forall (file in files)
                 else
                     para = para ~~~ #^(.{21})((?s).*)#;
                 para[0] ~~= #(.*\S) *$#;
-                para[1] = gsub(para[1], #'([^']+)'#, "<italic>\\1<noitalic>");
+                para[1] = font_subs(para[1]);
                 strcatf(mml, "<TagIn4cm><italic>%s<noitalic><Tab>%s", 
                     para[0], para[1]);
                 tag = "TagIn4cm";
@@ -179,12 +200,12 @@ forall (file in files)
                  * Indented to column 3+21 = 24, and last paragraph was 
                  * a tagged paragraph. This looks like a continuation.
                  */
-                para = gsub(para, #'([^']+)'#, "<italic>\\1<noitalic>");
+                para = font_subs(para);
                 strcatf(mml, "<TagIn4cm><Tab>%s", para);
             }
             else if (para ~ #^\S#)
             {
-                para = gsub(para, #'([^']+)'#, "<italic>\\1<noitalic>");
+                para = font_subs(para);
                 strcatf(mml, "<Body>%s", para);
                 tag = "Body";
             }
@@ -220,6 +241,7 @@ forall (file in files)
             }
         }
     }
+    push(mmls, mml);
 }
 
 sort(mmls);

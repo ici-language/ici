@@ -72,56 +72,49 @@
     <TH>Platform</TH>
     <TH>Makefile</TH>
     <TH>Config file</TH>
-    <TH>Main runtime files</TH>
-    <TH>Main SDK files</TH>
+    <TH>Make/build produces</TH>
     <TH>Notes</TH>
 </TR>
 <TR ALIGN="left" VALIGN="top">
     <TD>Win32</TD>
     <TD>win32\ici4.dsw or Makefile.w32</TD>
     <TD>conf-w32.h</TD>
-    <TD>ici4.dll, ici.exe, iciw.exe, ici4core*.ici</TD>
-    <TD>ici4.lib, ici.h</TD>
+    <TD>ici4.dll, ici4.lib, ici.h, ici.exe, iciw.exe</TD>
     <TD><A HREF="#ICI_on_Windows">ICI on Microsoft Windows</A></TD>
 </TR>
 <TR ALIGN="left" VALIGN="top">
     <TD>Linux</TD>
     <TD>Makefile.linux</TD>
     <TD>conf-linux.h</TD>
-    <TD>ici.linux, ici4core*.ici</TD>
-    <TD>ici.h, liblinux.a</TD>
+    <TD>liblinux.a, ici.linux, ici.h</TD>
     <TD>&nbsp;</TD>
 </TR>
 <TR ALIGN="left" VALIGN="top">
     <TD>BeOS (x86)</TD>
     <TD>Makefile.beos</TD>
     <TD>conf-beos.h</TD>
-    <TD>ici.beos, ici4core*.ici</TD>
-    <TD>ici.h, libbeos.a</TD>
+    <TD>libbeos.a, ici.beos, ici.h</TD>
     <TD>&nbsp;</TD>
 </TR>
 <TR ALIGN="left" VALIGN="top">
     <TD>BSD</TD>
     <TD>Makefile.bsd</TD>
     <TD>conf-bsd.h</TD>
-    <TD>ici4, ici4core*.ici</TD>
-    <TD>ici.h</TD>
+    <TD>ici4, ici.h</TD>
     <TD><A HREF="#ICI_on_BSD">ICI on BSD Unix</A></TD>
 </TR>
 <TR ALIGN="left" VALIGN="top">
     <TD>Solaris 2</TD>
     <TD>Makefile.sol2</TD>
     <TD>conf-sol2.h</TD>
-    <TD>ici.sol2, ici4core*.ici</TD>
-    <TD>ici.h, libsol2.a</TD>
+    <TD>ici.sol2, libsol2.a, ici.h</TD>
     <TD>&nbsp;</TD>
 </TR>
 <TR ALIGN="left" VALIGN="top">
     <TD>MacOSX</TD>
     <TD>Makefile.osx</TD>
     <TD>conf-osx.h</TD>
-    <TD>ici4, ici4core*.ici</TD>
-    <TD>ici.h, libici4.a</TD>
+    <TD>ici4, libici4.a, ici.h</TD>
     <TD><A HREF="#ICI_on_BSD">ICI on BSD Unix</A></TD>
 </TR>
 </TABLE>
@@ -143,6 +136,32 @@
     To install the interpreter use <I>make -f Makefile.$MACHINE install</I>. This
     installs the interpreter, library, manual pages, documentation, header
     and startup files. See the Makefiles for details.
+    
+<H3>Manifest of a core install on UNIX-like machines</H3>
+<P ALIGN="left">
+ICI would usually be install in /usr/local. From that base,
+the following forms a core run-time installation:
+<PRE>
+bin/ici (linked to bin/ici4)
+bin/ici4
+include/ici.h
+include/icistr-setup.h
+lib/libici4.a
+lib/ici4/ici.pdf
+lib/ici4/ici4core.ici
+lib/ici4/ici4core1.ici
+lib/ici4/ici4core2.ici
+lib/ici4/ici4core3.ici
+man/man1/ici.1
+man/man1/icifuncs.1
+man/man1/icinet.1
+man/man1/icioo.1
+man/man1/iciops.1
+man/man1/icire.1
+man/man1/icistmt.1
+man/man1/icisys.1
+man/man1/icitypes.1
+</PRE>
 
 <A NAME="ICI_on_Windows">
 <H2>ICI on Microsoft Windows</H2>
@@ -177,6 +196,20 @@
     xxx.ici will be inserted as the first argument
     as if it had been provided on the command line. This is a
     kludge to alleviate the lack of #! support under Windows.
+<H3>Manifest of a core install on Windows</H3>
+<P ALIGN="left">
+The following forms a core run-time installation:
+<PRE>
+*system-dir*\ici4.dll
+*system-dir*\ici.exe
+*system-dir*\iciw.exe
+*system-dir*\ici\ici4core.ici
+*system-dir*\ici\ici4core1.ici
+*system-dir*\ici\ici4core2.ici
+*system-dir*\ici\ici4core3.ici
+*system-dir*\ici\ici4widb.dll
+*prog-files*\ICI\ici.pdf
+</PRE>
 
 <A NAME="ICI_on_BSD">
 <H2>ICI on BSD Unix</H2>

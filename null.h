@@ -10,9 +10,9 @@
  */
 struct ici_null_t
 {
-    object_t    o_head;
+    ici_obj_t   o_head;
 };
-#define nullof(o)       ((null_t *)o)
+#define nullof(o)       ((ici_null_t *)o)
 #define isnull(o)       ((o) == objof(&o_null))
 
 /*

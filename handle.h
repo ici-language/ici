@@ -14,9 +14,9 @@
  */
 struct ici_handle
 {
-    objwsup_t   o_head;
+    ici_objwsup_t   o_head;
     void        *h_ptr;
-    string_t    *h_name;
+    ici_str_t   *h_name;
     void        (*h_pre_free)(ici_handle_t *h);
 };
 #define handleof(o)        ((ici_handle_t *)(o))

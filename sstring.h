@@ -1,6 +1,6 @@
 /*
  * Any strings listed in this file may be refered to with SS(name)
- * for a (string_t *), and SSO(name) for an (object_t *). Maximum
+ * for a (ici_str_t *), and SSO(name) for an (ici_obj_t *). Maximum
  * 15 chars per string. Users need to include str.h. Wherever possible,
  * the name and the string should be the same.
  *

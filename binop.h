@@ -11,8 +11,8 @@
  * so it isn't really there.
  */
 {
-    register object_t   *o0;
-    register object_t   *o1;
+    register ici_obj_t  *o0;
+    register ici_obj_t  *o1;
     register long       i;
     double              f;
     int                 can_temp;
@@ -440,7 +440,7 @@
         if (!isint(ptrof(o0)->p_key))
             goto mismatch;
         {
-            object_t    *i;
+            ici_obj_t   *i;
 
             if ((i = objof(ici_int_new(intof(ptrof(o0)->p_key)->i_value
                     - intof(o1)->i_value))) == NULL)
@@ -461,7 +461,7 @@
         if (!isint(ptrof(o0)->p_key))
             goto mismatch;
         {
-            object_t    *i;
+            ici_obj_t   *i;
 
             if ((i = objof(ici_int_new(intof(ptrof(o0)->p_key)->i_value
                     + intof(o1)->i_value))) == NULL)
@@ -495,7 +495,7 @@
     case TRI(TC_ARRAY, TC_ARRAY, T_PLUS):
     case TRI(TC_ARRAY, TC_ARRAY, T_PLUSEQ):
         {
-            array_t     *a;
+            ici_array_t *a;
             ptrdiff_t   z0;
             ptrdiff_t   z1;
 
@@ -514,8 +514,8 @@
     case TRI(TC_STRUCT, TC_STRUCT, T_PLUS):
     case TRI(TC_STRUCT, TC_STRUCT, T_PLUSEQ):
         {
-            register struct_t   *s;
-            register slot_t     *sl;
+            register ici_struct_t   *s;
+            register ici_sslot_t *sl;
             register int        i;
 
             if ((s = structof(copy(o0))) == NULL)
@@ -538,8 +538,8 @@
     case TRI(TC_SET, TC_SET, T_PLUS):
     case TRI(TC_SET, TC_SET, T_PLUSEQ):
         {
-            register set_t      *s;
-            register object_t   **sl;
+            register ici_set_t  *s;
+            register ici_obj_t  **sl;
             register int        i;
 
             if ((s = setof(copy(o0))) == NULL)
@@ -562,8 +562,8 @@
     case TRI(TC_SET, TC_SET, T_MINUS):
     case TRI(TC_SET, TC_SET, T_MINUSEQ):
         {
-            register set_t      *s;
-            register object_t   **sl;
+            register ici_set_t  *s;
+            register ici_obj_t  **sl;
             register int        i;
 
             if ((s = setof(copy(o0))) == NULL)
@@ -586,8 +586,8 @@
     case TRI(TC_SET, TC_SET, T_ASTERIX):
     case TRI(TC_SET, TC_SET, T_ASTERIXEQ):
         {
-            set_t      *s;
-            object_t   **sl;
+            ici_set_t  *s;
+            ici_obj_t  **sl;
             int        i;
 
             if (setof(o0)->s_nels > setof(o1)->s_nels)
@@ -645,8 +645,8 @@
     case TRI(TC_STRING, TC_STRING, T_GRTEQ):
         {
             int         compare;
-            string_t    *s1;
-            string_t    *s2;
+            ici_str_t   *s1;
+            ici_str_t   *s2;
 
             s1 = stringof(o0);
             s2 = stringof(o1);
@@ -744,12 +744,12 @@ usef:
             goto fail;
         if ((o = ici_exec->x_os_temp_cache->a_base[n]) == objof(&o_null))
         {
-            if ((o = objof(ici_talloc(ostemp_t))) == NULL)
+            if ((o = objof(ici_talloc(ici_ostemp_t))) == NULL)
                 goto fail;
             ici_exec->x_os_temp_cache->a_base[n] = o;
             ici_rego(o);
         }
-        ICI_OBJ_SET_TFNZ(o, TC_FLOAT, O_TEMP, 0, sizeof(ostemp_t));
+        ICI_OBJ_SET_TFNZ(o, TC_FLOAT, O_TEMP, 0, sizeof(ici_ostemp_t));
         floatof(o)->f_value = f;
         goto useo;
     }
@@ -766,7 +766,7 @@ usef:
      * In-line expansion of float creation.
      */
     {
-        register object_t       **po;
+        register ici_obj_t      **po;
         double                  v;
         unsigned long           h;
 
@@ -789,12 +789,12 @@ usef:
                 goto useo;
         }
         ++ici_supress_collect;
-        if ((o = objof(ici_talloc(float_t))) == NULL)
+        if ((o = objof(ici_talloc(ici_float_t))) == NULL)
         {
             --ici_supress_collect;
             goto fail;
         }
-        ICI_OBJ_SET_TFNZ(o, TC_FLOAT, O_ATOM, 1, sizeof(float_t));
+        ICI_OBJ_SET_TFNZ(o, TC_FLOAT, O_ATOM, 1, sizeof(ici_float_t));
         floatof(o)->f_value = f;
         ici_rego(o);
         assert(h == hash(o));
@@ -813,12 +813,12 @@ usei:
             goto fail;
         if ((o = ici_exec->x_os_temp_cache->a_base[n]) == objof(&o_null))
         {
-            if ((o = objof(ici_talloc(ostemp_t))) == NULL)
+            if ((o = objof(ici_talloc(ici_ostemp_t))) == NULL)
                 goto fail;
             ici_exec->x_os_temp_cache->a_base[n] = o;
             ici_rego(o);
         }
-        ICI_OBJ_SET_TFNZ(o, TC_INT, O_TEMP, 0, sizeof(ostemp_t));
+        ICI_OBJ_SET_TFNZ(o, TC_INT, O_TEMP, 0, sizeof(ici_ostemp_t));
         intof(o)->i_value = i;
         goto useo;
     }
@@ -832,7 +832,7 @@ usei:
         goto useo;
     }
     {
-        register object_t       **po;
+        register ici_obj_t      **po;
 
         for
         (
@@ -845,12 +845,12 @@ usei:
                 goto useo;
         }
         ++ici_supress_collect;
-        if ((o = objof(ici_talloc(int_t))) == NULL)
+        if ((o = objof(ici_talloc(ici_int_t))) == NULL)
         {
             --ici_supress_collect;
             goto fail;
         }
-        ICI_OBJ_SET_TFNZ(o, TC_INT, O_ATOM, 1, sizeof(int_t));
+        ICI_OBJ_SET_TFNZ(o, TC_INT, O_ATOM, 1, sizeof(ici_int_t));
         intof(o)->i_value = i;
         ici_rego(o);
         --ici_supress_collect;

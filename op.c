@@ -8,10 +8,10 @@
  * See comments on t_mark() in object.h.
  */
 static unsigned long
-mark_op(object_t *o)
+mark_op(ici_obj_t *o)
 {
     o->o_flags |= O_MARK;
-    return sizeof(op_t);
+    return sizeof(ici_op_t);
 }
 
 /*
@@ -19,7 +19,7 @@ mark_op(object_t *o)
  * See the comments on t_cmp() in object.h.
  */
 static int
-cmp_op(object_t *o1, object_t *o2)
+cmp_op(ici_obj_t *o1, ici_obj_t *o2)
 {
     return opof(o1)->op_func != opof(o2)->op_func
         || opof(o1)->op_code != opof(o2)->op_code
@@ -31,7 +31,7 @@ cmp_op(object_t *o1, object_t *o2)
  * See the comment on t_hash() in object.h
  */
 static unsigned long
-hash_op(object_t *o)
+hash_op(ici_obj_t *o)
 {
     return OP_PRIME * ((unsigned long)opof(o)->op_func
         + opof(o)->op_code
@@ -43,17 +43,17 @@ hash_op(object_t *o)
  * See the comments on t_free() in object.h.
  */
 static void
-free_op(object_t *o)
+free_op(ici_obj_t *o)
 {
-    ici_tfree(o, op_t);
+    ici_tfree(o, ici_op_t);
 }
 
-op_t *
+ici_op_t *
 new_op(int (*func)(), int ecode, int code)
 {
-    op_t                *o;
-    object_t            **po;
-    static op_t         proto = {OBJ(TC_OP)};
+    ici_op_t            *o;
+    ici_obj_t           **po;
+    static ici_op_t     proto = {OBJ(TC_OP)};
 
     proto.op_func = func;
     proto.op_code = code;
@@ -64,9 +64,9 @@ new_op(int (*func)(), int ecode, int code)
         return o;
     }
     ++ici_supress_collect;
-    if ((o = ici_talloc(op_t)) == NULL)
+    if ((o = ici_talloc(ici_op_t)) == NULL)
         return NULL;
-    ICI_OBJ_SET_TFNZ(o, TC_OP, O_ATOM, 1, sizeof(op_t));
+    ICI_OBJ_SET_TFNZ(o, TC_OP, O_ATOM, 1, sizeof(ici_op_t));
     o->op_code = code;
     o->op_ecode = ecode;
     o->op_func = func;
@@ -76,7 +76,7 @@ new_op(int (*func)(), int ecode, int code)
     return o;
 }
 
-type_t  op_type =
+ici_type_t  op_type =
 {
     mark_op,
     free_op,

@@ -8,7 +8,7 @@
  * argument values are ignored.
  */
 void
-expand_error(int lineno, string_t *fname)
+expand_error(int lineno, ici_str_t *fname)
 {
     char        *s;
     int         z;

@@ -131,7 +131,7 @@ void dlinfo( dll_t image, dll_info * d_info )
  * are in addition to the ICIPATH environment variable.
  */
 static int
-push_os_path_elements(array_t *a)
+push_os_path_elements(ici_array_t *a)
 {
     char                path[FILENAME_MAX];
 

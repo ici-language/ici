@@ -8,12 +8,12 @@
  * floats are intrinsically atomic. The returned object will have had its
  * reference count inceremented.
  */
-float_t *
+ici_float_t *
 ici_float_new(double v)
 {
-    float_t             *f;
-    object_t            **po;
-    static float_t      proto = {OBJ(TC_FLOAT)};
+    ici_float_t          *f;
+    ici_obj_t           **po;
+    static ici_float_t   proto = {OBJ(TC_FLOAT)};
 
     proto.f_value = v;
     if ((f = floatof(atom_probe(objof(&proto), &po))) != NULL)
@@ -22,9 +22,9 @@ ici_float_new(double v)
         return f;
     }
     ++ici_supress_collect;
-    if ((f = ici_talloc(float_t)) == NULL)
+    if ((f = ici_talloc(ici_float_t)) == NULL)
         return NULL;
-    ICI_OBJ_SET_TFNZ(f, TC_FLOAT, O_ATOM, 1, sizeof(float_t));
+    ICI_OBJ_SET_TFNZ(f, TC_FLOAT, O_ATOM, 1, sizeof(ici_float_t));
     f->f_value = v;
     ici_rego(f);
     --ici_supress_collect;
@@ -37,10 +37,10 @@ ici_float_new(double v)
  * See comments on t_mark() in object.h.
  */
 static unsigned long
-mark_float(object_t *o)
+mark_float(ici_obj_t *o)
 {
     o->o_flags |= O_MARK;
-    return sizeof(float_t);
+    return sizeof(ici_float_t);
 }
 
 /*
@@ -48,7 +48,7 @@ mark_float(object_t *o)
  * See the comments on t_cmp() in object.h.
  */
 static int
-cmp_float(object_t *o1, object_t *o2)
+cmp_float(ici_obj_t *o1, ici_obj_t *o2)
 {
     return floatof(o1)->f_value != floatof(o2)->f_value;
 }
@@ -58,9 +58,9 @@ cmp_float(object_t *o1, object_t *o2)
  * See the comments on t_free() in object.h.
  */
 static void
-free_float(object_t *o)
+free_float(ici_obj_t *o)
 {
-    ici_tfree(o, float_t);
+    ici_tfree(o, ici_float_t);
 }
 
 /*
@@ -68,7 +68,7 @@ free_float(object_t *o)
  * See the comment on t_hash() in object.h
  */
 static unsigned long
-hash_float(object_t *o)
+hash_float(ici_obj_t *o)
 {
     unsigned long       h;
     int                 i;
@@ -101,7 +101,7 @@ hash_float(object_t *o)
     return h;
 }
 
-type_t  float_type =
+ici_type_t  float_type =
 {
     mark_float,
     free_float,

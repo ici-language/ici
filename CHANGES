@@ -1,3 +1,9 @@
+*   Started adding a lot more API documentation. Much of it will
+    now be extracted from the source comments. (timl)
+
+*   Changed types names to have ici_ prefixes. But added macros to
+    allow back-ward compatibility. (timl)
+
 *   After much deliberation I decided *not* to have the new 'proto'
     mechanism in the global new(). (timl)
 

@@ -16,7 +16,7 @@ extern int	ici_maind();
 int
 main(int argc, char *argv[])
 {
-    extern debug_t ici_debug_funcs;
+    extern ici_debug_t ici_debug_funcs;
     ici_debug = &ici_debug_funcs;
 
     if (ici_maind(argc, argv, 1))

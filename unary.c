@@ -10,7 +10,7 @@
 int
 ici_op_unary(void)
 {
-    int_t       *i;
+    ici_int_t   *i;
 
     switch (opof(ici_xs.a_top[-1])->op_code)
     {

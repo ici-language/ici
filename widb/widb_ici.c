@@ -18,7 +18,7 @@ BOOL widb_ici_initialised = FALSE;
  *
  * The code inside widb_ici.c keeps this up-to-date.
  */
-array_t *widb_exec_name_stack = NULL;
+ici_array_t *widb_exec_name_stack = NULL;
 static int exec_no_name_count[1000];       // Our recursion is limited.
 static int exec_no_name_index = 0;
 
@@ -31,7 +31,7 @@ static int exec_no_name_index = 0;
  *      src     The source marker encountered.
  */
 static void
-ici_debug_src(src_t *src)
+ici_debug_src(ici_src_t *src)
 {
     if (widb_step_over_depth <= 0)
     {
@@ -63,15 +63,15 @@ ici_debug_src(src_t *src)
  *      nargs   The number of parameters in that array.
  */
 static void
-ici_debug_fncall(object_t *o, object_t **ap, int nargs)
+ici_debug_fncall(ici_obj_t *o, ici_obj_t **ap, int nargs)
 {
     char        n1[30];
-    string_t    *name = NULL;
+    ici_str_t   *name = NULL;
 
     // Does the function have a valid name?  Only for ICI functions.
     if (o != NULL && isptr(o))
     {
-        object_t *agg = ptrof(o)->p_aggr;
+        ici_obj_t *agg = ptrof(o)->p_aggr;
         o = ici_fetch(agg, ptrof(o)->p_key);
     }
     if (o != NULL)
@@ -116,7 +116,7 @@ ici_debug_fncall(object_t *o, object_t **ap, int nargs)
  *      o       The result of the function.
  */
 static void
-ici_debug_fnresult(object_t *o)
+ici_debug_fnresult(ici_obj_t *o)
 {
     if (widb_exec_name_stack != NULL)
     {
@@ -159,7 +159,7 @@ ici_debug_fnresult(object_t *o)
  *      src     the last source marker encountered.
  */
 static void
-ici_debug_error(char *err, src_t *src)
+ici_debug_error(char *err, ici_src_t *src)
 {
     char debug_str[256];
     char *filename = "";
@@ -221,7 +221,7 @@ ici_debug_error(char *err, src_t *src)
  *      v       The value being assigned to the object.
  */
 static void
-ici_debug_watch(object_t *o, object_t *k, object_t *v)
+ici_debug_watch(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v)
 {
 }
 
@@ -229,7 +229,7 @@ ici_debug_watch(object_t *o, object_t *k, object_t *v)
  * The interface to the debugging functions.  This replaces the default
  * interface which consists only of stub functions.
  */
-debug_t ici_debug_funcs =
+ici_debug_t ici_debug_funcs =
 {
     ici_debug_error,
     ici_debug_fncall,
@@ -262,7 +262,7 @@ f_debug_break()
 static int
 f_WIDB_view_object()
 {
-    object_t *o;
+    ici_obj_t *o;
     if (ici_typecheck("o", &o))
         return 1;
     WIDB_view_object(o, NULL);
@@ -290,13 +290,13 @@ widb_ici_uninit(void)
  *
  * Registers the ICI functions needed by the ICI debugger.
  */
-object_t *
+ici_obj_t *
 ici_widb_library_init() /* Was widb_ici_init() */
 {
-    static wrap_t       wrap;
-    objwsup_t           *s;
+    static ici_wrap_t   wrap;
+    ici_objwsup_t       *s;
 
-    static cfunc_t cfuncs[] =
+    static ici_cfunc_t cfuncs[] =
     {
         {CF_OBJ, "break",       f_debug_break      },
         {CF_OBJ, "view",        f_WIDB_view_object },

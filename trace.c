@@ -104,7 +104,7 @@ f_trace()
     return ici_int_ret(trace_yes);
 }
 
-cfunc_t trace_cfuncs[] =
+ici_cfunc_t trace_cfuncs[] =
 {
     {CF_OBJ,    "trace",        f_trace},
     {CF_OBJ}
@@ -166,7 +166,7 @@ fixup(char *s)
 }
 
 static void
-pcall_arg(object_t *ap)
+pcall_arg(ici_obj_t *ap)
 {
     if (isint(ap))
         fprintf(stderr, "%ld", intof(ap)->i_value);
@@ -189,24 +189,24 @@ pcall_arg(object_t *ap)
 }
 
 void
-trace_pcall(object_t *o)
+trace_pcall(ici_obj_t *o)
 {
-    func_t   *f = NULL;
+    ici_func_t   *f = NULL;
     char     *s;
     int      n;
-    object_t **ap;
+    ici_obj_t **ap;
     /* ### FIX for generalised callable objects. */
     if (iscfunc(o))
     {
         if (!(trace_flags & TRACE_INTRINSICS))
             return;
-        s = ((cfunc_t *)o)->cf_name;
+        s = ((ici_cfunc_t *)o)->cf_name;
     }
     else if (!(trace_flags & TRACE_FUNCS))
         return;
     else
     {
-        f = (func_t *)o;
+        f = (ici_func_t *)o;
         s = f->f_name->s_chars;
     }
     fprintf(stderr, "trace: %s(", s);
@@ -216,7 +216,7 @@ trace_pcall(object_t *o)
     {
         if (f != NULL)
         {
-            object_t **fp;
+            ici_obj_t **fp;
             for
             (
                 fp = f->f_args->a_base;

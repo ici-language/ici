@@ -6,7 +6,7 @@
 #include "buf.h"
 #include "func.h"
 
-static int push_path_elements(array_t *a, char *path); /* Forward. */
+static int push_path_elements(ici_array_t *a, char *path); /* Forward. */
 
 /*
  * If we're supporting loading of native code modules we need Unix-style
@@ -34,7 +34,7 @@ typedef void    *dll_t;
  * stuff). These are in addition to the ICIPATH environment variable.
  */
 static int
-push_os_path_elements(array_t *a)
+push_os_path_elements(ici_array_t *a)
 {
     return push_path_elements(a, PREFIX "/lib/ici");
 }
@@ -60,11 +60,11 @@ static const char   old_prefix[] = "ici3";
  * and is also the typical parent for top level classes made by dynamically
  * loaded modules. Usual error conventions.
  */
-objwsup_t *
+ici_objwsup_t *
 ici_outermost_writeable_struct(void)
 {
-    objwsup_t           *outer;
-    objwsup_t           *ows;
+    ici_objwsup_t       *outer;
+    ici_objwsup_t       *ows;
 
     outer = NULL;
     for (ows = objwsupof(ici_vs.a_top[-1]); ows != NULL; ows = ows->o_super)
@@ -95,15 +95,15 @@ ici_outermost_writeable_struct(void)
 static int
 f_load(void)
 {
-    string_t    *name;
-    object_t    *result;
+    ici_str_t   *name;
+    ici_obj_t   *result;
     char        fname[FILENAME_MAX];
     char        entry_symbol[64];
-    struct_t    *statics;
-    struct_t    *autos;
-    struct_t    *externs;
-    objwsup_t   *outer;
-    file_t      *file;
+    ici_struct_t    *statics;
+    ici_struct_t    *autos;
+    ici_struct_t    *externs;
+    ici_objwsup_t   *outer;
+    ici_file_t  *file;
     FILE        *stream;
 
     externs = NULL;
@@ -151,8 +151,8 @@ f_load(void)
     if (ici_find_on_path(fname, ICI_DLL_EXT))
     {
         dll_t           lib;
-        object_t        *(*library_init)(void);
-        object_t        *o;
+        ici_obj_t       *(*library_init)(void);
+        ici_obj_t       *o;
 
         /*
          * We have a file .../iciX.EXT. Attempt to dynamically load it.
@@ -177,7 +177,7 @@ f_load(void)
 #else
         sprintf(entry_symbol, "ici_%s_library_init", name->s_chars);
 #endif
-        library_init = (object_t *(*)(void))dlsym(lib, entry_symbol);
+        library_init = (ici_obj_t *(*)(void))dlsym(lib, entry_symbol);
         if (library_init == NULL)
         {
 #ifndef SUNOS5 /* Doing the dlclose results in a crash under Solaris - why? */
@@ -220,7 +220,7 @@ f_load(void)
     strcat(fname, name->s_chars);
     if (ici_find_on_path(fname, ".ici"))
     {
-        string_t        *fn;
+        ici_str_t       *fn;
 
     got_file:
         /*
@@ -295,12 +295,12 @@ fail:
  * seperator character (eg. : or ;), onto a. Usual error conventions.
  */
 static int
-push_path_elements(array_t *a, char *path)
+push_path_elements(ici_array_t *a, char *path)
 {
     char                *p;
     char                *q;
-    string_t            *s;
-    object_t            **e;
+    ici_str_t           *s;
+    ici_obj_t           **e;
 
     for (p = path; *p != '\0'; p = *q == '\0' ? q : q + 1)
     {
@@ -338,9 +338,9 @@ push_path_elements(array_t *a, char *path)
  * that should be searched in for ICI extension modules and stuff.
  */
 int
-ici_init_path(objwsup_t *externs)
+ici_init_path(ici_objwsup_t *externs)
 {
-    array_t             *a;
+    ici_array_t         *a;
     int                 r;
     char                *path;
 
@@ -359,7 +359,7 @@ ici_init_path(objwsup_t *externs)
     return 0;
 }
 
-cfunc_t load_cfuncs[] =
+ici_cfunc_t load_cfuncs[] =
 {
     {CF_OBJ, (char *)SS(load), f_load},
     {CF_OBJ}

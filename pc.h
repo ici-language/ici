@@ -10,11 +10,11 @@
  */
 struct ici_pc
 {
-    object_t    o_head;
-    array_t     *pc_code;
-    object_t    **pc_next;
+    ici_obj_t   o_head;
+    ici_array_t *pc_code;
+    ici_obj_t   **pc_next;
 };
-#define pcof(o)         ((pc_t *)(o))
+#define pcof(o)         ((ici_pc_t *)(o))
 #define ispc(o)         ((o)->o_tcode == TC_PC)
 /*
  * End of ici.h export. --ici.h-end--

@@ -13,10 +13,10 @@
  * See comments on t_mark() in object.h.
  */
 static unsigned long
-mark_ptr(object_t *o)
+mark_ptr(ici_obj_t *o)
 {
     o->o_flags |= O_MARK;
-    return sizeof(ptr_t) + ici_mark(ptrof(o)->p_aggr) + ici_mark(ptrof(o)->p_key);
+    return sizeof(ici_ptr_t) + ici_mark(ptrof(o)->p_aggr) + ici_mark(ptrof(o)->p_key);
 }
 
 /*
@@ -24,7 +24,7 @@ mark_ptr(object_t *o)
  * See the comments on t_cmp() in object.h.
  */
 static int
-cmp_ptr(object_t *o1, object_t *o2)
+cmp_ptr(ici_obj_t *o1, ici_obj_t *o2)
 {
     return ptrof(o1)->p_aggr != ptrof(o2)->p_aggr
         || ptrof(o1)->p_key != ptrof(o2)->p_key;
@@ -35,7 +35,7 @@ cmp_ptr(object_t *o1, object_t *o2)
  * See the comment on t_hash() in object.h
  */
 static unsigned long
-hash_ptr(object_t *o)
+hash_ptr(ici_obj_t *o)
 {
     return (unsigned long)ptrof(o)->p_aggr * PTR_PRIME_0
         + (unsigned long)ptrof(o)->p_key * PTR_PRIME_1;
@@ -50,8 +50,8 @@ hash_ptr(object_t *o)
  * of course the key must be an integer too.  The final key is the sum of the
  * two keys.  But if the key is zero, just do *ptr.
  */
-static object_t *
-fetch_ptr(object_t *o, object_t *k)
+static ici_obj_t *
+fetch_ptr(ici_obj_t *o, ici_obj_t *k)
 {
     if (k == objof(ici_zero))
         return ici_fetch(ptrof(o)->p_aggr, ptrof(o)->p_key);
@@ -74,7 +74,7 @@ fetch_ptr(object_t *o, object_t *k)
  * See above comment.
  */
 static int
-assign_ptr(object_t *o, object_t *k, object_t *v)
+assign_ptr(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v)
 {
     if (k == objof(ici_zero))
         return ici_assign(ptrof(o)->p_aggr, ptrof(o)->p_key, v);
@@ -95,9 +95,9 @@ assign_ptr(object_t *o, object_t *k, object_t *v)
 }
 
 static int
-call_ptr(object_t *o, object_t *subject)
+call_ptr(ici_obj_t *o, ici_obj_t *subject)
 {
-    object_t    *f;
+    ici_obj_t   *f;
 
     f = ici_fetch(ptrof(o)->p_aggr, ptrof(o)->p_key);
     if (ici_typeof(f)->t_call == NULL)
@@ -127,12 +127,12 @@ call_ptr(object_t *o, object_t *subject)
     return (*ici_typeof(f)->t_call)(f, NULL);
 }
 
-ptr_t *
-ici_ptr_new(object_t *a, object_t *k)
+ici_ptr_t *
+ici_ptr_new(ici_obj_t *a, ici_obj_t *k)
 {
-    register ptr_t      *p;
+    register ici_ptr_t  *p;
 
-    if ((p = ici_talloc(ptr_t)) == NULL)
+    if ((p = ici_talloc(ici_ptr_t)) == NULL)
         return NULL;
     ICI_OBJ_SET_TFNZ(p, TC_PTR, 0, 1, 0);
     p->p_aggr = a;
@@ -146,9 +146,9 @@ ici_ptr_new(object_t *a, object_t *k)
  * See the comments on t_free() in object.h.
  */
 static void
-free_ptr(object_t *o)
+free_ptr(ici_obj_t *o)
 {
-    ici_tfree(o, ptr_t);
+    ici_tfree(o, ici_ptr_t);
 }
 
 /*
@@ -157,7 +157,7 @@ free_ptr(object_t *o)
 int
 ici_op_mkptr()
 {
-    register object_t   *o;
+    register ici_obj_t  *o;
 
     if ((o = objof(ici_ptr_new(ici_os.a_top[-2], ici_os.a_top[-1]))) == NULL)
         return 1;
@@ -174,7 +174,7 @@ ici_op_mkptr()
 int
 ici_op_openptr()
 {
-    register ptr_t      *p;
+    register ici_ptr_t  *p;
     char                n[30];
 
     if (!isptr(objof(p = ptrof(ici_os.a_top[-1]))))
@@ -195,8 +195,8 @@ ici_op_openptr()
 int
 ici_op_fetch()
 {
-    register ptr_t      *p;
-    register object_t   *o;
+    register ici_ptr_t  *p;
+    register ici_obj_t  *o;
     char                n[30];
 
     if (!isptr(objof(p = ptrof(ici_os.a_top[-1]))))
@@ -212,7 +212,7 @@ ici_op_fetch()
     return 0;
 }
 
-type_t  ptr_type =
+ici_type_t  ptr_type =
 {
     mark_ptr,
     free_ptr,
@@ -226,6 +226,6 @@ type_t  ptr_type =
     call_ptr,
 };
 
-op_t    o_mkptr         = {OBJ(TC_OP), ici_op_mkptr};
-op_t    o_openptr       = {OBJ(TC_OP), ici_op_openptr};
-op_t    o_fetch         = {OBJ(TC_OP), ici_op_fetch};
+ici_op_t    o_mkptr         = {OBJ(TC_OP), ici_op_mkptr};
+ici_op_t    o_openptr       = {OBJ(TC_OP), ici_op_openptr};
+ici_op_t    o_fetch         = {OBJ(TC_OP), ici_op_fetch};

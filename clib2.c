@@ -22,7 +22,7 @@
 static int
 f_getenv(void)
 {
-    string_t            *n;
+    ici_str_t           *n;
     char                **p;
 
     if (NARGS() != 1)
@@ -104,7 +104,7 @@ f_putenv(void)
     return ici_null_ret();
 }
 
-cfunc_t extra_cfuncs[] =
+ici_cfunc_t extra_cfuncs[] =
 {
     {CF_OBJ,    "getenv",       f_getenv},
     {CF_OBJ,    "putenv",       f_putenv},

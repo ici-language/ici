@@ -6,13 +6,13 @@
  * See comments on t_mark() in object.h.
  */
 static unsigned long
-mark_null(object_t *o)
+mark_null(ici_obj_t *o)
 {
     o->o_flags |= O_MARK;
-    return sizeof(null_t);
+    return sizeof(ici_null_t);
 }
 
-type_t  null_type =
+ici_type_t  null_type =
 {
     mark_null,
     NULL,
@@ -24,4 +24,4 @@ type_t  null_type =
     "NULL"
 };
 
-null_t  o_null  = {{TC_NULL, O_ATOM, 1, 0}};
+ici_null_t  o_null  = {{TC_NULL, O_ATOM, 1, 0}};

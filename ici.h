@@ -204,11 +204,35 @@ typedef struct ici_ftype    ici_ftype_t;
 typedef struct ici_forall   ici_forall_t;
 typedef struct ici_parse    ici_parse_t;
 typedef struct ici_mem      ici_mem_t;
-typedef union  ici_ostemp   ici_ostemp_t;
 typedef struct ici_handle   ici_handle_t;
 typedef struct ici_debug    ici_debug_t;
 
-#if !defined(ICI_NO_OLD_NAMES)
+/*
+ * This define may be made before an include of 'ici.h' to suppress a group
+ * of old (backward compatible) names. These names have been upgraded to
+ * have 'ici_' prefixes since version 4.0.4. These names don't effect the
+ * binary interface of the API; they are all type or macro names. But you
+ * might want to suppress them if you get a clash with some other include
+ * file (for example, 'file_t' has been known to clash with defines in
+ * '<file.h>' on some systems).
+ *
+ * If you just was to get rid of one or two defines, you can '#undef' them
+ * after the include of 'ici.h'.
+ *
+ * The names this define supresses are:
+ *
+ *  array_t     float_t     object_t    catch_t
+ *  slot_t      set_t       struct_t    exec_t
+ *  file_t      func_t      cfunc_t     method_t
+ *  int_t       mark_t      null_t      objwsup_t
+ *  op_t        pc_t        ptr_t       regexp_t
+ *  src_t       string_t    type_t      wrap_t
+ *  ftype_t     forall_t    parse_t     mem_t
+ *  debug_t
+ *
+ * This --macro-- forms part of the --ici-api--.
+ */
+#ifndef ICI_NO_OLD_NAMES
 
 #   define array_t          ici_array_t
 #   define float_t          ici_float_t
@@ -238,21 +262,19 @@ typedef struct ici_debug    ici_debug_t;
 #   define forall_t         ici_forall_t
 #   define parse_t          ici_parse_t
 #   define mem_t            ici_mem_t
-#   define expr_t           ici_expr_t
 #   define debug_t          ici_debug_t
-#   define ostemp_t         ici_ostemp_t
 
 #endif /* ICI_NO_OLD_NAMES */
 
 
-extern DLI int_t        *ici_zero;
-extern DLI int_t        *ici_one;
+extern DLI ici_int_t    *ici_zero;
+extern DLI ici_int_t    *ici_one;
 extern DLI char         *ici_error;
-extern DLI exec_t       *ici_execs;
-extern DLI exec_t       *ici_exec;
-extern DLI array_t      ici_xs;
-extern DLI array_t      ici_os;
-extern DLI array_t      ici_vs;
+extern DLI ici_exec_t   *ici_execs;
+extern DLI ici_exec_t   *ici_exec;
+extern DLI ici_array_t  ici_xs;
+extern DLI ici_array_t  ici_os;
+extern DLI ici_array_t  ici_vs;
 
 extern DLI long         ici_vsver;
 
@@ -266,15 +288,15 @@ extern DLI int  ici_dont_record_line_nums;      /* See lex.c */
 extern DLI char *ici_buf;                       /* See buf.h */
 extern DLI int  ici_bufz;                       /* See buf.h */
 
-extern DLI ftype_t      ici_stdio_ftype;
-extern DLI ftype_t      ici_popen_ftype;
+extern DLI ici_ftype_t  ici_stdio_ftype;
+extern DLI ici_ftype_t  ici_popen_ftype;
 
-extern DLI null_t       o_null;
+extern DLI ici_null_t   o_null;
 
 #define ici_null        (objof(&o_null))
 
 #ifndef NODEBUGGING
-extern DLI debug_t *ici_debug;
+extern DLI ici_debug_t *ici_debug;
 #endif
 
 extern char             ici_version_string[];
@@ -284,100 +306,100 @@ extern int              ici_exec_count;
 
 #define ici_null_ret()  ici_ret_no_decref(objof(&o_null))
 
-extern object_t *ici_atom_probe(object_t *o);
-extern object_t *ici_evaluate(object_t *, int);
-extern object_t *ici_copy_simple(object_t *);
-extern object_t *ici_fetch_fail(object_t *, object_t *);
-extern object_t *ici_atom(object_t *, int);
-extern int      ici_parse_file(char *, char *, ftype_t *);
-extern array_t  *ici_array_new(ptrdiff_t);
-extern mem_t    *ici_mem_new(void *, size_t, int, void (*)());
-extern string_t *ici_str_alloc(int);
-extern string_t *ici_str_new_nul_term(char *);
-extern string_t *ici_str_get_nul_term(char *);
-extern set_t    *ici_set_new(void);
-extern struct_t *ici_struct_new(void);
-extern float_t  *ici_float_new(double);
-extern file_t   *ici_file_new(void *, ftype_t *, string_t *, object_t *);
-extern int_t    *ici_int_new(long);
-extern int      ici_interface_check(unsigned long, unsigned long, char const *);
-extern string_t *ici_str_new(char *, int);
-extern ptr_t    *ici_ptr_new(object_t *, object_t *);
-extern regexp_t *ici_regexp_new(string_t *, int);
-extern int      ici_assign_fail(object_t *, object_t *, object_t *);
-extern file_t   *ici_sopen(char *, int, object_t *);
-extern unsigned long ici_hash_unique(object_t *);
-extern int      ici_cmp_unique(object_t *, object_t *);
-extern int      ici_get_last_errno(char *, char *);
-extern int      ici_argcount(int);
-extern int      ici_argerror(int);
-extern void     ici_struct_unassign(struct_t *, object_t *);
-extern int      ici_set_unassign(set_t *, object_t *);
-extern char     *ici_objname(char [ICI_OBJNAMEZ], object_t *);
-extern int      ici_file_close(file_t *f);
-extern int      ici_ret_with_decref(object_t *);
-extern int      ici_int_ret(long);
-extern int      ici_ret_no_decref(object_t *);
-extern int      ici_typecheck(char *, ...);
-extern int      ici_retcheck(char *, ...);
-extern int      ici_init(void);
-extern void     ici_uninit(void);
-extern file_t   *ici_need_stdin(void);
-extern file_t   *ici_need_stdout(void);
-extern array_t  *ici_need_path(void);
-extern void     ici_reclaim(void);
-extern int      ici_str_ret(char *);
-extern int      ici_float_ret(double);
-extern int      ici_func(object_t *, char *, ...);
-extern int      ici_method(object_t *, string_t *, char *, ...);
-extern int      ici_funcv(object_t *, object_t *, char *, va_list);
-extern int      ici_call(string_t *, char *, ...);
-extern int      ici_callv(string_t *, char *, va_list);
-extern int      ici_cmkvar(objwsup_t *, char *, int, void *);
-extern int      ici_set_val(objwsup_t *, string_t *, int, void *);
-extern int      ici_fetch_num(object_t *, object_t *, double *);
-extern int      ici_fetch_int(object_t *, object_t *, long *);
-extern int      ici_assign_cfuncs(objwsup_t *, cfunc_t *);
-extern int      ici_def_cfuncs(cfunc_t *);
-extern int      ici_main(int, char **);
-extern method_t *ici_method_new(object_t *, object_t *);
-extern ici_handle_t *ici_handle_new(void *, string_t *, objwsup_t *);
-extern int      ici_register_type(type_t *t);
-extern void     ici_rego_work(object_t *o);
-extern ptrdiff_t ici_array_nels(array_t *);
-extern int      ici_grow_stack(array_t *, ptrdiff_t);
-extern int      ici_fault_stack(array_t *, ptrdiff_t);
-extern void     ici_array_gather(object_t **, array_t *, ptrdiff_t, ptrdiff_t);
-extern int      ici_array_push(array_t *, object_t *);
-extern int      ici_array_rpush(array_t *, object_t *);
-extern object_t *ici_array_pop(array_t *);
-extern object_t *ici_array_rpop(array_t *);
-extern object_t *ici_array_get(array_t *, ptrdiff_t);
-extern void     ici_invalidate_struct_lookaside(struct_t *);
-extern int      ici_engine_stack_check(void);
-extern void     ici_atexit(void (*)(void), wrap_t *);
-extern objwsup_t *ici_outermost_writeable_struct(void);
-extern objwsup_t *ici_class_new(cfunc_t *cf, objwsup_t *super);
-extern objwsup_t *ici_module_new(cfunc_t *cf);
-extern int      ici_handle_method_check(object_t *, string_t *, ici_handle_t **, void **);
-extern int      ici_method_check(object_t *o, int tcode);
-extern unsigned long ici_crc(unsigned long, unsigned char const *, ptrdiff_t);
-extern int      ici_str_need_size(string_t *, int);
-extern string_t *ici_str_buf_new(int);
+extern ici_obj_t        *ici_atom_probe(ici_obj_t *o);
+extern ici_obj_t        *ici_evaluate(ici_obj_t *, int);
+extern ici_obj_t        *ici_copy_simple(ici_obj_t *);
+extern ici_obj_t        *ici_fetch_fail(ici_obj_t *, ici_obj_t *);
+extern ici_obj_t        *ici_atom(ici_obj_t *, int);
+extern int              ici_parse_file(char *, char *, ici_ftype_t *);
+extern ici_array_t      *ici_array_new(ptrdiff_t);
+extern ici_mem_t        *ici_mem_new(void *, size_t, int, void (*)());
+extern ici_str_t        *ici_str_alloc(int);
+extern ici_str_t        *ici_str_new_nul_term(char *);
+extern ici_str_t        *ici_str_get_nul_term(char *);
+extern ici_set_t        *ici_set_new(void);
+extern ici_struct_t     *ici_struct_new(void);
+extern ici_float_t      *ici_float_new(double);
+extern ici_file_t       *ici_file_new(void *, ici_ftype_t *, ici_str_t *, ici_obj_t *);
+extern ici_int_t        *ici_int_new(long);
+extern int              ici_interface_check(unsigned long, unsigned long, char const *);
+extern ici_str_t        *ici_str_new(char *, int);
+extern ici_ptr_t        *ici_ptr_new(ici_obj_t *, ici_obj_t *);
+extern ici_regexp_t     *ici_regexp_new(ici_str_t *, int);
+extern int              ici_assign_fail(ici_obj_t *, ici_obj_t *, ici_obj_t *);
+extern ici_file_t       *ici_sopen(char *, int, ici_obj_t *);
+extern unsigned long    ici_hash_unique(ici_obj_t *);
+extern int              ici_cmp_unique(ici_obj_t *, ici_obj_t *);
+extern int              ici_get_last_errno(char *, char *);
+extern int              ici_argcount(int);
+extern int              ici_argerror(int);
+extern void             ici_struct_unassign(ici_struct_t *, ici_obj_t *);
+extern int              ici_set_unassign(ici_set_t *, ici_obj_t *);
+extern char             *ici_objname(char [ICI_OBJNAMEZ], ici_obj_t *);
+extern int              ici_file_close(ici_file_t *f);
+extern int              ici_ret_with_decref(ici_obj_t *);
+extern int              ici_int_ret(long);
+extern int              ici_ret_no_decref(ici_obj_t *);
+extern int              ici_typecheck(char *, ...);
+extern int              ici_retcheck(char *, ...);
+extern int              ici_init(void);
+extern void             ici_uninit(void);
+extern ici_file_t       *ici_need_stdin(void);
+extern ici_file_t       *ici_need_stdout(void);
+extern ici_array_t      *ici_need_path(void);
+extern void             ici_reclaim(void);
+extern int              ici_str_ret(char *);
+extern int              ici_float_ret(double);
+extern int              ici_func(ici_obj_t *, char *, ...);
+extern int              ici_method(ici_obj_t *, ici_str_t *, char *, ...);
+extern int              ici_funcv(ici_obj_t *, ici_obj_t *, char *, va_list);
+extern int              ici_call(ici_str_t *, char *, ...);
+extern int              ici_callv(ici_str_t *, char *, va_list);
+extern int              ici_cmkvar(ici_objwsup_t *, char *, int, void *);
+extern int              ici_set_val(ici_objwsup_t *, ici_str_t *, int, void *);
+extern int              ici_fetch_num(ici_obj_t *, ici_obj_t *, double *);
+extern int              ici_fetch_int(ici_obj_t *, ici_obj_t *, long *);
+extern int              ici_assign_cfuncs(ici_objwsup_t *, ici_cfunc_t *);
+extern int              ici_def_cfuncs(ici_cfunc_t *);
+extern int              ici_main(int, char **);
+extern ici_method_t     *ici_method_new(ici_obj_t *, ici_obj_t *);
+extern ici_handle_t     *ici_handle_new(void *, ici_str_t *, ici_objwsup_t *);
+extern int              ici_register_type(ici_type_t *t);
+extern void             ici_rego_work(ici_obj_t *o);
+extern ptrdiff_t        ici_array_nels(ici_array_t *);
+extern int              ici_grow_stack(ici_array_t *, ptrdiff_t);
+extern int              ici_fault_stack(ici_array_t *, ptrdiff_t);
+extern void             ici_array_gather(ici_obj_t **, ici_array_t *, ptrdiff_t, ptrdiff_t);
+extern int              ici_array_push(ici_array_t *, ici_obj_t *);
+extern int              ici_array_rpush(ici_array_t *, ici_obj_t *);
+extern ici_obj_t        *ici_array_pop(ici_array_t *);
+extern ici_obj_t        *ici_array_rpop(ici_array_t *);
+extern ici_obj_t        *ici_array_get(ici_array_t *, ptrdiff_t);
+extern void             ici_invalidate_struct_lookaside(ici_struct_t *);
+extern int              ici_engine_stack_check(void);
+extern void             ici_atexit(void (*)(void), ici_wrap_t *);
+extern ici_objwsup_t    *ici_outermost_writeable_struct(void);
+extern ici_objwsup_t    *ici_class_new(ici_cfunc_t *cf, ici_objwsup_t *super);
+extern ici_objwsup_t    *ici_module_new(ici_cfunc_t *cf);
+extern int              ici_handle_method_check(ici_obj_t *, ici_str_t *, ici_handle_t **, void **);
+extern int              ici_method_check(ici_obj_t *o, int tcode);
+extern unsigned long    ici_crc(unsigned long, unsigned char const *, ptrdiff_t);
+extern int              ici_str_need_size(ici_str_t *, int);
+extern ici_str_t        *ici_str_buf_new(int);
 
-extern exec_t   *ici_leave(void);
-extern void     ici_enter(exec_t *);
-extern void     ici_yield(void);
-extern int      ici_waitfor(object_t *);
-extern int      ici_wakeup(object_t *);
-extern int      ici_init_thread_stuff(void);
+extern ici_exec_t       *ici_leave(void);
+extern void             ici_enter(ici_exec_t *);
+extern void             ici_yield(void);
+extern int              ici_waitfor(ici_obj_t *);
+extern int              ici_wakeup(ici_obj_t *);
+extern int              ici_init_thread_stuff(void);
 
 #ifndef NODEBUGGING
-extern int      ici_maind(int, char **, int);
-extern DLI int  ici_debug_enabled;
-extern int      ici_debug_ign_err;
-extern DLI void ici_debug_ignore_errors(void);
-extern DLI void ici_debug_respect_errors(void);
+extern int              ici_maind(int, char **, int);
+extern DLI int          ici_debug_enabled;
+extern int              ici_debug_ign_err;
+extern DLI void         ici_debug_ignore_errors(void);
+extern DLI void         ici_debug_respect_errors(void);
 #else
 /*
  * We let the compiler use it's sense to remove a lot of debug
@@ -394,9 +416,9 @@ extern volatile sigset_t ici_signals_pending;
 extern volatile long    ici_signals_pending;
 #endif
 extern volatile long    ici_signals_count[];
-extern void     ici_signals_init(void);
-extern int      ici_signals_invoke_handlers(void);
-extern int      ici_signals_blocking_syscall(int);
+extern void             ici_signals_init(void);
+extern int              ici_signals_invoke_handlers(void);
+extern int              ici_signals_blocking_syscall(int);
 #else
 /*
  * Let compiler remove code without resorting to ifdefs as for debug.
@@ -415,7 +437,7 @@ double strtod(const char *ptr, char **endptr);
 #endif
 
 #ifndef NOTRACE
-extern void     trace_pcall(object_t *);
+extern void     trace_pcall(ici_obj_t *);
 #endif
 
 
@@ -430,7 +452,7 @@ extern void     trace_pcall(object_t *);
  * by calls to ici_register_type() and are given the next available slot.
  */
 #define ICI_MAX_TYPES   64
-extern DLI type_t       *ici_types[ICI_MAX_TYPES];
+extern DLI ici_type_t   *ici_types[ICI_MAX_TYPES];
 
 /*
  * Every object has a header. In the header the o_tcode (type code) field
@@ -440,22 +462,22 @@ extern DLI type_t       *ici_types[ICI_MAX_TYPES];
  */
 struct ici_type
 {
-    unsigned long (*t_mark)(object_t *);
-    void        (*t_free)(object_t *);
-    unsigned long (*t_hash)(object_t *);
-    int         (*t_cmp)(object_t *, object_t *);
-    object_t    *(*t_copy)(object_t *);
-    int         (*t_assign)(object_t *, object_t *, object_t *);
-    object_t    *(*t_fetch)(object_t *, object_t *);
+    unsigned long (*t_mark)(ici_obj_t *);
+    void        (*t_free)(ici_obj_t *);
+    unsigned long (*t_hash)(ici_obj_t *);
+    int         (*t_cmp)(ici_obj_t *, ici_obj_t *);
+    ici_obj_t   *(*t_copy)(ici_obj_t *);
+    int         (*t_assign)(ici_obj_t *, ici_obj_t *, ici_obj_t *);
+    ici_obj_t   *(*t_fetch)(ici_obj_t *, ici_obj_t *);
     char        *t_name;
-    void        (*t_objname)(object_t *, char [ICI_OBJNAMEZ]);
-    int         (*t_call)(object_t *, object_t *);
-    string_t    *t_ici_name;
-    int         (*t_assign_super)(object_t *, object_t *, object_t *, struct_t *);
-    int         (*t_fetch_super)(object_t *, object_t *, object_t **, struct_t *);
-    int         (*t_assign_base)(object_t *, object_t *, object_t *);
-    object_t    *(*t_fetch_base)(object_t *, object_t *);
-    object_t    *(*t_fetch_method)(object_t *, object_t *);
+    void        (*t_objname)(ici_obj_t *, char [ICI_OBJNAMEZ]);
+    int         (*t_call)(ici_obj_t *, ici_obj_t *);
+    ici_str_t   *t_ici_name;
+    int         (*t_assign_super)(ici_obj_t *, ici_obj_t *, ici_obj_t *, ici_struct_t *);
+    int         (*t_fetch_super)(ici_obj_t *, ici_obj_t *, ici_obj_t **, ici_struct_t *);
+    int         (*t_assign_base)(ici_obj_t *, ici_obj_t *, ici_obj_t *);
+    ici_obj_t   *(*t_fetch_base)(ici_obj_t *, ici_obj_t *);
+    ici_obj_t   *(*t_fetch_method)(ici_obj_t *, ici_obj_t *);
     void        *t_reserved2;   /* Must be zero. */
     void        *t_reserved3;   /* Must be zero. */
     void        *t_reserved4;   /* Must be zero. */
@@ -586,7 +608,7 @@ struct ici_type
  *                      call and s is the subject object of the call.  Return
  *                      1 on error, else 0.
  *
- * t_ici_name           A string_t copy of the name. This is just a cached
+ * t_ici_name           A ici_str_t copy of the name. This is just a cached
  *                      version so that typeof() doesn't keep re-computing the
  *                      string.
  *
@@ -684,7 +706,7 @@ struct ici_obj
  *
  * --ici-api--
  */
-#define objof(x)        ((object_t *)(x))
+#define objof(x)        ((ici_obj_t *)(x))
 
 /*
  * "Object with super." This is a specialised header for all objects
@@ -694,15 +716,15 @@ struct ici_obj
  */
 struct ici_objwsup
 {
-    object_t    o_head;         /* Universal header. */
-    objwsup_t   *o_super;       /* Out super. May be NULL. */
+    ici_obj_t   o_head;         /* Universal header. */
+    ici_objwsup_t   *o_super;       /* Out super. May be NULL. */
     /*
      * Each object that supports a super type includes this as a
      * header. In the real structures associated with each such object
      * the type specific stuff follows...
      */
 };
-#define objwsupof(o)    ((objwsup_t *)(o))
+#define objwsupof(o)    ((ici_objwsup_t *)(o))
 /*
  * This object supports a super type. (It may or may not have a super
  * at any particular time).
@@ -744,7 +766,7 @@ struct ici_objwsup
 #define O_MARK          0x01    /* Garbage collection mark. */
 #define O_ATOM          0x02    /* Is a member of the atom pool. */
 #define O_TEMP          0x04    /* Is a re-usable temp (flag for asserts). */
-#define O_SUPER         0x08    /* Has super (is objwsup_t derived). */
+#define O_SUPER         0x08    /* Has super (is ici_objwsup_t derived). */
 
 /*
  * The o_tcode field is a small int. These are the "well known" core
@@ -829,18 +851,18 @@ extern int      ici_growbuf(int);
 
 struct ici_cfunc
 {
-    object_t    o_head;
+    ici_obj_t   o_head;
     char        *cf_name;
     int         (*cf_cfunc)();
     void        *cf_arg1;
     void        *cf_arg2;
 };
-#define cfuncof(o)      ((cfunc_t *)(o))
+#define cfuncof(o)      ((ici_cfunc_t *)(o))
 #define iscfunc(o)      (objof(o)->o_tcode == TC_CFUNC)
 
 /*
  * Convienience macro for the object header for use in static
- * initialisations of cfunc_t objects.
+ * initialisations of ici_cfunc_t objects.
  */
 #define CF_OBJ          {TC_CFUNC, 0, 1, 0}
 
@@ -941,13 +963,13 @@ struct ici_cfunc
  */
 struct ici_array
 {
-    object_t    o_head;
-    object_t    **a_top;    /* The next free slot. */
-    object_t    **a_bot;    /* The first used slot. */
-    object_t    **a_base;   /* The base of allocation. */
-    object_t    **a_limit;  /* Allocation limit, first one you can't use. */
+    ici_obj_t   o_head;
+    ici_obj_t   **a_top;    /* The next free slot. */
+    ici_obj_t   **a_bot;    /* The first used slot. */
+    ici_obj_t   **a_base;   /* The base of allocation. */
+    ici_obj_t   **a_limit;  /* Allocation limit, first one you can't use. */
 };
-#define arrayof(o)  ((array_t *)(o))
+#define arrayof(o)  ((ici_array_t *)(o))
 #define isarray(o)  ((o)->o_tcode == TC_ARRAY)
 
 /*
@@ -986,20 +1008,20 @@ struct ici_array
 
 struct ici_int
 {
-    object_t    o_head;
+    ici_obj_t   o_head;
     long        i_value;
 };
-#define intof(o)        ((int_t *)(o))
+#define intof(o)        ((ici_int_t *)(o))
 #define isint(o)        ((o)->o_tcode == TC_INT)
 
 /* From float.h */
 
 struct ici_float
 {
-    object_t    o_head;
+    ici_obj_t   o_head;
     double      f_value;
 };
-#define floatof(o)      ((float_t *)o)
+#define floatof(o)      ((ici_float_t *)o)
 #define isfloat(o)      ((o)->o_tcode == TC_FLOAT)
 
 /* From exec.h */
@@ -1015,11 +1037,11 @@ struct ici_float
  */
 struct ici_debug
 {
-    void    (*idbg_error)(char *, src_t *);
-    void    (*idbg_fncall)(object_t *, object_t **, int);
-    void    (*idbg_fnresult)(object_t *);
-    void    (*idbg_src)(src_t *);
-    void    (*idbg_watch)(object_t *, object_t *, object_t *);
+    void    (*idbg_error)(char *, ici_src_t *);
+    void    (*idbg_fncall)(ici_obj_t *, ici_obj_t **, int);
+    void    (*idbg_fnresult)(ici_obj_t *);
+    void    (*idbg_src)(ici_src_t *);
+    void    (*idbg_watch)(ici_obj_t *, ici_obj_t *, ici_obj_t *);
 };
 
 #endif
@@ -1046,11 +1068,11 @@ struct ici_ftype
 
 struct ici_file
 {
-    object_t    o_head;
+    ici_obj_t   o_head;
     void        *f_file;
-    ftype_t     *f_type;
-    string_t    *f_name;    /* Reasonable name to call it by. */
-    object_t    *f_ref;
+    ici_ftype_t *f_type;
+    ici_str_t   *f_name;    /* Reasonable name to call it by. */
+    ici_obj_t   *f_ref;
 };
 /*
  * f_ref                An object for this file object to reference.
@@ -1059,7 +1081,7 @@ struct ici_file
  *                      to keep the object referenced. Basically if f_file
  *                      is an implicit reference to some object. May be NULL.
  */
-#define fileof(o)   ((file_t *)(o))
+#define fileof(o)   ((ici_file_t *)(o))
 #define isfile(o)   (objof(o)->o_tcode == TC_FILE)
 
 #define F_CLOSED    0x10    /* File is closed. */
@@ -1069,9 +1091,9 @@ struct ici_file
 
 struct ici_forall
 {
-    object_t    o_head;
+    ici_obj_t   o_head;
     int         fa_index;
-    object_t    *fa_objs[6];
+    ici_obj_t   *fa_objs[6];
 };
 #define fa_aggr         fa_objs[0]
 #define fa_code         fa_objs[1]
@@ -1080,22 +1102,22 @@ struct ici_forall
 #define fa_kaggr        fa_objs[4]
 #define fa_kkey         fa_objs[5]
 
-#define forallof(o)     ((forall_t *)o)
+#define forallof(o)     ((ici_forall_t *)o)
 #define isforall(o)     ((o)->o_tcode == TC_FORALL)
 
 /* From func.h */
 
 struct ici_func
 {
-    object_t    o_head;
-    array_t     *f_code;        /* The code of this function, atom. */
-    array_t     *f_args;        /* Array of argument names. */
-    struct_t    *f_autos;       /* Prototype struct of autos (incl. args). */
-    string_t    *f_name;        /* Some name for the function (diagnostics). */
-    int         f_nautos;       /* If !=0, a hint for auto struct alloc. */
+    ici_obj_t       o_head;
+    ici_array_t     *f_code;    /* The code of this function, atom. */
+    ici_array_t     *f_args;    /* Array of argument names. */
+    ici_struct_t    *f_autos;   /* Prototype struct of autos (incl. args). */
+    ici_str_t       *f_name;    /* Some name for the function (diagnostics). */
+    int             f_nautos;   /* If !=0, a hint for auto struct alloc. */
 };
 
-#define funcof(o)       ((func_t *)(o))
+#define funcof(o)       ((ici_func_t *)(o))
 #define isfunc(o)       (objof(o)->o_tcode == TC_FUNC)
 
 
@@ -1111,9 +1133,9 @@ struct ici_func
  */
 struct ici_handle
 {
-    objwsup_t   o_head;
+    ici_objwsup_t   o_head;
     void        *h_ptr;
-    string_t    *h_name;
+    ici_str_t   *h_name;
     void        (*h_pre_free)(ici_handle_t *h);
 };
 #define handleof(o)        ((ici_handle_t *)(o))
@@ -1152,25 +1174,25 @@ struct ici_handle
 
 struct ici_mem
 {
-    object_t            o_head;
+    ici_obj_t           o_head;
     void                *m_base;
     size_t              m_length;       /* In m_accessz units. */
     int                 m_accessz;      /* Read/write size. */
     void                (*m_free)();
 };
 
-#define memof(o)        ((mem_t *)o)
+#define memof(o)        ((ici_mem_t *)o)
 #define ismem(o)        (objof(o)->o_tcode == TC_MEM)
 
 /* From method.h */
 
 struct ici_method
 {
-    object_t    o_head;
-    object_t    *m_subject;
-    object_t    *m_callable;
+    ici_obj_t   o_head;
+    ici_obj_t   *m_subject;
+    ici_obj_t   *m_callable;
 };
-#define methodof(o)     ((method_t *)(o))
+#define methodof(o)     ((ici_method_t *)(o))
 #define ismethod(o)     (objof(o)->o_tcode == TC_METHOD)
 
 
@@ -1178,9 +1200,9 @@ struct ici_method
 
 struct ici_null_t
 {
-    object_t    o_head;
+    ici_obj_t   o_head;
 };
-#define nullof(o)       ((null_t *)o)
+#define nullof(o)       ((ici_null_t *)o)
 #define isnull(o)       ((o) == objof(&o_null))
 
 
@@ -1188,29 +1210,29 @@ struct ici_null_t
 
 struct ici_op
 {
-    object_t    o_head;
+    ici_obj_t   o_head;
     int         (*op_func)();
     int         op_ecode;       /* See OP_* below. */
     int         op_code;
 };
-#define opof(o) ((op_t *)o)
+#define opof(o) ((ici_op_t *)o)
 #define isop(o) ((o)->o_tcode == TC_OP)
 
 
 /* From parse.h */
 
 #define isparse(o)      (objof(o)->o_tcode == TC_PARSE)
-#define parseof(o)      ((parse_t *)(o))
+#define parseof(o)      ((ici_parse_t *)(o))
 
 /* From pc.h */
 
 struct ici_pc
 {
-    object_t    o_head;
-    array_t     *pc_code;
-    object_t    **pc_next;
+    ici_obj_t   o_head;
+    ici_array_t *pc_code;
+    ici_obj_t   **pc_next;
 };
-#define pcof(o)         ((pc_t *)(o))
+#define pcof(o)         ((ici_pc_t *)(o))
 #define ispc(o)         ((o)->o_tcode == TC_PC)
 
 /* From profile.h */
@@ -1218,7 +1240,7 @@ struct ici_pc
 
 typedef struct profilecall profilecall_t;
 extern int ici_profile_active;
-void ici_profile_call(func_t *f);
+void ici_profile_call(ici_func_t *f);
 void ici_profile_return();
 void ici_profile_set_done_callback(void (*)(profilecall_t *));
 profilecall_t *ici_profilecall_new(profilecall_t *called_by);
@@ -1233,9 +1255,9 @@ profilecall_t *ici_profilecall_new(profilecall_t *called_by);
  */
 struct profilecall
 {
-    object_t        o_head;
+    ici_obj_t       o_head;
     profilecall_t   *pc_calledby;
-    struct_t        *pc_calls;
+    ici_struct_t    *pc_calls;
     long            pc_total;
     long            pc_laststart;
     long            pc_call_count;
@@ -1259,20 +1281,20 @@ struct profilecall
 
 struct ici_ptr
 {
-    object_t    o_head;
-    object_t    *p_aggr;        /* The aggregate which contains the object. */
-    object_t    *p_key;         /* The key which references it. */
+    ici_obj_t   o_head;
+    ici_obj_t   *p_aggr;        /* The aggregate which contains the object. */
+    ici_obj_t   *p_key;         /* The key which references it. */
 };
-#define ptrof(o)        ((ptr_t *)o)
+#define ptrof(o)        ((ici_ptr_t *)o)
 #define isptr(o)        ((o)->o_tcode == TC_PTR)
 
 /* From re.h */
 
-#define regexpof(o)     ((regexp_t *)(o))
+#define regexpof(o)     ((ici_regexp_t *)(o))
 #define isregexp(o)     ((o)->o_tcode == TC_REGEXP)
 
 extern int
-ici_pcre(regexp_t *r,
+ici_pcre(ici_regexp_t *r,
     const char *subject, int length, int start_offset,
     int options, int *offsets, int offsetcount);
 
@@ -1282,12 +1304,12 @@ ici_pcre(regexp_t *r,
 
 struct ici_set
 {
-    object_t    o_head;
+    ici_obj_t   o_head;
     int         s_nels;         /* How many slots used. */
     int         s_nslots;       /* How many slots allocated. */
-    object_t    **s_slots;
+    ici_obj_t   **s_slots;
 };
-#define setof(o)        ((set_t *)(o))
+#define setof(o)        ((ici_set_t *)(o))
 #define isset(o)        ((o)->o_tcode == TC_SET)
 
 /* From src.h */
@@ -1295,11 +1317,11 @@ struct ici_set
 
 struct ici_src
 {
-    object_t    s_head;
+    ici_obj_t   s_head;
     int         s_lineno;
-    string_t    *s_filename;
+    ici_str_t   *s_filename;
 };
-#define srcof(o)        ((src_t *)o)
+#define srcof(o)        ((ici_src_t *)o)
 #define issrc(o)        ((o)->o_tcode == TC_SRC)
 
 /* From str.h */
@@ -1319,9 +1341,9 @@ struct ici_src
 
 struct ici_str
 {
-    object_t    o_head;
-    struct_t    *s_struct;      /* Where we were last found on the vs. */
-    slot_t      *s_slot;        /* And our slot. */
+    ici_obj_t   o_head;
+    ici_struct_t    *s_struct;      /* Where we were last found on the vs. */
+    ici_sslot_t *s_slot;        /* And our slot. */
     long        s_vsver;        /* The vs version at that time. */
 #   if KEEP_STRING_HASH
         unsigned long s_hash;  /* String hash code or 0 if not yet computed */
@@ -1352,7 +1374,7 @@ struct ici_str
  * su.su_inline_chars   If ICI_S_SEP_ALLOC is *not* set, this is where s_chars will
  *                      be pointing. The actual string chars follow on from this.
  */
-#define stringof(o)     ((string_t *)o)
+#define stringof(o)     ((ici_str_t *)o)
 #define isstring(o)     ((o)->o_tcode == TC_STRING)
 
 /*
@@ -1379,7 +1401,7 @@ struct ici_str
  *
  * etc. Include that file in any files that access ICI strings.
  * Access them with either ICIS(fred) or ICISO(fred) which return
- * string_t* and object_t* pointers respectively. For example:
+ * ici_str_t* and ici_obj_t* pointers respectively. For example:
  *
  *  o = ici_fetch(s, ICIS(fred));
  *
@@ -1392,8 +1414,8 @@ struct ici_str
  */
 #define ICIS(name)              (ici_str_##name)
 #define ICISO(name)             (objof(ICIS(name)))
-#define ICI_STR_NORM(name, str) extern string_t *ici_str_##name;
-#define ICI_STR_DECL(name, str) string_t *ici_str_##name;
+#define ICI_STR_NORM(name, str) extern ici_str_t *ici_str_##name;
+#define ICI_STR_DECL(name, str) ici_str_t *ici_str_##name;
 #define ICI_STR_MAKE(name, str) (ICIS(name) = ici_str_new_nul_term(str)) == NULL ||
 #define ICI_STR_REL(name, str)  ici_decref(ICIS(name));
 #define ICI_STR                 ICI_STR_NORM
@@ -1403,18 +1425,18 @@ struct ici_str
 
 struct ici_sslot
 {
-    object_t    *sl_key;
-    object_t    *sl_value;
+    ici_obj_t   *sl_key;
+    ici_obj_t   *sl_value;
 };
 
 struct ici_struct
 {
-    objwsup_t   o_head;
+    ici_objwsup_t   o_head;
     int         s_nels;         /* How many slots used. */
     int         s_nslots;       /* How many slots allocated. */
-    slot_t      *s_slots;
+    ici_sslot_t *s_slots;
 };
-#define structof(o)     ((struct_t *)(o))
+#define structof(o)     ((ici_struct_t *)(o))
 #define isstruct(o)     (objof(o)->o_tcode == TC_STRUCT)
 
 
@@ -1439,7 +1461,7 @@ extern int trace_flags;
 
 struct ici_wrap
 {
-    wrap_t      *w_next;
+    ici_wrap_t  *w_next;
     void        (*w_func)(void);
 };
 

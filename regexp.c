@@ -21,10 +21,10 @@
 int     re_bra[(NSUBEXP + 1) * 3];
 int     re_nbra;
 
-regexp_t *
-ici_regexp_new(string_t *s, int flags)
+ici_regexp_t *
+ici_regexp_new(ici_str_t *s, int flags)
 {
-    regexp_t    *r;
+    ici_regexp_t    *r;
     pcre        *re;
     pcre_extra  *rex = NULL;
     int         errofs;
@@ -45,7 +45,7 @@ ici_regexp_new(string_t *s, int flags)
     if (ici_error != NULL)
         goto fail;
     /* Note rex can be NULL if no extra info required */
-    if ((r = (regexp_t *)ici_talloc(regexp_t)) == NULL)
+    if ((r = (ici_regexp_t *)ici_talloc(ici_regexp_t)) == NULL)
         goto fail;
     ICI_OBJ_SET_TFNZ(r, TC_REGEXP, 0, 1, 0);
     r->r_re  = re;
@@ -67,10 +67,10 @@ fail:
  * See comments on t_mark() in object.h.
  */
 static unsigned long
-mark_regexp(object_t *o)
+mark_regexp(ici_obj_t *o)
 {
     o->o_flags |= O_MARK;
-    return sizeof(regexp_t) + ici_mark(regexpof(o)->r_pat) + ((real_pcre *)regexpof(o)->r_re)->size;
+    return sizeof(ici_regexp_t) + ici_mark(regexpof(o)->r_pat) + ((real_pcre *)regexpof(o)->r_re)->size;
 }
 
 /*
@@ -78,12 +78,12 @@ mark_regexp(object_t *o)
  * See the comments on t_free() in object.h.
  */
 static void
-free_regexp(object_t *o)
+free_regexp(ici_obj_t *o)
 {
     if (regexpof(o)->r_rex != NULL)
         ici_free(regexpof(o)->r_rex);
     ici_free(regexpof(o)->r_re);
-    ici_tfree(o, regexp_t);
+    ici_tfree(o, ici_regexp_t);
 }
 
 /*
@@ -91,7 +91,7 @@ free_regexp(object_t *o)
  * See the comment on t_hash() in object.h
  */
 static unsigned long
-hash_regexp(object_t *o)
+hash_regexp(ici_obj_t *o)
 {
     /* static unsigned long     primes[] = {0xBF8D, 0x9A4F, 0x1C81, 0x6DDB}; */
     return (unsigned long)regexpof(o)->r_pat * 0x9A4F;
@@ -102,13 +102,13 @@ hash_regexp(object_t *o)
  * See the comments on t_cmp() in object.h.
  */
 static int
-cmp_regexp(object_t *o1, object_t *o2)
+cmp_regexp(ici_obj_t *o1, ici_obj_t *o2)
 {
     return cmp(regexpof(o1)->r_pat, regexpof(o2)->r_pat);
 }
 
-static object_t *
-fetch_regexp(object_t *o, object_t *k)
+static ici_obj_t *
+fetch_regexp(ici_obj_t *o, ici_obj_t *k)
 {
     if (k == SSO(pattern))
         return objof(regexpof(o)->r_pat);
@@ -126,7 +126,7 @@ fetch_regexp(object_t *o, object_t *k)
  * don't need to drag in the whole definition of pcre's include files.
  */
 int
-ici_pcre(regexp_t *r,
+ici_pcre(ici_regexp_t *r,
     const char *subject, int length, int start_offset,
     int options, int *offsets, int offsetcount)
 {
@@ -143,7 +143,7 @@ ici_pcre(regexp_t *r,
     );
 }
 
-type_t  regexp_type =
+ici_type_t  regexp_type =
 {
     mark_regexp,
     free_regexp,

@@ -75,7 +75,7 @@ seof(sfile_t *sf)
     return sf->sf_eof;
 }
 
-ftype_t string_ftype =
+ici_ftype_t string_ftype =
 {
     sgetc,
     sungetc,
@@ -94,10 +94,10 @@ ftype_t string_ftype =
  * used in-place. But if ref is NULL, it is assumed that the data must
  * be copied.
  */
-file_t *
-ici_sopen(char *data, int size, object_t *ref)
+ici_file_t *
+ici_sopen(char *data, int size, ici_obj_t *ref)
 {
-    register file_t     *f;
+    register ici_file_t *f;
     register sfile_t    *sf;
 
     if ((sf = ici_talloc(sfile_t)) == NULL)

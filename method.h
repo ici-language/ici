@@ -10,11 +10,11 @@
  */
 struct ici_method
 {
-    object_t    o_head;
-    object_t    *m_subject;
-    object_t    *m_callable;
+    ici_obj_t   o_head;
+    ici_obj_t   *m_subject;
+    ici_obj_t   *m_callable;
 };
-#define methodof(o)     ((method_t *)(o))
+#define methodof(o)     ((ici_method_t *)(o))
 #define ismethod(o)     (objof(o)->o_tcode == TC_METHOD)
 
 /*

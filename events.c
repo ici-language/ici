@@ -15,7 +15,7 @@ static int
 f_eventloop()
 {
     MSG         msg;
-    exec_t      *x;
+    ici_exec_t  *x;
 
     x = ici_leave();
     for (;;)
@@ -39,7 +39,7 @@ f_eventloop()
 
 #endif /* _WIN32 */
 
-cfunc_t ici_event_cfuncs[] =
+ici_cfunc_t ici_event_cfuncs[] =
 {
     {CF_OBJ,    (char *)SS(eventloop),       f_eventloop},
     {CF_OBJ}

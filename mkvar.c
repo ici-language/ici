@@ -24,14 +24,14 @@
  *      f       float           double *
  *      s       string          char *
  *      u       file            FILE *
- *      o       any             object_t *
+ *      o       any             ici_obj_t *
  *
  * Returns 0 on succcess, else non-zerro, usual conventions.
  */
 int
-ici_set_val(objwsup_t *s, string_t *name, int type, void *vp)
+ici_set_val(ici_objwsup_t *s, ici_str_t *name, int type, void *vp)
 {
-    object_t    *o;
+    ici_obj_t   *o;
     int         i;
 
     switch (type)
@@ -54,7 +54,7 @@ ici_set_val(objwsup_t *s, string_t *name, int type, void *vp)
         break;
 
     case 'o':
-        o = (object_t *)vp;
+        o = (ici_obj_t *)vp;
         ici_incref(o); /* so can ici_decref(o) below */
         break;
 
@@ -76,7 +76,7 @@ ici_set_val(objwsup_t *s, string_t *name, int type, void *vp)
  * it can be used directly in typical error returns.
  */
 int
-ici_fetch_mismatch(object_t *o, object_t *k, object_t *v, char *expected)
+ici_fetch_mismatch(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v, char *expected)
 {
     char        n1[30];
     char        n2[30];
@@ -94,9 +94,9 @@ ici_fetch_mismatch(object_t *o, object_t *k, object_t *v, char *expected)
 }
 
 int
-ici_assign_float(object_t *o, object_t *k, double v)
+ici_assign_float(ici_obj_t *o, ici_obj_t *k, double v)
 {
-    float_t     *f;
+    ici_float_t  *f;
 
     if ((f = ici_float_new(v)) == NULL)
         return 1;
@@ -111,9 +111,9 @@ ici_assign_float(object_t *o, object_t *k, double v)
  * non-zero on error, usual conventions.
  */
 int
-ici_fetch_num(object_t *o, object_t *k, double *vp)
+ici_fetch_num(ici_obj_t *o, ici_obj_t *k, double *vp)
 {
-    object_t    *v;
+    ici_obj_t   *v;
 
     if ((v = ici_fetch(o, k)) == NULL)
         return 1;
@@ -132,9 +132,9 @@ ici_fetch_num(object_t *o, object_t *k, double *vp)
  * non-zero on error, usual conventions.
  */
 int
-ici_fetch_int(object_t *o, object_t *k, long *vp)
+ici_fetch_int(ici_obj_t *o, ici_obj_t *k, long *vp)
 {
-    object_t    *v;
+    ici_obj_t   *v;
 
     if ((v = ici_fetch(o, k)) == NULL)
         return 1;
@@ -161,12 +161,12 @@ ici_fetch_int(object_t *o, object_t *k, long *vp)
  *      f       float           double *
  *      s       string          char *
  *      u       file            FILE *
- *      o       any             object_t *
+ *      o       any             ici_obj_t *
  */
 int
-ici_cmkvar(objwsup_t *scope, char *name, int type, void *vp)
+ici_cmkvar(ici_objwsup_t *scope, char *name, int type, void *vp)
 {
-    string_t    *s;
+    ici_str_t   *s;
     int         i;
 
     if ((s = ici_str_new_nul_term(name)) == NULL)

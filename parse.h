@@ -13,7 +13,7 @@ typedef struct
         long    tu_int;
         double  tu_float;
         char    *tu_str;        /* Malloced string. */
-        object_t *tu_obj;
+        ici_obj_t *tu_obj;
     }
         tu;
 }
@@ -26,21 +26,21 @@ typedef struct
 
 struct ici_parse
 {
-    object_t    o_head;
-    file_t      *p_file;
+    ici_obj_t   o_head;
+    ici_file_t  *p_file;
     int         p_lineno;       /* Diagnostic information. */
     short       p_sol;          /* At first char in line. */
     short       p_cr;           /* New-line cause by \r, not \n. */
     token_t     p_got;
     token_t     p_ungot;
-    func_t      *p_func;        /* NULL when not within scope. */
+    ici_func_t  *p_func;        /* NULL when not within scope. */
     int         p_module_depth; /* Depth within module, 0 is file level. */
 };
 /*
  * The following portion of this file exports to ici.h. --ici.h-start--
  */
 #define isparse(o)      (objof(o)->o_tcode == TC_PARSE)
-#define parseof(o)      ((parse_t *)(o))
+#define parseof(o)      ((ici_parse_t *)(o))
 /*
  * End of ici.h export. --ici.h-end--
  */
@@ -159,7 +159,7 @@ struct expr
 {
     int         e_what;         /* A token identifier, ie. T_*. */
     expr_t      *e_arg[2];
-    object_t    *e_obj;
+    ici_obj_t   *e_obj;
 };
 
 #endif  /* ICI_PARSE_H */

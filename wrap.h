@@ -7,7 +7,7 @@
 
 struct ici_wrap
 {
-    wrap_t      *w_next;
+    ici_wrap_t  *w_next;
     void        (*w_func)(void);
 };
 

@@ -15,11 +15,11 @@
  * the scope and operand stacks to the matching depth (but only if it is).
  * Returns the catcher, or NULL if there wasn't one.
  */
-catch_t *
+ici_catch_t *
 ici_unwind()
 {
-    object_t    **p;
-    catch_t     *c;
+    ici_obj_t   **p;
+    ici_catch_t *c;
 
     for (p = ici_xs.a_top - 1; p >= ici_xs.a_base; --p)
     {
@@ -41,12 +41,12 @@ ici_unwind()
  * See comments on t_mark() in object.h.
  */
 static unsigned long
-mark_catch(object_t *o)
+mark_catch(ici_obj_t *o)
 {
     unsigned long       mem;
 
     o->o_flags |= O_MARK;
-    mem = sizeof(catch_t);
+    mem = sizeof(ici_catch_t);
     if (catchof(o)->c_catcher != NULL)
         mem += ici_mark(catchof(o)->c_catcher);
     return mem;
@@ -60,12 +60,12 @@ mark_catch(object_t *o)
  * Note: catch's are special. Unlike most types this new_catch function
  * returns its object with a ref count of 0 not 1.
  */
-catch_t *
-new_catch(object_t *o, int odepth, int vdepth, int flags)
+ici_catch_t *
+new_catch(ici_obj_t *o, int odepth, int vdepth, int flags)
 {
-    register catch_t    *c;
+    register ici_catch_t    *c;
 
-    if ((c = ici_talloc(catch_t)) == NULL)
+    if ((c = ici_talloc(ici_catch_t)) == NULL)
         return NULL;
     ICI_OBJ_SET_TFNZ(c, TC_CATCH, flags, 0, 0);
     c->c_catcher = o;
@@ -80,10 +80,10 @@ new_catch(object_t *o, int odepth, int vdepth, int flags)
  * See the comments on t_free() in object.h.
  */
 static void
-free_catch(object_t *o)
+free_catch(ici_obj_t *o)
 {
     assert((o->o_flags & CF_EVAL_BASE) == 0);
-    ici_tfree(o, catch_t);
+    ici_tfree(o, ici_catch_t);
 }
 
 /*
@@ -102,7 +102,7 @@ ici_op_onerror()
     return 0;
 }
 
-type_t  ici_catch_type =
+ici_type_t  ici_catch_type =
 {
     mark_catch,
     free_catch,
@@ -114,4 +114,4 @@ type_t  ici_catch_type =
     "catch"
 };
 
-op_t    o_onerror       = {OBJ(TC_OP), ici_op_onerror};
+ici_op_t    o_onerror       = {OBJ(TC_OP), ici_op_onerror};

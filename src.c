@@ -7,23 +7,23 @@
  * See comments on t_mark() in object.h.
  */
 static unsigned long
-mark_src(object_t *o)
+mark_src(ici_obj_t *o)
 {
     long        mem;
 
     o->o_flags |= O_MARK;
-    mem = sizeof(src_t);
+    mem = sizeof(ici_src_t);
     if (srcof(o)->s_filename != NULL)
         mem += ici_mark(srcof(o)->s_filename);
     return mem;
 }
 
-src_t *
-new_src(int lineno, string_t *filename)
+ici_src_t *
+new_src(int lineno, ici_str_t *filename)
 {
-    register src_t      *s;
+    register ici_src_t  *s;
 
-    if ((s = ici_talloc(src_t)) == NULL)
+    if ((s = ici_talloc(ici_src_t)) == NULL)
         return NULL;
     ICI_OBJ_SET_TFNZ(s, TC_SRC, 0, 1, 0);
     s->s_lineno = lineno;
@@ -37,12 +37,12 @@ new_src(int lineno, string_t *filename)
  * See the comments on t_free() in object.h.
  */
 static void
-free_src(object_t *o)
+free_src(ici_obj_t *o)
 {
-    ici_tfree(o, src_t);
+    ici_tfree(o, ici_src_t);
 }
 
-type_t  src_type =
+ici_type_t  src_type =
 {
     mark_src,
     free_src,

@@ -3,18 +3,18 @@
 #include "exec.h"
 #include "wrap.h"
 
-static wrap_t           *wraps;
+static ici_wrap_t       *wraps;
 
 /*
  * Register the function func to be called at ICI interpreter shutdown
  * (i.e. ici_uninit() call).
  *
- * The caller must supply a wrap_t struct, which is usually statically
+ * The caller must supply a ici_wrap_t struct, which is usually statically
  * allocated. This structure will be linked onto an internal list and
  * be unavailable till after ici_uninit() is called.
  */
 void
-ici_atexit(void (*func)(void), wrap_t *w)
+ici_atexit(void (*func)(void), ici_wrap_t *w)
 {
     w->w_next = wraps;
     w->w_func = func;
@@ -30,10 +30,10 @@ void
 ici_uninit(void)
 {
     int                 i;
-    exec_t              *x;
+    ici_exec_t          *x;
     extern void         ici_dump_refs(void);
-    extern string_t     *ici_ver_cache;
-    extern regexp_t     *ici_smash_default_re;
+    extern ici_str_t    *ici_ver_cache;
+    extern ici_regexp_t *ici_smash_default_re;
 
     /*
      * This catches the case where ici_uninit() is called without ici_init
@@ -99,9 +99,9 @@ ici_uninit(void)
     /*
      * Now free the allocated part of our three special static stacks.
      */
-    ici_nfree(ici_vs.a_base, (ici_vs.a_limit - ici_vs.a_base) * sizeof(object_t *));
-    ici_nfree(ici_os.a_base, (ici_os.a_limit - ici_os.a_base) * sizeof(object_t *));
-    ici_nfree(ici_xs.a_base, (ici_xs.a_limit - ici_xs.a_base) * sizeof(object_t *));
+    ici_nfree(ici_vs.a_base, (ici_vs.a_limit - ici_vs.a_base) * sizeof(ici_obj_t *));
+    ici_nfree(ici_os.a_base, (ici_os.a_limit - ici_os.a_base) * sizeof(ici_obj_t *));
+    ici_nfree(ici_xs.a_base, (ici_xs.a_limit - ici_xs.a_base) * sizeof(ici_obj_t *));
 
 #if 1 && !defined(NDEBUG)
     ici_decref(&ici_vs);
@@ -118,9 +118,9 @@ ici_uninit(void)
     /*
      * Destroy the now empty atom pool and list of registered objects.
      */
-    ici_nfree(atoms, atomsz * sizeof(object_t *));
+    ici_nfree(atoms, atomsz * sizeof(ici_obj_t *));
     atoms = NULL;
-    ici_nfree(objs, (objs_limit - objs) * sizeof(object_t *));
+    ici_nfree(objs, (objs_limit - objs) * sizeof(ici_obj_t *));
     objs = NULL;
 
     ici_drop_all_small_allocations();

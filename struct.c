@@ -31,10 +31,10 @@ long    ici_vsver   = 1;
  * Find the struct slot which does, or should, contain the key k.  Does
  * not look down the super chain.
  */
-slot_t *
-find_raw_slot(struct_t *s, object_t *k)
+ici_sslot_t*
+find_raw_slot(ici_struct_t *s, ici_obj_t *k)
 {
-    register slot_t     *sl;
+    register ici_sslot_t *sl;
 
     sl = &s->s_slots[HASHINDEX(k, s)];
     while (sl->sl_key != NULL)
@@ -52,15 +52,15 @@ find_raw_slot(struct_t *s, object_t *k)
  * See comments on t_mark() in object.h.
  */
 static unsigned long
-mark_struct(object_t *o)
+mark_struct(ici_obj_t *o)
 {
-    register slot_t     *sl;
+    register ici_sslot_t *sl;
     long                mem;
 
     do /* Merge tail recursion on o_head.o_super. */
     {
         o->o_flags |= O_MARK;
-        mem = sizeof(struct_t) + structof(o)->s_nslots * sizeof(slot_t);
+        mem = sizeof(ici_struct_t) + structof(o)->s_nslots * sizeof(slot_t);
         if (structof(o)->s_nels != 0)
         {
             for
@@ -92,32 +92,32 @@ mark_struct(object_t *o)
  * See the comments on t_free() in object.h.
  */
 static void
-free_struct(object_t *o)
+free_struct(ici_obj_t *o)
 {
     if (structof(o)->s_slots != NULL)
         ici_nfree(structof(o)->s_slots, structof(o)->s_nslots * sizeof(slot_t));
-    ici_tfree(o, struct_t);
+    ici_tfree(o, ici_struct_t);
     ++ici_vsver;
 }
 
-struct_t *
+ici_struct_t *
 ici_struct_new(void)
 {
-    register struct_t   *s;
+    register ici_struct_t   *s;
 
     /*
      * NB: there is a copy of this sequence in copy_struct.
      */
-    if ((s = ici_talloc(struct_t)) == NULL)
+    if ((s = ici_talloc(ici_struct_t)) == NULL)
         return NULL;
     ICI_OBJ_SET_TFNZ(s, TC_STRUCT, O_SUPER, 1, 0);
     s->o_head.o_super = NULL;
     s->s_slots = NULL;
     s->s_nels = 0;
     s->s_nslots = 4; /* Must be power of 2. */
-    if ((s->s_slots = (slot_t *)ici_nalloc(4 * sizeof(slot_t))) == NULL)
+    if ((s->s_slots = (ici_sslot_t*)ici_nalloc(4 * sizeof(slot_t))) == NULL)
     {
-        ici_tfree(s, struct_t);
+        ici_tfree(s, ici_struct_t);
         return NULL;
     }
     memset(s->s_slots, 0, 4 * sizeof(slot_t));
@@ -130,11 +130,11 @@ ici_struct_new(void)
  * See the comments on t_cmp() in object.h.
  */
 static int
-cmp_struct(object_t *o1, object_t *o2)
+cmp_struct(ici_obj_t *o1, ici_obj_t *o2)
 {
     register int        i;
-    register slot_t     *sl1;
-    register slot_t     *sl2;
+    register ici_sslot_t *sl1;
+    register ici_sslot_t *sl2;
 
     if (structof(o1) == structof(o2))
         return 0;
@@ -162,12 +162,12 @@ cmp_struct(object_t *o1, object_t *o2)
  * See the comment on t_hash() in object.h
  */
 static unsigned long
-hash_struct(object_t *o)
+hash_struct(ici_obj_t *o)
 {
     int                         i;
     unsigned long               hk;
     unsigned long               hv;
-    slot_t                      *sl;
+    ici_sslot_t                 *sl;
 
     hk = 0;
     hv = 0;
@@ -192,11 +192,11 @@ hash_struct(object_t *o)
  * call this if you know exactly what you are doing.
  */
 void
-ici_invalidate_struct_lookaside(struct_t *s)
+ici_invalidate_struct_lookaside(ici_struct_t *s)
 {
-    slot_t          *sl;
-    slot_t          *sle;
-    string_t        *str;
+    ici_sslot_t     *sl;
+    ici_sslot_t     *sle;
+    ici_str_t       *str;
 
     sl = s->s_slots;
     sle = sl + s->s_nslots;
@@ -218,14 +218,14 @@ ici_invalidate_struct_lookaside(struct_t *s)
  * Return a copy of the given object, or NULL on error.
  * See the comment on t_copy() in object.h.
  */
-static object_t *
-copy_struct(object_t *o)
+static ici_obj_t *
+copy_struct(ici_obj_t *o)
 {
-    struct_t    *s;
-    struct_t    *ns;
+    ici_struct_t    *s;
+    ici_struct_t    *ns;
 
     s = structof(o);
-    if ((ns = (struct_t *)ici_talloc(struct_t)) == NULL)
+    if ((ns = (ici_struct_t *)ici_talloc(ici_struct_t)) == NULL)
         return NULL;
     ICI_OBJ_SET_TFNZ(ns, TC_STRUCT, O_SUPER, 1, 0);
     ns->o_head.o_super = s->o_head.o_super;
@@ -233,7 +233,7 @@ copy_struct(object_t *o)
     ns->s_nslots = 0;
     ns->s_slots = NULL;
     ici_rego(ns);
-    if ((ns->s_slots = (slot_t *)ici_nalloc(s->s_nslots * sizeof(slot_t))) == NULL)
+    if ((ns->s_slots = (ici_sslot_t*)ici_nalloc(s->s_nslots * sizeof(slot_t))) == NULL)
         goto fail;
     memcpy((char *)ns->s_slots, (char *)s->s_slots, s->s_nslots*sizeof(slot_t));
     ns->s_nels = s->s_nels;
@@ -250,25 +250,25 @@ fail:
 }
 
 #ifdef  NOTYET
-struct_t *
-copy_autos(func_t *f)
+ici_struct_t *
+copy_autos(ici_func_t *f)
 {
-    struct_t    *ns;
-    struct_t    *s;
+    ici_struct_t    *ns;
+    ici_struct_t    *s;
     int         nslots;
 
     if (f->f_nautos == 0)
         return structof(copy_struct(f->f_autos));
     s = f->f_autos;
     nslots = f->f_nautos + (f->f_nautos >> 1);
-    ns = (struct_t *)ici_nalloc(sizeof(struct_t) + nslots * sizeof(slot_t));
+    ns = (ici_struct_t *)ici_nalloc(sizeof(ici_struct_t) + nslots * sizeof(slot_t));
     if (ns == NULL)
         return NULL;
     ICI_OBJ_SET_TFNZ(ns, TC_STRUCT, O_SUPER, 1, 0);
     ns->o_head.o_super = s->o_head.o_super;
     ns->s_nels = 0;
     ns->s_nslots = 0;
-    ns->s_slots = (slot_t *)(ns + 1);
+    ns->s_slots = (ici_sslot_t*)(ns + 1);
     memcpy((char *)ns->s_slots, (char *)s->s_slots, s->s_nslots*sizeof(slot_t));
     ns->s_nels = s->s_nels;
     ns->s_nslots = nslots;
@@ -289,14 +289,14 @@ fail:
  * Grow the struct s so that it has twice as many slots.
  */
 static int
-grow_struct(struct_t *s)
+grow_struct(ici_struct_t *s)
 {
-    register slot_t     *sl;
-    register slot_t     *oldslots;
+    register ici_sslot_t *sl;
+    register ici_sslot_t *oldslots;
     register int        i;
 
     i = (s->s_nslots * 2) * sizeof(slot_t);
-    if ((sl = (slot_t *)ici_nalloc(i)) == NULL)
+    if ((sl = (ici_sslot_t*)ici_nalloc(i)) == NULL)
         return 1;
     memset((char *)sl, 0, i);
     oldslots = s->s_slots;
@@ -317,11 +317,11 @@ grow_struct(struct_t *s)
  * Remove the key from the structure, ignoring super-structs.
  */
 void
-ici_struct_unassign(struct_t *s, object_t *k)
+ici_struct_unassign(ici_struct_t *s, ici_obj_t *k)
 {
-    register slot_t     *sl;
-    register slot_t     *ss;
-    register slot_t     *ws;    /* Wanted position. */
+    register ici_sslot_t *sl;
+    register ici_sslot_t *ss;
+    register ici_sslot_t *ws;    /* Wanted position. */
 
     if ((ss = find_raw_slot(s, k))->sl_key == NULL)
         return;
@@ -376,9 +376,9 @@ ici_struct_unassign(struct_t *s, object_t *k)
  * assignment. This is used to mantain the lookup lookaside mechanism.
  */
 static int
-fetch_super_struct(object_t *o, object_t *k, object_t **v, struct_t *b)
+fetch_super_struct(ici_obj_t *o, ici_obj_t *k, ici_obj_t **v, ici_struct_t *b)
 {
-    slot_t              *sl;
+    ici_sslot_t         *sl;
 
     do
     {
@@ -415,10 +415,10 @@ fetch_super_struct(object_t *o, object_t *k, object_t **v, struct_t *b)
  * Return the object at key k of the obejct o, or NULL on error.
  * See the comment on t_fetch in object.h.
  */
-static object_t *
-fetch_struct(object_t *o, object_t *k)
+static ici_obj_t *
+fetch_struct(ici_obj_t *o, ici_obj_t *k)
 {
-    object_t            *v;
+    ici_obj_t           *v;
 
     if
     (
@@ -441,10 +441,10 @@ fetch_struct(object_t *o, object_t *k)
     return objof(&o_null);              /* Not found. */
 }
 
-static object_t *
-fetch_base_struct(object_t *o, object_t *k)
+static ici_obj_t *
+fetch_base_struct(ici_obj_t *o, ici_obj_t *k)
 {
-    slot_t              *sl;
+    ici_sslot_t         *sl;
 
     sl = find_raw_slot(structof(o), k);
     if (sl->sl_key == NULL)
@@ -475,9 +475,9 @@ fetch_base_struct(object_t *o, object_t *k)
  * assignment. This is used to mantain the lookup lookaside mechanism.
  */
 static int
-assign_super_struct(object_t *o, object_t *k, object_t *v, struct_t *b)
+assign_super_struct(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v, ici_struct_t *b)
 {
-    slot_t              *sl;
+    ici_sslot_t         *sl;
 
     do
     {
@@ -517,9 +517,9 @@ assign_super_struct(object_t *o, object_t *k, object_t *v, struct_t *b)
  * See the comment on t_assign() in object.h.
  */
 static int
-assign_struct(object_t *o, object_t *k, object_t *v)
+assign_struct(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v)
 {
-    slot_t              *sl;
+    ici_sslot_t         *sl;
 
     if
     (
@@ -533,7 +533,7 @@ assign_struct(object_t *o, object_t *k, object_t *v)
     )
     {
 #ifndef NDEBUG
-        object_t        *av;
+        ici_obj_t       *av;
 #endif
 
         assert(fetch_super_struct(o, k, &av, NULL) == 1);
@@ -611,9 +611,9 @@ do_assign:
  * That is, always assign into the lowest level. Usual error coventions.
  */
 static int
-assign_base_struct(object_t *o, object_t *k, object_t *v)
+assign_base_struct(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v)
 {
-    slot_t              *sl;
+    ici_sslot_t         *sl;
 
     if (o->o_flags & O_ATOM)
     {
@@ -657,7 +657,7 @@ do_assign:
     return 0;
 }
 
-type_t  struct_type =
+ici_type_t  struct_type =
 {
     mark_struct,
     free_struct,
@@ -676,9 +676,9 @@ type_t  struct_type =
     fetch_base_struct
 };
 
-op_t    o_namelvalue    = {OBJ(TC_OP), NULL, OP_NAMELVALUE};
-op_t    o_colon         = {OBJ(TC_OP), NULL, OP_COLON};
-op_t    o_coloncaret    = {OBJ(TC_OP), NULL, OP_COLONCARET};
-op_t    o_dot           = {OBJ(TC_OP), NULL, OP_DOT};
-op_t    o_dotkeep       = {OBJ(TC_OP), NULL, OP_DOTKEEP};
-op_t    o_dotrkeep      = {OBJ(TC_OP), NULL, OP_DOTRKEEP};
+ici_op_t    o_namelvalue    = {OBJ(TC_OP), NULL, OP_NAMELVALUE};
+ici_op_t    o_colon         = {OBJ(TC_OP), NULL, OP_COLON};
+ici_op_t    o_coloncaret    = {OBJ(TC_OP), NULL, OP_COLONCARET};
+ici_op_t    o_dot           = {OBJ(TC_OP), NULL, OP_DOT};
+ici_op_t    o_dotkeep       = {OBJ(TC_OP), NULL, OP_DOTKEEP};
+ici_op_t    o_dotrkeep      = {OBJ(TC_OP), NULL, OP_DOTRKEEP};

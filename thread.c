@@ -34,10 +34,10 @@ long                    ici_n_active_threads;
  * If the current thread is in an ICI level critical section (e.g.
  * the test or body of a watifor) this will have no effect.
  */
-exec_t *
+ici_exec_t *
 ici_leave(void)
 {
-    exec_t              *x;
+    ici_exec_t          *x;
 
     x = ici_exec;
     if (!x->x_critsect)
@@ -87,7 +87,7 @@ ici_leave(void)
  * that happened when the ici_leave() was done).
  */
 void
-ici_enter(exec_t *x)
+ici_enter(ici_exec_t *x)
 {
     if (!x->x_critsect)
     {
@@ -139,7 +139,7 @@ ici_enter(exec_t *x)
 void
 ici_yield(void)
 {
-    exec_t              *x;
+    ici_exec_t          *x;
 
     x = ici_exec;
     if (ici_n_active_threads > 1 && x->x_critsect == 0)
@@ -197,9 +197,9 @@ ici_yield(void)
  * the actual wait.
  */
 int
-ici_waitfor(object_t *o)
+ici_waitfor(ici_obj_t *o)
 {
-    exec_t              *x;
+    ici_exec_t          *x;
     char                *e;
 
     e = NULL;
@@ -238,9 +238,9 @@ ici_waitfor(object_t *o)
  * thus allow them re-evaluate their wait expression).
  */
 int
-ici_wakeup(object_t *o)
+ici_wakeup(ici_obj_t *o)
 {
-    exec_t              *x;
+    ici_exec_t          *x;
 
     for (x = ici_execs; x != NULL; x = x->x_next)
     {
@@ -266,7 +266,7 @@ ici_wakeup(object_t *o)
 
 /*
  * Entry point for a new thread. The passed argument is the pointer
- * to the execution context (exec_t *). It has one ref count that is
+ * to the execution context (ici_exec_t *). It has one ref count that is
  * now considered to be owned by this function. The operand stack
  * of the new context has the ICI function to be called configured on
  * it.
@@ -276,14 +276,14 @@ static
 #ifdef ICI_USE_WIN32_THREADS
 long
 WINAPI /* Ensure correct Win32 calling convention. */
-ici_thread_base(exec_t *x)
+ici_thread_base(ici_exec_t *x)
 {
 #endif
 #ifdef ICI_USE_POSIX_THREADS
 void *
 ici_thread_base(void *arg)
 {
-    exec_t      *x = arg;
+    ici_exec_t  *x = arg;
 #endif
     int                 n_ops;
 
@@ -312,7 +312,7 @@ ici_thread_base(void *arg)
 static int
 f_thread()
 {
-    exec_t              *x;
+    ici_exec_t          *x;
     int                 i;
 
     if (NARGS() < 1 || ici_typeof(ARG(0))->t_call == NULL)
@@ -438,7 +438,7 @@ ici_init_thread_stuff(void)
     return 0;
 }
 
-cfunc_t ici_thread_cfuncs[] =
+ici_cfunc_t ici_thread_cfuncs[] =
 {
     {CF_OBJ,    "thread",        f_thread},
     {CF_OBJ,    "wakeup",        f_wakeup},

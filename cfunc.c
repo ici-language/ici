@@ -2,7 +2,7 @@
  * cfunc.c
  *
  * Implementations of many (not all) of the core language intrinsic functions.
- * For historical reasons this is *NOT* the code associated with the cfunc_t
+ * For historical reasons this is *NOT* the code associated with the ici_cfunc_t
  * type. That's in cfunco.c
  *
  * This is public domain source. Please do not add any copyrighted material.
@@ -83,7 +83,7 @@ extern int      fgetc();
  * The argspec key letters and their meaning are:
  *
  * o    Any ICI object is required in the actuals, the corresponding pointer
- *      must be a pointer to a (object_t *); which will be set to the actual
+ *      must be a pointer to a (ici_obj_t *); which will be set to the actual
  *      argument.
  * h    An ICI handle object, that has the name given by the corresponding
  *      argument, is required. The next argument is a pointer to store the
@@ -126,12 +126,12 @@ int
 ici_typecheck(char *types, ...)
 {
     va_list             va;
-    register object_t   **ap;   /* Argument pointer. */
+    register ici_obj_t  **ap;   /* Argument pointer. */
     register int        nargs;
     register int        i;
     char                *ptr;   /* Subsequent things from va_alist. */
     register int        tcode;
-    register object_t   *o;
+    register ici_obj_t  *o;
 
     va_start(va, types);
     nargs = NARGS();
@@ -170,11 +170,11 @@ ici_typecheck(char *types, ...)
         switch (tcode)
         {
         case 'o': /* Any object. */
-            *(object_t **)ptr = o;
+            *(ici_obj_t **)ptr = o;
             break;
 
         case 'h': /* A handle with a particular name. */
-            if (!ishandleof(o, (string_t *)ptr))
+            if (!ishandleof(o, (ici_str_t *)ptr))
                 goto fail;
             ptr = va_arg(va, char *);
             *(ici_handle_t **)ptr = handleof(o);
@@ -183,7 +183,7 @@ ici_typecheck(char *types, ...)
         case 'p': /* Any pointer. */
             if (!isptr(o))
                 goto fail;
-            *(ptr_t **)ptr = ptrof(o);
+            *(ici_ptr_t **)ptr = ptrof(o);
             break;
 
         case 'i': /* An int -> long. */
@@ -213,34 +213,34 @@ ici_typecheck(char *types, ...)
                 goto fail;
             break;
 
-        case 'd': /* A struct ("dict") -> (struct_t *). */
+        case 'd': /* A struct ("dict") -> (ici_struct_t *). */
             if (!isstruct(o))
                 goto fail;
-            *(struct_t **)ptr = structof(o);
+            *(ici_struct_t **)ptr = structof(o);
             break;
 
-        case 'a': /* An array -> (array_t *). */
+        case 'a': /* An array -> (ici_array_t *). */
             if (!isarray(o))
                 goto fail;
-            *(array_t **)ptr = arrayof(o);
+            *(ici_array_t **)ptr = arrayof(o);
             break;
 
-        case 'u': /* A file -> (file_t *). */
+        case 'u': /* A file -> (ici_file_t *). */
             if (!isfile(o))
                 goto fail;
-            *(file_t **)ptr = fileof(o);
+            *(ici_file_t **)ptr = fileof(o);
             break;
 
         case 'r': /* A regular expression -> (regexpr_t *). */
             if (!isregexp(o))
                 goto fail;
-            *(regexp_t **)ptr = regexpof(o);
+            *(ici_regexp_t **)ptr = regexpof(o);
             break;
 
-        case 'm': /* A mem -> (mem_t *). */
+        case 'm': /* A mem -> (ici_mem_t *). */
             if (!ismem(o))
                 goto fail;
-            *(mem_t **)ptr = memof(o);
+            *(ici_mem_t **)ptr = memof(o);
             break;
 
         default:
@@ -267,8 +267,8 @@ fail:
  * Each of the characters in the retspec has the following meaning.
  *
  * o    The actual argument must be a ptr, the corresponding pointer is
- *      assumed to be an (object_t **).  The location indicated by the
- *      ptr object is updated with the (object_t *).
+ *      assumed to be an (ici_obj_t **).  The location indicated by the
+ *      ptr object is updated with the (ici_obj_t *).
  * d
  * a
  * u    Likwise for types as per ici_typecheck() above.
@@ -282,11 +282,11 @@ ici_retcheck(char *types, ...)
     va_list             va;
     register int        i;
     register int        nargs;
-    register object_t   **ap;
+    register ici_obj_t  **ap;
     char                *ptr;
     register int        tcode;
-    register object_t   *o;
-    register object_t   *s;
+    register ici_obj_t  *o;
+    register ici_obj_t  *s;
 
     va_start(va, types);
     nargs = NARGS();
@@ -317,13 +317,13 @@ ici_retcheck(char *types, ...)
         switch (tcode)
         {
         case 'o': /* Any object. */
-            *(object_t **)ptr = o;
+            *(ici_obj_t **)ptr = o;
             break;
 
         case 'p': /* Any pointer. */
             if (!isptr(o))
                 goto fail;
-            *(ptr_t **)ptr = ptrof(o);
+            *(ici_ptr_t **)ptr = ptrof(o);
             break;
 
         case 'i':
@@ -353,19 +353,19 @@ ici_retcheck(char *types, ...)
         case 'd':
             if (!isstruct(o))
                 goto fail;
-            *(struct_t **)ptr = structof(o);
+            *(ici_struct_t **)ptr = structof(o);
             break;
 
         case 'a':
             if (!isarray(o))
                 goto fail;
-            *(array_t **)ptr = arrayof(o);
+            *(ici_array_t **)ptr = arrayof(o);
             break;
 
         case 'u':
             if (!isfile(o))
                 goto fail;
-            *(file_t **)ptr = fileof(o);
+            *(ici_file_t **)ptr = fileof(o);
             break;
 
         case '*':
@@ -410,7 +410,7 @@ fail:
  *  static int
  *  myfunc()
  *  {
- *      object_t   *o;
+ *      ici_obj_t  *o;
  *
  *      if (NARGS() != 1)
  *          return ici_argcount(1);
@@ -456,7 +456,7 @@ ici_argerror(int i)
  *      static int
  *      myfunc()
  *      {
- *          object_t   *o;
+ *          ici_obj_t  *o;
  *
  *          if (NARGS() != 1)
  *              return ici_argcount(1);
@@ -493,7 +493,7 @@ ici_argcount(int n)
  * This function forms part of ICI's exernal API --ici-api-- --func--
  */
 int
-ici_ret_with_decref(object_t *o)
+ici_ret_with_decref(ici_obj_t *o)
 {
     if (o == NULL)
         return 1;
@@ -520,7 +520,7 @@ ici_ret_with_decref(object_t *o)
  * This function forms part of ICI's exernal API --ici-api-- --func--
  */
 int
-ici_ret_no_decref(object_t *o)
+ici_ret_no_decref(ici_obj_t *o)
 {
     if (o == NULL)
         return 1;
@@ -568,10 +568,10 @@ ici_str_ret(char *str)
  * current scope. The array is not increfed - it is assumed to be still
  * referenced from the scope until the caller has finished with it.
  */
-array_t *
+ici_array_t *
 ici_need_path(void)
 {
-    object_t            *o;
+    ici_obj_t           *o;
 
     o = ici_fetch(ici_vs.a_top[-1], SSO(path));
     if (!isarray(o))
@@ -586,10 +586,10 @@ ici_need_path(void)
  * Return the file object that is the current value of the "stdin"
  * name in the current scope. Else NULL, usual conventions.
  */
-file_t *
+ici_file_t *
 ici_need_stdin(void)
 {
-    file_t              *f;
+    ici_file_t          *f;
 
     f = fileof(ici_fetch(ici_vs.a_top[-1], SSO(_stdin)));
     if (!isfile(f))
@@ -605,10 +605,10 @@ ici_need_stdin(void)
  * name in the current scope. Else NULL, usual conventions.
  */
 
-file_t *
+ici_file_t *
 ici_need_stdout(void)
 {
-    file_t              *f;
+    ici_file_t          *f;
 
     f = fileof(ici_fetch(ici_vs.a_top[-1], SSO(_stdout)));
     if (!isfile(f))
@@ -689,21 +689,21 @@ f_math()
  *                      "icicore.ici" is always parse. Others are on-demand.)
  */
 static int
-f_coreici(object_t *s)
+f_coreici(ici_obj_t *s)
 {
-    object_t            *c;
-    object_t            *f;
+    ici_obj_t           *c;
+    ici_obj_t           *f;
 
     /*
      * Use the execution engine to evaluate the name of the core module
      * this function is in. It will auto-load if necessary.
      */
-    if ((c = ici_evaluate((object_t *)CF_ARG2(), 0)) == NULL)
+    if ((c = ici_evaluate((ici_obj_t *)CF_ARG2(), 0)) == NULL)
         return 1;
     /*
      * Fetch the real function from that module and verify it is callable.
      */
-    f = fetch_base(c, (object_t *)CF_ARG1());
+    f = fetch_base(c, (ici_obj_t *)CF_ARG1());
     ici_decref(c);
     if (f == NULL)
         return 1;
@@ -719,7 +719,7 @@ f_coreici(object_t *s)
      * Over-write the definition of the function (which was us) with the
      * real function.
      */
-    if (ici_assign(ici_vs.a_top[-1], (object_t *)CF_ARG1(), f))
+    if (ici_assign(ici_vs.a_top[-1], (ici_obj_t *)CF_ARG1(), f))
         return 1;
     /*
      * Replace us with the new callable object on the operand stack
@@ -732,10 +732,10 @@ f_coreici(object_t *s)
 static int
 f_struct()
 {
-    object_t            **o;
+    ici_obj_t           **o;
     int                 nargs;
-    struct_t            *s;
-    objwsup_t           *super;
+    ici_struct_t        *s;
+    ici_objwsup_t       *super;
 
     nargs = NARGS();
     o = ARGS();
@@ -768,8 +768,8 @@ static int
 f_set()
 {
     register int        nargs;
-    register set_t      *s;
-    register object_t   **o;
+    register ici_set_t  *s;
+    register ici_obj_t  **o;
 
     if ((s = ici_set_new()) == NULL)
         return 1;
@@ -788,8 +788,8 @@ static int
 f_array()
 {
     register int        nargs;
-    register array_t    *a;
-    register object_t   **o;
+    register ici_array_t    *a;
+    register ici_obj_t  **o;
 
     nargs = NARGS();
     if ((a = ici_array_new(nargs)) == NULL)
@@ -802,9 +802,9 @@ f_array()
 static int
 f_keys()
 {
-    struct_t            *s;
-    register array_t    *k;
-    register slot_t     *sl;
+    ici_struct_t        *s;
+    register ici_array_t    *k;
+    register ici_sslot_t *sl;
 
     if (ici_typecheck("d", &s))
         return 1;
@@ -819,7 +819,7 @@ f_keys()
 }
 
 static int
-f_copy(object_t *o)
+f_copy(ici_obj_t *o)
 {
     if (o != NULL)
         return ici_ret_with_decref(copy(o));
@@ -843,7 +843,7 @@ f_typeof()
 static int
 f_nels()
 {
-    register object_t   *o;
+    register ici_obj_t  *o;
     long                size;
 
     if (NARGS() != 1)
@@ -867,7 +867,7 @@ f_nels()
 static int
 f_int()
 {
-    register object_t   *o;
+    register ici_obj_t  *o;
     register long       v;
 
     if (NARGS() != 1)
@@ -887,7 +887,7 @@ f_int()
 static int
 f_float()
 {
-    register object_t   *o;
+    register ici_obj_t  *o;
     register double     v;
     extern double       strtod();
 
@@ -908,7 +908,7 @@ f_float()
 static int
 f_num()
 {
-    register object_t   *o;
+    register ici_obj_t  *o;
     register double     f;
     register long       i;
     char                *s;
@@ -937,7 +937,7 @@ f_num()
 static int
 f_string()
 {
-    register object_t   *o;
+    register ici_obj_t  *o;
 
     if (NARGS() != 1)
         return ici_argcount(1);
@@ -958,8 +958,8 @@ f_string()
 static int
 f_eq()
 {
-    object_t    *o1;
-    object_t    *o2;
+    ici_obj_t   *o1;
+    ici_obj_t   *o2;
 
     if (ici_typecheck("oo", &o1, &o2))
         return 1;
@@ -971,8 +971,8 @@ f_eq()
 static int
 f_push()
 {
-    array_t     *a;
-    object_t    *o;
+    ici_array_t *a;
+    ici_obj_t   *o;
 
     if (ici_typecheck("ao", &a, &o))
         return 1;
@@ -984,8 +984,8 @@ f_push()
 static int
 f_rpush()
 {
-    array_t     *a;
-    object_t    *o;
+    ici_array_t *a;
+    ici_obj_t   *o;
 
     if (ici_typecheck("ao", &a, &o))
         return 1;
@@ -997,8 +997,8 @@ f_rpush()
 static int
 f_pop()
 {
-    array_t     *a;
-    object_t    *o;
+    ici_array_t *a;
+    ici_obj_t   *o;
 
     if (ici_typecheck("a", &a))
         return 1;
@@ -1010,8 +1010,8 @@ f_pop()
 static int
 f_rpop()
 {
-    array_t     *a;
-    object_t    *o;
+    ici_array_t *a;
+    ici_obj_t   *o;
 
     if (ici_typecheck("a", &a))
         return 1;
@@ -1023,7 +1023,7 @@ f_rpop()
 static int
 f_top()
 {
-    array_t     *a;
+    ici_array_t *a;
     long        n = 0;
 
     switch (NARGS())
@@ -1044,10 +1044,10 @@ f_top()
 static int
 f_parse()
 {
-    object_t    *o;
-    file_t      *f;
-    struct_t    *s;     /* Statics. */
-    struct_t    *a;     /* Autos. */
+    ici_obj_t   *o;
+    ici_file_t  *f;
+    ici_struct_t    *s;     /* Statics. */
+    ici_struct_t    *a;     /* Autos. */
 
     switch (NARGS())
     {
@@ -1106,10 +1106,10 @@ fail:
 static int
 f_include()
 {
-    string_t    *filename;
-    struct_t    *a;
+    ici_str_t   *filename;
+    ici_struct_t    *a;
     int         rc;
-    file_t      *f;
+    ici_file_t  *f;
 
     switch (NARGS())
     {
@@ -1166,14 +1166,14 @@ f_include()
 static int
 f_call(void)
 {
-    array_t     *aa;        /* The array with extra arguments, or NULL. */
+    ici_array_t *aa;        /* The array with extra arguments, or NULL. */
     int         nargs;      /* Number of args to target function. */
     int         naargs;     /* Number of args comming from the array. */
-    object_t    **base;
-    object_t    **e;
+    ici_obj_t   **base;
+    ici_obj_t   **e;
     int         i;
-    int_t       *nargso;
-    object_t    *func;
+    ici_int_t   *nargso;
+    ici_obj_t   *func;
 
     if (NARGS() < 2)
         return ici_argcount(2);
@@ -1217,7 +1217,7 @@ f_call(void)
      * First move the arguments that we want to keep up to the stack
      * to their new position (all except the func and the array).
      */
-    memmove(base + naargs, base + 1, (NARGS() - 2) * sizeof(object_t *));
+    memmove(base + naargs, base + 1, (NARGS() - 2) * sizeof(ici_obj_t *));
     ici_os.a_top += naargs - 2;
     if (naargs > 0)
     {
@@ -1263,7 +1263,7 @@ f_fail()
 static int
 f_exit()
 {
-    object_t    *rc;
+    ici_obj_t   *rc;
     long        status;
 
     switch (NARGS())
@@ -1367,13 +1367,13 @@ f_rand()
 static int
 f_interval()
 {
-    object_t            *o;
+    ici_obj_t           *o;
     long                start;
     long                length;
     long                nel;
-    register string_t   *s = 0; /* init to shut up compiler */
-    register array_t    *a = 0; /* init to shut up compiler */
-    register array_t    *a1;
+    register ici_str_t  *s = 0; /* init to shut up compiler */
+    register ici_array_t    *a = 0; /* init to shut up compiler */
+    register ici_array_t    *a1;
 
 
     if (ici_typecheck("oi*", &o, &start))
@@ -1440,7 +1440,7 @@ f_explode()
 {
     register int        i;
     char                *s;
-    array_t             *x;
+    ici_array_t         *x;
 
     if (ici_typecheck("s", &s))
         return 1;
@@ -1463,10 +1463,10 @@ f_explode()
 static int
 f_implode()
 {
-    array_t             *a;
+    ici_array_t         *a;
     int                 i;
-    object_t            **o;
-    string_t            *s;
+    ici_obj_t           **o;
+    ici_str_t           *s;
     char                *p;
 
     if (ici_typecheck("a", &a))
@@ -1510,7 +1510,7 @@ f_implode()
 static int
 f_sopen()
 {
-    file_t      *f;
+    ici_file_t  *f;
     char        *str;
     char        *mode;
 
@@ -1533,8 +1533,8 @@ f_sopen()
 static int
 f_mopen()
 {
-    mem_t       *mem;
-    file_t      *f;
+    ici_mem_t   *mem;
+    ici_file_t  *f;
     char        *mode;
 
     if (ici_typecheck("os", &mem, &mode))
@@ -1578,8 +1578,8 @@ f_sprintf()
     long                ivalue;
     double              fvalue;
     char                *svalue;
-    object_t            **o;            /* Argument pointer. */
-    file_t              *file;
+    ici_obj_t           **o;            /* Argument pointer. */
+    ici_file_t          *file;
     char                oname[ICI_OBJNAMEZ];
 #ifdef  BAD_PRINTF_RETVAL
 #define IPLUSEQ
@@ -1834,7 +1834,7 @@ f_sprintf()
         {
             char        small_buf[128];
             char        *out_buf;
-            exec_t      *x;
+            ici_exec_t  *x;
 
             if (i <= sizeof small_buf)
             {
@@ -1872,9 +1872,9 @@ lacking:
 static int
 f_currentfile()
 {
-    object_t    **o;
+    ici_obj_t   **o;
     int         raw;
-    file_t      *f;
+    ici_file_t  *f;
 
     raw = NARGS() > 0 && ARG(0) == SSO(raw);
     for (o = ici_xs.a_top - 1; o >= ici_xs.a_base; --o)
@@ -1895,8 +1895,8 @@ f_currentfile()
 static int
 f_del()
 {
-    object_t    *s;
-    object_t    *o;
+    ici_obj_t   *s;
+    ici_obj_t   *o;
 
     if (ici_typecheck("oo", &s, &o))
         return 1;
@@ -1910,9 +1910,9 @@ f_del()
     }
     else if (isarray(s))
     {
-        array_t         *a;
-        object_t        **e;
-        object_t        **prev_e;
+        ici_array_t     *a;
+        ici_obj_t       **e;
+        ici_obj_t       **prev_e;
 
         a = arrayof(s);
         for (e = ici_astart(a); e != ici_alimit(a); e = ici_anext(a, e))
@@ -1944,9 +1944,9 @@ f_del()
  * a loop. Else return 0.
  */
 static int
-super_loop(objwsup_t *base)
+super_loop(ici_objwsup_t *base)
 {
-    objwsup_t           *s;
+    ici_objwsup_t       *s;
 
     /*
      * Scan up the super chain setting the O_MARK flag as we go. If we hit
@@ -1981,9 +1981,9 @@ super_loop(objwsup_t *base)
 static int
 f_super()
 {
-    objwsup_t           *o;
-    objwsup_t           *newsuper;
-    objwsup_t           *oldsuper;
+    ici_objwsup_t       *o;
+    ici_objwsup_t       *newsuper;
+    ici_objwsup_t       *oldsuper;
 
     if (ici_typecheck("o*", &o))
         return 1;
@@ -2019,7 +2019,7 @@ f_super()
 static int
 f_scope()
 {
-    struct_t    *s;
+    ici_struct_t    *s;
 
     s = structof(ici_vs.a_top[-1]);
     if (NARGS() > 0)
@@ -2033,7 +2033,7 @@ f_scope()
 static int
 f_isatom()
 {
-    object_t    *o;
+    ici_obj_t   *o;
 
     if (ici_typecheck("o", &o))
         return 1;
@@ -2116,9 +2116,9 @@ f_mem()
 static int
 f_assign()
 {
-    object_t    *s;
-    object_t    *k;
-    object_t    *v;
+    ici_obj_t   *s;
+    ici_obj_t   *k;
+    ici_obj_t   *v;
 
     switch (NARGS())
     {
@@ -2152,8 +2152,8 @@ f_assign()
 static int
 f_fetch()
 {
-    struct_t    *s;
-    object_t    *k;
+    ici_struct_t    *s;
+    ici_obj_t   *k;
 
     if (ici_typecheck("oo", &s, &k))
         return 1;
@@ -2166,7 +2166,7 @@ f_fetch()
 static int
 f_waitfor()
 {
-    register object_t   **e;
+    register ici_obj_t  **e;
     int                 nargs;
     fd_set              readfds;
     struct timeval      timeval;
@@ -2260,8 +2260,8 @@ f_waitfor()
 static int
 f_gettoken()
 {
-    file_t              *f;
-    string_t            *s;
+    ici_file_t          *f;
+    ici_str_t           *s;
     unsigned char       *seps;
     int                 nseps;
     char                *file;
@@ -2354,7 +2354,7 @@ f_gettoken()
 static int
 fast_gettokens(char *str, char *delims)
 {
-    array_t     *a;
+    ici_array_t *a;
     int         k       = 0;
     char        *cp     = str;
 
@@ -2394,8 +2394,8 @@ fast_gettokens(char *str, char *delims)
 static int
 f_gettokens()
 {
-    file_t              *f;
-    string_t            *s;
+    ici_file_t          *f;
+    ici_str_t           *s;
     unsigned char       *terms;
     int                 nterms;
     unsigned char       *seps;
@@ -2405,7 +2405,7 @@ f_gettokens()
     int                 hardsep;
     unsigned char       sep;
     char                *file;
-    array_t             *a;
+    ici_array_t         *a;
     int                 (*get)();
     int                 c;
     int                 i;
@@ -2651,18 +2651,18 @@ fail:
 static int
 f_sort()
 {
-    array_t     *a;
-    object_t    **base;
+    ici_array_t *a;
+    ici_obj_t   **base;
     long        n;
-    object_t    *f;
+    ici_obj_t   *f;
     long        cmp;
     long        k;                              /* element added or removed */
     long        p;                              /* place in heap */
     long        q;                              /* place in heap */
     long        l;                              /* left child */
     long        r;                              /* right child */
-    object_t    *o;                             /* object used for swapping */
-    object_t    *uarg;                          /* user argument to cmp func */
+    ici_obj_t   *o;                             /* object used for swapping */
+    ici_obj_t   *uarg;                          /* user argument to cmp func */
 
 /*
  * Relations within heap.
@@ -2717,7 +2717,7 @@ f_sort()
     if (a->a_bot > a->a_top)
     {
         ptrdiff_t       m;
-        object_t        **e;
+        ici_obj_t       **e;
 
         /*
          * Can't sort in-place because the array has wrapped. Force the
@@ -2725,10 +2725,10 @@ f_sort()
          * in array.c.
          */
         m = a->a_limit - a->a_base;
-        if ((e = ici_nalloc(m * sizeof(object_t *))) == NULL)
+        if ((e = ici_nalloc(m * sizeof(ici_obj_t *))) == NULL)
             goto fail;
         ici_array_gather(e, a, 0, n);
-        ici_nfree(a->a_base, m * sizeof(object_t *));
+        ici_nfree(a->a_base, m * sizeof(ici_obj_t *));
         a->a_base = e;
         a->a_bot = e;
         a->a_top = e + n;
@@ -2871,7 +2871,7 @@ f_now()
 static int
 f_calendar()
 {
-    objwsup_t           *s;
+    ici_objwsup_t       *s;
     double              d;
     long                l;
 
@@ -2963,7 +2963,7 @@ static int
 f_sleep()
 {
     double              how_long;
-    exec_t              *x;
+    ici_exec_t          *x;
 
     if (ici_typecheck("n", &how_long))
         return 1;
@@ -3038,7 +3038,7 @@ f_cputime()
     return ici_float_ret(t);
 }
 
-string_t                *ici_ver_cache;
+ici_str_t               *ici_ver_cache;
 
 static int
 f_version()
@@ -3057,8 +3057,8 @@ f_version()
 static int
 f_strbuf()
 {
-    string_t            *s;
-    string_t            *is;
+    ici_str_t           *s;
+    ici_str_t           *is;
     int                 n;
 
     is = NULL;
@@ -3083,8 +3083,8 @@ f_strbuf()
 static int
 f_strcat()
 {
-    string_t            *s1;
-    string_t            *s2;
+    ici_str_t           *s1;
+    ici_str_t           *s2;
     int                 n;
     int                 i;
     int                 si;
@@ -3140,7 +3140,7 @@ uninit_cfunc(void)
 {
 }
 
-cfunc_t std_cfuncs[] =
+ici_cfunc_t std_cfuncs[] =
 {
     {CF_OBJ,    (char *)SS(array),        f_array},
     {CF_OBJ,    (char *)SS(copy),         f_copy},

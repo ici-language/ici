@@ -14,9 +14,9 @@
  * See array.h. This reallocates the array buffer.
  */
 int
-ici_grow_stack(array_t *a, ptrdiff_t n)
+ici_grow_stack(ici_array_t *a, ptrdiff_t n)
 {
-    register object_t   **e;
+    register ici_obj_t  **e;
     ptrdiff_t           oldz;
 
     /*
@@ -33,12 +33,12 @@ ici_grow_stack(array_t *a, ptrdiff_t n)
         n += (a->a_limit - a->a_base) + 10;
     else
         n = (a->a_limit - a->a_base) * 3 / 2;
-    if ((e = (object_t **)ici_nalloc(n * sizeof(object_t *))) == NULL)
+    if ((e = (ici_obj_t **)ici_nalloc(n * sizeof(ici_obj_t *))) == NULL)
         return 1;
     memcpy((char *)e, (char *)a->a_base,
-        (a->a_limit - a->a_base) * sizeof(object_t *));
+        (a->a_limit - a->a_base) * sizeof(ici_obj_t *));
     a->a_top = e + (a->a_top - a->a_base);
-    ici_nfree((char *)a->a_base, oldz * sizeof(object_t *));
+    ici_nfree((char *)a->a_base, oldz * sizeof(ici_obj_t *));
     a->a_base = e;
     a->a_bot = e;
     a->a_limit = e + n;
@@ -49,7 +49,7 @@ ici_grow_stack(array_t *a, ptrdiff_t n)
  * Function to do the hard work for the macro ici_stack_probe(). See array.h.
  */
 int
-ici_fault_stack(array_t *a, ptrdiff_t i)
+ici_fault_stack(ici_array_t *a, ptrdiff_t i)
 {
     /*
      * Users of arrays as stacks are supposed to know the origin and
@@ -71,7 +71,7 @@ ici_fault_stack(array_t *a, ptrdiff_t i)
  * This --func-- forms part of the --ici-api--.
  */
 ptrdiff_t
-ici_array_nels(array_t *a)
+ici_array_nels(ici_array_t *a)
 {
     if (a->a_top >= a->a_bot)
         return a->a_top - a->a_bot;
@@ -86,10 +86,10 @@ ici_array_nels(array_t *a)
  * This is the commonest routine for finding an element at a given
  * index in an array. It only works for valid indexes.
  */
-static object_t **
-ici_array_span(array_t *a, int i, ptrdiff_t *np)
+static ici_obj_t **
+ici_array_span(ici_array_t *a, int i, ptrdiff_t *np)
 {
-    object_t            **e;
+    ici_obj_t           **e;
     ptrdiff_t           n;
 
     if (a->a_bot <= a->a_top)
@@ -128,9 +128,9 @@ ici_array_span(array_t *a, int i, ptrdiff_t *np)
  * This --func-- forms part of the --ici-api--.
  */
 void
-ici_array_gather(object_t **b, array_t *a, ptrdiff_t start, ptrdiff_t n)
+ici_array_gather(ici_obj_t **b, ici_array_t *a, ptrdiff_t start, ptrdiff_t n)
 {
-    object_t            **e;
+    ici_obj_t           **e;
     ptrdiff_t           i;
     ptrdiff_t           m;
 
@@ -138,7 +138,7 @@ ici_array_gather(object_t **b, array_t *a, ptrdiff_t start, ptrdiff_t n)
     {
         m = n - (i - start);
         e = ici_array_span(a, i, &m);
-        memcpy(b, e, m * sizeof(object_t *));
+        memcpy(b, e, m * sizeof(ici_obj_t *));
     }
 }
 
@@ -148,21 +148,21 @@ ici_array_gather(object_t **b, array_t *a, ptrdiff_t start, ptrdiff_t n)
  * a_bot.
  */
 static int
-ici_array_grow(array_t *a)
+ici_array_grow(ici_array_t *a)
 {
     ptrdiff_t           nel;    /* Number of elements. */
     ptrdiff_t           n;      /* Old allocation count. */
     ptrdiff_t           m;      /* New allocation count. */
-    object_t            **e;    /* New allocation. */
+    ici_obj_t           **e;    /* New allocation. */
 
     n = a->a_limit - a->a_base;
     if ((m = n * 3 / 2) < 8)
         m = 8;
-    if ((e = (object_t **)ici_nalloc(m * sizeof(object_t *))) == NULL)
+    if ((e = (ici_obj_t **)ici_nalloc(m * sizeof(ici_obj_t *))) == NULL)
         return 1;
     nel = ici_array_nels(a);
     ici_array_gather(e + 1, a, 0, nel);
-    ici_nfree(a->a_base, n * sizeof(object_t *));
+    ici_nfree(a->a_base, n * sizeof(ici_obj_t *));
     a->a_base = e;
     a->a_limit = e + m;
     a->a_bot = e + 1;
@@ -179,7 +179,7 @@ ici_array_grow(array_t *a)
  * This --func-- forms part of the --ici-api--.
  */
 int
-ici_array_push(array_t *a, object_t *o)
+ici_array_push(ici_array_t *a, ici_obj_t *o)
 {
     if (objof(a)->o_flags & O_ATOM)
     {
@@ -236,7 +236,7 @@ ici_array_push(array_t *a, object_t *o)
  * This --func-- forms part of the --ici-api--.
  */
 int
-ici_array_rpush(array_t *a, object_t *o)
+ici_array_rpush(ici_array_t *a, ici_obj_t *o)
 {
     if (objof(a)->o_flags & O_ATOM)
     {
@@ -287,8 +287,8 @@ ici_array_rpush(array_t *a, object_t *o)
  *
  * This --func-- forms part of the --ici-api--.
  */
-object_t *
-ici_array_pop(array_t *a)
+ici_obj_t *
+ici_array_pop(ici_array_t *a)
 {
     if (objof(a)->o_flags & O_ATOM)
     {
@@ -328,8 +328,8 @@ ici_array_pop(array_t *a)
  *
  * This --func-- forms part of the --ici-api--.
  */
-object_t *
-ici_array_rpop(array_t *a)
+ici_obj_t *
+ici_array_rpop(ici_array_t *a)
 {
     if (objof(a)->o_flags & O_ATOM)
     {
@@ -367,8 +367,8 @@ ici_array_rpop(array_t *a)
  * the index 'i'.  This will grow and 'ici_null' fill the array as necessary.
  * Only positive 'i'.  Returns NULL on error, usual conventions.
  */
-static object_t **
-ici_array_find_slot(array_t *a, ptrdiff_t i)
+static ici_obj_t **
+ici_array_find_slot(ici_array_t *a, ptrdiff_t i)
 {
     ptrdiff_t           n;
 
@@ -396,8 +396,8 @@ ici_array_find_slot(array_t *a, ptrdiff_t i)
  *
  * This --func-- forms part of the --ici-api--.
  */
-object_t *
-ici_array_get(array_t *a, ptrdiff_t i)
+ici_obj_t *
+ici_array_get(ici_array_t *a, ptrdiff_t i)
 {
     ptrdiff_t           n;
 
@@ -416,12 +416,12 @@ ici_array_get(array_t *a, ptrdiff_t i)
  *
  * This --func-- forms part of the --ici-api--.
  */
-array_t *
+ici_array_t *
 ici_array_new(ptrdiff_t n)
 {
-    register array_t    *a;
+    register ici_array_t    *a;
 
-    if ((a = ici_talloc(array_t)) == NULL)
+    if ((a = ici_talloc(ici_array_t)) == NULL)
         return NULL;
     ICI_OBJ_SET_TFNZ(a, TC_ARRAY, 0, 1, 0);
     a->a_base = NULL;
@@ -430,9 +430,9 @@ ici_array_new(ptrdiff_t n)
     a->a_bot = NULL;
     if (n == 0)
         n = 4;
-    if ((a->a_base = (object_t **)ici_nalloc(n * sizeof(object_t *))) == NULL)
+    if ((a->a_base = (ici_obj_t **)ici_nalloc(n * sizeof(ici_obj_t *))) == NULL)
     {
-        ici_tfree(a, array_t);
+        ici_tfree(a, ici_array_t);
         return NULL;
     }
     a->a_top = a->a_base;
@@ -447,16 +447,16 @@ ici_array_new(ptrdiff_t n)
  * See comments on t_mark() in object.h.
  */
 static unsigned long
-mark_array(object_t *o)
+mark_array(ici_obj_t *o)
 {
-    object_t            **e;
+    ici_obj_t           **e;
     unsigned long       mem;
 
     o->o_flags |= O_MARK;
     if (arrayof(o)->a_base == NULL)
-        return sizeof(array_t);
-    mem = sizeof(array_t)
-        + (arrayof(o)->a_limit - arrayof(o)->a_base) * sizeof(object_t *);
+        return sizeof(ici_array_t);
+    mem = sizeof(ici_array_t)
+        + (arrayof(o)->a_limit - arrayof(o)->a_base) * sizeof(ici_obj_t *);
     if (arrayof(o)->a_bot <= arrayof(o)->a_top)
     {
         for (e = arrayof(o)->a_bot; e < arrayof(o)->a_top; ++e)
@@ -477,17 +477,17 @@ mark_array(object_t *o)
  * See the comments on t_free() in object.h.
  */
 static void
-free_array(object_t *o)
+free_array(ici_obj_t *o)
 {
     if (arrayof(o)->a_base != NULL)
     {
         ici_nfree
         (
             arrayof(o)->a_base,
-            (arrayof(o)->a_limit - arrayof(o)->a_base) * sizeof(object_t *)
+            (arrayof(o)->a_limit - arrayof(o)->a_base) * sizeof(ici_obj_t *)
         );
     }
-    ici_tfree(o, array_t);
+    ici_tfree(o, ici_array_t);
 }
 
 /*
@@ -495,13 +495,13 @@ free_array(object_t *o)
  * See the comments on t_cmp() in object.h.
  */
 static int
-cmp_array(object_t *o1, object_t *o2)
+cmp_array(ici_obj_t *o1, ici_obj_t *o2)
 {
     ptrdiff_t           i;
     ptrdiff_t           n1;
     ptrdiff_t           n2;
-    object_t            **e1;
-    object_t            **e2;
+    ici_obj_t           **e1;
+    ici_obj_t           **e2;
 
     if (o1 == o2)
         return 0;
@@ -514,7 +514,7 @@ cmp_array(object_t *o1, object_t *o2)
         n2 = n1;
         e1 = ici_array_span(arrayof(o1), i, &n2);
         e2 = ici_array_span(arrayof(o2), i, &n2);
-        if (memcmp(e1, e2, n2 * sizeof(object_t *)))
+        if (memcmp(e1, e2, n2 * sizeof(ici_obj_t *)))
             return 1;
     }
     return 0;
@@ -524,10 +524,10 @@ cmp_array(object_t *o1, object_t *o2)
  * Return a copy of the given object, or NULL on error.
  * See the comment on t_copy() in object.h.
  */
-static object_t *
-copy_array(object_t *o)
+static ici_obj_t *
+copy_array(ici_obj_t *o)
 {
-    array_t             *na;
+    ici_array_t         *na;
     ptrdiff_t           n;
 
     n = ici_array_nels(arrayof(o));
@@ -543,10 +543,10 @@ copy_array(object_t *o)
  * See the comment on t_hash() in object.h
  */
 static unsigned long
-hash_array(object_t *o)
+hash_array(ici_obj_t *o)
 {
     unsigned long       h;
-    object_t            **e;
+    ici_obj_t           **e;
     ptrdiff_t           n;
     ptrdiff_t           m;
     ptrdiff_t           i;
@@ -576,10 +576,10 @@ hash_array(object_t *o)
  * to accomodate the new index as necessary.
  */
 static int
-assign_array(object_t *o, object_t *k, object_t *v)
+assign_array(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v)
 {
     long        i;
-    object_t    **e;
+    ici_obj_t   **e;
 
     if (o->o_flags & O_ATOM)
     {
@@ -607,8 +607,8 @@ assign_array(object_t *o, object_t *k, object_t *v)
  * The key k must be an integer. Reading non existing keys results in
  * an NULL value (not an error).
  */
-static object_t *
-fetch_array(object_t *o, object_t *k)
+static ici_obj_t *
+fetch_array(ici_obj_t *o, ici_obj_t *k)
 {
     if (!isint(k))
         return ici_fetch_fail(o, k);
@@ -621,7 +621,7 @@ fetch_array(object_t *o, object_t *k)
 static int
 ici_op_mklvalue()
 {
-    array_t     *a;
+    ici_array_t *a;
 
     if ((a = ici_array_new(1)) == NULL)
         return 1;
@@ -633,7 +633,7 @@ ici_op_mklvalue()
     return 0;
 }
 
-type_t  ici_array_type =
+ici_type_t  ici_array_type =
 {
     mark_array,
     free_array,
@@ -645,4 +645,4 @@ type_t  ici_array_type =
     "array"
 };
 
-op_t    o_mklvalue      = {OBJ(TC_OP), ici_op_mklvalue};
+ici_op_t    o_mklvalue      = {OBJ(TC_OP), ici_op_mklvalue};

@@ -28,9 +28,9 @@ ici_maind(int argc, char *argv[], int debugging)
     char                *s;
     char                *fmt;
     char                *arg0;
-    array_t             *av;
+    ici_array_t         *av;
     FILE                *stream;
-    file_t              *f;
+    ici_file_t          *f;
 
     if (ici_init())
         goto fail;

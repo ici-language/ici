@@ -17,7 +17,7 @@
  * by calls to ici_register_type() and are given the next available slot.
  */
 #define ICI_MAX_TYPES   64
-extern DLI type_t       *ici_types[ICI_MAX_TYPES];
+extern DLI ici_type_t   *ici_types[ICI_MAX_TYPES];
 
 /*
  * Every object has a header. In the header the o_tcode (type code) field
@@ -27,22 +27,22 @@ extern DLI type_t       *ici_types[ICI_MAX_TYPES];
  */
 struct ici_type
 {
-    unsigned long (*t_mark)(object_t *);
-    void        (*t_free)(object_t *);
-    unsigned long (*t_hash)(object_t *);
-    int         (*t_cmp)(object_t *, object_t *);
-    object_t    *(*t_copy)(object_t *);
-    int         (*t_assign)(object_t *, object_t *, object_t *);
-    object_t    *(*t_fetch)(object_t *, object_t *);
+    unsigned long (*t_mark)(ici_obj_t *);
+    void        (*t_free)(ici_obj_t *);
+    unsigned long (*t_hash)(ici_obj_t *);
+    int         (*t_cmp)(ici_obj_t *, ici_obj_t *);
+    ici_obj_t   *(*t_copy)(ici_obj_t *);
+    int         (*t_assign)(ici_obj_t *, ici_obj_t *, ici_obj_t *);
+    ici_obj_t   *(*t_fetch)(ici_obj_t *, ici_obj_t *);
     char        *t_name;
-    void        (*t_objname)(object_t *, char [ICI_OBJNAMEZ]);
-    int         (*t_call)(object_t *, object_t *);
-    string_t    *t_ici_name;
-    int         (*t_assign_super)(object_t *, object_t *, object_t *, struct_t *);
-    int         (*t_fetch_super)(object_t *, object_t *, object_t **, struct_t *);
-    int         (*t_assign_base)(object_t *, object_t *, object_t *);
-    object_t    *(*t_fetch_base)(object_t *, object_t *);
-    object_t    *(*t_fetch_method)(object_t *, object_t *);
+    void        (*t_objname)(ici_obj_t *, char [ICI_OBJNAMEZ]);
+    int         (*t_call)(ici_obj_t *, ici_obj_t *);
+    ici_str_t   *t_ici_name;
+    int         (*t_assign_super)(ici_obj_t *, ici_obj_t *, ici_obj_t *, ici_struct_t *);
+    int         (*t_fetch_super)(ici_obj_t *, ici_obj_t *, ici_obj_t **, ici_struct_t *);
+    int         (*t_assign_base)(ici_obj_t *, ici_obj_t *, ici_obj_t *);
+    ici_obj_t   *(*t_fetch_base)(ici_obj_t *, ici_obj_t *);
+    ici_obj_t   *(*t_fetch_method)(ici_obj_t *, ici_obj_t *);
     void        *t_reserved2;   /* Must be zero. */
     void        *t_reserved3;   /* Must be zero. */
     void        *t_reserved4;   /* Must be zero. */
@@ -173,7 +173,7 @@ struct ici_type
  *                      call and s is the subject object of the call.  Return
  *                      1 on error, else 0.
  *
- * t_ici_name           A string_t copy of the name. This is just a cached
+ * t_ici_name           A ici_str_t copy of the name. This is just a cached
  *                      version so that typeof() doesn't keep re-computing the
  *                      string.
  *
@@ -271,7 +271,7 @@ struct ici_obj
  *
  * --ici-api--
  */
-#define objof(x)        ((object_t *)(x))
+#define objof(x)        ((ici_obj_t *)(x))
 
 /*
  * "Object with super." This is a specialised header for all objects
@@ -281,15 +281,15 @@ struct ici_obj
  */
 struct ici_objwsup
 {
-    object_t    o_head;         /* Universal header. */
-    objwsup_t   *o_super;       /* Out super. May be NULL. */
+    ici_obj_t   o_head;         /* Universal header. */
+    ici_objwsup_t   *o_super;       /* Out super. May be NULL. */
     /*
      * Each object that supports a super type includes this as a
      * header. In the real structures associated with each such object
      * the type specific stuff follows...
      */
 };
-#define objwsupof(o)    ((objwsup_t *)(o))
+#define objwsupof(o)    ((ici_objwsup_t *)(o))
 /*
  * This object supports a super type. (It may or may not have a super
  * at any particular time).
@@ -331,7 +331,7 @@ struct ici_objwsup
 #define O_MARK          0x01    /* Garbage collection mark. */
 #define O_ATOM          0x02    /* Is a member of the atom pool. */
 #define O_TEMP          0x04    /* Is a re-usable temp (flag for asserts). */
-#define O_SUPER         0x08    /* Has super (is objwsup_t derived). */
+#define O_SUPER         0x08    /* Has super (is ici_objwsup_t derived). */
 
 /*
  * The o_tcode field is a small int. These are the "well known" core
@@ -388,7 +388,7 @@ struct ici_objwsup
 #else
 #undef  ici_rego
 #define ici_rego(o)     bughunt_rego(objof(o))
-extern void             bughunt_rego(object_t *);
+extern void             bughunt_rego(ici_obj_t *);
 #endif
 
 #define ICI_STORE_ATOM_AND_COUNT(po, s) \
@@ -401,8 +401,8 @@ extern void             bughunt_rego(object_t *);
 #ifdef BUGHUNT
 #   undef ici_incref
 #   undef ici_decref
-    void bughunt_incref(object_t *o);
-    void bughunt_decref(object_t *o);
+    void bughunt_incref(ici_obj_t *o);
+    void bughunt_decref(ici_obj_t *o);
 #   define ici_incref(o) bughunt_incref(objof(o))
 #   define ici_decref(o) bughunt_decref(objof(o))
 #endif

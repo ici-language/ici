@@ -13,9 +13,9 @@
  */
 struct ici_mark
 {
-    object_t    o_head;
+    ici_obj_t   o_head;
 };
-#define markof(o)       ((mark_t *)o)
+#define markof(o)       ((ici_mark_t *)o)
 #define ismark(o)       ((o) == objof(&o_mark))
 
 /*

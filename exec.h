@@ -29,27 +29,27 @@
 
 union ici_ostemp
 {
-    int_t       i;
-    float_t     f;
+    ici_int_t   i;
+    ici_float_t f;
 };
 
 struct ici_exec
 {
-    object_t    o_head;
-    array_t     *x_xs;
-    array_t     *x_os;
-    array_t     *x_vs;
-    src_t       *x_src;
+    ici_obj_t   o_head;
+    ici_array_t *x_xs;
+    ici_array_t *x_os;
+    ici_array_t *x_vs;
+    ici_src_t   *x_src;
     int         x_count;
     int         x_yield_count;
-    array_t     *x_pc_closet;           /* See below. */
-    array_t     *x_os_temp_cache;       /* See below. */
-    exec_t      *x_next;
+    ici_array_t *x_pc_closet;           /* See below. */
+    ici_array_t *x_os_temp_cache;       /* See below. */
+    ici_exec_t  *x_next;
     int         x_n_engine_recurse;
     int         x_critsect;
-    object_t    *x_waitfor;
+    ici_obj_t   *x_waitfor;
     int         x_state;
-    object_t    *x_result;
+    ici_obj_t   *x_result;
 #ifdef ICI_USE_WIN32_THREADS
     HANDLE      x_semaphore;
     HANDLE      x_thread_handle;
@@ -59,7 +59,7 @@ struct ici_exec
     pthread_t   x_thread_handle;
 #endif
 };
-#define execof(o)        ((exec_t *)(o))
+#define execof(o)        ((ici_exec_t *)(o))
 #define isexec(o)        (objof(o)->o_tcode == TC_EXEC)
 /*
  * x_xs                 The ICI interpreter execution stack. This contains
@@ -159,11 +159,11 @@ enum
  */
 struct ici_debug
 {
-    void    (*idbg_error)(char *, src_t *);
-    void    (*idbg_fncall)(object_t *, object_t **, int);
-    void    (*idbg_fnresult)(object_t *);
-    void    (*idbg_src)(src_t *);
-    void    (*idbg_watch)(object_t *, object_t *, object_t *);
+    void    (*idbg_error)(char *, ici_src_t *);
+    void    (*idbg_fncall)(ici_obj_t *, ici_obj_t **, int);
+    void    (*idbg_fnresult)(ici_obj_t *);
+    void    (*idbg_src)(ici_src_t *);
+    void    (*idbg_watch)(ici_obj_t *, ici_obj_t *, ici_obj_t *);
 };
 
 #endif

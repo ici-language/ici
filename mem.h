@@ -10,14 +10,14 @@
  */
 struct ici_mem
 {
-    object_t            o_head;
+    ici_obj_t           o_head;
     void                *m_base;
     size_t              m_length;       /* In m_accessz units. */
     int                 m_accessz;      /* Read/write size. */
     void                (*m_free)();
 };
 
-#define memof(o)        ((mem_t *)o)
+#define memof(o)        ((ici_mem_t *)o)
 #define ismem(o)        (objof(o)->o_tcode == TC_MEM)
 /*
  * End of ici.h export. --ici.h-end--

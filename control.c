@@ -29,22 +29,22 @@ ici_op_for()
     return 0;
 }
 
-op_t    o_exec          = {OBJ(TC_OP), NULL, OP_EXEC};
-op_t    o_looper        = {OBJ(TC_OP), NULL, OP_LOOPER};
-op_t    o_loop          = {OBJ(TC_OP), NULL, OP_LOOP};
-op_t    o_break         = {OBJ(TC_OP), NULL, OP_BREAK};
-op_t    o_continue      = {OBJ(TC_OP), NULL, OP_CONTINUE};
-op_t    o_if            = {OBJ(TC_OP), NULL, OP_IF};
-op_t    o_ifnotbreak    = {OBJ(TC_OP), NULL, OP_IFNOTBREAK};
-op_t    o_ifbreak       = {OBJ(TC_OP), NULL, OP_IFBREAK};
-op_t    o_ifelse        = {OBJ(TC_OP), NULL, OP_IFELSE};
-op_t    o_pop           = {OBJ(TC_OP), NULL, OP_POP};
-op_t    o_andand        = {OBJ(TC_OP), NULL, OP_ANDAND, 1};
-op_t    o_barbar        = {OBJ(TC_OP), NULL, OP_ANDAND, 0};
-op_t    o_switch        = {OBJ(TC_OP), NULL, OP_SWITCH};
-op_t    o_switcher      = {OBJ(TC_OP), NULL, OP_SWITCHER};
-op_t    o_critsect      = {OBJ(TC_OP), NULL, OP_CRITSECT};
-op_t    o_waitfor       = {OBJ(TC_OP), NULL, OP_WAITFOR};
-op_t    o_rewind        = {OBJ(TC_OP), NULL, OP_REWIND};
-op_t    o_end           = {OBJ(TC_OP), NULL, OP_ENDCODE};
+ici_op_t    o_exec          = {OBJ(TC_OP), NULL, OP_EXEC};
+ici_op_t    o_looper        = {OBJ(TC_OP), NULL, OP_LOOPER};
+ici_op_t    o_loop          = {OBJ(TC_OP), NULL, OP_LOOP};
+ici_op_t    o_break         = {OBJ(TC_OP), NULL, OP_BREAK};
+ici_op_t    o_continue      = {OBJ(TC_OP), NULL, OP_CONTINUE};
+ici_op_t    o_if            = {OBJ(TC_OP), NULL, OP_IF};
+ici_op_t    o_ifnotbreak    = {OBJ(TC_OP), NULL, OP_IFNOTBREAK};
+ici_op_t    o_ifbreak       = {OBJ(TC_OP), NULL, OP_IFBREAK};
+ici_op_t    o_ifelse        = {OBJ(TC_OP), NULL, OP_IFELSE};
+ici_op_t    o_pop           = {OBJ(TC_OP), NULL, OP_POP};
+ici_op_t    o_andand        = {OBJ(TC_OP), NULL, OP_ANDAND, 1};
+ici_op_t    o_barbar        = {OBJ(TC_OP), NULL, OP_ANDAND, 0};
+ici_op_t    o_switch        = {OBJ(TC_OP), NULL, OP_SWITCH};
+ici_op_t    o_switcher      = {OBJ(TC_OP), NULL, OP_SWITCHER};
+ici_op_t    o_critsect      = {OBJ(TC_OP), NULL, OP_CRITSECT};
+ici_op_t    o_waitfor       = {OBJ(TC_OP), NULL, OP_WAITFOR};
+ici_op_t    o_rewind        = {OBJ(TC_OP), NULL, OP_REWIND};
+ici_op_t    o_end           = {OBJ(TC_OP), NULL, OP_ENDCODE};
 

@@ -10,16 +10,16 @@
  */
 struct ici_int
 {
-    object_t    o_head;
+    ici_obj_t   o_head;
     long        i_value;
 };
-#define intof(o)        ((int_t *)(o))
+#define intof(o)        ((ici_int_t *)(o))
 #define isint(o)        ((o)->o_tcode == TC_INT)
 /*
  * End of ici.h export. --ici.h-end--
  */
 
 #define ICI_SMALL_INT_MASK  0x1F
-extern int_t                *ici_small_ints[32];
+extern ici_int_t            *ici_small_ints[32];
 
 #endif /* ICI_INT_H */

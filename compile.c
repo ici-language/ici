@@ -7,18 +7,18 @@
 /*
  * A cache of binary opperators created by new_binop.
  */
-static object_t *binops[BINOP_MAX + 1];
-static object_t *binops_temps[BINOP_MAX + 1];
+static ici_obj_t *binops[BINOP_MAX + 1];
+static ici_obj_t *binops_temps[BINOP_MAX + 1];
 
 /*
  * Return a new op object corresponding to the binary operation of the
  * given token, which is a binary operator. The returned object does
  * not have an extra reference (unlike most new_* functions).
  */
-static object_t *
+static ici_obj_t *
 new_binop(int op, int why)
 {
-    object_t            *o;
+    ici_obj_t           *o;
 
     op = t_subtype(op);
     if (why != FOR_TEMP)
@@ -52,7 +52,7 @@ new_binop(int op, int why)
 
 #ifdef  THINK
 int
-optimise_code(array_t *a)
+optimise_code(ici_array_t *a)
 {
     for (e = a->a_base; (o = e) < a->a_top; ++e)
     {
@@ -76,7 +76,7 @@ optimise_code(array_t *a)
  * Returns 1 on failure, 0 on success.
  */
 int
-compile_expr(array_t *a, expr_t *e, int why)
+compile_expr(ici_array_t *a, expr_t *e, int why)
 {
 
 #define NOTLV(why)      ((why) == FOR_LVALUE ? FOR_VALUE : (why))
@@ -96,8 +96,8 @@ compile_expr(array_t *a, expr_t *e, int why)
         }
         if (e->e_what == T_QUESTION)
         {
-            array_t     *a1;
-            array_t     *a2;
+            ici_array_t *a1;
+            ici_array_t *a2;
 
             if (e->e_arg[1]->e_what != T_COLON)
             {
@@ -228,7 +228,7 @@ compile_expr(array_t *a, expr_t *e, int why)
             goto notlvalue;
         if (e->e_what == T_ANDAND || e->e_what == T_BARBAR)
         {
-            register array_t    *a1;
+            register ici_array_t    *a1;
 
             if (compile_expr(a, e->e_arg[0], FOR_VALUE))
                 return 1;
@@ -287,7 +287,7 @@ compile_expr(array_t *a, expr_t *e, int why)
 
         case T_DOLLAR:
             {
-                array_t *a1;
+                ici_array_t *a1;
 
                 if ((a1 = ici_array_new(0)) == NULL)
                     return 1;

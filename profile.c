@@ -96,7 +96,7 @@ char prof_outfile[512] = "";
  * See comments on t_mark() in object.h.
  */
 static unsigned long
-mark_profilecall(object_t *o)
+mark_profilecall(ici_obj_t *o)
 {
     profilecall_t *pf;
 
@@ -114,7 +114,7 @@ mark_profilecall(object_t *o)
  * See the comments on t_free() in object.h.
  */
 static void
-free_profilecall(object_t *o)
+free_profilecall(ici_obj_t *o)
 {
     ici_tfree(o, profilecall_t);
 }
@@ -123,9 +123,9 @@ free_profilecall(object_t *o)
 /*
  * I must admit that I'm being a bit half-hearted about defining this type
  * since I really only need it to be an ICI type so I can store it in a
- * struct_t.
+ * ici_struct_t.
  */
-type_t profilecall_type =
+ici_type_t profilecall_type =
 {
     mark_profilecall,
     free_profilecall,
@@ -240,7 +240,7 @@ f_profile()
  *  This is called whenever ICI calls a function.
  */
 void
-ici_profile_call(func_t *f)
+ici_profile_call(ici_func_t *f)
 {
     profilecall_t *pc;
     time_t start;
@@ -277,7 +277,7 @@ ici_profile_call(func_t *f)
 static void
 write_outfile(FILE *of, profilecall_t *pc, int indent)
 {
-    slot_t *sl;
+    ici_sslot_t*sl;
     char    *p;
 
     fputs("[struct\n", of);
@@ -378,7 +378,7 @@ ici_profile_return()
 /*
  * ICI functions exported for profiling.
  */
-cfunc_t ici_profile_cfuncs[] =
+ici_cfunc_t ici_profile_cfuncs[] =
 {
     {CF_OBJ,    (char *)SS(profile),       f_profile},
     {CF_OBJ}

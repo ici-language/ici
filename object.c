@@ -30,33 +30,33 @@ char            *ici_error;
  * core. NB: The positions of these must exactly match the TC_* defines
  * in object.h.
  */
-extern type_t           ici_array_type;
-extern type_t           ici_catch_type;
-extern type_t           ici_exec_type;
-extern type_t           set_type;
-extern type_t           struct_type;
-extern type_t           float_type;
-extern type_t           file_type;
-extern type_t           ici_func_type;
-extern type_t           ici_cfunc_type;
-extern type_t           ici_method_type;
-extern type_t           forall_type;
-extern type_t           int_type;
-extern type_t           mark_type;
-extern type_t           null_type;
-extern type_t           op_type;
-extern type_t           pc_type;
-extern type_t           ptr_type;
-extern type_t           regexp_type;
-extern type_t           src_type;
-extern type_t           string_type;
-extern type_t           parse_type;
-extern type_t           ostemp_type;
-extern type_t           ici_handle_type;
-extern type_t           profilecall_type;
-extern type_t           mem_type;
+extern ici_type_t       ici_array_type;
+extern ici_type_t       ici_catch_type;
+extern ici_type_t       ici_exec_type;
+extern ici_type_t       set_type;
+extern ici_type_t       struct_type;
+extern ici_type_t       float_type;
+extern ici_type_t       file_type;
+extern ici_type_t       ici_func_type;
+extern ici_type_t       ici_cfunc_type;
+extern ici_type_t       ici_method_type;
+extern ici_type_t       forall_type;
+extern ici_type_t       int_type;
+extern ici_type_t       mark_type;
+extern ici_type_t       null_type;
+extern ici_type_t       op_type;
+extern ici_type_t       pc_type;
+extern ici_type_t       ptr_type;
+extern ici_type_t       regexp_type;
+extern ici_type_t       src_type;
+extern ici_type_t       string_type;
+extern ici_type_t       parse_type;
+extern ici_type_t       ostemp_type;
+extern ici_type_t       ici_handle_type;
+extern ici_type_t       profilecall_type;
+extern ici_type_t       mem_type;
 
-type_t          *ici_types[ICI_MAX_TYPES] =
+ici_type_t      *ici_types[ICI_MAX_TYPES] =
 {
     NULL,
     &pc_type,
@@ -95,11 +95,11 @@ static int              ici_ntypes = TC_MAX_CORE + 1;
  * All objects are in the objects list or completely static and
  * known to never require collection.
  */
-object_t        **objs;         /* List of all objects. */
-object_t        **objs_limit;   /* First element we can't use in list. */
-object_t        **objs_top;     /* Next unused element in list. */
+ici_obj_t       **objs;         /* List of all objects. */
+ici_obj_t       **objs_limit;   /* First element we can't use in list. */
+ici_obj_t       **objs_top;     /* Next unused element in list. */
 
-object_t        **atoms;        /* Hash table of atomic objects. */
+ici_obj_t       **atoms;        /* Hash table of atomic objects. */
 int             atomsz;         /* Number of slots in hash table. */
 int             ici_natoms;     /* Number of atomic objects. */
 
@@ -109,7 +109,7 @@ int             ici_supress_collect;
  * Format a human readable version of the object in less than 30 chars.
  */
 char *
-ici_objname(char p[ICI_OBJNAMEZ], object_t *o)
+ici_objname(char p[ICI_OBJNAMEZ], ici_obj_t *o)
 {
     if (ici_typeof(o)->t_objname != NULL)
     {
@@ -136,8 +136,8 @@ ici_objname(char p[ICI_OBJNAMEZ], object_t *o)
 }
 
 /*
- * Register a new type_t structure and return a new small int type code
- * to use in the header of objects of that type. The type_t * passed to
+ * Register a new ici_type_t structure and return a new small int type code
+ * to use in the header of objects of that type. The ici_type_t * passed to
  * this function is retained and assumed to remain valid indefinetly
  * (it is normally a statically initialised structure).
  *
@@ -145,7 +145,7 @@ ici_objname(char p[ICI_OBJNAMEZ], object_t *o)
  * has been set.
  */
 int
-ici_register_type(type_t *t)
+ici_register_type(ici_type_t *t)
 {
     if (ici_ntypes == ICI_MAX_TYPES)
     {
@@ -160,8 +160,8 @@ ici_register_type(type_t *t)
  * Return a copy of the given object, or NULL on error.
  * See the comment on t_copy() in object.h.
  */
-object_t *
-ici_copy_simple(object_t *o)
+ici_obj_t *
+ici_copy_simple(ici_obj_t *o)
 {
     ici_incref(o);
     return o;
@@ -177,7 +177,7 @@ ici_copy_simple(object_t *o)
  * is illegal.
  */
 int
-ici_assign_fail(object_t *o, object_t *k, object_t *v)
+ici_assign_fail(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v)
 {
     char        n1[30];
     char        n2[30];
@@ -200,8 +200,8 @@ ici_assign_fail(object_t *o, object_t *k, object_t *v)
  * within a custom fetch function in cases where the particular fetch
  * is illegal.
  */
-object_t *
-ici_fetch_fail(object_t *o, object_t *k)
+ici_obj_t *
+ici_fetch_fail(ici_obj_t *o, ici_obj_t *k)
 {
     char        n1[30];
     char        n2[30];
@@ -219,7 +219,7 @@ ici_fetch_fail(object_t *o, object_t *k)
  * See the comments on t_cmp() in object.h.
  */
 int
-ici_cmp_unique(object_t *o1, object_t *o2)
+ici_cmp_unique(ici_obj_t *o1, ici_obj_t *o2)
 {
     return o1 != o2;
 }
@@ -229,7 +229,7 @@ ici_cmp_unique(object_t *o1, object_t *o2)
  * See the comment on t_hash() in object.h
  */
 unsigned long
-ici_hash_unique(object_t *o)
+ici_hash_unique(ici_obj_t *o)
 {
     return ICI_PTR_HASH(o);
 }
@@ -241,26 +241,26 @@ ici_hash_unique(object_t *o)
 static void
 ici_grow_atoms_core(ptrdiff_t newz)
 {
-    register object_t   **po;
+    register ici_obj_t  **po;
     register int        i;
-    object_t            **olda;
+    ici_obj_t           **olda;
     ptrdiff_t           oldz;
 
     assert(((newz - 1) & newz) == 0); /* Assert power of 2. */
     oldz = atomsz;
     ++ici_supress_collect;
-    po = (object_t **)ici_nalloc(newz * sizeof(object_t *));
+    po = (ici_obj_t **)ici_nalloc(newz * sizeof(ici_obj_t *));
     --ici_supress_collect;
     if (po == NULL)
         return;
     atomsz = newz;
-    memset((char *)po, 0, newz * sizeof(object_t *));
+    memset((char *)po, 0, newz * sizeof(ici_obj_t *));
     olda = atoms;
     atoms = po;
     i = oldz;
     while (--i >= 0)
     {
-        object_t    *o;
+        ici_obj_t   *o;
 
         if ((o = olda[i]) != NULL)
         {
@@ -274,7 +274,7 @@ ici_grow_atoms_core(ptrdiff_t newz)
             *po = o;
         }
     }
-    ici_nfree(olda, oldz * sizeof(object_t *));
+    ici_nfree(olda, oldz * sizeof(ici_obj_t *));
 }
 
 /*
@@ -311,10 +311,10 @@ ici_grow_atoms(ptrdiff_t newz)
  * the object is not used, the nrefs of the passed object will be transfered
  * to the object being returned.
  */
-object_t *
-ici_atom(object_t *o, int lone)
+ici_obj_t *
+ici_atom(ici_obj_t *o, int lone)
 {
-    object_t    **po;
+    ici_obj_t   **po;
 
 	assert(!(lone == 1 && o->o_nrefs == 0));
 
@@ -369,10 +369,10 @@ ici_atom(object_t *o, int lone)
  * afterwards.  The macro ICI_STORE_ATOM_AND_COUNT() can be used for this.
  * Note that any call to collect() could disturb the atom pool.
  */
-object_t *
-atom_probe(object_t *o, object_t ***ppo)
+ici_obj_t *
+atom_probe(ici_obj_t *o, ici_obj_t ***ppo)
 {
-    object_t    **po;
+    ici_obj_t   **po;
 
     for
     (
@@ -396,8 +396,8 @@ atom_probe(object_t *o, object_t ***ppo)
  * to this probe.  If it finds a match, that is returned, thus avoiding the
  * allocation of an object that may be thrown away anyway.
  */
-object_t *
-ici_atom_probe(object_t *o)
+ici_obj_t *
+ici_atom_probe(ici_obj_t *o)
 {
     return atom_probe(o, NULL);
 }
@@ -406,11 +406,11 @@ ici_atom_probe(object_t *o)
  * Quick search for an int to save allocation/deallocation if it already
  * exists.
  */
-int_t *
+ici_int_t *
 atom_int(long i)
 {
-    object_t    *o;
-    object_t    **po;
+    ici_obj_t   *o;
+    ici_obj_t   **po;
 
     /*
      * NB: There is an in-line version of this code in binop.h
@@ -439,11 +439,11 @@ atom_int(long i)
  * little more robustness if something is screwy.
  */
 static int
-unatom(object_t *o)
+unatom(ici_obj_t *o)
 {
-    register object_t   **sl;
-    register object_t   **ss;
-    register object_t   **ws;   /* Wanted position. */
+    register ici_obj_t  **sl;
+    register ici_obj_t  **ss;
+    register ici_obj_t  **ws;   /* Wanted position. */
 
     for
     (
@@ -499,16 +499,16 @@ delete:
 }
 
 void
-grow_objs(object_t *o)
+grow_objs(ici_obj_t *o)
 {
-    object_t            **newobjs;
+    ici_obj_t           **newobjs;
     ptrdiff_t           newz;
     ptrdiff_t           oldz;
 
     oldz = objs_limit - objs;
     newz = 2 * oldz;
     ++ici_supress_collect;
-    if ((newobjs = (object_t **)ici_nalloc(newz * sizeof(object_t *))) == NULL)
+    if ((newobjs = (ici_obj_t **)ici_nalloc(newz * sizeof(ici_obj_t *))) == NULL)
     {
         --ici_supress_collect;
         return;
@@ -518,13 +518,13 @@ grow_objs(object_t *o)
     objs_limit = newobjs + newz;
     objs_top = newobjs + (objs_top - objs);
     memset((char *)objs_top, 0, (char *)objs_limit - (char *)objs_top);
-    ici_nfree(objs, oldz * sizeof(object_t *));
+    ici_nfree(objs, oldz * sizeof(ici_obj_t *));
     objs = newobjs;
     *objs_top++ = o;
 }
 
 void
-ici_rego_work(object_t *o)
+ici_rego_work(ici_obj_t *o)
 {
     if (objs_top < objs_limit)
     {
@@ -549,9 +549,9 @@ ici_rego_work(object_t *o)
 void
 collect(void)
 {
-    register object_t   **a;
-    register object_t   *o;
-    register object_t   **b;
+    register ici_obj_t  **a;
+    register ici_obj_t  *o;
+    register ici_obj_t  **b;
     /*register int        ndead_atoms;*/
     register long       mem;    /* Total mem tied up in refed objects. */
 
@@ -576,7 +576,7 @@ collect(void)
      * life of the object.
      */
     {
-        object_t    **a;
+        ici_obj_t   **a;
 
         if ((a = &atoms[atomsz]) != NULL)
         {
@@ -704,7 +704,7 @@ printf("mem=%ld vs. %ld, nobjects=%d, ici_natoms=%d\n", mem, ici_mem, objs_top -
 void
 ici_dump_refs(void)
 {
-    object_t            **a;
+    ici_obj_t           **a;
     char                n[30];
     int                 spoken;
 
@@ -738,10 +738,10 @@ ici_reclaim(void)
 
 #ifdef  BUGHUNT
 
-object_t    *traceobj;
+ici_obj_t   *traceobj;
 
 void
-bughunt_incref(object_t *o)
+bughunt_incref(ici_obj_t *o)
 {
     if (o == traceobj)
     {
@@ -760,7 +760,7 @@ bughunt_incref(object_t *o)
 }
 
 void
-bughunt_decref(object_t *o)
+bughunt_decref(ici_obj_t *o)
 {
     if (o == traceobj)
     {
@@ -774,7 +774,7 @@ bughunt_decref(object_t *o)
 }
 
 void
-bughunt_rego(object_t *o)
+bughunt_rego(ici_obj_t *o)
 {
     if (o == traceobj)
     {
@@ -790,7 +790,7 @@ bughunt_rego(object_t *o)
 
 #if 0
 unsigned long
-ici_mark(object_t *o)
+ici_mark(ici_obj_t *o)
 {
     if (o->o_flags & O_MARK)
         return 0L;
@@ -798,37 +798,37 @@ ici_mark(object_t *o)
 }
 
 void
-freeo(object_t *o)
+freeo(ici_obj_t *o)
 {
     (*ici_typeof(o)->t_free)(o);
 }
 
 unsigned long
-hash(object_t *o)
+hash(ici_obj_t *o)
 {
     return (*ici_typeof(o)->t_hash)(o);
 }
 
 int
-cmp(object_t *o1, object_t *o2)
+cmp(ici_obj_t *o1, ici_obj_t *o2)
 {
     return (*ici_typeof(o1)->t_cmp)(o1, o2);
 }
 
-object_t *
-copy(object_t *o)
+ici_obj_t *
+copy(ici_obj_t *o)
 {
     return (*ici_typeof(o)->t_copy)(o);
 }
 
-object_t *
-ici_fetch(object_t *o, object_t *k)
+ici_obj_t *
+ici_fetch(ici_obj_t *o, ici_obj_t *k)
 {
     return (*ici_typeof(o)->t_fetch)(o, k);
 }
 
 int
-ici_assign(object_t *o, object_t *k, object_t *v)
+ici_assign(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v)
 {
     return (*ici_typeof(o)->t_assign)(o, k, v);
 }

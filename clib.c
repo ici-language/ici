@@ -64,7 +64,7 @@ static int      xfwrite();
 extern int      system();
 #endif
 
-ftype_t ici_stdio_ftype =
+ici_ftype_t ici_stdio_ftype =
 {
     fgetc,
     ungetc,
@@ -90,7 +90,7 @@ xpclose(FILE *f)
     return rc;
 }
 
-ftype_t  ici_popen_ftype =
+ici_ftype_t  ici_popen_ftype =
 {
     fgetc,
     ungetc,
@@ -106,9 +106,9 @@ ftype_t  ici_popen_ftype =
 static int
 f_getchar()
 {
-    file_t              *f;
+    ici_file_t          *f;
     int                 c;
-    exec_t              *x;
+    ici_exec_t          *x;
 
     if (NARGS() != 0)
     {
@@ -141,12 +141,12 @@ f_getline()
     register int        i;
     register int        c;
     register char       *file;
-    file_t              *f;
+    ici_file_t          *f;
     int                 (*get)();
-    exec_t              *x;
+    ici_exec_t          *x;
     char                *b;
     int                 buf_size;
-    string_t            *str;
+    ici_str_t           *str;
 
     x = NULL;
     if (NARGS() != 0)
@@ -198,13 +198,13 @@ f_getfile()
 {
     register int        i;
     register int        c;
-    file_t              *f;
+    ici_file_t          *f;
     int                 (*get)();
     char                *file;
-    exec_t              *x;
+    ici_exec_t          *x;
     char                *b;
     int                 buf_size;
-    string_t            *str;
+    ici_str_t           *str;
     int                 must_close;
     
     must_close = 0;
@@ -275,8 +275,8 @@ static int
 f_put()
 {
     char                *s;
-    file_t              *f;
-    exec_t              *x;
+    ici_file_t          *f;
+    ici_exec_t          *x;
 
     if (NARGS() > 1)
     {
@@ -309,8 +309,8 @@ f_put()
 static int
 f_fflush()
 {
-    file_t              *f;
-    exec_t              *x;
+    ici_file_t          *f;
+    ici_exec_t          *x;
 
     if (NARGS() > 0)
     {
@@ -361,9 +361,9 @@ f_fopen()
 {
     char        *name;
     char        *mode;
-    file_t      *f;
+    ici_file_t  *f;
     FILE        *stream;
-    exec_t      *x;
+    ici_exec_t  *x;
     int         i;
 
     mode = "r";
@@ -389,7 +389,7 @@ f_fopen()
 static int
 f_fseek()
 {
-    file_t      *f;
+    ici_file_t  *f;
     long        offset;
     long        whence;
 
@@ -416,9 +416,9 @@ f_popen()
 {
     char        *name;
     char        *mode;
-    file_t      *f;
+    ici_file_t  *f;
     FILE        *stream;
-    exec_t      *x;
+    ici_exec_t  *x;
     int         i;
     extern int  pclose();
 
@@ -449,7 +449,7 @@ f_system()
 {
     char        *cmd;
     long        result;
-    exec_t      *x;
+    ici_exec_t  *x;
 
     if (ici_typecheck("s", &cmd))
         return 1;
@@ -463,8 +463,8 @@ f_system()
 static int
 f_fclose()
 {
-    object_t    *o;
-    exec_t      *x;
+    ici_obj_t   *o;
+    ici_exec_t  *x;
     int         r;
 
     if (NARGS() != 1)
@@ -483,8 +483,8 @@ f_fclose()
 static int
 f_eof()
 {
-    file_t              *f;
-    exec_t              *x;
+    ici_file_t          *f;
+    ici_exec_t          *x;
     int                 r;
 
     if (NARGS() != 0)
@@ -606,13 +606,13 @@ f_dir(void)
 {
     char                *path   = ".";
     char                *format = "f";
-    regexp_t            *regexp = NULL;
-    object_t            *o;
-    array_t             *a;
+    ici_regexp_t        *regexp = NULL;
+    ici_obj_t           *o;
+    ici_array_t         *a;
     DIR                 *dir;
     struct dirent       *dirent;
     int                 fmt;
-    string_t            *s;
+    ici_str_t           *s;
 
     switch (NARGS())
     {
@@ -839,7 +839,7 @@ f_getcwd(void)
     return ici_str_ret(buf);
 }
 
-cfunc_t clib_cfuncs[] =
+ici_cfunc_t clib_cfuncs[] =
 {
     {CF_OBJ,    (char *)SS(printf),       f_sprintf,      (void *)1},
     {CF_OBJ,    (char *)SS(getchar),      f_getchar},

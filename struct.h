@@ -10,18 +10,18 @@
 
 struct ici_sslot
 {
-    object_t    *sl_key;
-    object_t    *sl_value;
+    ici_obj_t   *sl_key;
+    ici_obj_t   *sl_value;
 };
 
 struct ici_struct
 {
-    objwsup_t   o_head;
+    ici_objwsup_t   o_head;
     int         s_nels;         /* How many slots used. */
     int         s_nslots;       /* How many slots allocated. */
-    slot_t      *s_slots;
+    ici_sslot_t *s_slots;
 };
-#define structof(o)     ((struct_t *)(o))
+#define structof(o)     ((ici_struct_t *)(o))
 #define isstruct(o)     (objof(o)->o_tcode == TC_STRUCT)
 
 /*

@@ -10,12 +10,12 @@
  */
 struct ici_op
 {
-    object_t    o_head;
+    ici_obj_t   o_head;
     int         (*op_func)();
     int         op_ecode;       /* See OP_* below. */
     int         op_code;
 };
-#define opof(o) ((op_t *)o)
+#define opof(o) ((ici_op_t *)o)
 #define isop(o) ((o)->o_tcode == TC_OP)
 
 /*
@@ -74,46 +74,46 @@ enum
  * Are defined in various source files. Generally where they are
  * implemented.
  */
-extern op_t             o_quote;
-extern op_t             o_looper;
-extern op_t             o_loop;
-extern op_t             o_rewind;
-extern op_t             o_end;
-extern op_t             o_break;
-extern op_t             o_continue;
-extern op_t             o_offsq;
-extern op_t             o_exec;
-extern op_t             o_mkfunc;
-extern op_t             o_return;
-extern op_t             o_call;
-extern op_t             o_method_call;
-extern op_t             o_super_call;
-extern op_t             o_if;
-extern op_t             o_ifnot;
-extern op_t             o_ifnotbreak;
-extern op_t             o_ifbreak;
-extern op_t             o_ifelse;
-extern op_t             o_pop;
-extern op_t             o_colon;
-extern op_t             o_coloncaret;
-extern op_t             o_dot;
-extern op_t             o_dotkeep;
-extern op_t             o_dotrkeep;
-extern op_t             o_mkptr;
-extern op_t             o_openptr;
-extern op_t             o_fetch;
-extern op_t             o_for;
-extern op_t             o_mklvalue;
-extern op_t             o_rematch;
-extern op_t             o_renotmatch;
-extern op_t             o_reextract;
-extern op_t             o_onerror;
-extern op_t             o_andand;
-extern op_t             o_barbar;
-extern op_t             o_namelvalue;
-extern op_t             o_switch;
-extern op_t             o_switcher;
-extern op_t             o_critsect;
-extern op_t             o_waitfor;
+extern ici_op_t         o_quote;
+extern ici_op_t         o_looper;
+extern ici_op_t         o_loop;
+extern ici_op_t         o_rewind;
+extern ici_op_t         o_end;
+extern ici_op_t         o_break;
+extern ici_op_t         o_continue;
+extern ici_op_t         o_offsq;
+extern ici_op_t         o_exec;
+extern ici_op_t         o_mkfunc;
+extern ici_op_t         o_return;
+extern ici_op_t         o_call;
+extern ici_op_t         o_method_call;
+extern ici_op_t         o_super_call;
+extern ici_op_t         o_if;
+extern ici_op_t         o_ifnot;
+extern ici_op_t         o_ifnotbreak;
+extern ici_op_t         o_ifbreak;
+extern ici_op_t         o_ifelse;
+extern ici_op_t         o_pop;
+extern ici_op_t         o_colon;
+extern ici_op_t         o_coloncaret;
+extern ici_op_t         o_dot;
+extern ici_op_t         o_dotkeep;
+extern ici_op_t         o_dotrkeep;
+extern ici_op_t         o_mkptr;
+extern ici_op_t         o_openptr;
+extern ici_op_t         o_fetch;
+extern ici_op_t         o_for;
+extern ici_op_t         o_mklvalue;
+extern ici_op_t         o_rematch;
+extern ici_op_t         o_renotmatch;
+extern ici_op_t         o_reextract;
+extern ici_op_t         o_onerror;
+extern ici_op_t         o_andand;
+extern ici_op_t         o_barbar;
+extern ici_op_t         o_namelvalue;
+extern ici_op_t         o_switch;
+extern ici_op_t         o_switcher;
+extern ici_op_t         o_critsect;
+extern ici_op_t         o_waitfor;
 
 #endif /* ICI_OP_H */

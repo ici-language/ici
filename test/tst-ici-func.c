@@ -7,9 +7,9 @@ int
 f_rpc_main()
 {
         char *command;
-        struct_t *autos;
-        struct_t *statics;
-        struct_t *externs;
+        ici_struct_t *autos;
+        ici_struct_t *statics;
+        ici_struct_t *externs;
 
         autos = new_struct();
         statics = new_struct();
@@ -48,8 +48,8 @@ f_rpc_main()
 static int
 test_ici_func_obj()
 {
-    string_t *name_obj;
-    func_t *func_obj;
+    ici_str_t *name_obj;
+    ici_func_t *func_obj;
     
     name_obj = new_cname("experiment");
     func_obj = fetch(v_top[-1], name_obj);
@@ -59,7 +59,7 @@ test_ici_func_obj()
     return null_ret();
 }
 
-cfunc_t experiment[] =
+ici_cfunc_t experiment[] =
 {
     {CF_OBJ, "experiment", f_rpc_main},
     {CF_OBJ, "test_ici_func_obj", test_ici_func_obj},

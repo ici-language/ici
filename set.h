@@ -9,12 +9,12 @@
  */
 struct ici_set
 {
-    object_t    o_head;
+    ici_obj_t   o_head;
     int         s_nels;         /* How many slots used. */
     int         s_nslots;       /* How many slots allocated. */
-    object_t    **s_slots;
+    ici_obj_t   **s_slots;
 };
-#define setof(o)        ((set_t *)(o))
+#define setof(o)        ((ici_set_t *)(o))
 #define isset(o)        ((o)->o_tcode == TC_SET)
 /*
  * End of ici.h export. --ici.h-end--

@@ -7,12 +7,12 @@
  * See comments on t_mark() in object.h.
  */
 static unsigned long
-mark_pc(object_t *o)
+mark_pc(ici_obj_t *o)
 {
     o->o_flags |= O_MARK;
     if (pcof(o)->pc_code != NULL)
-        return sizeof(pc_t) + ici_mark(pcof(o)->pc_code);
-    return sizeof(pc_t);
+        return sizeof(ici_pc_t) + ici_mark(pcof(o)->pc_code);
+    return sizeof(ici_pc_t);
 }
 
 /*
@@ -20,12 +20,12 @@ mark_pc(object_t *o)
  *
  * NOTE: pc's come back ready-decref'ed.
  */
-pc_t *
+ici_pc_t *
 new_pc(void)
 {
-    pc_t                *pc;
+    ici_pc_t            *pc;
 
-    if ((pc = pcof(ici_talloc(pc_t))) == NULL)
+    if ((pc = pcof(ici_talloc(ici_pc_t))) == NULL)
         return NULL;
     ICI_OBJ_SET_TFNZ(pc, TC_PC, 0, 0, 0);
     pc->pc_code = NULL;
@@ -38,12 +38,12 @@ new_pc(void)
  * See the comments on t_free() in object.h.
  */
 static void
-free_pc(object_t *o)
+free_pc(ici_obj_t *o)
 {
-    ici_tfree(o, pc_t);
+    ici_tfree(o, ici_pc_t);
 }
 
-type_t  pc_type =
+ici_type_t  pc_type =
 {
     mark_pc,
     free_pc,

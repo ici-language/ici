@@ -10,15 +10,15 @@
  */
 struct ici_func
 {
-    object_t    o_head;
-    array_t     *f_code;        /* The code of this function, atom. */
-    array_t     *f_args;        /* Array of argument names. */
-    struct_t    *f_autos;       /* Prototype struct of autos (incl. args). */
-    string_t    *f_name;        /* Some name for the function (diagnostics). */
-    int         f_nautos;       /* If !=0, a hint for auto struct alloc. */
+    ici_obj_t       o_head;
+    ici_array_t     *f_code;    /* The code of this function, atom. */
+    ici_array_t     *f_args;    /* Array of argument names. */
+    ici_struct_t    *f_autos;   /* Prototype struct of autos (incl. args). */
+    ici_str_t       *f_name;    /* Some name for the function (diagnostics). */
+    int             f_nautos;   /* If !=0, a hint for auto struct alloc. */
 };
 
-#define funcof(o)       ((func_t *)(o))
+#define funcof(o)       ((ici_func_t *)(o))
 #define isfunc(o)       (objof(o)->o_tcode == TC_FUNC)
 
 /*

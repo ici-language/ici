@@ -71,7 +71,7 @@ f_debug(void)
     return ici_int_ret(t);
 }
 
-cfunc_t ici_debug_cfuncs[] =
+ici_cfunc_t ici_debug_cfuncs[] =
 {
     {CF_OBJ,    (char *)SS(debug),        f_debug},
     {CF_OBJ}

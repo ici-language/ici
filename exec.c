@@ -27,14 +27,14 @@
 /*
  * List of all active execution structures.
  */
-exec_t          *ici_execs;
+ici_exec_t      *ici_execs;
 
 /*
  * The global pointer to the current execution context and cached pointers
  * to the three stacks (execution, operand and variable (scope)). These are
  * set every time we switch ICI threads.
  */
-exec_t          *ici_exec;
+ici_exec_t      *ici_exec;
 
 /*
  * A cached copy of ici_exec->x_count for the current thread.
@@ -53,12 +53,12 @@ int             ici_exec_count;
  * from a particular context, we copies these stacks back to real array
  * structs (see thread.c).
  */
-array_t         ici_xs;
-array_t         ici_os;
-array_t         ici_vs;
+ici_array_t     ici_xs;
+ici_array_t     ici_os;
+ici_array_t     ici_vs;
 
-int_t           *ici_zero;
-int_t           *ici_one;
+ici_int_t       *ici_zero;
+ici_int_t       *ici_one;
 
 /*
  * Set this to non-zero to cause an "aborted" failure even when the ICI
@@ -94,13 +94,13 @@ int sigisempty(sigset_t *s) {
  * See comments on t_mark() in object.h.
  */
 static unsigned long
-mark_exec(object_t *o)
+mark_exec(ici_obj_t *o)
 {
-    exec_t              *x;
+    ici_exec_t          *x;
 
     o->o_flags |= O_MARK;
     x = execof(o);
-    return sizeof(exec_t)
+    return sizeof(ici_exec_t)
        + (x->x_xs != NULL ? ici_mark(x->x_xs) : 0)
        + (x->x_os != NULL ? ici_mark(x->x_os) : 0)
        + (x->x_vs != NULL ? ici_mark(x->x_vs) : 0)
@@ -112,10 +112,10 @@ mark_exec(object_t *o)
 }
 
 static void
-free_exec(object_t *o)
+free_exec(ici_obj_t *o)
 {
-    exec_t              *x;
-    exec_t              **xp;
+    ici_exec_t          *x;
+    ici_exec_t          **xp;
 
     for (xp = &ici_execs; (x = *xp) != NULL; xp = &x->x_next)
     {
@@ -135,17 +135,17 @@ free_exec(object_t *o)
         pthread_join(x->x_thread_handle, NULL);
     (void)sem_destroy(&x->x_semaphore);
 #endif
-    ici_tfree(o, exec_t);
+    ici_tfree(o, ici_exec_t);
 }
 
 /*
  * Return the object at key k of the obejct o, or NULL on error.
  * See the comment on t_fetch in object.h.
  */
-static object_t *
-fetch_exec(object_t *o, object_t *k)
+static ici_obj_t *
+fetch_exec(ici_obj_t *o, ici_obj_t *k)
 {
-    exec_t              *x;
+    ici_exec_t          *x;
 
     x = execof(o);
     if (k == SSO(result))
@@ -194,13 +194,13 @@ fetch_exec(object_t *o, object_t *k)
  * The new exec struct is linked onto the global list of all exec
  * structs (ici_execs).
  */
-exec_t *
+ici_exec_t *
 ici_new_exec(void)
 {
-    exec_t              *x;
-    static src_t        default_src = {OBJ(TC_SRC), 0, NULL};
+    ici_exec_t          *x;
+    static ici_src_t    default_src = {OBJ(TC_SRC), 0, NULL};
 
-    if ((x = ici_talloc(exec_t)) ==  NULL)
+    if ((x = ici_talloc(ici_exec_t)) ==  NULL)
         return NULL;
     memset(x, 0, sizeof *x);
     ICI_OBJ_SET_TFNZ(x, TC_EXEC, 0, 1, 0);
@@ -256,7 +256,7 @@ fail:
 int
 ici_engine_stack_check(void)
 {
-    array_t             *pcs;
+    ici_array_t         *pcs;
     int                 depth;
 
     if (ici_stk_push_chk(&ici_xs, 60))
@@ -282,9 +282,9 @@ ici_engine_stack_check(void)
 }
 
 void
-get_pc(array_t *code, object_t **xs)
+get_pc(ici_array_t *code, ici_obj_t **xs)
 {
-    pc_t                *pc;
+    ici_pc_t            *pc;
 
     pc = pcof(*xs = ici_exec->x_pc_closet->a_base[xs - ici_xs.a_base]);
     pc->pc_code = code;
@@ -292,7 +292,7 @@ get_pc(array_t *code, object_t **xs)
 }
 
 /*
- * Execute 'code' (any object, normally an array_t of code or a parse_t).
+ * Execute 'code' (any object, normally an ici_array_t of code or a ici_parse_t).
  * The execution procedes on top of the current stacks (execution, operand
  * and variable). This call to evaluate will return when the execution
  * stack again returns to the level it was when entered. It then returns
@@ -305,7 +305,7 @@ get_pc(array_t *code, object_t **xs)
  * returns.
  *
  * The execution loop knows when the execution stack returns to its
- * origional level because it puts a catch_t object on it. This object
+ * origional level because it puts a ici_catch_t object on it. This object
  * also records the levels of the other two stacks that match.
  *
  * This is the main execution loop.  All of the nasty optimisations are
@@ -322,12 +322,12 @@ get_pc(array_t *code, object_t **xs)
  *
  * Note that binop.h is included half way down this function.
  */
-object_t *
-ici_evaluate(object_t *code, int n_operands)
+ici_obj_t *
+ici_evaluate(ici_obj_t *code, int n_operands)
 {
-    register object_t   *o;
+    register ici_obj_t  *o;
     int                 flags;
-    catch_t             frame;
+    ici_catch_t         frame;
 #define FETCH(s, k) \
                         isstring(objof(k)) \
                             && stringof(k)->s_struct == structof(s) \
@@ -427,7 +427,7 @@ ici_evaluate(object_t *code, int n_operands)
         assert(ici_os.a_top >= ici_os.a_base);
         if (ispc(o = ici_xs.a_top[-1]))
         {
-            object_t   *tmp;
+            ici_obj_t  *tmp;
 
     o_is_a_pc_and_continue:
             tmp = *pcof(o)->pc_next++;
@@ -501,7 +501,7 @@ ici_evaluate(object_t *code, int n_operands)
             }
             else
             {
-                object_t    *f;
+                ici_obj_t   *f;
 
                 /*
                  * This is an in-line version of fetch_struct because
@@ -645,9 +645,9 @@ ici_evaluate(object_t *code, int n_operands)
                  * aggr key => method (os) (normal case)
                  */
                 {
-                    method_t            *m;
-                    object_t            *o1;
-                    object_t            *t;
+                    ici_method_t        *m;
+                    ici_obj_t           *o1;
+                    ici_obj_t           *t;
                     char                n1[30];
 
                     flags = opof(o)->op_code;
@@ -899,8 +899,8 @@ ici_evaluate(object_t *code, int n_operands)
                  *                              => aggr1 key1
                  */
                 {
-                    register object_t   *v1;
-                    register object_t   *v2;
+                    register ici_obj_t  *v1;
+                    register ici_obj_t  *v2;
 
                     if ((v1 = ici_fetch(ici_os.a_top[-4], ici_os.a_top[-3])) == NULL)
                         goto fail;
@@ -1013,7 +1013,7 @@ ici_evaluate(object_t *code, int n_operands)
                  * Oh, and forall as well.
                  */
                 {
-                    register object_t   **s;
+                    register ici_obj_t  **s;
 
                     for (s = ici_xs.a_top; s > ici_xs.a_base + 1; --s)
                     {
@@ -1079,7 +1079,7 @@ ici_evaluate(object_t *code, int n_operands)
                  * Pop the execution stack until a looper is found.
                  */
                 {
-                    object_t    **s;
+                    ici_obj_t   **s;
 
                     for (s = ici_xs.a_top; s > ici_xs.a_base + 1; --s)
                     {
@@ -1169,7 +1169,7 @@ ici_evaluate(object_t *code, int n_operands)
                  *           => NULL switcher (pc(array) + struct.value) (xs)
                  */
                 {
-                    register slot_t     *sl;
+                    register ici_sslot_t *sl;
 
                     if ((sl = find_raw_slot(structof(ici_os.a_top[-1]), ici_os.a_top[-3]))->sl_key == NULL)
                     {
@@ -1194,7 +1194,7 @@ ici_evaluate(object_t *code, int n_operands)
 
             case OP_CRITSECT:
                 {
-                    *ici_xs.a_top = (object_t *)new_catch
+                    *ici_xs.a_top = (ici_obj_t *)new_catch
                     (
                         NULL,
                         (ici_os.a_top - ici_os.a_base) - 1,
@@ -1242,7 +1242,7 @@ ici_evaluate(object_t *code, int n_operands)
 
     fail:
         {
-            catch_t     *c;
+            ici_catch_t *c;
 
             if (ici_error == NULL)
                 ici_error = "error";
@@ -1287,7 +1287,7 @@ ici_evaluate(object_t *code, int n_operands)
     }
 }
 
-type_t  ici_exec_type =
+ici_type_t  ici_exec_type =
 {
     mark_exec,
     free_exec,
@@ -1299,6 +1299,6 @@ type_t  ici_exec_type =
     "exec"
 };
 
-op_t    o_quote         = {OBJ(TC_OP), NULL, OP_QUOTE};
+ici_op_t    o_quote         = {OBJ(TC_OP), NULL, OP_QUOTE};
 
 

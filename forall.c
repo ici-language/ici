@@ -12,13 +12,13 @@
  * See comments on t_mark() in object.h.
  */
 static unsigned long
-mark_forall(object_t *o)
+mark_forall(ici_obj_t *o)
 {
     register int        i;
     unsigned long       mem;
 
     o->o_flags |= O_MARK;
-    mem = sizeof(forall_t);
+    mem = sizeof(ici_forall_t);
     for (i = 0; i < nels(forallof(o)->fa_objs); ++i)
     {
         if (forallof(o)->fa_objs[i] != NULL)
@@ -34,7 +34,7 @@ mark_forall(object_t *o)
 int
 ici_op_forall()
 {
-    register forall_t   *fa;
+    register ici_forall_t   *fa;
 
     if (ici_os.a_top[-2] == objof(&o_null))
     {
@@ -42,7 +42,7 @@ ici_op_forall()
         --ici_xs.a_top;
         return 0;
     }
-    if ((fa = ici_talloc(forall_t)) == NULL)
+    if ((fa = ici_talloc(ici_forall_t)) == NULL)
         return 1;
     ICI_OBJ_SET_TFNZ(fa, TC_FORALL, 0, 0, 0);
     ici_rego(fa);
@@ -62,9 +62,9 @@ ici_op_forall()
  * See the comments on t_free() in object.h.
  */
 static void
-free_forall(object_t *o)
+free_forall(ici_obj_t *o)
 {
-    ici_tfree(o, forall_t);
+    ici_tfree(o, ici_forall_t);
 }
 
 /*
@@ -75,7 +75,7 @@ free_forall(object_t *o)
 int
 exec_forall()
 {
-    register forall_t   *fa;
+    register ici_forall_t   *fa;
     char                n[30];
 
     fa = forallof(ici_xs.a_top[-1]);
@@ -83,8 +83,8 @@ exec_forall()
     {
     case TC_STRUCT:
         {
-            register struct_t   *s;
-            register slot_t     *sl;
+            register ici_struct_t   *s;
+            register ici_sslot_t *sl;
 
             s = structof(fa->fa_aggr);
             while (++fa->fa_index < s->s_nslots)
@@ -108,8 +108,8 @@ exec_forall()
 
     case TC_SET:
         {
-            register set_t      *s;
-            register object_t   **sl;
+            register ici_set_t  *s;
+            register ici_obj_t  **sl;
 
             s = setof(fa->fa_aggr);
             while (++fa->fa_index < s->s_nslots)
@@ -141,8 +141,8 @@ exec_forall()
 
     case TC_ARRAY:
         {
-            register array_t    *a;
-            register int_t      *i;
+            register ici_array_t    *a;
+            register ici_int_t  *i;
 
             a = arrayof(fa->fa_aggr);
             if (++fa->fa_index >= ici_array_nels(a))
@@ -165,8 +165,8 @@ exec_forall()
 
     case TC_STRING:
         {
-            register string_t   *s;
-            register int_t      *i;
+            register ici_str_t  *s;
+            register ici_int_t  *i;
 
             s = stringof(fa->fa_aggr);
             if (++fa->fa_index >= s->s_nchars)
@@ -204,7 +204,7 @@ fin:
     return 0;
 }
 
-type_t  forall_type =
+ici_type_t  forall_type =
 {
     mark_forall,
     free_forall,

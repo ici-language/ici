@@ -10,11 +10,11 @@
 
 struct ici_src
 {
-    object_t    s_head;
+    ici_obj_t   s_head;
     int         s_lineno;
-    string_t    *s_filename;
+    ici_str_t   *s_filename;
 };
-#define srcof(o)        ((src_t *)o)
+#define srcof(o)        ((ici_src_t *)o)
 #define issrc(o)        ((o)->o_tcode == TC_SRC)
 /*
  * End of ici.h export. --ici.h-end--
