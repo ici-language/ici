@@ -76,6 +76,9 @@ cfunc_t *funcs[] =
 char ici_version_string[] = "@(#)ICI 4.0.0, " CONFIG_FILE ", " __DATE__
                             ", " CONFIG_STR " ("
 
+#ifndef NDEBUG
+    "DEBUG-BUILD "
+#endif
 #ifndef NOMATH
     "math "
 #endif

@@ -20,7 +20,7 @@ static char     an_expression[] = "an expression";
 static int      compound_statement(parse_t *, struct_t *);
 static int      expr(parse_t *, expr_t **, int);
 static int      const_expression(parse_t *, object_t **, int);
-static int      statement(parse_t *, array_t *, struct_t *, char *);
+static int      statement(parse_t *, array_t *, struct_t *, char *, int);
 
 /*
  * In general, parseing functions return -1 on error (and set the global
@@ -170,10 +170,13 @@ function(parse_t *p, string_t *name)
     }
     f->f_code = arrayof(p->p_got.t_obj);
     decref(f->f_code);
-    if (ici_stk_push_chk(f->f_code, 2))
+    if (f->f_code->a_top[-1] == objof(&o_end))
+        --f->f_code->a_top;
+    if (ici_stk_push_chk(f->f_code, 3))
         goto fail;
     *f->f_code->a_top++ = objof(&o_null);
     *f->f_code->a_top++ = objof(&o_return);
+    *f->f_code->a_top++ = objof(&o_end);
     f->f_args = f->f_args;
     f->f_autos = structof(atom(objof(f->f_autos), 1));
     p->p_got.t_obj = atom(objof(f), 1);
@@ -294,7 +297,7 @@ compound_statement(parse_t *p, struct_t *sw)
         goto fail;
     for (;;)
     {
-        switch (statement(p, a, sw, NULL))
+        switch (statement(p, a, sw, NULL, 0))
         {
         case -1: goto fail;
         case 1: continue;
@@ -306,6 +309,9 @@ compound_statement(parse_t *p, struct_t *sw)
         ici_error = "badly formed statement";
         goto fail;
     }
+    if (ici_stk_push_chk(a, 1))
+        goto fail;
+    *a->a_top++ = objof(&o_end);
     p->p_got.t_obj = objof(a);
     return 1;
 
@@ -315,6 +321,9 @@ fail:
     return -1;
 }
 
+/*
+ * Free an exprssesion tree and decref all the objects that it references.
+ */
 static void
 free_expr(expr_t *e)
 {
@@ -1129,6 +1138,9 @@ const_expression(parse_t *p, object_t **po, int exclude)
         goto fail;
     if (compile_expr(a, e, FOR_VALUE))
         goto fail;
+    if (ici_stk_push_chk(a, 1))
+        goto fail;
+    *a->a_top++ = objof(&o_end);
     free_expr(e);
     e = NULL;
     if ((*po = ici_evaluate(objof(a), 0)) == NULL)
@@ -1176,17 +1188,19 @@ fail:
  * a    Code array being appended to.
  * sw   Switch structure, else NULL.
  * m    Who needs it, else NULL.
+ * endme If non-zero, put an o_end at the end of the code array before
+ *      returning.
  */
 static int
-statement(parse_t *p, array_t *a, struct_t *sw, char *m)
+statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
 {
     array_t     *a1;
     array_t     *a2;
-    object_t    **op;
     expr_t      *e;
     struct_t    *d;
     objwsup_t   *ows;
     object_t    *o;
+    object_t    **op;
     int_t       *i;
     int         stepz;
 
@@ -1202,7 +1216,10 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m)
          */
         if (ici_stk_push_chk(a, a1->a_top - a1->a_base))
             return -1;
-        for (op = a1->a_base; op < a1->a_top; ++op)
+        /*
+         * Copy in-line, up to end or o_end operator.
+         */
+        for (op = a1->a_base; op < a1->a_top && *op != objof(&o_end); ++op)
             *a->a_top++ = *op;
         decref(a1);
         break;
@@ -1311,7 +1328,7 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m)
                 return -1;
             if ((a1 = new_array(0)) == NULL)
                 return -1;
-            if (statement(p, a1, NULL, "if (expr)") == -1)
+            if (statement(p, a1, NULL, "if (expr)", 1) == -1)
             {
                 decref(a1);
                 return -1;
@@ -1322,7 +1339,7 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m)
                 decref(p->p_got.t_obj);
                 if ((a2 = new_array(0)) == NULL)
                     return -1;
-                if (statement(p, a2, NULL, "if (expr) stmt else") == -1)
+                if (statement(p, a2, NULL, "if (expr) stmt else", 1) == -1)
                     return -1;
             }
             else
@@ -1358,7 +1375,7 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m)
                 return -1;
             }
             *a1->a_top++ = objof(&o_ifnotbreak);
-            if (statement(p, a1, NULL, "while (expr)") == -1)
+            if (statement(p, a1, NULL, "while (expr)", 0) == -1)
                 return -1;
             if (ici_stk_push_chk(a1, 1))
             {
@@ -1378,7 +1395,7 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m)
             decref(p->p_got.t_obj);
             if ((a1 = new_array(0)) == NULL)
                 return -1;
-            if (statement(p, a1, NULL, "do") == -1)
+            if (statement(p, a1, NULL, "do", 0) == -1)
                 return -1;
             if (next(p, a1) != T_NAME || p->p_got.t_obj != SSO(while))
                 return not_followed_by("do statement", "\"while\"");
@@ -1447,7 +1464,7 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m)
                 return not_followed_by("forall (expr [, expr] in expr", "\")\"");
             if ((a1 = new_array(0)) == NULL)
                 return -1;
-            if (statement(p, a1, NULL, "forall (expr [, expr] in expr)") == -1)
+            if (statement(p, a1, NULL, "forall (expr [, expr] in expr)", 1) == -1)
                 return -1;
             if (ici_stk_push_chk(a, 2))
                 return -1;
@@ -1506,7 +1523,7 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m)
             }
             if (next(p, a1) != T_OFFROUND)
                 return not_followed_by("for (expr; expr; expr", "\")\"");
-            if (statement(p, a1, NULL, "for (expr; expr; expr)") == -1)
+            if (statement(p, a1, NULL, "for (expr; expr; expr)", 0) == -1)
                 return -1;
             if (ici_stk_push_chk(a1, 1))
                 return -1;
@@ -1588,14 +1605,14 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m)
             decref(p->p_got.t_obj);
             if ((a1 = new_array(0)) == NULL)
                 return -1;
-            if (statement(p, a1, NULL, "try") == -1)
+            if (statement(p, a1, NULL, "try", 1) == -1)
                 return -1;
-            if (next(p, a1) != T_NAME || p->p_got.t_obj != SSO(onerror))
+            if (next(p, NULL) != T_NAME || p->p_got.t_obj != SSO(onerror))
                 return not_followed_by("try statement", "\"onerror\"");
             decref(p->p_got.t_obj);
             if ((a2 = new_array(0)) == NULL)
                 return -1;
-            if (statement(p, a2, NULL, "try statement onerror") == -1)
+            if (statement(p, a2, NULL, "try statement onerror", 1) == -1)
                 return -1;
             if (ici_stk_push_chk(a, 3))
                 return -1;
@@ -1619,7 +1636,7 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m)
                 return -1;
             *a->a_top++ = objof(a1);
             decref(a1);
-            if (statement(p, a1, NULL, "critsect") == -1)
+            if (statement(p, a1, NULL, "critsect", 1) == -1)
                 return -1;
             *a->a_top++ = objof(&o_critsect);
             break;
@@ -1689,7 +1706,7 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m)
              */
             if (next(p, a2) != T_OFFROUND)
                 return not_followed_by("waitfor (expr; expr", "\")\"");
-            if (statement(p, a1, NULL, "waitfor (expr; expr)") == -1)
+            if (statement(p, a1, NULL, "waitfor (expr; expr)", 1) == -1)
                 return -1;
             break;
         }
@@ -1706,6 +1723,12 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m)
             return -1;
         }
         break;
+    }
+    if (endme)
+    {
+        if (ici_stk_push_chk(a, 1))
+            return -1;
+        *a->a_top++ = objof(&o_end);
     }
     return 1;
 
@@ -1813,7 +1836,7 @@ parse_exec(void)
 
     for (;;)
     {
-        switch (statement(p, a, NULL, NULL))
+        switch (statement(p, a, NULL, NULL, 1))
         {
         case 1:
             if (a->a_top == a->a_base)

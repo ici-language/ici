@@ -87,8 +87,12 @@ compile_expr(array_t *a, expr_t *e, int why)
                 return 1;
             if ((a1 = new_array(0)) == NULL)
                 return 1;
-            if (compile_expr(a1, e->e_arg[1]->e_arg[0], why))
+            if (compile_expr(a1, e->e_arg[1]->e_arg[0], why) || ici_stk_push_chk(a1, 1))
+            {
+                decref(a1);
                 return 1;
+            }
+            *a1->a_top++ = objof(&o_end);
             if ((a2 = new_array(0)) == NULL)
             {
                 decref(a1);
@@ -98,6 +102,8 @@ compile_expr(array_t *a, expr_t *e, int why)
             (
                 compile_expr(a2, e->e_arg[1]->e_arg[1], why)
                 ||
+                ici_stk_push_chk(a2, 1)
+                ||
                 ici_stk_push_chk(a, 3)
             )
             {
@@ -105,6 +111,7 @@ compile_expr(array_t *a, expr_t *e, int why)
                 decref(a2);
                 return 1;
             }
+            *a2->a_top++ = objof(&o_end);
             *a->a_top++ = objof(a1 = (array_t *)atom(objof(a1), 1));
             *a->a_top++ = objof(a2 = (array_t *)atom(objof(a2), 1));
             *a->a_top++ = objof(&o_ifelse);
@@ -197,12 +204,15 @@ compile_expr(array_t *a, expr_t *e, int why)
             (
                 compile_expr(a1, e->e_arg[1], FOR_VALUE)
                 ||
+                ici_stk_push_chk(a1, 3)
+                ||
                 ici_stk_push_chk(a, 3)
             )
             {
                 decref(a1);
                 return 1;
             }
+            *a1->a_top++ = objof(&o_end);
             *a->a_top++ = objof(a1 = (array_t *)atom(objof(a1), 1));
             decref(a1);
             *a->a_top++ = objof(e->e_what == T_ANDAND ? &o_andand : &o_barbar);
@@ -253,8 +263,14 @@ compile_expr(array_t *a, expr_t *e, int why)
                 (
                     compile_expr(a1, e->e_arg[0], NOTLV(why))
                     ||
-                    (e->e_obj = ici_evaluate(objof(a1), 0)) == NULL
+                    ici_stk_push_chk(a1, 1)
                 )
+                {
+                    decref(a1);
+                    return 1;
+                }
+                *a1->a_top++ = objof(&o_end);
+                if ((e->e_obj = ici_evaluate(objof(a1), 0)) == NULL)
                 {
                     decref(a1);
                     return 1;

@@ -38,15 +38,6 @@ if ((y = copy(x)) != x)
 if (eq(x, y))
     fail("copy of set was same object");
 
-/*
-x = 123;
-if (eval("x") != 123)
-    fail("eval() failed to evaluate x");
-if (eval(456) != 456)
-    fail("eval() failed to evaluate 456");
-*/
-
-
 x = 1;
 try
     fail("testing fail");
@@ -349,26 +340,58 @@ x = gettokens(currentfile(), ':')
 if (x != [array "", "", "is", "input", ""])
     fail("gettokens returned wrong value");
 
+z = [array
+    [struct f = acos, a = [array 0.5], r = 1.0472, e = 1e-5],
+    [struct f = sin, a = [array 0.5], r = 0.479426, e = 1e-5],
+    [struct f = tan, a = [array 0.5], r = 0.546302, e = 1e-5],
+    [struct f = asin, a = [array 0.5], r = 0.523599, e = 1e-5],
+    [struct f = atan, a = [array 0.5], r = 0.463648, e = 1e-5],
+    [struct f = atan2, a = [array 0.5, 0.4], r = 0.896055, e = 1e-5],
+    [struct f = exp, a = [array 0.5], r = 1.64872, e = 1e-5],
+    [struct f = log, a = [array 0.5], r = -0.693147, e = 1e-5],
+    [struct f = log10, a = [array 0.5], r = -0.30103, e = 1e-5],
+    [struct f = pow, a = [array 0.5, 0.4], r = 0.757858, e = 1e-5],
+    [struct f = sqrt, a = [array 0.5], r = 0.707107, e = 1e-5],
+];
 
-    /* To be done...
-    {CF_OBJ,    "del",          f_del},
-    {CF_OBJ,    "alloc",        f_alloc},
-    {CF_OBJ,    "mem",          f_mem},
-    {CF_OBJ,    "super",        f_super},
-    {CF_OBJ,    "sin",          f_math, (int (*)())sin,         "f=f"},
-    {CF_OBJ,    "cos",          f_math, (int (*)())cos,         "f=f"},
-    {CF_OBJ,    "tan",          f_math, (int (*)())tan,         "f=f"},
-    {CF_OBJ,    "asin",         f_math, (int (*)())asin,        "f=f"},
-    {CF_OBJ,    "acos",         f_math, (int (*)())acos,        "f=f"},
-    {CF_OBJ,    "atan",         f_math, (int (*)())atan,        "f=f"},
-    {CF_OBJ,    "atan2",        f_math, (int (*)())atan2,       "f=ff"},
-    {CF_OBJ,    "exp",          f_math, (int (*)())exp,         "f=f"},
-    {CF_OBJ,    "log",          f_math, (int (*)())log,         "f=f"},
-    {CF_OBJ,    "log10",        f_math, (int (*)())log10,       "f=f"},
-    {CF_OBJ,    "pow",          f_math, (int (*)())pow,         "f=ff"},
-    {CF_OBJ,    "sqrt",         f_math, (int (*)())sqrt,        "f=f"},
-    {CF_OBJ,    "waitfor",      f_waitfor},
-*/
+forall (x in z)
+{
+    r = call(x.f, x.a);
+    if (abs(r - x.r) > x.e)
+        fail(sprintf("%s returned %g, not %g", x.f.name, r, x.r));
+}
+
+if (abs(pi - 3.1415) > 1e-4)
+    fail("pi has wrong value");
+
+x = alloc(3);
+x[1] = 0x123;
+if (x[1] != 0x23)
+    fail("alloc() bytes didn't chop bits");
+x = alloc(3, 1);
+x[1] = 0x123;
+if (x[1] != 0x23)
+    fail("alloc() bytes didn't chop bits");
+x = alloc(3, 2);
+x[1] = 0x12345;
+if (x[1] != 0x2345)
+    fail("alloc() 16 bit words didn't chop bits");
+x = alloc(3, 4);
+x[1] = 0x12345678;
+if (x[1] != 0x12345678)
+    fail("alloc() 32 bit words didn't work");
+if (x[0] != 0 || x[2] != 0)
+    fail("alloc() mem wasn't cleared");
+
+x = array(1, 2, 3);
+rpush(x, 0);
+if (pop(x) != 3)
+    fail("pop of queue got wrong result");
+y = array(1, 2, 3);
+rpush(y, 0);
+rpush(y, -1);
+if (x + y != [array 0, 1, 2, -1, 0, 1, 2, 3])
+    fail("sum of queues incorrect");
 
 /* exit() not tested here. */
 /* import() not tested here. */

@@ -377,7 +377,8 @@ ici_evaluate(object_t *code, int n_operands)
          * We get a net gain if we assume it is pre-popped, because we
          * can avoid pushing things that are comming out of code arrays
          * on at all. Some of the cases below must push it on to restore
-         * the formal model.
+         * the formal model. The code just above here assumes this, but
+         * has to explicitly pop the stack in the non-pc case.
          */
         switch (o->o_tcode)
         {
