@@ -11,7 +11,7 @@ CONFIG  = conf-$(FLAVOUR).h
 CC      = gcc -pipe
 LIBS    = -lm -ldl -lrt
 OPTIM   = -O2 -DNDEBUG
-CFLAGS  = -g -Wall $(OPTIM) -DCONFIG_FILE='"$(CONFIG)"' -DPREFIX='"$(PREFIX)"' -I.
+CFLAGS  = -g -Wall $(OPTIM) -DCONFIG_FILE='"$(CONFIG)"' -I.
 LDFLAGS = -g
 RANLIB  = :
 RM      = rm -f

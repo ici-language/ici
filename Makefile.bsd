@@ -11,7 +11,7 @@ BINDIR  = $(PREFIX)/bin
 OPTIM   ?= -DNDEBUG -O2
 LDFLAGS = -g
 LDADD   = -lm
-DEFS    = -DCONFIG_FILE='"conf-bsd.h"' -DPREFIX='"$(PREFIX)"' -D_THREAD_SAFE -pthread
+DEFS    = -DCONFIG_FILE='"conf-bsd.h"' -D_THREAD_SAFE -pthread
 LDEXTRA != osv=`uname -r`; [ `expr "$osv" : "'^2'"` = 0 ] && echo ' -export-dynamic'
 LDFLAGS += $(LDEXTRA)
 CFLAGS  += $(OPTIM) -g -Wall -ansi -I. $(DEFS)

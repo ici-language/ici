@@ -21,7 +21,7 @@ CONFIG  = conf-$(FLAVOUR).h
 CC      = gcc -pipe
 LIBS    =
 OPTIM   = -O3
-CFLAGS  = $(OPTIM) -DCONFIG_FILE='"$(CONFIG)"'  -DPREFIX='"$(PREFIX)"' -I. -xc
+CFLAGS  = $(OPTIM) -DCONFIG_FILE='"$(CONFIG)"' -I. -xc
 LDFLAGS =
 RANLIB  = ranlib
 RM      = rm -f

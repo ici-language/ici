@@ -22,7 +22,7 @@ LIBS    = -lm -ltermcap -ldl -lpthread
 OPTIM  = -DNDEBUG -O3 -finline-functions -fexpensive-optimizations \
 	-fomit-frame-pointer -malign-double
 
-CFLAGS  = -g -Wall $(OPTIM) -DPREFIX=\"$(PREFIX)\" -I.
+CFLAGS  = -g -Wall $(OPTIM) -I.
 LDFLAGS = -export-dynamic -g
 RANLIB  = ranlib
 RM      = rm -f

@@ -7,7 +7,7 @@ LIB     = libici4.a
 CC      = cc -pipe
 LIBS    = -framework Foundation
 COPT	?= -O2
-CFLAGS  = -g -Wall $(COPT) -I. -DNDEBUG -DPREFIX='"$(PREFIX)"'
+CFLAGS  = -g -Wall $(COPT) -I. -DNDEBUG
 LDFLAGS = -g
 RM      = rm -f
 

@@ -22,7 +22,7 @@ LIBS    = -lc -lm -ltermcap -lpthread
 # For releases
 OPTIM  = -DNDEBUG -O3 
 
-CFLAGS  = -ansi -g -Wall $(OPTIM) -DPREFIX='"$(PREFIX)"' -I.
+CFLAGS  = -ansi -g -Wall $(OPTIM) -I.
 LDFLAGS = -g
 RANLIB  = ranlib
 RM      = rm -f

@@ -12,7 +12,7 @@ CONFIG  = conf-$(FLAVOUR).h
 CC      = cc
 LIBS    = -lm -ltermcap -lnsl -lsocket -ldl -lrt
 OPTIM   = -DNDEBUG -xtarget=ultra -xarch=v8plus -xO5 -xstrconst -xdepend -Xa
-CFLAGS  = $(OPTIM) -DCONFIG_FILE='"$(CONFIG)"' -DPREFIX='"$(PREFIX)"' -I.
+CFLAGS  = $(OPTIM) -DCONFIG_FILE='"$(CONFIG)"' -I.
 LDFLAGS = -s
 RANLIB  = :
 RM      = rm -f

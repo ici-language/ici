@@ -16,7 +16,7 @@ MANDIR  = $(PREFIX)/man/man1
 INSTALL = install -c
 
 LIBS    = -lm -lcurses
-CFLAGS  = -O -DCONFIG_FILE='"$(CONFIG)"' -I. -DPREFIX='"$(PREFIX)"'
+CFLAGS  = -O -DCONFIG_FILE='"$(CONFIG)"' -I.
 LDFLAGS =
 RANLIB  = ranlib
 RM      = rm -f

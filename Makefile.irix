@@ -17,7 +17,7 @@ INSTALL = install -c
 
 CC      = cc
 LIBS    = -lm -ltermcap
-CFLAGS  = -O2 -DCONFIG_FILE='"$(CONFIG)"' -I. -DPREFIX='"$(PREFIX)"'
+CFLAGS  = -O2 -DCONFIG_FILE='"$(CONFIG)"' -I.
 LDFLAGS =
 RANLIB  = echo
 RM      = rm -f

@@ -10,7 +10,7 @@ CONFIG  = conf-$(FLAVOUR).h
 
 CC      = gcc -pipe
 LIBS    = -lm -ltermcap
-CFLAGS  = -g -O2 -DCONFIG_FILE='"$(CONFIG)"'  -DPREFIX='"$(PREFIX)"' -I. -Wall -D__USE_FIXED_PROTOTYPES__
+CFLAGS  = -g -O2 -DCONFIG_FILE='"$(CONFIG)"' -I. -Wall -D__USE_FIXED_PROTOTYPES__
 LDFLAGS =
 RANLIB  = ranlib
 RM      = rm -f

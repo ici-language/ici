@@ -18,7 +18,7 @@ INSTALL = install -c
 
 CC      = gcc -pipe
 LIBS    = -lm -ltermcap
-CFLAGS  = -DCONFIG_FILE='"$(CONFIG)"' -I. -DPREFIX='"$(PREFIX)"'
+CFLAGS  = -DCONFIG_FILE='"$(CONFIG)"' -I.
 AR      = ar
 LDFLAGS =
 RANLIB  = ranlib
