@@ -28,8 +28,10 @@ ici_init(void)
 {
     cfunc_t             **cfp;
     struct_t            *scope;
+    objwsup_t           *externs;
     exec_t              *x;
     int                 i;
+    double              pi = 3.1415926535897932;
 
     /*
      * Just make sure our universal headers are really the size we
@@ -65,9 +67,9 @@ ici_init(void)
         return 1;
     if ((scope = new_struct()) == NULL)
         return 1;
-    if ((scope->o_head.o_super = objwsupof(new_struct())) == NULL)
+    if ((scope->o_head.o_super = externs = objwsupof(new_struct())) == NULL)
         return 1;
-    decref(scope->o_head.o_super);
+    decref(externs);
     if ((x = ici_new_exec()) == NULL)
         return 1;
     ici_enter(x);
@@ -88,14 +90,15 @@ ici_init(void)
 
     if
     (
-        ici_set_val(objwsupof(ici_vs.a_top[-1])->o_super, SS(_stdin),  'u', stdin)
+        ici_set_val(externs, SS(_stdin),  'u', stdin)
         ||
-        ici_set_val(objwsupof(ici_vs.a_top[-1])->o_super, SS(_stdout), 'u', stdout)
+        ici_set_val(externs, SS(_stdout), 'u', stdout)
         ||
-        ici_set_val(objwsupof(ici_vs.a_top[-1])->o_super, SS(_stderr), 'u', stderr)
+        ici_set_val(externs, SS(_stderr), 'u', stderr)
+        ||
+        ici_set_val(externs, SS(pi), 'f', &pi)
     )
-        return 1;;
-
+        return 1;
 
 #ifndef NOSTARTUPFILE
     if (ici_call("load", "o", SSO(core)) != NULL)

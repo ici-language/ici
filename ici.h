@@ -32,7 +32,7 @@ extern "C" {
 #undef  NODIR           /* Directory reading function, dir(). */
 #define NOPASSWD        /* UNIX password file access */
 #undef  NODLOAD         /* Dynamic loading of native machine code modules. */
-#define NOSTARTUPFILE   /* Parse a standard file of ICI code at init time. */
+#undef  NOSTARTUPFILE   /* Parse a standard file of ICI code at init time. */
 #undef  NODEBUGGING     /* Debugger interface and functions */
 #undef  NOEVENTS        /* Event loop and associated processing. */
 #define NOPROFILE       /* Profiler, see profile.c. */
@@ -922,8 +922,8 @@ struct cfunc
     object_t    o_head;
     char        *cf_name;
     int         (*cf_cfunc)();
-    int         (*cf_arg1)();
-    char        *cf_arg2;
+    void        *cf_arg1;
+    void        *cf_arg2;
 };
 #define cfuncof(o)      ((cfunc_t *)(o))
 #define iscfunc(o)      (objof(o)->o_tcode == TC_CFUNC)

@@ -580,7 +580,7 @@ f_math()
     double      av[2];
     double      r;
 
-    if (ici_typecheck(CF_ARG2() + 2, &av[0], &av[1]))
+    if (ici_typecheck((char *)CF_ARG2() + 2, &av[0], &av[1]))
         return 1;
     errno = 0;
     r = (*(double (*)())CF_ARG1())(av[0], av[1]);
@@ -592,6 +592,60 @@ f_math()
     return float_ret(r);
 }
 #endif
+
+/*
+ * Stand-in function for core functions that are coded in ICI. The
+ * real function is loaded on first call, and replaces this one, then
+ * we transfer to it. On subsequent calls, this code is out of the picture.
+ *
+ * cf_arg1              The name (an ICI string) of the function to
+ *                      be loaded and transfered to.
+ *
+ * cf_arg2              The name (an ICI string) of the core ICI extension
+ *                      module that defines the function. (Eg "core1",
+ *                      meaning the function is in "icicore1.ici". Only
+ *                      "icicore.ici" is always parse. Others are on-demand.)
+ */
+static int
+f_coreici(object_t *s)
+{
+    object_t            *c;
+    object_t            *f;
+
+    /*
+     * Use the execution engine to evaluate the name of the core module
+     * this function is in. It will auto-load if necessary.
+     */
+    if ((c = ici_evaluate((object_t *)CF_ARG2(), 0)) == NULL)
+        return 1;
+    /*
+     * Fetch the real function from that module and verify it is callable.
+     */
+    f = fetch_base(c, (object_t *)CF_ARG1());
+    decref(c);
+    if (f == NULL)
+        return 1;
+    if (ici_typeof(f)->t_call == NULL)
+    {
+        char    n1[30];
+
+        sprintf(buf, "attempt to call %s", objname(n1, f));
+        ici_error = buf;
+        return 1;
+    }
+    /*
+     * Over-write the definition of the function (which was us) with the
+     * real function.
+     */
+    if (assign(ici_vs.a_top[-1], (object_t *)CF_ARG1(), f))
+        return 1;
+    /*
+     * Replace us with the new callable object on the operand stack
+     * and transfer to it.
+     */
+    ici_os.a_top[-1] = f;
+    return (*ici_typeof(f)->t_call)(f, s);
+}
 
 static int
 f_struct()
@@ -2897,21 +2951,21 @@ cfunc_t std_cfuncs[] =
     {CF_OBJ,    (char *)SS(fetch),        f_fetch},
     {CF_OBJ,    (char *)SS(abs),          f_abs},
 #ifndef NOMATH
-    {CF_OBJ,    (char *)SS(sin),          f_math, (int (*)())sin,    "f=n"},
-    {CF_OBJ,    (char *)SS(cos),          f_math, (int (*)())cos,    "f=n"},
-    {CF_OBJ,    (char *)SS(tan),          f_math, (int (*)())tan,    "f=n"},
-    {CF_OBJ,    (char *)SS(asin),         f_math, (int (*)())asin,   "f=n"},
-    {CF_OBJ,    (char *)SS(acos),         f_math, (int (*)())acos,   "f=n"},
-    {CF_OBJ,    (char *)SS(atan),         f_math, (int (*)())atan,   "f=n"},
-    {CF_OBJ,    (char *)SS(atan2),        f_math, (int (*)())atan2,  "f=nn"},
-    {CF_OBJ,    (char *)SS(exp),          f_math, (int (*)())exp,    "f=n"},
-    {CF_OBJ,    (char *)SS(log),          f_math, (int (*)())log,    "f=n"},
-    {CF_OBJ,    (char *)SS(log10),        f_math, (int (*)())log10,  "f=n"},
-    {CF_OBJ,    (char *)SS(pow),          f_math, (int (*)())pow,    "f=nn"},
-    {CF_OBJ,    (char *)SS(sqrt),         f_math, (int (*)())sqrt,   "f=n"},
-    {CF_OBJ,    (char *)SS(floor),        f_math, (int (*)())floor,  "f=n"},
-    {CF_OBJ,    (char *)SS(ceil),         f_math, (int (*)())ceil,   "f=n"},
-    {CF_OBJ,    (char *)SS(fmod),         f_math, (int (*)())fmod,   "f=nn"},
+    {CF_OBJ,    (char *)SS(sin),          f_math, sin,    "f=n"},
+    {CF_OBJ,    (char *)SS(cos),          f_math, cos,    "f=n"},
+    {CF_OBJ,    (char *)SS(tan),          f_math, tan,    "f=n"},
+    {CF_OBJ,    (char *)SS(asin),         f_math, asin,   "f=n"},
+    {CF_OBJ,    (char *)SS(acos),         f_math, acos,   "f=n"},
+    {CF_OBJ,    (char *)SS(atan),         f_math, atan,   "f=n"},
+    {CF_OBJ,    (char *)SS(atan2),        f_math, atan2,  "f=nn"},
+    {CF_OBJ,    (char *)SS(exp),          f_math, exp,    "f=n"},
+    {CF_OBJ,    (char *)SS(log),          f_math, log,    "f=n"},
+    {CF_OBJ,    (char *)SS(log10),        f_math, log10,  "f=n"},
+    {CF_OBJ,    (char *)SS(pow),          f_math, pow,    "f=nn"},
+    {CF_OBJ,    (char *)SS(sqrt),         f_math, sqrt,   "f=n"},
+    {CF_OBJ,    (char *)SS(floor),        f_math, floor,  "f=n"},
+    {CF_OBJ,    (char *)SS(ceil),         f_math, ceil,   "f=n"},
+    {CF_OBJ,    (char *)SS(fmod),         f_math, fmod,   "f=nn"},
 #endif
 #ifndef NOWAITFOR
     {CF_OBJ,    (char *)SS(waitfor),      f_waitfor},
@@ -2927,5 +2981,15 @@ cfunc_t std_cfuncs[] =
     {CF_OBJ,    (char *)SS(version),      f_version},
     {CF_OBJ,    (char *)SS(cputime),      f_cputime},
     {CF_OBJ,    (char *)SS(sleep),        f_sleep},
+    {CF_OBJ,    (char *)SS(cmp),          f_coreici, SS(cmp),       SS(core1)},
+    {CF_OBJ,    (char *)SS(pathjoin),     f_coreici, SS(pathjoin),  SS(core2)},
+    {CF_OBJ,    (char *)SS(basename),     f_coreici, SS(basename),  SS(core2)},
+    {CF_OBJ,    (char *)SS(pfopen),       f_coreici, SS(pfopen),    SS(core2)},
+    {CF_OBJ,    (char *)SS(use),          f_coreici, SS(use),       SS(core2)},
+    {CF_OBJ,    (char *)SS(min),          f_coreici, SS(min),       SS(core3)},
+    {CF_OBJ,    (char *)SS(max),          f_coreici, SS(max),       SS(core3)},
+    {CF_OBJ,    (char *)SS(argerror),     f_coreici, SS(argerror),  SS(core3)},
+    {CF_OBJ,    (char *)SS(argcount),     f_coreici, SS(argcount),  SS(core3)},
+    {CF_OBJ,    (char *)SS(typecheck),    f_coreici, SS(typecheck), SS(core3)},
     {CF_OBJ}
 };

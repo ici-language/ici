@@ -14,8 +14,8 @@ struct cfunc
     object_t    o_head;
     char        *cf_name;
     int         (*cf_cfunc)();
-    int         (*cf_arg1)();
-    char        *cf_arg2;
+    void        *cf_arg1;
+    void        *cf_arg2;
 };
 #define cfuncof(o)      ((cfunc_t *)(o))
 #define iscfunc(o)      (objof(o)->o_tcode == TC_CFUNC)

@@ -856,7 +856,7 @@ f_getcwd(void)
 
 cfunc_t clib_cfuncs[] =
 {
-    {CF_OBJ,    (char *)SS(printf),       f_sprintf,      (int (*)())1},
+    {CF_OBJ,    (char *)SS(printf),       f_sprintf,      (void *)1},
     {CF_OBJ,    (char *)SS(getchar),      f_getchar},
     {CF_OBJ,    (char *)SS(getfile),      f_getfile},
     {CF_OBJ,    (char *)SS(getline),      f_getline},
