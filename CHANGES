@@ -15,7 +15,7 @@
 	that the handle is one of the correct type by a supplied name. (timl)
 
 *	Changed the interface to ici_call[v] and ici_func[v] functions
-	to be more consistent with other functions and tack string_t *
+	to be more consistent with other functions and take string_t *
 	args instead of char * (now that string_t types are easier to
 	get). Also added ici_method for making method calls from C. (timl)
 
@@ -40,7 +40,7 @@
 	get documented.) (timl)
 
 *	Made currentfile() layer on top of the parse context so that
-	line numbers don't get out of sync. Also added an options
+	line numbers don't get out of sync. Also added an optional
 	"raw" argument to produce the old behaviour. (timl)
 
 *	Restored the ici4 prefix on auto-loading ici modules.

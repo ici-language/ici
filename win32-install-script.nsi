@@ -103,7 +103,7 @@ SectionEnd
 Section "Manual in PDF"
 SetOutPath "$INSTDIR\ici"
 File "/oname=ici.pdf" "doc\ici.pdf"
-CreateShortCut "$SMPROGRAMS\ICI Programming Language Manual.lnk" "$INSTDIR\ici.pdf"
+CreateShortCut "$SMPROGRAMS\ICI Programming Language Manual.lnk" "$INSTDIR\ici\ici.pdf"
 SetOutPath "$INSTDIR"
 SectionEnd
 
