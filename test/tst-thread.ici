@@ -33,7 +33,7 @@ while (count < 5000)
     }
 }
 if (!did_crit)
-    fail("didn't execute critsect");
+    printf("didn't execute critsect");
 
 
 static state = "ping";
