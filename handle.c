@@ -75,22 +75,29 @@ hash_handle(object_t *o)
 ici_handle_t *
 ici_handle_new(void *ptr, string_t *name, objwsup_t *super)
 {
-    ici_handle_t         *h;
-    static ici_handle_t  proto = {{TC_HANDLE, O_SUPER, 1, 0}};
+    ici_handle_t        *h;
+    object_t            **po;
+    static ici_handle_t proto = {{TC_HANDLE, O_SUPER, 1, 0}};
 
     proto.h_ptr = ptr;
     proto.h_name = name;
     proto.o_head.o_super = super;
-    if ((h = handleof(atom_probe(objof(&proto)))) != NULL)
+    if ((h = handleof(atom_probe(objof(&proto), &po))) != NULL)
     {
         ici_incref(h);
         return h;
     }
+    ++ici_supress_collect;
     if ((h = ici_talloc(ici_handle_t)) == NULL)
         return NULL;
-    *h = proto;
-    rego(h);
-    return handleof(ici_atom(objof(h), 1));
+    ICI_OBJ_SET_TFNZ(h, TC_HANDLE, O_SUPER | O_ATOM, 1, 0);
+    h->h_ptr = ptr;
+    h->h_name = name;
+    h->o_head.o_super = super;
+    ici_rego(h);
+    --ici_supress_collect;
+    ICI_STORE_ATOM_AND_COUNT(po, h);
+    return h;
 }
 
 /*

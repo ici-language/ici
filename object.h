@@ -210,17 +210,14 @@ struct type
 
 #ifndef BUGHUNT
 /*
- * Link an object into the list of objects. We clear the o_leafz field
- * here because that is the safe thing to do and, as of the introduction
- * of this field, much code does not set this field to zero. Objects
- * that want to take advantage of o_leafz must set it after calling rego().
+ * Append an object onto the list of all objects visible to the garbage
+ * collector.
  */
-#define rego(o)         (objof(o)->o_leafz = 0, \
-                          (objs_top < objs_limit \
+#define ici_rego(o)     (objs_top < objs_limit \
                             ? (void)(*objs_top++ = objof(o)) \
-                            : grow_objs(objof(o))))
+                            : grow_objs(objof(o)))
 #else
-#define rego(o)         bughunt_rego(objof(o))
+#define ici_rego(o)     bughunt_rego(objof(o))
 extern void             bughunt_rego(object_t *);
 #endif
 
@@ -305,6 +302,19 @@ struct objwsup
 #define OBJ(tc)    {(tc), 0, 1, 0}
 
 /*
+ * Set the basic fields of an object header. This macro is prefered to doing it
+ * by hand in case there is any future change in the structure.
+ */
+#define ICI_OBJ_SET_TFNZ(o, tcode, flags, nrefs, leafz) \
+    (objof(o)->o_tcode = (tcode), \
+     objof(o)->o_flags = (flags), \
+     objof(o)->o_nrefs = (nrefs), \
+     objof(o)->o_leafz = (leafz))
+   /*(*(unsigned long *)(o) = (tcode) | ((flags) << 8) | ((nrefs) << 16) | ((leafz) << 24))
+
+    */
+
+/*
  * Flags that may appear in o_flags. The upper nibble is considered available
  * for type specific use.
  */
@@ -359,4 +369,10 @@ struct objwsup
 /*
  * End of ici.h export. --ici.h-end--
  */
+
+#define ICI_STORE_ATOM_AND_COUNT(po, s) \
+        ((*(po) = objof(s)), \
+        ((++ici_natoms > atomsz / 2) ? \
+            ici_grow_atoms(atomsz * 2) : 0))
+
 #endif

@@ -14,7 +14,8 @@ Name "${NAME}"
 OutFile "ici4-sdk-install.exe"
 
 SetDateSave on
-;SetOverwrite ifnewer
+SetOverwrite ifnewer
+CRCCheck on
 
 ;
 ; Set the text of the component selection dialog. This has the side
@@ -52,13 +53,13 @@ SectionEnd
 Section "ICI Software Development Kit"
 SetOutPath "$INSTDIR\lib"
 File "/oname=ici4.lib" "Release\ici4.lib"
-File "/oname=ici4-d.lib" "Debug\ici4-d.lib"
 SetOutPath "$INSTDIR\include"
 File "/oname=ici.h" "..\ici.h"
 File "/oname=icistr-setup.h" "..\icistr-setup.h"
 SetOutPath "$INSTDIR\ici"
 File "/oname=ici.exe" "Release\ici.exe"
 File "/oname=ici4.dll" "Release\ici4.dll"
+File "/oname=ici4.pdb" "Release\ici4.pdb"
 File "/oname=iciw.exe" "Release\iciw.exe"
 File "/oname=ici4widb.dll" "Release\ici4widb.dll"
 SetOutPath "$INSTDIR\ici\debug"
@@ -66,8 +67,8 @@ File "/oname=ici.exe" "Debug\ici.exe"
 File "/oname=ici.pdb" "Debug\ici.pdb"
 File "/oname=iciw.exe" "Debug\iciw.exe"
 File "/oname=iciw.pdb" "Debug\iciw.pdb"
-File "/oname=ici4-d.dll" "Debug\ici4-d.dll"
-File "/oname=ici4-d.pdb" "Debug\ici4-d.pdb"
+File "/oname=ici4.dll" "Debug\ici4.dll"
+File "/oname=ici4.pdb" "Debug\ici4.pdb"
 File "/oname=ici4widb.dll" "Debug\ici4widb.dll"
 File "/oname=ici4widb.pdb" "Debug\ici4widb.pdb"
 SectionEnd
@@ -96,7 +97,14 @@ Delete "$INSTDIR\icisdk-uninst.exe"
 Delete "$INSTDIR\lib\ici4.lib"
 Delete "$INSTDIR\include\ici.h"
 Delete "$INSTDIR\include\icistr-setup.h"
-Delete "$INSTDIR\ici\src\*"
+Delete "$INSTDIR\ici\debug\ici.exe"
+Delete "$INSTDIR\ici\debug\ici.pdb"
+Delete "$INSTDIR\ici\debug\iciw.exe"
+Delete "$INSTDIR\ici\debug\ici4.dll"
+Delete "$INSTDIR\ici\debug\ici4.pdb"
+Delete "$INSTDIR\ici\debug\ici4widb.dll"
+Delete "$INSTDIR\ici\debug\ici4widb.pdb"
+RMDir "$INSTDIR\ici\debug"
 RMDir "$INSTDIR\ici"
 DeleteRegKey HKLM "SOFTWARE\${NAME}"
 DeleteRegKey HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}"

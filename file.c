@@ -15,17 +15,6 @@ cmp_file(object_t *o1, object_t *o2)
 }
 
 /*
- * Return a hash sensitive to the value of the object.
- * See the comment on t_hash() in object.h
- */
-static unsigned long
-hash_file(object_t *o)
-{
-    return (unsigned long)fileof(o)->f_file * FILE_PRIME
-        + (unsigned long)fileof(o)->f_type;
-}
-
-/*
  * Free this object and associated memory (but not other objects).
  * See the comments on t_free() in object.h.
  */
@@ -52,22 +41,16 @@ file_t *
 new_file(void *fp, ftype_t *ftype, string_t *name, object_t *ref)
 {
     register file_t     *f;
-    static file_t       proto = {OBJ(TC_FILE)};
 
-    proto.f_file = fp;
-    proto.f_type = ftype;
-    proto.f_name = name;
-    proto.f_ref = ref;
-    if ((f = fileof(atom_probe(objof(&proto)))) != NULL)
-    {
-        ici_incref(f);
-        return f;
-    }
     if ((f = ici_talloc(file_t)) == NULL)
         return NULL;
-    *f = proto;
-    rego(f);
-    return fileof(ici_atom(objof(f), 1));
+    ICI_OBJ_SET_TFNZ(f, TC_FILE, 0, 1, 0);
+    f->f_file = fp;
+    f->f_type = ftype;
+    f->f_name = name;
+    f->f_ref = ref;
+    ici_rego(f);
+    return f;
 }
 
 int
@@ -104,7 +87,7 @@ type_t  file_type =
 {
     mark_file,
     free_file,
-    hash_file,
+    hash_unique,
     cmp_file,
     copy_simple,
     ici_assign_fail,

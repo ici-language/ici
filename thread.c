@@ -52,6 +52,7 @@ ici_leave(void)
         *x->x_os = ici_os;
         *x->x_xs = ici_xs;
         *x->x_vs = ici_vs;
+        x->x_count = ici_exec_count;
 #ifdef ICI_USE_WIN32_THREADS
         InterlockedDecrement(&ici_n_active_threads);
         ReleaseMutex(ici_mutex);
@@ -120,6 +121,7 @@ ici_enter(exec_t *x)
             ici_os = *x->x_os;
             ici_xs = *x->x_xs;
             ici_vs = *x->x_vs;
+            ici_exec_count = x->x_count;
         }
         x->x_os->a_base = NULL;
         x->x_xs->a_base = NULL;
@@ -148,6 +150,7 @@ ici_yield(void)
         *x->x_os = ici_os;
         *x->x_xs = ici_xs;
         *x->x_vs = ici_vs;
+        x->x_count = ici_exec_count;
 #ifdef ICI_USE_WIN32_THREADS
         ReleaseMutex(ici_mutex);
         WaitForSingleObject(ici_mutex, INFINITE);
@@ -176,6 +179,7 @@ ici_yield(void)
             ici_os = *x->x_os;
             ici_xs = *x->x_xs;
             ici_vs = *x->x_vs;
+            ici_exec_count = x->x_count;
         }
         x->x_os->a_base = NULL;
         x->x_xs->a_base = NULL;
@@ -289,6 +293,7 @@ ici_thread_base(void *arg)
     {
         x->x_result = objof(ici_str_get_nul_term(ici_error));
         x->x_state = XS_FAILED;
+        fprintf(stderr, "Warning, uncaught error in sub-thread: %s\n", ici_error);
     }
     else
     {

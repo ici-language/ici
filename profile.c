@@ -165,10 +165,7 @@ ici_profilecall_new(profilecall_t *called_by)
         return NULL;
 
     /* Fill in the bits common to all ICI objects. */
-    objof(pc)->o_tcode = TC_PROFILECALL;
-    assert(ici_typeof(pc) == &profilecall_type);
-    objof(pc)->o_flags = 0;
-    objof(pc)->o_nrefs = 1;
+    ICI_OBJ_SET_TFNZ(pc, TC_PROFILECALL, 0, 1, 0);
 
     /* Fill in profilecall specific bits. */
     pc->pc_calledby = called_by;
@@ -184,7 +181,7 @@ ici_profilecall_new(profilecall_t *called_by)
     pc->pc_call_count = 0;
 
     /* Link it in to the global list of objects. */
-    rego(pc);
+    ici_rego(pc);
 
     return pc;
 }

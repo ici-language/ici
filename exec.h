@@ -63,11 +63,17 @@ struct exec
  *                      (never seen at the language level) that are special
  *                      pointers into code arrays. Entering blocks and
  *                      functions calls cause this stack to grow deeper.
+ *                      NB: This stack is swapped into the global varable
+ *                      ici_xs for the active thread. Accessing this field
+ *                      directly is very rare.
  *
  * x_os                 The ICI interpreter operand stack. This is where
  *                      operands in expressions are stacked during expression
  *                      evaluation (which includes function call argument
  *                      preparation).
+ *                      NB: This stack is swapped into the global varable
+ *                      ici_os for the active thread. Accessing this field
+ *                      directly is very rare.
  *
  * x_vs                 The ICI interpreter 'scope' or 'variable' stack. The
  *                      top element of this stack is always a struct that
@@ -75,6 +81,15 @@ struct exec
  *                      names. Function calls cause this to grow deeper as
  *                      the new scope of the function being entered is pushed
  *                      on the stack.
+ *                      NB: This stack is swapped into the global varable
+ *                      ici_vs for the active thread. Accessing this field
+ *                      directly is very rare.
+ *
+ * x_count              A count-down until we should check such things as
+ *                      whether the above stacks need growing. Various expensive
+ *                      tests are delayed and done occasionally to save time.
+ *                      NB: This is cached in ici_exec_count for the current
+ *                      thread.
  *
  * x_src                The most recently executed source line tag. These tags
  *                      are placed in code arrays during compilation.  They

@@ -80,10 +80,8 @@ new_func()
     if ((f = ici_talloc(func_t)) == NULL)
         return NULL;
     memset((char *)f, 0, sizeof(func_t));
-    objof(f)->o_tcode = TC_FUNC;
-    assert(ici_typeof(f) == &ici_func_type);
-    objof(f)->o_nrefs = 1;
-    rego(f);
+    ICI_OBJ_SET_TFNZ(f, TC_FUNC, 0, 1, 0);
+    ici_rego(f);
     return f;
 }
 

@@ -66,15 +66,7 @@ Update all the extension modules to ici4
 
 ---
 
-Update dependencies under Windows.
-
----
-
 Mention the old form of smash in the documentation.
-
----
-
-Update and check ici_uninit().
 
 ---
 
@@ -107,10 +99,6 @@ Put in general forall
 ---
 
 Put --help and/or /? help into ici.exe
-
----
-
-Make the Windows path include ici sub-dir of module dir.
 
 ---
 
@@ -188,10 +176,6 @@ Make arrays shrink during collection.
 
 ---
 
-Add auto-increment initialisers to build.
-
----
-
 Seperate out extension module docs?
 
 ---
@@ -207,13 +191,6 @@ And using waitfor to wait for termination is a bit verbose. Add join()?
 
 Special int count loop construct?
 
-    forall (n)
-
-	forall (i in n)
-
-	forall (i in first; limit; step)
-
-	forall (i in [first;] [limit] [;step])
 ---
 
 Make sort() return the sorted array & document.
@@ -224,5 +201,6 @@ Add icinet.html and icisys.html to cvs.
 
 ---
 
+Add an 'interface version' to extern dlls.
 
-
+---

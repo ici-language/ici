@@ -6,8 +6,13 @@
  * Include sstring.h to define static string objects (with 1 ref count
  * and a pesudo size of 1 in o_leafz).
  */
-#define SSTRING(name, str)    sstring_t ici_ss_##name \
+#if KEEP_STRING_HASH
+#   define SSTRING(name, str)    sstring_t ici_ss_##name \
         = {{TC_STRING, 0, 1, 1}, NULL, NULL, 0, 0, (sizeof str) - 1, str};
+#else
+#   define SSTRING(name, str)    sstring_t ici_ss_##name \
+        = {{TC_STRING, 0, 1, 1}, NULL, NULL, 0, (sizeof str) - 1, str};
+#endif
 #include "sstring.h"
 #undef  SSTRING
 

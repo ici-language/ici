@@ -63,6 +63,7 @@ LINK32=xilink6.exe
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
+# PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
 # ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /Fd"Debug/ici.pdb" /FD /GZ /c
@@ -97,31 +98,5 @@ SOURCE=..\main.c
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # End Group
-# Begin Source File
-
-SOURCE=.\Release\ici4.lib
-
-!IF  "$(CFG)" == "ici - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "ici - Win32 Debug"
-
-# PROP Exclude_From_Build 1
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=".\Debug\ici4-d.lib"
-
-!IF  "$(CFG)" == "ici - Win32 Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "ici - Win32 Debug"
-
-!ENDIF 
-
-# End Source File
 # End Target
 # End Project

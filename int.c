@@ -54,33 +54,41 @@ free_int(object_t *o)
  * its ref count incremented.
  */
 int_t *
-ici_int_new(long v)
+ici_int_new(long i)
 {
-    register int_t      *i;
+    object_t            *o;
+    object_t            **po;
 
-    /*
-     * There is an in-line copy of this near the end of binop.h
-     */
-    if ((v & ~ICI_SMALL_INT_MASK) == 0 && (i = ici_small_ints[v]) != NULL)
+    if ((i & ~ICI_SMALL_INT_MASK) == 0 && (o = objof(ici_small_ints[i])) != NULL)
     {
-        ici_incref(i);
-        return i;
+        ici_incref(o);
+        return intof(o);
     }
-    if ((i = atom_int(v)) != NULL)
+    for
+    (
+        po = &atoms[ici_atom_hash_index((unsigned long)i * INT_PRIME)];
+        (o = *po) != NULL;
+        --po < atoms ? po = atoms + atomsz - 1 : NULL
+    )
     {
-        ici_incref(i);
-        return i;
+        if (isint(o) && intof(o)->i_value == i)
+        {
+            ici_incref(o);
+            return intof(o);
+        }
     }
-    if ((i = ici_talloc(int_t)) == NULL)
+    ++ici_supress_collect;
+    if ((o = objof(ici_talloc(int_t))) == NULL)
+    {
+        --ici_supress_collect;
         return NULL;
-    objof(i)->o_tcode = TC_INT;
-    assert(ici_typeof(i) == &int_type);
-    objof(i)->o_flags = 0;
-    objof(i)->o_nrefs = 1;
-    rego(i);
-    objof(i)->o_leafz = sizeof(int_t);
-    i->i_value = v;
-    return intof(ici_atom(objof(i), 1));
+    }
+    ICI_OBJ_SET_TFNZ(o, TC_INT, O_ATOM, 1, sizeof(int_t));
+    ici_rego(o);
+    intof(o)->i_value = i;
+    --ici_supress_collect;
+    ICI_STORE_ATOM_AND_COUNT(po, o);
+    return intof(o);
 }
 
 type_t  int_type =

@@ -110,10 +110,7 @@ ici_struct_new(void)
      */
     if ((s = ici_talloc(struct_t)) == NULL)
         return NULL;
-    objof(s)->o_tcode = TC_STRUCT;
-    assert(ici_typeof(s) == &struct_type);
-    objof(s)->o_flags = O_SUPER;
-    objof(s)->o_nrefs = 1;
+    ICI_OBJ_SET_TFNZ(s, TC_STRUCT, O_SUPER, 1, 0);
     s->o_head.o_super = NULL;
     s->s_slots = NULL;
     s->s_nels = 0;
@@ -124,7 +121,7 @@ ici_struct_new(void)
         return NULL;
     }
     memset(s->s_slots, 0, 4 * sizeof(slot_t));
-    rego(s);
+    ici_rego(s);
     return s;
 }
 
@@ -230,15 +227,12 @@ copy_struct(object_t *o)
     s = structof(o);
     if ((ns = (struct_t *)ici_talloc(struct_t)) == NULL)
         return NULL;
-    objof(ns)->o_tcode = TC_STRUCT;
-    assert(ici_typeof(ns) == &struct_type);
-    objof(ns)->o_flags = O_SUPER;
-    objof(ns)->o_nrefs = 1;
-    rego(ns);
+    ICI_OBJ_SET_TFNZ(ns, TC_STRUCT, O_SUPER, 1, 0);
     ns->o_head.o_super = s->o_head.o_super;
     ns->s_nels = 0;
     ns->s_nslots = 0;
     ns->s_slots = NULL;
+    ici_rego(ns);
     if ((ns->s_slots = (slot_t *)ici_nalloc(s->s_nslots * sizeof(slot_t))) == NULL)
         goto fail;
     memcpy((char *)ns->s_slots, (char *)s->s_slots, s->s_nslots*sizeof(slot_t));
@@ -270,11 +264,7 @@ copy_autos(func_t *f)
     ns = (struct_t *)ici_nalloc(sizeof(struct_t) + nslots * sizeof(slot_t));
     if (ns == NULL)
         return NULL;
-    objof(ns)->o_tcode = TC_STRUCT;
-    assert(ici_typeof(ns) == &struct_type);
-    objof(ns)->o_flags = O_SUPER;
-    objof(ns)->o_nrefs = 1;
-    rego(ns);
+    ICI_OBJ_SET_TFNZ(ns, TC_STRUCT, O_SUPER, 1, 0);
     ns->o_head.o_super = s->o_head.o_super;
     ns->s_nels = 0;
     ns->s_nslots = 0;
@@ -282,6 +272,7 @@ copy_autos(func_t *f)
     memcpy((char *)ns->s_slots, (char *)s->s_slots, s->s_nslots*sizeof(slot_t));
     ns->s_nels = s->s_nels;
     ns->s_nslots = nslots;
+    ici_rego(ns);
     if (ns->s_nslots <= 16)
         ici_invalidate_struct_lookaside(ns);
     else

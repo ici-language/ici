@@ -134,14 +134,11 @@ ici_ptr_new(object_t *a, object_t *k)
 
     if ((p = ici_talloc(ptr_t)) == NULL)
         return NULL;
-    objof(p)->o_tcode = TC_PTR;
-    assert(ici_typeof(p) == &ptr_type);
-    objof(p)->o_flags = 0;
-    objof(p)->o_nrefs = 1;
-    rego(p);
+    ICI_OBJ_SET_TFNZ(p, TC_PTR, 0, 1, 0);
     p->p_aggr = a;
     p->p_key = k;
-    return ptrof(ici_atom(objof(p), 1));
+    ici_rego(p);
+    return p;
 }
 
 /*

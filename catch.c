@@ -67,14 +67,11 @@ new_catch(object_t *o, int odepth, int vdepth, int flags)
 
     if ((c = ici_talloc(catch_t)) == NULL)
         return NULL;
-    objof(c)->o_tcode = TC_CATCH;
-    assert(ici_typeof(c) == &ici_catch_type);
-    objof(c)->o_flags = flags;
-    objof(c)->o_nrefs = 0;/* Catch's are pre-decref'ed.  Unlike other types. */
-    rego(c);
+    ICI_OBJ_SET_TFNZ(c, TC_CATCH, flags, 0, 0);
     c->c_catcher = o;
     c->c_odepth = odepth;
     c->c_vdepth = vdepth;
+    ici_rego(c);
     return c;
 }
 

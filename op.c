@@ -51,24 +51,29 @@ free_op(object_t *o)
 op_t *
 new_op(int (*func)(), int ecode, int code)
 {
-    register op_t       *o;
+    op_t                *o;
+    object_t            **po;
     static op_t         proto = {OBJ(TC_OP)};
 
     proto.op_func = func;
     proto.op_code = code;
     proto.op_ecode = ecode;
-    if ((o = opof(atom_probe(objof(&proto)))) != NULL)
+    if ((o = opof(atom_probe(objof(&proto), &po))) != NULL)
     {
         ici_incref(o);
         return o;
     }
+    ++ici_supress_collect;
     if ((o = ici_talloc(op_t)) == NULL)
         return NULL;
-    *o = proto;
-    assert(ici_typeof(o) == &op_type);
-    rego(o);
-    objof(o)->o_leafz = sizeof(op_t);
-    return opof(ici_atom(objof(o), 1));
+    ICI_OBJ_SET_TFNZ(o, TC_OP, O_ATOM, 1, sizeof(op_t));
+    o->op_code = code;
+    o->op_ecode = ecode;
+    o->op_func = func;
+    ici_rego(o);
+    --ici_supress_collect;
+    ICI_STORE_ATOM_AND_COUNT(po, o);
+    return o;
 }
 
 type_t  op_type =

@@ -37,6 +37,11 @@ exec_t          *ici_execs;
 exec_t          *ici_exec;
 
 /*
+ * A cached copy of ici_exec->x_count for the current thread.
+ */
+int             ici_exec_count;
+
+/*
  * The arrays that form the current execution, operand and variable (scope)
  * stacks. These are actually swapped-in copies of the stacks that are
  * referenced from the current execution context. They get copied into
@@ -182,10 +187,8 @@ ici_new_exec(void)
     if ((x = ici_talloc(exec_t)) ==  NULL)
         return NULL;
     memset(x, 0, sizeof *x);
-    objof(x)->o_tcode = TC_EXEC;
-    assert(ici_typeof(x) == &ici_exec_type);
-    objof(x)->o_nrefs = 1;
-    rego(x);
+    ICI_OBJ_SET_TFNZ(x, TC_EXEC, 0, 1, 0);
+    ici_rego(x);
     x->x_src = &default_src;
     if ((x->x_xs = ici_array_new(80)) == NULL)
         goto fail;
@@ -356,7 +359,7 @@ ici_evaluate(object_t *code, int n_operands)
      */
     for (;;)
     {
-        if (--ici_exec->x_count == 0)
+        if (--ici_exec_count == 0)
         {
             if (ici_aborted)
             {
@@ -369,7 +372,7 @@ ici_evaluate(object_t *code, int n_operands)
              */
             if (ici_engine_stack_check())
                 goto fail;
-            ici_exec->x_count = 20;
+            ici_exec_count = 20;
             if (++ici_exec->x_yield_count > 10)
             {
                 ici_yield();
@@ -410,6 +413,7 @@ ici_evaluate(object_t *code, int n_operands)
         {
             object_t   *tmp;
 
+    o_is_a_pc_and_continue:
             tmp = *pcof(o)->pc_next++;
             o = tmp;
             if (isop(o))
@@ -579,10 +583,10 @@ ici_evaluate(object_t *code, int n_operands)
                  * much of its time in critsects could sync with the
                  * stack check countdown and never yield.
                  */
-                ici_exec->x_count = 1;
+                ici_exec_count = 1;
             }
             ici_unwind();
-            continue;
+            goto stable_stacks_continue;
 
         case TC_FORALL:
             *ici_xs.a_top++ = o; /* Restore formal state. */
@@ -717,7 +721,8 @@ ici_evaluate(object_t *code, int n_operands)
                  * pc           => pc+1 (xs)
                  *              => *pc (os)
                  */
-                *ici_os.a_top++ = *pcof(ici_xs.a_top[-1])->pc_next++;
+                o = ici_xs.a_top[-1];
+                *ici_os.a_top++ = *pcof(o)->pc_next++;
                 continue;
 
             case OP_AT:
@@ -924,26 +929,39 @@ ici_evaluate(object_t *code, int n_operands)
 
             case OP_IF:
                 /*
-                 * bool obj => -
+                 * bool => - (os)
+                 * 
                  */
-                if (isfalse(ici_os.a_top[-2]))
+                if (isfalse(ici_os.a_top[-1]))
                 {
-                    ici_os.a_top -= 2;
-                    continue;
+                    --ici_os.a_top;
+                    ++pcof(ici_xs.a_top[-1])->pc_next;
+                    goto stable_stacks_continue;
                 }
-                get_pc(arrayof(ici_os.a_top[-1]), ici_xs.a_top);
+                o = *pcof(ici_xs.a_top[-1])->pc_next++;
+                get_pc(arrayof(o), ici_xs.a_top);
+                --ici_os.a_top;
                 ++ici_xs.a_top;
-                ici_os.a_top -= 2;
                 continue;
 
             case OP_IFELSE:
                 /*
-                 * bool obj1 obj2 => -
+                 * bool => -
                  */
-                get_pc(arrayof(ici_os.a_top[-1 - !isfalse(ici_os.a_top[-3])]), ici_xs.a_top);
+                if (isfalse(ici_os.a_top[-1]))
+                {
+                    ++pcof(ici_xs.a_top[-1])->pc_next;
+                    o = *pcof(ici_xs.a_top[-1])->pc_next++;
+                }
+                else
+                {
+                    o = *pcof(ici_xs.a_top[-1])->pc_next++;
+                    ++pcof(ici_xs.a_top[-1])->pc_next;
+                }
+                get_pc(arrayof(o), ici_xs.a_top);
+                --ici_os.a_top;
                 ++ici_xs.a_top;
-                ici_os.a_top -= 3;
-                continue;
+                goto stable_stacks_continue;
 
             case OP_IFBREAK:
                 /*
@@ -988,7 +1006,7 @@ ici_evaluate(object_t *code, int n_operands)
                             if (s[-1]->o_flags & CF_CRIT_SECT)
                             {
                                 --ici_exec->x_critsect;
-                                ici_exec->x_count = 1;
+                                ici_exec_count = 1;
                             }
                             else if (s[-1]->o_flags & CF_EVAL_BASE)
                                 break;
@@ -1001,12 +1019,12 @@ ici_evaluate(object_t *code, int n_operands)
                         )
                         {
                             ici_xs.a_top = s - 2;
-                            goto cont;
+                            goto stable_stacks_continue;
                         }
                         else if (isforall(s[-1]))
                         {
                             ici_xs.a_top = s - 1;
-                            goto cont;
+                            goto stable_stacks_continue;
                         }
                     }
                 }
@@ -1054,13 +1072,13 @@ ici_evaluate(object_t *code, int n_operands)
                             if (s[-1]->o_flags & CF_CRIT_SECT)
                             {
                                 --ici_exec->x_critsect;
-                                ici_exec->x_count = 1;
+                                ici_exec_count = 1;
                             }
                         }
                         if (s[-1] == objof(&o_looper) || isforall(s[-1]))
                         {
                             ici_xs.a_top = s;
-                            goto cont;
+                            goto stable_stacks_continue;
                         }
                     }
                 }
@@ -1072,8 +1090,9 @@ ici_evaluate(object_t *code, int n_operands)
                  * This is the end of a code array that is the subject
                  * of a loop. Rewind the pc back to its start.
                  */
-                pcof(ici_xs.a_top[-1])->pc_next = pcof(ici_xs.a_top[-1])->pc_code->a_base;
-                goto stable_stacks_continue;
+                o = ici_xs.a_top[-1];
+                pcof(o)->pc_next = pcof(o)->pc_code->a_base;
+                goto o_is_a_pc_and_continue;
 
             case OP_LOOPER:
                 /*
@@ -1099,13 +1118,13 @@ ici_evaluate(object_t *code, int n_operands)
                 goto stable_stacks_continue;
 
             case OP_LOOP:
-                /*
-                 *      => obj looper pc (xs)
-                 * obj  => - (os)
-                 */
-                *ici_xs.a_top++ = ici_os.a_top[-1];
+                o = *pcof(ici_xs.a_top[-1])->pc_next++;
+                *ici_xs.a_top++ = o;
                 *ici_xs.a_top++ = objof(&o_looper);
-                /* Fall through */
+                get_pc(arrayof(o), ici_xs.a_top);
+                ++ici_xs.a_top;
+                break;
+
             case OP_EXEC:
                 /*
                  * array => - (os)
@@ -1216,7 +1235,7 @@ ici_evaluate(object_t *code, int n_operands)
                 if (objof(c)->o_flags & CF_CRIT_SECT)
                 {
                     --ici_exec->x_critsect;
-                    ici_exec->x_count = 1;
+                    ici_exec_count = 1;
                     continue;
                 }
                 break;
@@ -1247,9 +1266,6 @@ ici_evaluate(object_t *code, int n_operands)
             --ici_exec->x_n_engine_recurse;
             return NULL;
         }
-
-    cont:;
-
     }
 }
 

@@ -77,10 +77,7 @@ ici_set_new()
      */
     if ((s = ici_talloc(set_t)) == NULL)
         return NULL;
-    objof(s)->o_tcode = TC_SET;
-    assert(ici_typeof(s) == &set_type);
-    objof(s)->o_flags = 0;
-    objof(s)->o_nrefs = 1;
+    ICI_OBJ_SET_TFNZ(s, TC_SET, 0, 1, 0);
     s->s_nels = 0;
     s->s_nslots = 4; /* Must be power of 2. */
     if ((s->s_slots = (object_t **)ici_nalloc(4 * sizeof(object_t *))) == NULL)
@@ -89,7 +86,7 @@ ici_set_new()
         return NULL;
     }
     memset(s->s_slots, 0, 4 * sizeof(object_t *));
-    rego(s);
+    ici_rego(s);
     return s;
 }
 
@@ -153,13 +150,10 @@ copy_set(object_t *o)
     s = setof(o);
     if ((ns = ici_talloc(set_t)) == NULL)
         return NULL;
-    objof(ns)->o_tcode = TC_SET;
-    assert(ici_typeof(ns) == &set_type);
-    objof(ns)->o_flags = 0;
-    objof(ns)->o_nrefs = 1;
-    rego(ns);
+    ICI_OBJ_SET_TFNZ(ns, TC_SET, 0, 1, 0);
     ns->s_nels = 0;
     ns->s_nslots = 0;
+    ici_rego(ns);
     if ((ns->s_slots = (object_t **)ici_nalloc(s->s_nslots * sizeof(object_t *))) == NULL)
         goto fail;
     memcpy(ns->s_slots, s->s_slots, s->s_nslots*sizeof(object_t *));

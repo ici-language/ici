@@ -1,4 +1,5 @@
 #define ICI_CORE
+#include "fwd.h"
 #include "str.h"
 #include "struct.h"
 #include "exec.h"
@@ -13,28 +14,23 @@
 string_t *
 new_string(int nchars)
 {
-    register object_t   *o;
+    register string_t   *s;
     size_t              az;
 
     az = STR_ALLOCZ(nchars);
-    if ((o = (object_t *)ici_nalloc(az)) == NULL)
+    if ((s = (string_t *)ici_nalloc(az)) == NULL)
         return NULL;
-    o->o_tcode = TC_STRING;
-    assert(ici_typeof(o) == &string_type);
-    o->o_flags = 0;
-    o->o_nrefs = 1;
-    rego(o);
-    if (az <= 127)
-        o->o_leafz = az;
-    else
-        o->o_leafz = 0;
-    stringof(o)->s_nchars = nchars;
-    stringof(o)->s_chars[nchars] = '\0';
-    stringof(o)->s_struct = NULL;
-    stringof(o)->s_slot = NULL;
-    stringof(o)->s_hash = 0;
-    stringof(o)->s_vsver = 0;
-    return stringof(o);
+    ICI_OBJ_SET_TFNZ(s, TC_STRING, 0, 1, az <= 127 ? az : 0);
+    s->s_nchars = nchars;
+    s->s_chars[nchars] = '\0';
+    s->s_struct = NULL;
+    s->s_slot = NULL;
+#   if KEEP_STRING_HASH
+        s->s_hash = 0;
+#   endif
+    s->s_vsver = 0;
+    ici_rego(s);
+    return s;
 }
 
 /*
@@ -55,41 +51,46 @@ ici_str_new(char *p, int nchars)
         proto   = {{OBJ(TC_STRING)}};
 
     assert(nchars >= 0);
+    az = STR_ALLOCZ(nchars);
     if ((size_t)nchars < sizeof proto.d)
     {
+        object_t        **po;
+
         proto.s.s_nchars = nchars;
         memcpy(proto.s.s_chars, p, nchars);
         proto.s.s_chars[nchars] = '\0';
-        proto.s.s_hash = 0;
-        if ((s = stringof(atom_probe(objof(&proto.s)))) != NULL)
+#       if KEEP_STRING_HASH
+            proto.s.s_hash = 0;
+#       endif
+        if ((s = stringof(atom_probe(objof(&proto.s), &po))) != NULL)
         {
             ici_incref(s);
             return s;
         }
+        ++ici_supress_collect;
         az = STR_ALLOCZ(nchars);
         if ((s = (string_t *)ici_nalloc(az)) == NULL)
             return NULL;
         memcpy((char *)s, (char *)&proto.s, az);
-        rego(s);
-        objof(s)->o_leafz = az;
-        return stringof(ici_atom(objof(s), 1));
+        ICI_OBJ_SET_TFNZ(s, TC_STRING, O_ATOM, 1, az);
+        ici_rego(s);
+        --ici_supress_collect;
+        ICI_STORE_ATOM_AND_COUNT(po, s);
+        return s;
     }
-    if ((s = (string_t *)ici_nalloc(STR_ALLOCZ(nchars))) == NULL)
+    if ((s = (string_t *)ici_nalloc(az)) == NULL)
         return NULL;
-    s->o_head = proto.s.o_head;
-    assert(ici_typeof(s) == &string_type);
-    rego(s);
-    if (STR_ALLOCZ(nchars) <= 127)
-        objof(s)->o_leafz = STR_ALLOCZ(nchars);
-    else
-        objof(s)->o_leafz = 0;
+    ICI_OBJ_SET_TFNZ(s, TC_STRING, 0, 1, az <= 127 ? az : 0);
     s->s_nchars = nchars;
     s->s_struct = NULL;
     s->s_slot = NULL;
     s->s_vsver = 0;
     memcpy(s->s_chars, p, nchars);
     s->s_chars[nchars] = '\0';
-    s->s_hash = 0;
+#   if KEEP_STRING_HASH
+        s->s_hash = 0;
+#   endif
+    ici_rego(s);
     return stringof(ici_atom(objof(s), 1));
 }
 
@@ -163,50 +164,17 @@ unsigned long
 ici_hash_string(object_t *o)
 {
     unsigned long       h;
-    unsigned char       *p;
-    unsigned char       *ep;
-    int                 leap;
 
-    if (stringof(o)->s_hash)
-        return stringof(o)->s_hash;
-    p = stringof(o)->s_chars;
-    h = stringof(o)->s_nchars;
-    switch (h)
-    {
-    case 4:
-            h ^= (*p++ <<  4) ^ (h >> 9);
-    case 3:
-            h ^= (*p++ <<  9) ^ (h << 4);
-    case 2:
-            h ^= (*p++ << 12) ^ (h >> 3);
-    case 1:
-            h ^= (*p++ <<  3) ^ (h << 7);
-            break;
-
-    case 0:
-            h = 0x5678A9B5;
-            break;
-
-    default:
-        ep = p + h - 4;
-        leap = 0;
-        do
-        {
-            h ^= (*p++ <<  4) ^ (h << 9);
-            h ^= (*p++ <<  9) ^ (h << 4);
-            h ^= (*p++ << 12) ^ (h >> 3);
-            h ^= (*p++ <<  3) ^ (h >> 7);
-            p += leap++;
-
-        } while (p < ep);
-
-        h ^= (*ep++     ) ^ (h << 9);
-        h ^= (*ep++ << 4) ^ (h << 4);
-        h ^= (*ep++ << 7) ^ (h >> 3);
-        h ^= (*ep++ << 9) ^ (h >> 7);
-    }
+#   if KEEP_STRING_HASH
+        if (stringof(o)->s_hash != 0)
+            return stringof(o)->s_hash;
+#   endif
+    h = ici_crc(STR_PRIME_0, stringof(o)->s_chars, stringof(o)->s_nchars);
 //printf("%8X %s\n", h, stringof(o)->s_chars);
-    return stringof(o)->s_hash = h;
+#   if KEEP_STRING_HASH
+        stringof(o)->s_hash = h;
+#   endif
+    return h;
 }
 
 /*

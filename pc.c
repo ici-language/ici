@@ -27,12 +27,9 @@ new_pc(void)
 
     if ((pc = pcof(ici_talloc(pc_t))) == NULL)
         return NULL;
-    objof(pc)->o_tcode = TC_PC;
-    assert(ici_typeof(pc) == &pc_type);
-    objof(pc)->o_flags = 0;
-    objof(pc)->o_nrefs = 0;
+    ICI_OBJ_SET_TFNZ(pc, TC_PC, 0, 0, 0);
     pc->pc_code = NULL;
-    rego(pc);
+    ici_rego(pc);
     return pc;
 }
 

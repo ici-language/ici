@@ -47,10 +47,7 @@ ici_regexp_new(string_t *s, int flags)
     /* Note rex can be NULL if no extra info required */
     if ((r = (regexp_t *)ici_talloc(regexp_t)) == NULL)
         goto fail;
-    objof(r)->o_tcode = TC_REGEXP;
-    assert(ici_typeof(r) == &regexp_type);
-    objof(r)->o_flags = 0;
-    objof(r)->o_nrefs = 1;
+    ICI_OBJ_SET_TFNZ(r, TC_REGEXP, 0, 1, 0);
     r->r_re  = re;
     r->r_rex = rex;
     if ((r->r_pat = stringof(copy(s))) == NULL)
@@ -59,7 +56,7 @@ ici_regexp_new(string_t *s, int flags)
         goto fail;
     }
     ici_decref(r->r_pat);
-    rego(r);
+    ici_rego(r);
     return regexpof(ici_atom(objof(r), 1));
 
 fail:

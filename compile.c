@@ -133,9 +133,9 @@ compile_expr(array_t *a, expr_t *e, int why)
                 return 1;
             }
             *a2->a_top++ = objof(&o_end);
+            *a->a_top++ = objof(&o_ifelse);
             *a->a_top++ = objof(a1);
             *a->a_top++ = objof(a2);
-            *a->a_top++ = objof(&o_ifelse);
             ici_decref(a1);
             ici_decref(a2);
             return 0;

@@ -67,6 +67,7 @@ EXPORTS ici_handle_new
 EXPORTS ici_handle_type
 EXPORTS ici_hash_string
 EXPORTS ici_init
+EXPORTS ici_interface_check
 EXPORTS ici_int_new
 EXPORTS ici_int_ret
 EXPORTS ici_leave

@@ -9,13 +9,27 @@
  * The following portion of this file exports to ici.h. --ici.h-start--
  */
 
+/*
+ * This define enables keeping of the string hash in the string structure to
+ * save re-computation. It is potentially recomputed when the atom pool is
+ * rebuilt or atoms are being removed from it. Changes to hashing and atom
+ * pool usage have reduced the number of times hashes are recomputer and it
+ * now seems that *not* keeping the hash value makes things faster overall
+ * than keeping it (which must be due to memory bandwidth and cache misses).
+ * So it is now ifdefed out. However it's a close thing and it could go back
+ * in one day.
+ */
+#define KEEP_STRING_HASH 0
+
 struct string
 {
     object_t    o_head;
     struct_t    *s_struct;      /* Where we were last found on the vs. */
     slot_t      *s_slot;        /* And our slot. */
     long        s_vsver;        /* The vs version at that time. */
-    unsigned long s_hash;       /* String hash code or 0 if not yet computed */
+#   if KEEP_STRING_HASH
+        unsigned long s_hash;  /* String hash code or 0 if not yet computed */
+#   endif
     int         s_nchars;
     char        s_chars[1];     /* And following bytes. */
 };
@@ -66,10 +80,9 @@ struct string
  * only be used where the ici_atom() operation is guaranteed to use the
  * string given, and never find an existing one already in the atom pool.
  * They are only used by the ICI core on first initialisation. They
- * are registered with the garbage collector because string reference
- * other objects and they may be the only ref. But they are never collected
- * because they always have a ref. They are inserted into the atom pool
- * of course. They only support strings up to 15 characters. See sstring.c.
+ * are not registered with the garbage collector. They are inserted into
+ * the atom pool of course. They only support strings up to 15 characters.
+ * See sstring.c.
  *
  * This structure must be an exact overlay of the one above.
  */
@@ -80,7 +93,9 @@ struct sstring
     struct_t    *s_struct;      /* Where we were last found on the vs. */
     slot_t      *s_slot;        /* And our slot. */
     long        s_vsver;        /* The vs version at that time. */
-    unsigned long s_hash;       /* String hash code or 0 if not yet computed */
+#   if KEEP_STRING_HASH
+        unsigned long s_hash;   /* String hash code or 0 if not yet computed */
+#   endif
     int         s_nchars;
     char        s_chars[12];    /* Longest string in sstring.h */
 };

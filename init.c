@@ -39,6 +39,19 @@ ici_init(void)
     assert(sizeof(object_t) == 4);
     assert(offsetof(objwsup_t, o_super) == 4);
 
+#   ifndef NDEBUG
+    {
+        char            v[80];
+        /*
+         * Check that the #defines of version number are in sync with our version
+         * string from conf.c.
+         */
+        sprintf(v, "@(#)ICI %d.%d.%d", ICI_VER_MAJOR, ICI_VER_MINOR, ICI_VER_RELEASE);
+        assert(strncmp(v, ici_version_string, strlen(v)) == 0);
+    }
+#   endif
+
+
     if (ici_chkbuf(120))
         return 1;
     if ((atoms = (object_t **)ici_nalloc(64 * sizeof(object_t *))) == NULL)
@@ -71,9 +84,9 @@ ici_init(void)
     if ((x = ici_new_exec()) == NULL)
         return 1;
     ici_enter(x);
-    rego(&ici_os);
-    rego(&ici_xs);
-    rego(&ici_vs);
+    ici_rego(&ici_os);
+    ici_rego(&ici_xs);
+    ici_rego(&ici_vs);
     if (ici_engine_stack_check())
         return 1;
     *ici_vs.a_top++ = objof(scope);
@@ -107,4 +120,23 @@ ici_init(void)
         return 1;
 #endif
     return 0;
+}
+
+int
+ici_interface_check(unsigned long ver, char const *name)
+{
+    if (ver >= ICI_BACK_COMPATIBLE_VER)
+        return 0;
+    sprintf(ici_buf,
+        "%s module was built for ICI %d.%d.%d, which is incompatible with this version %d.%d.%d",
+        name,
+        (ver >> 24),
+        (ver >> 16) & 0xFF,
+        (ver & 0xFFFF),
+        ICI_VER_MAJOR,
+        ICI_VER_MINOR,
+        ICI_VER_RELEASE);
+    ici_error = ici_buf;
+    return 1;
+
 }

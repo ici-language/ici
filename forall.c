@@ -44,11 +44,8 @@ ici_op_forall()
     }
     if ((fa = ici_talloc(forall_t)) == NULL)
         return 1;
-    objof(fa)->o_tcode = TC_FORALL;
-    assert(ici_typeof(fa) == &forall_type);
-    objof(fa)->o_flags = 0;
-    objof(fa)->o_nrefs = 0;
-    rego(fa);
+    ICI_OBJ_SET_TFNZ(fa, TC_FORALL, 0, 0, 0);
+    ici_rego(fa);
     fa->fa_index = -1;
     fa->fa_code = *--ici_os.a_top;
     fa->fa_aggr = *--ici_os.a_top;

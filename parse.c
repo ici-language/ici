@@ -8,6 +8,7 @@
 #include "op.h"
 #include "exec.h"
 #include "pc.h"
+#include "src.h"
 
 /*
  * Some commonly used strings.
@@ -22,6 +23,76 @@ static int      compound_statement(parse_t *, struct_t *);
 static int      expr(parse_t *, expr_t **, int);
 static int      const_expression(parse_t *, object_t **, int);
 static int      statement(parse_t *, array_t *, struct_t *, char *, int);
+
+#define DISASSEMBLE   0
+#if DISASSEMBLE
+static char *
+opname(op_t *op)
+{
+    switch (op->op_ecode)
+    {
+    case OP_OTHER: return "OP_OTHER";
+    case OP_CALL: return "OP_CALL";
+    case OP_NAMELVALUE: return "OP_NAMELVALUE";
+    case OP_DOT: return "OP_DOT";
+    case OP_DOTKEEP: return "OP_DOTKEEP";
+    case OP_DOTRKEEP: return "OP_DOTRKEEP";
+    case OP_ASSIGN: return "OP_ASSIGN";
+    case OP_ASSIGN_TO_NAME: return "OP_ASSIGN_TO_NAME";
+    case OP_ASSIGNLOCAL: return "OP_ASSIGNLOCAL";
+    case OP_EXEC: return "OP_EXEC";
+    case OP_LOOP: return "OP_LOOP";
+    case OP_REWIND: return "OP_REWIND";
+    case OP_ENDCODE: return "OP_ENDCODE";
+    case OP_IF: return "OP_IF";
+    case OP_IFELSE: return "OP_IFELSE";
+    case OP_IFNOTBREAK: return "OP_IFNOTBREAK";
+    case OP_IFBREAK: return "OP_IFBREAK";
+    case OP_BREAK: return "OP_BREAK";
+    case OP_QUOTE: return "OP_QUOTE";
+    case OP_BINOP: return "OP_BINOP";
+    case OP_AT: return "OP_AT";
+    case OP_SWAP: return "OP_SWAP";
+    case OP_BINOP_FOR_TEMP: return "OP_BINOP_FOR_TEMP";
+    case OP_AGGR_KEY_CALL: return "OP_AGGR_KEY_CALL";
+    case OP_COLON: return "OP_COLON";
+    case OP_COLONCARET: return "OP_COLONCARET";
+    case OP_METHOD_CALL: return "OP_METHOD_CALL";
+    case OP_SUPER_CALL: return "OP_SUPER_CALL";
+    case OP_ASSIGNLOCALVAR: return "OP_ASSIGNLOCALVAR";
+    case OP_CRITSECT: return "OP_CRITSECT";
+    case OP_WAITFOR: return "OP_WAITFOR";
+    case OP_POP: return "OP_POP";
+    case OP_CONTINUE: return "OP_CONTINUE";
+    case OP_LOOPER: return "OP_LOOPER";
+    case OP_ANDAND: return "OP_ANDAND";
+    case OP_SWITCH: return "OP_SWITCH";
+    case OP_SWITCHER: return "OP_SWITCHER";
+    default: return "op by function";
+    }
+}
+
+static void
+disassemble(int indent, array_t *a)
+{
+    object_t            **e;
+    char                n1[30];
+    int                 i;
+
+    for (i = 0, e = a->a_bot; e < a->a_top; ++i, ++e)
+    {
+        printf("%*d: ", indent, i);
+        if (issrc(*e))
+            printf("%s, %d\n", srcof(*e)->s_filename->s_chars, srcof(*e)->s_lineno);
+        else if (isop(*e))
+            printf("%s %d\n", opname(opof(*e)), opof(*e)->op_code);
+        else
+            printf("%s\n", objname(n1, *e));
+        if (isarray(*e))
+            disassemble(indent + 4, arrayof(*e));
+    }
+}
+#endif
 
 /*
  * In general, parseing functions return -1 on error (and set the global
@@ -177,6 +248,10 @@ function(parse_t *p, string_t *name)
     *f->f_code->a_top++ = objof(&o_null);
     *f->f_code->a_top++ = objof(&o_return);
     *f->f_code->a_top++ = objof(&o_end);
+#   if DISASSEMBLE
+        printf("%s()\n", name == NULL ? "?" : name->s_chars);
+        disassemble(4, f->f_code);
+#   endif
     f->f_autos = structof(ici_atom(objof(f->f_autos), 2));
     p->p_got.t_obj = ici_atom(objof(f), 1);
     p->p_func = saved_func;
@@ -1247,28 +1322,27 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
     struct_t    *d;
     objwsup_t   *ows;
     object_t    *o;
-    object_t    **op;
     int_t       *i;
     int         stepz;
 
     switch (next(p, a))
     {
     case T_ONCURLY:
-        reject(p);
-        if (compound_statement(p, NULL) == -1)
+        for (;;)
+        {
+            switch (statement(p, a, NULL, NULL, 0))
+            {
+            case -1: return -1;
+            case 1: continue;
+            }
+            break;
+        }
+        if (next(p, a) != T_OFFCURLY)
+        {
+            reject(p);
+            ici_error = "badly formed statement";
             return -1;
-        a1 = arrayof(p->p_got.t_obj);
-        /*
-         * Expand the statement in-line. Just a minor optimisation.
-         */
-        if (ici_stk_push_chk(a, a1->a_top - a1->a_base))
-            return -1;
-        /*
-         * Copy in-line, up to end or o_end operator.
-         */
-        for (op = a1->a_base; op < a1->a_top && *op != objof(&o_end); ++op)
-            *a->a_top++ = *op;
-        ici_decref(a1);
+        }
         break;
 
     case T_SEMICOLON:
@@ -1387,7 +1461,11 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
                 return -1;
             }
             a2 = NULL;
-            if (next(p, a) == T_NAME && p->p_got.t_obj == SSO(else))
+            /*
+             * Don't pass any code array to next() on else clause to stop
+             * spurious src marker.
+             */
+            if (next(p, NULL) == T_NAME && p->p_got.t_obj == SSO(else))
             {
                 ici_decref(p->p_got.t_obj);
                 if ((a2 = ici_array_new(0)) == NULL)
@@ -1411,18 +1489,20 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
                     ici_decref(a2);
                 return -1;
             }
-            *a->a_top++ = objof(a1);
-            ici_decref(a1);
             if (a2 != NULL)
             {
+                *a->a_top++ = objof(&o_ifelse);
+                *a->a_top++ = objof(a1);
                 *a->a_top++ = objof(a2);
                 ici_decref(a2);
-                *a->a_top++ = objof(&o_ifelse);
             }
             else
+            {
                 *a->a_top++ = objof(&o_if);
+                *a->a_top++ = objof(a1);
+            }
+            ici_decref(a1);
             break;
-
         }
         if (p->p_got.t_obj == SSO(while))
         {
@@ -1456,9 +1536,9 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
                 ici_decref(a1);
                 return -1;
             }
+            *a->a_top++ = objof(&o_loop);
             *a->a_top++ = objof(a1);
             ici_decref(a1);
-            *a->a_top++ = objof(&o_loop);
             break;
         }
         if (p->p_got.t_obj == SSO(do))
@@ -1508,9 +1588,9 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
                 ici_decref(a1);
                 return -1;
             }
+            *a->a_top++ = objof(&o_loop);
             *a->a_top++ = objof(a1);
             ici_decref(a1);
-            *a->a_top++ = objof(&o_loop);
             break;
         }
         if (p->p_got.t_obj == SSO(forall))
@@ -1834,9 +1914,9 @@ statement(parse_t *p, array_t *a, struct_t *sw, char *m, int endme)
                 return -1;
             if ((a2 = ici_array_new(2)) == NULL)
                 return -1;
+            *a1->a_top++ = objof(&o_loop);
             *a1->a_top++ = objof(a2);
             ici_decref(a2);
-            *a1->a_top++ = objof(&o_loop);
             /*
              * Into the new code array (a1, the body of the loop) we build:
              *     condition expression (for value)
@@ -2028,6 +2108,9 @@ parse_exec(void)
         case 1:
             if (a->a_top == a->a_base)
                 continue;
+#           if DISASSEMBLE
+                disassemble(4, a);
+#           endif
             get_pc(a, ici_xs.a_top);
             ++ici_xs.a_top;
             ici_decref(a);
@@ -2073,11 +2156,8 @@ new_parse(file_t *f)
     if ((p = (parse_t *)ici_talloc(parse_t)) == NULL)
         return NULL;
     memset(p, 0, sizeof(parse_t));
-    objof(p)->o_tcode = TC_PARSE;
-    assert(ici_typeof(p) == &parse_type);
-    objof(p)->o_flags = 0;
-    objof(p)->o_nrefs = 1;
-    rego(p);
+    ICI_OBJ_SET_TFNZ(p, TC_PARSE, 0, 1, 0);
+    ici_rego(p);
     p->p_file = f;
     p->p_sol = 1;
     p->p_lineno = 1;

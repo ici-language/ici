@@ -80,24 +80,37 @@ int ici_get_last_win32_error(void);
 
 /* From fwd.h */
 
-
-/*
- * Define SMALL to reduce the use of macros and thus reduce code size.
- * But it causes considerable speed degradation.
- */
-
-
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
 #ifndef NOSIGNALS
 # ifdef SUNOS5
 #  include <signal.h>
 # endif
 #endif
+
+/*
+ * ICI version number. Note that this occurs in a string in conf.c too.
+ */
+#define ICI_VER_MAJOR   4
+#define ICI_VER_MINOR   0
+#define ICI_VER_RELEASE 2
+
+/*
+ * The ICI version number composed into an 8.8.16 long for simple comparisons.
+ */
+#define ICI_VER         ((ICI_VER_MAJOR << 24) | (ICI_VER_MINOR << 16) | ICI_VER_RELEASE)
+
+/*
+ * The oldet version number for which the binary interface for seperately
+ * compiled modules is backwards compatible. This must be updated whenever
+ * the exernal interface changes in a way that could break already compiled
+ * modules. See ici_interface_check().
+ */
+#define ICI_BACK_COMPATIBLE_VER ((4 << 24) | (0 << 16) | 1)
+
 
 /*
  * DLI is defined in some configurations (Windows, in the conf include file)
@@ -265,7 +278,7 @@ extern slot_t   *find_raw_slot(struct_t *, object_t *);
 extern object_t *get_token(file_t *);
 extern object_t *get_value(struct_t *, object_t *);
 extern object_t *ici_atom(object_t *, int);
-extern object_t *atom_probe(object_t *);
+extern object_t *atom_probe(object_t *, object_t ***);
 extern int_t    *atom_int(long);
 extern int      parse_exec(void);
 extern int      parse_module(file_t *, objwsup_t *);
@@ -284,6 +297,7 @@ extern float_t  *ici_float_new(double);
 extern file_t   *new_file(void *, ftype_t *, string_t *, object_t *);
 extern func_t   *new_func(void);
 extern int_t    *ici_int_new(long);
+extern int      ici_interface_check(unsigned long ver, char const *name);
 extern string_t *new_string(int);
 extern string_t *ici_str_new(char *, int);
 extern op_t     *new_op(int (*)(), int, int);

@@ -142,6 +142,11 @@ f_load(void)
      */
     strcpy(fname, ici_prefix);
     strcat(fname, name->s_chars);
+/*
+#ifndef NDEBUG
+    strcat(fname, "-d");
+#endif
+*/
 
     if (ici_find_on_path(fname, ICI_DLL_EXT))
     {

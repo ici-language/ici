@@ -65,10 +65,16 @@ cfunc_t *funcs[] =
  */
 #if defined(__STDC__) || defined(_WIN32)
 /*
- * Eg: @(#)ICI 2.0.1, conf-sco.h, Apr 20 1994, SCO config (math win waitfor pipes )
+ * Eg: @(#)ICI 2.0.1, conf-sco.h, Apr 20 1994 11:42:12, SCO config (math win waitfor pipes )
+ *
+ * Note that the version number also occurs in some defines in fwd.h (ICI_*_VER).
  */
-char ici_version_string[] = "@(#)ICI 4.0.0, " CONFIG_FILE ", " __DATE__
-                            ", " CONFIG_STR " ("
+char ici_version_string[] =
+    "@(#)ICI 4.0.2, "
+    CONFIG_FILE ", "
+    __DATE__ " " __TIME__ ", "
+    CONFIG_STR
+    " ("
 
 #ifndef NDEBUG
     "DEBUG-BUILD "
@@ -111,6 +117,6 @@ char ici_version_string[] = "@(#)ICI 4.0.0, " CONFIG_FILE ", " __DATE__
 
 #else /* __STDC__ */
 
-char ici_version_string[] = "@(#)ICI 4.0.0";
+char ici_version_string[] = "@(#)ICI 4.0.1";
 
 #endif

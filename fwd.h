@@ -8,7 +8,7 @@
 
 /*
  * In general CONFIG_FILE is defined by the external build environment,
- * but for some common cases we have standard setting that can be used
+ * but for some common cases we have standard settings that can be used
  * directly. Windows in particular, because it is such a pain to handle
  * setting like this in Visual C, Project Builder and similar "advanced"
  * development environments.
@@ -35,27 +35,42 @@
 #define BUGHUNT
 #endif
 
+#include <assert.h>
+
 /*
  * The following portion of this file exports to ici.h. --ici.h-start--
  */
-
-/*
- * Define SMALL to reduce the use of macros and thus reduce code size.
- * But it causes considerable speed degradation.
- */
-
-
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
 #ifndef NOSIGNALS
 # ifdef SUNOS5
 #  include <signal.h>
 # endif
 #endif
+
+/*
+ * ICI version number. Note that this occurs in a string in conf.c too.
+ */
+#define ICI_VER_MAJOR   4
+#define ICI_VER_MINOR   0
+#define ICI_VER_RELEASE 2
+
+/*
+ * The ICI version number composed into an 8.8.16 long for simple comparisons.
+ */
+#define ICI_VER         ((ICI_VER_MAJOR << 24) | (ICI_VER_MINOR << 16) | ICI_VER_RELEASE)
+
+/*
+ * The oldet version number for which the binary interface for seperately
+ * compiled modules is backwards compatible. This must be updated whenever
+ * the exernal interface changes in a way that could break already compiled
+ * modules. See ici_interface_check().
+ */
+#define ICI_BACK_COMPATIBLE_VER ((4 << 24) | (0 << 16) | 1)
+
 
 /*
  * DLI is defined in some configurations (Windows, in the conf include file)
@@ -104,7 +119,14 @@
  * But if it wasn't, this is what we use.
  */
 #ifndef ICI_PTR_HASH
+/*
 #define ICI_PTR_HASH(p) (((unsigned long)(p) >> 12) * 31 ^ ((unsigned long)(p) >> 4) * 17)
+*/
+#define ICI_PTR_HASH(p) \
+     (ici_crc_table[((size_t)(p) >>  4) & 0xFF] \
+    ^ ici_crc_table[((size_t)(p) >> 12) & 0xFF])
+
+
 #endif
  
 #define nels(a)         (sizeof a / sizeof a[0])
@@ -210,6 +232,9 @@ extern DLI debug_t *ici_debug;
 
 extern char     ici_version_string[];
 
+extern unsigned long const ici_crc_table[256];
+extern int              ici_exec_count;
+
 #define ici_null_ret() ici_ret_no_decref(objof(&o_null))
 
 extern char     **smash(char *, int);
@@ -223,7 +248,7 @@ extern slot_t   *find_raw_slot(struct_t *, object_t *);
 extern object_t *get_token(file_t *);
 extern object_t *get_value(struct_t *, object_t *);
 extern object_t *ici_atom(object_t *, int);
-extern object_t *atom_probe(object_t *);
+extern object_t *atom_probe(object_t *, object_t ***);
 extern int_t    *atom_int(long);
 extern int      parse_exec(void);
 extern int      parse_module(file_t *, objwsup_t *);
@@ -242,6 +267,7 @@ extern float_t  *ici_float_new(double);
 extern file_t   *new_file(void *, ftype_t *, string_t *, object_t *);
 extern func_t   *new_func(void);
 extern int_t    *ici_int_new(long);
+extern int      ici_interface_check(unsigned long ver, char const *name);
 extern string_t *new_string(int);
 extern string_t *ici_str_new(char *, int);
 extern op_t     *new_op(int (*)(), int, int);
@@ -348,6 +374,7 @@ extern objwsup_t *ici_class_new(cfunc_t *cf, objwsup_t *super);
 extern objwsup_t *ici_module_new(cfunc_t *cf);
 extern int      ici_handle_method_check(object_t *, string_t *, ici_handle_t **, void **);
 extern int      ici_method_check(object_t *o, int tcode);
+extern unsigned long ici_crc(unsigned long, unsigned char const *, ptrdiff_t);
 
 extern exec_t   *ici_leave(void);
 extern void     ici_enter(exec_t *);

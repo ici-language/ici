@@ -25,13 +25,10 @@ new_src(int lineno, string_t *filename)
 
     if ((s = ici_talloc(src_t)) == NULL)
         return NULL;
-    objof(s)->o_tcode = TC_SRC;
-    assert(ici_typeof(s) == &src_type);
-    objof(s)->o_flags = 0;
-    objof(s)->o_nrefs = 1;
-    rego(s);
+    ICI_OBJ_SET_TFNZ(s, TC_SRC, 0, 1, 0);
     s->s_lineno = lineno;
     s->s_filename = filename;
+    ici_rego(s);
     return s;
 }
 

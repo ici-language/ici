@@ -21,6 +21,7 @@ OutFile "ici4-core-install.exe"
 
 SetDateSave on
 SetOverwrite ifnewer
+CRCCheck on
 
 ;
 ; Set the text of the component selection dialog. This has the side

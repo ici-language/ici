@@ -9,17 +9,40 @@
 #include "op.h"
 #include "array.h"
 
+/*
+ * This structure holds the recursion-independent parameters for the recursive
+ * buildxx() function.
+ */
 struct context
 {
-    object_t    **c_dlimit;     /* Addr or 1st dimension we don't use. */
-    int         c_dstep;        /* Direction to step dnext by. +/-1. */
-    char        c_option;       /* The option char. */
-    object_t    **c_cstart;     /* First element of the content. */
-    object_t    **c_climit;     /* Addr of 1st content we don't use. */
-    object_t    **c_cnext;      /* Next content waiting to be used. */
-    int         c_cstep;        /* Direction to step c_cnext by, +/-1. */
+    object_t    **c_dlimit;
+    int         c_dstep;
+    char        c_option;
+    object_t    **c_cstart;
+    object_t    **c_climit;
+    object_t    **c_cnext;
+    long        c_ccount;
+    long        c_cstep;
 };
-
+/*
+ * c_dlimit             Addr of 1st dimension we don't use.
+ *
+ * c_dstep              Direction to step dnext by. +/-1.
+ *
+ * c_option             The option char.
+ *
+ * c_cstart             The first element of the content.
+ *
+ * c_climit             Addr of 1st content we don't use.
+ *
+ * c_cnext              Next content waiting to be used.
+ *
+ * c_ccount             Count for auto increment or array index for array
+ *                      content.
+ *
+ * c_cstep              Direction to step c_cnext by +/-1, or, if we are
+ *                      doing an "i" type auto increment, the step value.
+ */
 
 /*
  * Build a data structure according to the given dimensions and content.
@@ -44,16 +67,47 @@ buildxx(object_t **r, object_t **dnext, struct context *c)
          * the content. We must then step our content context in accordance
          * with the supplied option.
          */
-        *r = *c->c_cnext;
-        ici_incref(*r);
-        c->c_cnext += c->c_cstep;
         switch (c->c_option)
         {
+        case 'i':
+            if ((*r = objof(ici_int_new(c->c_ccount))) == NULL)
+                return 1;
+            c->c_ccount += c->c_cstep;
+            break;
+
+        case 'a':
+            if (!isarray(*c->c_cnext))
+            {
+                sprintf(ici_buf,
+                    "build(..\"a\"..) given %s instead of an array for content",
+                    objname(n1, *c->c_cnext));
+                ici_error = ici_buf;
+                return 1;
+            }
+            *r = ici_array_get(arrayof(*c->c_cnext), c->c_ccount);
+            ici_incref(*r);
+            c->c_cnext += c->c_cstep;
+            break;
+
+        default:
+            *r = *c->c_cnext;
+            ici_incref(*r);
+            c->c_cnext += c->c_cstep;
+        }
+        switch (c->c_option)
+        {
+        case 'i':
+            break;
+
         case '\0':
+        case 'a':
         case 'c':
         case 'r': /* See end of function for restart case. */
             if (c->c_cnext == c->c_climit)
+            {
                 c->c_cnext = c->c_cstart;
+                ++c->c_ccount;
+            }
             break;
 
         case 'l':
@@ -62,7 +116,7 @@ buildxx(object_t **r, object_t **dnext, struct context *c)
             break;
 
         default:
-            sprintf(buf, "option \"%c\" given to %s is not one of \"\", \"c\", \"r\" or \"l\"",
+            sprintf(buf, "option \"%c\" given to %s is not one of c, r, a, i or l",
                 c->c_option, objname(n1, ici_os.a_top[-1]));
             ici_error = buf;
             return 1;
@@ -143,6 +197,7 @@ f_build()
     int                 i;
     object_t            *r;
     object_t            *default_content;
+    char                n1[30];
     struct context      c;
 
     memset(&c, 0, sizeof c);
@@ -174,6 +229,38 @@ f_build()
         c.c_cstep = 1;
     }
     c.c_cnext = c.c_cstart;
+
+    if (c.c_option == 'i')
+    {
+        if (c.c_cnext != c.c_climit && c.c_cnext != &default_content)
+        {
+            if (!isint(*c.c_cnext))
+            {
+                sprintf(ici_buf, "%s given as auto-increment start is not an int",
+                    objname(n1, *c.c_cnext));
+                ici_error = ici_buf;
+                return 1;
+            }
+            c.c_ccount = intof(*c.c_cnext)->i_value;
+            c.c_cnext += c.c_cstep;
+            if (c.c_cnext != c.c_climit)
+            {
+                if (!isint(*c.c_cnext))
+                {
+                    sprintf(ici_buf, "%s given as auto-increment step is not an int",
+                        objname(n1, *c.c_cnext));
+                    ici_error = ici_buf;
+                    return 1;
+                }
+                c.c_cstep = intof(*c.c_cnext)->i_value;
+            }
+            else
+                c.c_cstep = 1;
+        }
+        else
+            c.c_cstep = 1;
+    }
+
     if (buildxx(&r, dstart, &c))
         return 1;
     return ici_ret_with_decref(r);

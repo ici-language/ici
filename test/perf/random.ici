@@ -1,0 +1,15 @@
+static IM = 139968;
+static IA = 3877;
+static IC = 29573;
+static last = 42;
+
+static
+gen_random(max)
+{
+    return max * (last := (last * $IA + $IC) % $IM) / $IM;
+}
+
+n = argv[1] ? int(argv[1]) : 1;
+while (--n)
+    gen_random(100.0);
+printf("%.9f\n", gen_random(100.0));

@@ -344,15 +344,21 @@ ici_atom(object_t *o, int lone)
     return o;
 }
 /*
- * Probe the atom pool for an atomic form of o.  If found, return that
- * atomic form, else NULL.  Used by various new_*() routines.  These
- * routines generally set up a dummy version of the object being made
- * which is passed to this probe.  If it finds a match, that is returned,
- * thus avoiding the allocation of an object that may be thrown
- * away anyway.
+ * Probe the atom pool for an atomic form of o.  If found, return that atomic
+ * form, else NULL.  Used by various new_*() routines.  These routines
+ * generally set up a dummy version of the object being made which is passed
+ * to this probe.  If it finds a match, that is returned, thus avoiding the
+ * allocation of an object that may be thrown away anyway.
+ *
+ * The argument ppo, if given, and if this function returns NULL, will be
+ * updated to point to the slot in the atom pool where this object belongs.
+ * The caller may use this to store the new object in *provided* the atom pool
+ * is not disturbed in the meantime, and is check for possible growth
+ * afterwards.  The macro ICI_STORE_ATOM_AND_COUNT() can be used for this.
+ * Note that any call to collect() could disturb the atom pool.
  */
 object_t *
-atom_probe(object_t *o)
+atom_probe(object_t *o, object_t ***ppo)
 {
     object_t    **po;
 
@@ -366,6 +372,8 @@ atom_probe(object_t *o)
         if (o->o_tcode == (*po)->o_tcode && cmp(o, *po) == 0)
             return *po;
     }
+    if (ppo != NULL)
+        *ppo = po;
     return NULL;
 }
 
@@ -424,7 +432,7 @@ unatom(object_t *o)
     }
     /*
      * The object isn't in the pool. This would seem to indicate that
-     * we have been given a bad pointer, so the O_ATOM flag of some object
+     * we have been given a bad pointer, or the O_ATOM flag of some object
      * has been set spuriously.
      */
     assert(0);
@@ -474,8 +482,13 @@ grow_objs(object_t *o)
 
     oldz = objs_limit - objs;
     newz = 2 * oldz;
+    ++ici_supress_collect;
     if ((newobjs = (object_t **)ici_nalloc(newz * sizeof(object_t *))) == NULL)
+    {
+        --ici_supress_collect;
         return;
+    }
+    --ici_supress_collect;
     memcpy((char *)newobjs, (char *)objs, (char *)objs_limit - (char *)objs);
     objs_limit = newobjs + newz;
     objs_top = newobjs + (objs_top - objs);
@@ -506,10 +519,6 @@ collect(void)
     register int        ndead_atoms;
     register long       mem;    /* Total mem tied up in refed objects. */
 
-#if 0
-    long                tc_counts[16];
-    memset((char *)tc_counts, 0, sizeof tc_counts);
-#endif
     if (ici_supress_collect)
     {
         /*
@@ -521,6 +530,28 @@ collect(void)
     }
     ++ici_supress_collect;
 
+#   ifndef NDEBUG
+    /*
+     * In debug builds we take this opportunity to check the consistency of
+     * of the atom pool. We check that each entry has the O_ATOM flag set,
+     * and that it can be found in the pool (i.e. that its hash is the same
+     * as when it was inserted.
+     */
+    {
+        object_t    **a;
+
+        if ((a = &atoms[atomsz]) != NULL)
+        {
+            while (--a >= atoms)
+            {
+                if (*a == NULL)
+                    continue;
+                assert((*a)->o_flags & O_ATOM);
+                assert(atom_probe(*a, NULL) == *a);
+            }
+        }
+    }
+#   endif
     /*
      * Mark all objects which are referenced (and thus what they ref).
      */
@@ -531,6 +562,8 @@ collect(void)
             mem += ici_mark(*a);
     }
 
+
+#if 0
     /*
      * Count how many atoms are going to be retained and how many are
      * going to be lost so we can decide on the fastest method.
@@ -538,10 +571,6 @@ collect(void)
     ndead_atoms = 0;
     for (a = objs; a < objs_top; ++a)
     {
-#if 0
-        if (((*a)->o_flags & O_MARK) != 0)
-            ++tc_counts[(*a)->o_tcode];
-#endif
         if (((*a)->o_flags & (O_ATOM|O_MARK)) == O_ATOM)
             ++ndead_atoms;
     }
@@ -592,6 +621,7 @@ collect(void)
         objs_top = b;
     }
     else
+#endif
     {
         /*
          * Faster to delete dead atoms as we go.
@@ -617,30 +647,18 @@ printf("mem=%ld vs. %ld, nobjects=%d, ici_natoms=%d\n", mem, ici_mem, objs_top -
     /*
      * Set ici_mem_limit (which is the point at which to trigger a
      * new call to us) to twice what is currently allocated, but
-     * with some special cases for small and large.
+     * with a special cases for small sizes.
      */
     if (ici_mem < 0)
         ici_mem = 0;
-#if ALLCOLLECT
-    ici_mem_limit = 0;
-#else
-    if (ici_mem < 16 * 1024)
-        ici_mem_limit = 32 * 1024;
-    else
-        ici_mem_limit = ici_mem * 2;
-#endif
-
-#if 0
-    {
-        int i;
-        for (i = 0; i < 16; ++i)
-        {
-            if (tc_counts[i] != 0)
-                printf("%d:%d ", i, tc_counts[i]);
-        }
-        printf("\n");
-    }
-#endif
+#   if ALLCOLLECT
+        ici_mem_limit = 0;
+#   else
+        if (ici_mem < 16 * 1024)
+            ici_mem_limit = 32 * 1024;
+        else
+            ici_mem_limit = ici_mem * 2;
+#   endif
     --ici_supress_collect;
 }
 

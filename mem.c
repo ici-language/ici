@@ -115,11 +115,8 @@ ici_mem_new(void *base, size_t length, int accessz, void (*free_func)())
 
     if ((m = ici_talloc(mem_t)) == NULL)
         return NULL;
-    objof(m)->o_tcode = TC_MEM;
-    assert(ici_typeof(m) == &mem_type);
-    objof(m)->o_flags = 0;
-    objof(m)->o_nrefs = 1;
-    rego(m);
+    ICI_OBJ_SET_TFNZ(m, TC_MEM, 0, 1, sizeof(mem_t));
+    ici_rego(m);
     m->m_base = base;
     m->m_length = length;
     m->m_accessz = accessz;

@@ -1,3 +1,50 @@
+Changes in version 4.0.2 (an alpha release - binary interface not final)
+
+*   Added printf to stderr in the case of an uncaught error in a
+    sub-thread. This is a bit of a hack, but it is a bit of a pain
+    working with threaded apps without it. (timl)
+
+*   Introduced some version #defines and a function ici_interface_check()
+    that external modules can call to check that they are not being
+    invoked by a newer interpreter that they are not compatible with. (timl)
+
+*   Removed include of <assert.h> from ici.h. (timl)
+
+*   Changed atom_probe() to take an extra arg where it stores the location
+    of the empty slot the object should go in it it wasn't found. This saves
+    re-hashing and looking up where to put the newly allocated object.
+    But there are some rules to its usage. Applied it to various objects
+    including ints, floats and strings. (timl)
+
+*   Changed file objects from being instrinsicly atomic. This didn't
+    really make any sense. As it was, the cmp() function took the
+    closed flag into account, but the closed flag changed even for
+    atomic files (which is bad). (timl)
+
+*   Added __TIME__ to the version string.
+
+*   Changed a few compiled-form operators to have things in-line in
+    the code array rather than haveing them pushed on the operand
+    stack first. This saves a few main loop iterations. (timl)
+
+*   Added macro ICI_OBJ_SET_TFNZ() to initialise the header of new
+    objects, and phased out rego() (becomes ici_rego()) from setting
+    o_leafz to zero.
+
+*   Added auto-increment and indirect content types to build().
+    This allows quick creation of sequential integer vectors, and
+    more complex initialisations and data transposes. See documentation.
+    (timl)
+
+*   Woops. That string hash was no good. Had a good look at hashing
+    in general and decided to go (back) to a CRC32 derived method.
+    In theory the cache misses on the 4Kb table would be bad, but
+    in practice the improvement in the hash result more than
+    compensates. Added crc.c. Also made pointer hashes for struct
+    lookup use the table. (timl)
+
+Changes in version 4.0.1 (an alpha release)
+
 *   Yet again changed various hash functions. In particular string,
     float and pointer hashing for structs. (timl)
 

@@ -38,13 +38,10 @@ ici_method_new(object_t *subject, object_t *callable)
 
     if ((m = ici_talloc(method_t)) == NULL)
         return NULL;
-    objof(m)->o_tcode = TC_METHOD;
-    assert(ici_typeof(m) == &ici_method_type);
-    objof(m)->o_nrefs = 1;
-    objof(m)->o_flags = 0;
-    rego(m);
+    ICI_OBJ_SET_TFNZ(m, TC_METHOD, 0, 1, 0);
     m->m_subject = subject;
     m->m_callable = callable;
+    ici_rego(m);
     return m;
 }
 

@@ -400,10 +400,7 @@ ici_array_new(ptrdiff_t n)
 
     if ((a = ici_talloc(array_t)) == NULL)
         return NULL;
-    objof(a)->o_tcode = TC_ARRAY;
-    assert(ici_typeof(a) == &ici_array_type);
-    objof(a)->o_flags = 0;
-    objof(a)->o_nrefs = 1;
+    ICI_OBJ_SET_TFNZ(a, TC_ARRAY, 0, 1, 0);
     a->a_base = NULL;
     a->a_top = NULL;
     a->a_limit = NULL;
@@ -418,7 +415,7 @@ ici_array_new(ptrdiff_t n)
     a->a_top = a->a_base;
     a->a_bot = a->a_base;
     a->a_limit = a->a_base + n;
-    rego(a);
+    ici_rego(a);
     return a;
 }
 

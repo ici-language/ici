@@ -1,0 +1,46 @@
+static n = argv[1] ? int(argv[1]) : 1;
+static count = 0;
+static consumed = 0;
+static produced = 0;
+static data = 0;
+
+static
+producer()
+{
+    for (i := 1; i <= n; ++i)
+    {
+        waitfor (count == 0; "access")
+        {
+            data = i;
+            count = 1;
+            wakeup("access");
+        }
+        ++produced;
+    }
+    return 1;
+}
+
+static
+consumer()
+{
+    do
+    {
+        waitfor (count != 0; "access")
+        {
+            i = data;
+            count = 0;
+            wakeup("access");
+        }
+        ++consumed;
+
+    } while (i != n);
+    return 1;
+}
+
+p := thread(producer);
+c := thread(consumer);
+waitfor (p.result; p)
+    ;
+waitfor (c.result; c)
+    ;
+printf("%d %d\n", produced, consumed);

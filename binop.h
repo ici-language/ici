@@ -747,13 +747,9 @@ usef:
             if ((o = objof(ici_talloc(ostemp_t))) == NULL)
                 goto fail;
             ici_exec->x_os_temp_cache->a_base[n] = o;
-            rego(o);
+            ici_rego(o);
         }
-        o->o_tcode = TC_FLOAT;
-        assert(ici_typeof(o) == &float_type);
-        o->o_flags = O_TEMP;
-        o->o_nrefs = 0;
-        o->o_leafz = sizeof(ostemp_t);
+        ICI_OBJ_SET_TFNZ(o, TC_FLOAT, O_TEMP, 0, sizeof(ostemp_t));
         floatof(o)->f_value = f;
         goto useo;
     }
@@ -798,18 +794,12 @@ usef:
             --ici_supress_collect;
             goto fail;
         }
-        o->o_tcode = TC_FLOAT;
-        assert(ici_typeof(o) == &float_type);
-        o->o_flags = O_ATOM;
-        o->o_nrefs = 1;
-        rego(o);
-        o->o_leafz = sizeof(float_t);
+        ICI_OBJ_SET_TFNZ(o, TC_FLOAT, O_ATOM, 1, sizeof(float_t));
         floatof(o)->f_value = f;
+        ici_rego(o);
         assert(h == hash(o));
         --ici_supress_collect;
-        *po = o;
-        if (++ici_natoms > atomsz / 2)
-            ici_grow_atoms(atomsz * 2);
+        ICI_STORE_ATOM_AND_COUNT(po, o);
         goto looseo;
     }
 
@@ -826,13 +816,9 @@ usei:
             if ((o = objof(ici_talloc(ostemp_t))) == NULL)
                 goto fail;
             ici_exec->x_os_temp_cache->a_base[n] = o;
-            rego(o);
+            ici_rego(o);
         }
-        o->o_tcode = TC_INT;
-        assert(ici_typeof(o) == &int_type);
-        o->o_flags = O_TEMP;
-        o->o_nrefs = 0;
-        o->o_leafz = sizeof(ostemp_t);
+        ICI_OBJ_SET_TFNZ(o, TC_INT, O_TEMP, 0, sizeof(ostemp_t));
         intof(o)->i_value = i;
         goto useo;
     }
@@ -864,17 +850,11 @@ usei:
             --ici_supress_collect;
             goto fail;
         }
-        o->o_tcode = TC_INT;
-        assert(ici_typeof(o) == &int_type);
-        o->o_flags = O_ATOM;
-        o->o_nrefs = 1;
-        rego(o);
-        o->o_leafz = sizeof(int_t);
+        ICI_OBJ_SET_TFNZ(o, TC_INT, O_ATOM, 1, sizeof(int_t));
         intof(o)->i_value = i;
+        ici_rego(o);
         --ici_supress_collect;
-        *po = o;
-        if (++ici_natoms > atomsz / 2)
-            ici_grow_atoms(atomsz * 2);
+        ICI_STORE_ATOM_AND_COUNT(po, o);
     }
 
 looseo:

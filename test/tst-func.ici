@@ -541,6 +541,32 @@ x := build([array "a", "b"], [array "x", "y"], "l", 0, "z");
 if (x.b.y != "z" || x.b.x != "z")
 	fail("failed to initialise in build() with last-repeat");
 
+x := build(3, [array "x", "y"], "a", [array 10, 11], [array 1, 2, 3]);
+if (x[0] != [struct x = 10, y = 1])
+    fail("failed to build with 'a' format");
+if (x[2] != [struct x = NULL, y = 3])
+    fail("failed to build with 'a' format 2");
+
+x := build(5, "i");
+if (x != [array 0, 1, 2, 3, 4])
+    fail("auto increment build failed");
+
+x := build(5, "i", 3);
+if (x != [array 3, 4, 5, 6, 7])
+    fail("auto increment build failed");
+
+x := build(5, "i", 3, 2);
+if (x != [array 3, 5, 7, 9, 11])
+    fail("auto increment build failed");
+
+error := NULL; try build(5, "i", 1.2); onerror;
+if (error == NULL)
+    fail("failed to fail on bad start in build");
+
+error := NULL; try build(5, "i", 1, 1.2); onerror;
+if (error == NULL)
+    fail("failed to fail on bad step in build");
+
 if (build() != NULL)
 	fail("build() with no args didn't return NULL");
 
@@ -551,6 +577,14 @@ onerror
 	;
 if (error == NULL)
 	fail("failed to fail on bad build");
+
+try
+	x := build(2, "a", 1);
+onerror
+	;
+if (error == NULL)
+	fail("failed to fail on bad build");
+
 
 a := array();
 for (i = 0; i < 100; ++i)

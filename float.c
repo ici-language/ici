@@ -11,21 +11,25 @@
 float_t *
 ici_float_new(double v)
 {
-    register float_t    *f;
+    float_t             *f;
+    object_t            **po;
     static float_t      proto = {OBJ(TC_FLOAT)};
 
     proto.f_value = v;
-    if ((f = floatof(atom_probe(objof(&proto)))) != NULL)
+    if ((f = floatof(atom_probe(objof(&proto), &po))) != NULL)
     {
         ici_incref(f);
         return f;
     }
+    ++ici_supress_collect;
     if ((f = ici_talloc(float_t)) == NULL)
         return NULL;
-    *f = proto;
-    rego(f);
-    objof(f)->o_leafz = sizeof(float_t);
-    return floatof(ici_atom(objof(f), 1));
+    ICI_OBJ_SET_TFNZ(f, TC_FLOAT, O_ATOM, 1, sizeof(float_t));
+    f->f_value = v;
+    ici_rego(f);
+    --ici_supress_collect;
+    ICI_STORE_ATOM_AND_COUNT(po, f);
+    return f;
 }
 
 /*
