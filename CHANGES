@@ -1,3 +1,8 @@
+*   Makefile.osx updated for ici4 and a ProjectBuilder project,
+    macosx/ici.pbproj, added to build a static library and
+    executable.  Threads are not enabled due to lack of a
+    functional sem_init() in the OS X pthreads. (andy)
+
 *   Makefile.bsd updated for ici4 and now installs required
     headers and builds ici.h.  doc/ici.pdf is now installed as
     the the documentation. (andy)
