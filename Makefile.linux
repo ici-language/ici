@@ -7,7 +7,6 @@
 FLAVOUR = linux
 VERSION = "`awk '{print $$1}' VERSION`"
 PREFIX  = /usr/local
-#PREFIX  = /home/users/t/ti/timl/linux
 
 TARGET  = ici.$(FLAVOUR)
 LIB     = lib$(FLAVOUR).a

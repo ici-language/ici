@@ -378,8 +378,6 @@ push_os_path_elements(ici_array_t *a)
 {
     char                *p;
     char                *q;
-    ici_str_t           *s;
-    ici_obj_t           **e;
     char                *path;
     char                fname[FILENAME_MAX];
 
