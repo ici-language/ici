@@ -20,8 +20,12 @@ static int push_path_elements(ici_array_t *a, char *path); /* Forward. */
 #  include "load-beos.h"
 # else /* Unix */
 #  include <sys/types.h>
-#  include <dlfcn.h>
 #  include <unistd.h>
+#  if defined(__MACH__) && defined(__APPLE__)
+#   include <macosx/dlfcn_simple.h>
+#  else
+#   include <dlfcn.h>
+#endif
 
 #ifndef NODLOAD
 typedef void    *dll_t;
@@ -381,7 +385,7 @@ push_os_path_elements(ici_array_t *a)
     char                *path;
     char                fname[FILENAME_MAX];
 
-    if (push_path_elements(a, "/usr/local/lib/ici4:/opt/lib/ici4:/sw/lib/ici4"))
+    if (push_path_elements(a, "/usr/local/lib/ici4:/opt/lib/ici4:/sw/lib/ici4:."))
         return 1;
     if ((path = getenv("PATH")) != NULL)
     {

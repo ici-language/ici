@@ -1,5 +1,11 @@
 Changes in version 4.1.0 (a beta release)
 
+*   Small fix for MacOSX from Albert Chang at Canon incoporated
+    to allow building without the dlcompat library. (andy)
+
+*   Unix systems now look in the current directory for modules
+    to be more like the Win32 ici. (andy)
+
 *   Added indexing of file object by 'name' to obtain the diagnostic
     name associated with the file object when it was created.
     Also, for the special files associated with an ICI parse stream

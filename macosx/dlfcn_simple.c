@@ -37,7 +37,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <stdarg.h>
 #include <limits.h>
 #include <mach-o/dyld.h>
-#include "dlfcn.h"
+#include "dlfcn_simple.h"
 
 #define ERR_STR_LEN 256
 
@@ -112,7 +112,7 @@ dlopen(const char *path, int mode)
 }
 
 /* dlsymIntern is used by dlsym to find the symbol */
-void *
+static void *
 dlsymIntern(void *handle, const char *symbol)
 {
     NSSymbol *nssym = 0;
