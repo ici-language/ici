@@ -1,9 +1,10 @@
 #
 # For compiling a standard version on FreeBSD {2,3,4}.x
 #
-PROG    = ici4
-VERSION = "`awk '{print $$1}' VERSION`"
-PREFIX  ?= /usr/local
+PROG	= ici4
+LIBRARY	= lib$(PROG).a
+VERSION	= "`awk '{print $$1}' VERSION`"
+PREFIX	?= /usr/local
 # Keep all symbol information please.  Used by bsd.prog.mk's install target
 STRIP   =
 BINDIR  = $(PREFIX)/bin
@@ -30,9 +31,29 @@ SRCS    = \
 PCRESRCS= \
 	pcre/study.c pcre/maketables.c pcre/pcre.c
 
-OBJS    += study.o maketables.o pcre.o
-MANDIR  = $(PREFIX)/man/man
-MAN1    = doc/ici3.1
+OBJS	+= study.o maketables.o pcre.o
+MANDIR	= $(PREFIX)/man/man
+MAN1	= doc/man1/ici.1\
+	  doc/man1/icifuncs.1\
+	  doc/man1/icinet.1\
+	  doc/man1/icioo.1\
+	  doc/man1/iciops.1\
+	  doc/man1/icire.1\
+	  doc/man1/icistmt.1\
+	  doc/man1/icisys.1\
+	  doc/man1/icitypes.1
+
+CLEANFILES =\
+	$(LIBRARY)\
+	ici4.1 ici4.1.gz\
+	icifuncs.1 icifuncs.1.gz\
+	icinet.1 icinet.1.gz\
+	icioo.1 icioo.1.gz\
+	iciops.1 iciops.1.gz\
+	icire.1 icire.1.gz\
+	icistmt.1 icistmt.1.gz\
+	icisys.1 icisys.1.gz\
+	icitypes.1 icitypes.1.gz
 
 .include <bsd.prog.mk>
 
@@ -50,10 +71,8 @@ pcre.o  : pcre/pcre.c
 
 # Headers that are potentially used in module writing are made public
 ICIHDRS=\
-	alloc.h array.h buf.h catch.h cfunc.h conf-bsd.h exec.h file.h\
-	float.h forall.h func.h fwd.h ici.h int.h mark.h mem.h method.h\
-	null.h object.h op.h parse.h pc.h primes.h ptr.h re.h set.h\
-	src.h str.h struct.h trace.h wrap.h
+	conf-bsd.h\
+	ici.h
 
 PCREHDRS=\
 	pcre/internal.h\
@@ -68,44 +87,46 @@ beforeinstall:
 	@echo 'Installing ici interpreter and manual page'
 	@echo '=========================================='
 
-ici3.1: $(MAN1)
+ici4.1: $(MAN1)
 	ln -sf $(MAN1) $@
 
-ici3.1.gz: ici3.1
-	gzip -c ici3.1 > $@
+ici4.1.gz: ici4.1
+	gzip -c ici4.1 > $@
 
-libici3.a: $(OBJS)
-	$(AR) r libici3.a $(OBJS)
-	$(RANLIB) libici3.a
+$(LIBRARY): $(OBJS)
+	$(AR) r $(LIBRARY) $(OBJS)
+	$(RANLIB) $(LIBRARY)
+
+$(PROG) : $(LIBRARY)
 
 # Install the init file, headers and docs.
-afterinstall: libici3.a
+afterinstall:
 	@echo '=========================================='
 	@echo 'Creating installation directories'
 	@echo '=========================================='
-	-mkdir -p $(PREFIX)/lib/ici3
-	-mkdir -p $(PREFIX)/include/ici3/pcre
-	-mkdir -p $(PREFIX)/share/doc/ici3
+	-mkdir -p $(PREFIX)/lib/ici4
+	-mkdir -p $(PREFIX)/include/ici4/pcre
+	-mkdir -p $(PREFIX)/share/doc/ici4
 	@echo '=========================================='
 	@echo 'Installing ici library'
 	@echo '=========================================='
-	install -c -m 444 libici3.a $(PREFIX)/lib
+	install -c -m 444 $(LIBRARY) $(PREFIX)/lib
 	@echo '=========================================='
 	@echo 'Startup file'
 	@echo '=========================================='
-	install -c -m 444 icicore.ici $(PREFIX)/lib/ici3/ici3core.ici
-	install -c -m 444 icicore1.ici $(PREFIX)/lib/ici3/ici3core1.ici
-	install -c -m 444 icicore2.ici $(PREFIX)/lib/ici3/ici3core2.ici
-	install -c -m 444 icicore3.ici $(PREFIX)/lib/ici3/ici3core3.ici
+	install -c -m 444 ici4core.ici $(PREFIX)/lib/ici4/ici4core.ici
+	install -c -m 444 ici4core1.ici $(PREFIX)/lib/ici4/ici4core1.ici
+	install -c -m 444 ici4core2.ici $(PREFIX)/lib/ici4/ici4core2.ici
+	install -c -m 444 ici4core3.ici $(PREFIX)/lib/ici4/ici4core3.ici
 	@echo '=========================================='
 	@echo 'Headers'
 	@echo '=========================================='
-	install -c -m 444 $(ICIHDRS) $(PREFIX)/include/ici3
-	install -c -m 444 $(PCREHDRS) $(PREFIX)/include/ici3/pcre
+	install -c -m 444 $(ICIHDRS) $(PREFIX)/include/ici4
+	install -c -m 444 $(PCREHDRS) $(PREFIX)/include/ici4/pcre
 	@echo '=========================================='
 	@echo 'Documentation'
 	@echo '=========================================='
-	install -c -m 444 $(DOCS) $(PREFIX)/share/doc/ici3
+	install -c -m 444 $(DOCS) $(PREFIX)/share/doc/ici4
 	@echo '=========================================='
 	@echo 'Install done'
 	@echo '=========================================='
