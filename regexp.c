@@ -122,9 +122,14 @@ fetch_regexp(ici_obj_t *o, ici_obj_t *k)
         return objof(regexpof(o)->r_pat);
     if (k == SSO(options))
     {
-        int     options;
+        int         options;
+        ici_int_t   *io;
+
         pcre_info(regexpof(o)->r_re, &options, NULL);
-        return objof(ici_int_new(options));
+        if ((io = ici_int_new(options)) == NULL)
+            return NULL;
+        ici_decref(io);
+        return objof(io);
     }
     return ici_fetch_fail(o, k);
 }

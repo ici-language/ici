@@ -60,6 +60,7 @@ extern ici_type_t       ostemp_type;
 extern ici_type_t       ici_handle_type;
 extern ici_type_t       profilecall_type;
 extern ici_type_t       mem_type;
+extern ici_type_t       ici_code_type;
 
 ici_type_t      *ici_types[ICI_MAX_TYPES] =
 {
@@ -90,8 +91,13 @@ ici_type_t      *ici_types[ICI_MAX_TYPES] =
 #ifndef NOPROFILE
     &profilecall_type,
 #else
-    NULL
+    NULL,
 #endif
+#   if 0
+        &ici_code_type,
+#   else
+        NULL
+#   endif
 };
 
 static int              ici_ntypes = TC_MAX_CORE + 1;

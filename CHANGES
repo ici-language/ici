@@ -1,3 +1,22 @@
+*   Added user-parsed literals and support functions. User-parsed
+    literals allow things like:
+
+        [ident stuff...]
+
+    to be defined for things other than the built-in ones. The
+    stuff... can be any suntax, build variously from low level
+    character data, from standard ICI tokens, or from full ICI
+    expressions.
+    
+    The mechanism works by getting a parser function by evaluating
+    the ident (if it is callable, it is the function, else ident.parser
+    is used). It then calls that function with the current parse stream
+    file (as returned by currentfile()).
+    
+    There are new functions: parsetoken() and parsevalue() to read ICI
+    tokens or expressions, as well as tokenobj(), rejecttoken(),
+    and rejectchar() to assist. See new documentation.
+
 *   Corrected objname functions of func and handle. Both had
     bugs that could cause crashes. (timl)
 

@@ -1278,3 +1278,10 @@ error = NULL; try strcat(a, 1.2); onerror; if (error == NULL)
     fail("failed to fail on bad strcat");
 error = NULL; try strcat(a, nels(a) + 1); onerror; if (error == NULL)
     fail("failed to fail on bad strcat");
+
+if (basename("/abc/xyz/mno") != "mno")
+    fail("wrong result from basename 1");
+if (basename("\\abc\\xyz\\mno") != "mno")
+    fail("wrong result from basename 2");
+if (basename("mno") != "mno")
+    fail("wrong result from basename 3");

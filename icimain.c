@@ -17,7 +17,7 @@
  * line ICI interpreter is expected to simply pass its given 'argc' and 'argv'
  * on to 'ici_main' then return its return value.
  *
- * If ici_main fails (that is, returns non-zero) it will also set ici_error in
+ * If ici_main2 fails (that is, returns non-zero) it will also set ici_error in
  * the usual ICI manner.  However it will have already printed an error
  * message on standard error, so no further action need be taken.
  *

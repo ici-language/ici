@@ -1,5 +1,5 @@
 printf("%s\n", version());
-cputime = [func(){return 0.0;}];
+//cputime = [func(){return 0.0;}];
 
 base := dirname(argv[0]);
 chdir(base);

@@ -188,6 +188,7 @@ typedef struct ici_parse    ici_parse_t;
 typedef struct ici_mem      ici_mem_t;
 typedef struct ici_handle   ici_handle_t;
 typedef struct ici_debug    ici_debug_t;
+typedef struct ici_code     ici_code_t;
 
 /*
  * This define may be made before an include of 'ici.h' to suppress a group
@@ -495,6 +496,7 @@ extern int              ici_init_sstrings(void);
 extern void             ici_drop_all_small_allocations(void);
 extern void             get_pc(ici_array_t *code, ici_obj_t **xs);
 extern ici_objwsup_t    *ici_outermost_writeable_struct(void);
+extern ici_code_t       *ici_code_new(ici_array_t *);
 extern DLI ici_mark_t   o_mark;
 
 extern ici_obj_t        **objs;

@@ -126,13 +126,25 @@ unget(ici_parse_t *p, int c)
 int
 lex(ici_parse_t *p, ici_array_t *a)
 {
-    register int        c;
-    register int        t = 0; /* init to shut up compiler */
-    register int        i;
-    register int        fstate;
+    int                 c;
+    int                 t = 0; /* init to shut up compiler */
+    int                 i;
+    int                 fstate;
     char                *s;
     long                l;
     double              d;
+
+    if (p->p_got.t_what & TM_HASOBJ)
+    {
+        /*
+         * No-one consumed the object reference in the last token we returned.
+         * Disgard it now. This only happens because of user parseing, as ICI's
+         * parser is always well behaved and consumes tokens completely before
+         * getting the next one.
+         */
+        ici_decref(p->p_got.t_obj);
+        p->p_got.t_what = T_NONE;
+    }
 
     /*
      * Skip white space, in its various forms.
@@ -693,7 +705,6 @@ lex(ici_parse_t *p, ici_array_t *a)
 
 fail:
     p->p_got.t_what = T_ERROR;
-    p->p_got.t_str = ici_error;
     return T_ERROR;
 }
 

@@ -49,7 +49,6 @@ ici_binop_name(int op)
     case t_subtype(T_TILDE):    return "~";
     case t_subtype(T_EXCLAMTILDE):return "!~";
     case t_subtype(T_2TILDE)    :return "~~";
-    case t_subtype(T_2TILDEEQ)  :return "~~=";
     case t_subtype(T_3TILDE)    :return "~~~";
     case t_subtype(T_AND):      return "&";
     case t_subtype(T_CARET):    return "^";
@@ -59,6 +58,7 @@ ici_binop_name(int op)
     case t_subtype(T_COLON):    return ":";
     case t_subtype(T_QUESTION): return "?";
     case t_subtype(T_EQ):       return "=";
+    case t_subtype(T_COLONEQ):  return ":=";
     case t_subtype(T_PLUSEQ):   return "+=";
     case t_subtype(T_MINUSEQ):  return "-=";
     case t_subtype(T_ASTERIXEQ):return "*=";
@@ -69,8 +69,10 @@ ici_binop_name(int op)
     case t_subtype(T_ANDEQ):    return "&=";
     case t_subtype(T_CARETEQ):  return "^=";
     case t_subtype(T_BAREQ):    return "|=";
+    case t_subtype(T_2TILDEEQ)  :return "~~=";
+    case t_subtype(T_LESSEQGRT):return "<=>";
     case t_subtype(T_COMMA):    return ",";
-    default:                    return "binary operator";
+    default:                    return "binop";
     }
 }
 

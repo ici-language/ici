@@ -213,3 +213,13 @@ SSTRING(status, "status")
 SSTRING(active, "active")
 SSTRING(failed, "failed")
 SSTRING(finished, "finished")
+SSTRING(parser, "parser")
+SSTRING(parsetoken, "parsetoken")
+SSTRING(tokenobj, "tokenobj")
+SSTRING(rejecttoken, "rejecttoken")
+SSTRING(parsevalue, "parsevalue")
+SSTRING(rejectchar, "rejectchar")
+#if 0
+    SSTRING(parse_expr, "parse_expr")
+    SSTRING(parse_stmt, "parse_stmt")
+#endif

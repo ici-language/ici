@@ -20,6 +20,7 @@
 <!DefineTag NumberedCont>
 <!DefineTag TableFootnote>
 <!DefineTag TableTitle>
-<!DefineTag TagIn4cm>
-<!DefineTag TagIn2cm>
+<!DefineTag DefnIn4cm>
+<!DefineTag DefnIn2cm>
+<!DefineTag DefnTerm>
 <!DefineTag CodeIn1cm>

@@ -504,8 +504,9 @@ struct ici_objwsup
 #define TC_HANDLE       22
 #define TC_MEM          23
 #define TC_PROFILECALL  24
+#define TC_CODE         25
 
-#define TC_MAX_CORE     24
+#define TC_MAX_CORE     25
 
 #define TRI(a,b,t)      (((((a) << 4) + b) << 6) + t_subtype(t))
 

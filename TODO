@@ -66,3 +66,7 @@ Put in general forall
 Put --help and/or /? help into ici.exe
 
 ---
+
+Add ici_assign_super and ici_fetch_super to public interface.
+
+---

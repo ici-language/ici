@@ -285,33 +285,31 @@ get_pc(ici_array_t *code, ici_obj_t **xs)
 }
 
 /*
- * Execute 'code' (any object, normally an ici_array_t of code or a ici_parse_t).
- * The execution procedes on top of the current stacks (execution, operand
- * and variable). This call to evaluate will return when the execution
- * stack again returns to the level it was when entered. It then returns
- * the object left on the operand stack, or &o_null if there wasn't one.
- * The returned object is ici_incref()ed.  Returns NULL on error, usual
- * conventions (i.e. 'error' points to the error message).
+ * Execute 'code' (any object, normally an ici_array_t of code or a
+ * ici_parse_t).  The execution procedes on top of the current stacks
+ * (execution, operand and variable).  This call to evaluate will return when
+ * the execution stack again returns to the level it was when entered.  It
+ * then returns the object left on the operand stack, or &o_null if there
+ * wasn't one.  The returned object is ici_incref()ed.  Returns NULL on error,
+ * usual conventions (i.e.  'ici_error' points to the error message).
  *
- * n_operands is the number of objects on the operand stack that are
- * arguments to this call. They will all be poped off before ici_evaluate
- * returns.
+ * n_operands is the number of objects on the operand stack that are arguments
+ * to this call.  They will all be poped off before ici_evaluate returns.
  *
- * The execution loop knows when the execution stack returns to its
- * origional level because it puts a ici_catch_t object on it. This object
- * also records the levels of the other two stacks that match.
+ * The execution loop knows when the execution stack returns to its origional
+ * level because it puts a ici_catch_t object on it.  This object also records
+ * the levels of the other two stacks that match.
  *
  * This is the main execution loop.  All of the nasty optimisations are
- * concentrated here.  It used to be clean, elegant and 20 lines long.
- * Now it goes faster.
+ * concentrated here.  It used to be clean, elegant and 20 lines long.  Now it
+ * goes faster.
  *
- * Originally each type had an execution method, which was a function
- * pointer like all the other type specific methods. This was unrolled
- * into a switch within the main loop for speed and variable optimisation.
- * Then many of the op_type operations got unrolled in the loop in the same
- * way. Gotos got added to short-circuit some of the steps where possible.
- * Then they got removed, apart from the fail exits. Then one got added
- * again. And again.
+ * Originally each type had an execution method, which was a function pointer
+ * like all the other type specific methods.  This was unrolled into a switch
+ * within the main loop for speed and variable optimisation.  Then many of the
+ * op_type operations got unrolled in the loop in the same way.  Gotos got
+ * added to short-circuit some of the steps where possible.  Then they got
+ * removed, apart from the fail exits.  Then one got added again.  And again.
  *
  * Note that binop.h is included half way down this function.
  */
@@ -509,7 +507,13 @@ ici_evaluate(ici_obj_t *code, int n_operands)
                      * the lookup before deciding it is undefined.
                      */
                     if ((f = ici_fetch(ici_vs.a_top[-1], SSO(load))) == objof(&o_null))
-                        goto undefined;
+                    {
+                        if (ici_chkbuf(stringof(o)->s_nchars + 20))
+                            goto fail;
+                        sprintf(buf, "\"%s\" undefined", stringof(o)->s_chars);
+                        ici_error = buf;
+                        goto fail;
+                    }
                     *ici_xs.a_top++ = o; /* Temp restore formal state. */
                     if (ici_func(f, "o", o))
                         goto fail;
@@ -529,7 +533,6 @@ ici_evaluate(ici_obj_t *code, int n_operands)
                         goto fail;
 
                     case 0:
-                    undefined:
                         if (ici_chkbuf(stringof(o)->s_nchars + 20))
                             goto fail;
                         sprintf(buf, "load() failed to define \"%s\"",
@@ -1283,5 +1286,60 @@ ici_type_t  ici_exec_type =
     fetch_exec,
     "exec"
 };
+
+#if 0
+ici_code_t *
+ici_code_new(ici_array_t *a)
+{
+    ici_code_t          *c;
+
+    if ((c = ici_talloc(ici_code_t)) == NULL)
+        return NULL;
+    ICI_OBJ_SET_TFNZ(c, TC_CODE, 0, 1, 0);
+    c->c_code = a;
+    return c;
+}
+
+static unsigned long
+mark_code(ici_obj_t *o)
+{
+    return sizeof(ici_code_t) + ici_mark(codeof(o)->c_code);
+}
+
+static void
+free_code(ici_obj_t *o)
+{
+    ici_tfree(o, ici_code_t);
+}
+
+/*
+ * nargs code     => code-array (os)
+ *       call     => o_exec     (xs)
+ */
+static int
+call_code(ici_obj_t *o, ici_obj_t *s)
+{
+    if (NARGS() != 0)
+        return ici_argcount(0);
+    ici_xs.a_top[-1] = objof(&o_exec);
+    --ici_os.a_top;
+    ici_os.a_top[-1] = objof(codeof(o)->c_code);
+    return 0;
+}
+
+ici_type_t  ici_code_type =
+{
+    mark_code,
+    free_code,
+    ici_hash_unique,
+    ici_cmp_unique,
+    ici_copy_simple,
+    ici_assign_fail,
+    ici_fetch_fail,
+    "codefrag",
+    NULL,
+    call_code
+};
+#endif
 
 ici_op_t    o_quote         = {OBJ(TC_OP), NULL, OP_QUOTE};

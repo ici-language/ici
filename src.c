@@ -1,6 +1,7 @@
 #define ICI_CORE
 #include "exec.h"
 #include "src.h"
+#include "str.h"
 
 /*
  * Mark this and referenced unmarked objects, return memory costs.
@@ -31,6 +32,25 @@ new_src(int lineno, ici_str_t *filename)
     ici_rego(s);
     return s;
 }
+
+#if 0
+static ici_obj_t *
+fetch_src(ici_obj_t *o, ici_obj_t *k)
+{
+    if (k == SSO(file))
+        return objof(srcof(o)->s_filename);
+    if (k == SSO(line))
+    {
+        ici_int_t   *io;
+
+        if ((io = ici_int_new(srcof(o)->s_lineno)) == NULL)
+            return NULL;
+        ici_decref(io);
+        return objof(io);
+    }
+    return ici_fetch_fail(o, k);
+}
+#endif
 
 /*
  * Free this object and associated memory (but not other objects).

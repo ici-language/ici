@@ -235,13 +235,13 @@ forall (file in files)
                 para = trim_off_space(para);
                 para = font_subs(para);
                 if (indent > 17)
-                    tag = "TagIn4cm";
+                    tag = "DefnIn4cm";
                 else
-                    tag = "TagIn2cm";
-                strcatf(mml, "<%s><italic>%s<noitalic><Tab>%s", 
-                    tag, subject, para);
+                    tag = "DefnIn2cm";
+                strcatf(mml, "<DefnTerm>%s<%s>%s", 
+                    subject, tag, para);
             }
-            else if (para ~ #^ {3}# && tag ~ #TagIn.cm#)
+            else if (para ~ #^ {3}# && tag ~ #DefnIn.cm#)
             {
                 /*
                  * Indented, and last paragraph was a tagged paragraph.

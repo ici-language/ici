@@ -9,6 +9,7 @@ extern ici_cfunc_t  ici_apl_funcs[];
 extern ici_cfunc_t  clib_cfuncs[];
 extern ici_cfunc_t  extra_cfuncs[];
 extern ici_cfunc_t  load_cfuncs[];
+extern ici_cfunc_t  parse_cfuncs[];
 
 #ifndef NOTRACE
 extern ici_cfunc_t  trace_cfuncs[];
@@ -36,6 +37,7 @@ ici_cfunc_t *funcs[] =
     clib_cfuncs,
     extra_cfuncs,
     load_cfuncs,
+    parse_cfuncs,
 #ifndef NOTRACE
     trace_cfuncs,
 #endif

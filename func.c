@@ -181,7 +181,7 @@ ici_op_return()
  * arg(N-1) .. arg1 arg0 nargs ptr      => (os) OR
  * arg(N-1) .. arg1 arg0 nargs aggr key => (os) iff OP_AGGR_KEY_CALL
  *                                => auto-struct  (vs)
- *                      call(N)   => mark pc      (xs)
+ *                      call      => mark pc      (xs)
  *
  * Calling a function pushes a structure for auto variables on the
  * variable stack. It then pushes a mark and a pc starting at the first

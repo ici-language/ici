@@ -12,7 +12,6 @@ typedef struct
     {
         long    tu_int;
         double  tu_float;
-        char    *tu_str;        /* Malloced string. */
         ici_obj_t *tu_obj;
     }
         tu;
@@ -21,7 +20,6 @@ typedef struct
 
 #define t_int   tu.tu_int
 #define t_float tu.tu_float
-#define t_str   tu.tu_str
 #define t_obj   tu.tu_obj
 
 struct ici_parse
@@ -30,7 +28,7 @@ struct ici_parse
     ici_file_t  *p_file;
     int         p_lineno;       /* Diagnostic information. */
     short       p_sol;          /* At first char in line. */
-    short       p_cr;           /* New-line cause by \r, not \n. */
+    short       p_cr;           /* New-line caused by \r, not \n. */
     token_t     p_got;
     token_t     p_ungot;
     ici_func_t  *p_func;        /* NULL when not within scope. */
@@ -52,6 +50,7 @@ struct ici_parse
 #define TM_SUBTYPE      0x003F          /* 6 bits. */
 #define TM_TYPE         0x07C0          /* 5 bits. */
 #define TM_PREC         0x7800          /* 4 bits, 0 is high (tight bind).*/
+#define TM_HASOBJ       0x8000          /* Implies incref on t_obj. */
 #define t_subtype(t)    ((t) & TM_SUBTYPE)
 #define t_type(t)       ((t) & TM_TYPE)
 #define t_prec(t)       (((t) & TM_PREC) >> 11)
@@ -59,9 +58,9 @@ struct ici_parse
 #define PREC(n)         ((n) << 11)
 
 #define T_NONE          TYPE(0)
-#define T_NAME          TYPE(1)     /* Implies incref on t_obj. */
-#define T_REGEXP        TYPE(2)     /* Implies incref of t_obj. */  
-#define T_STRING        TYPE(3)     /* Implies incref of t_obj. */
+#define T_NAME          (TM_HASOBJ|TYPE(1))
+#define T_REGEXP        (TM_HASOBJ|TYPE(2))
+#define T_STRING        (TM_HASOBJ|TYPE(3))
 #define T_SEMICOLON     TYPE(4)
 #define T_EOF           TYPE(5)
 #define T_INT           TYPE(6)

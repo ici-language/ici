@@ -144,6 +144,15 @@ enum
     XS_FAILED,          /* Function failed and thread exitied. */
 };
 
+#if 0
+struct ici_code
+{
+    ici_obj_t           o_head;
+    ici_array_t         *c_code;
+};
+#define codeof(o)       ((ici_code_t *)(o))
+#define iscode(o)       (objof(o)->o_tcode == TC_CODE)
+#endif
 
 /*
  * The following portion of this file exports to ici.h. --ici.h-start--
