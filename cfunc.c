@@ -437,8 +437,8 @@ ici_argerror(int i)
 
     sprintf(buf, "argument %d of %s incorrectly supplied as %s",
         i + 1,
-        objname(n1, ici_os.a_top[-1]),
-        objname(n2, ARG(i)));
+        ici_objname(n1, ici_os.a_top[-1]),
+        ici_objname(n2, ARG(i)));
     ici_error = buf;
     return 1;
 }
@@ -480,7 +480,7 @@ ici_argcount(int n)
     char        n1[30];
 
     sprintf(buf, "%d arguments given to %s, but it takes %d",
-        NARGS(), objname(n1, ici_os.a_top[-1]), n);
+        NARGS(), ici_objname(n1, ici_os.a_top[-1]), n);
     ici_error = buf;
     return 1;
 }
@@ -668,7 +668,7 @@ f_math()
         sprintf(n2, "%g", av[0]);
         if (NARGS() == 2)
             sprintf(n2 + strlen(n2), ", %g", av[1]);
-         return ici_get_last_errno(objname(n1, ici_os.a_top[-1]), n2);
+         return ici_get_last_errno(ici_objname(n1, ici_os.a_top[-1]), n2);
     }
     return ici_float_ret(r);
 }
@@ -710,7 +710,7 @@ f_coreici(object_t *s)
     {
         char    n1[30];
 
-        sprintf(buf, "attempt to call %s", objname(n1, f));
+        sprintf(buf, "attempt to call %s", ici_objname(n1, f));
         ici_error = buf;
         return 1;
     }
@@ -928,7 +928,7 @@ f_num()
         if (*s == '\0')
             return ici_float_ret(f);
     }
-    sprintf(buf, "%s is not a number", objname(n, o));
+    sprintf(buf, "%s is not a number", ici_objname(n, o));
     ici_error = buf;
     return 1;
 }
@@ -1139,7 +1139,10 @@ f_include()
         if (!ici_find_on_path(fname, NULL))
         {
             ici_debug_respect_errors();
-            ici_error = "can't find include file";
+            if (ici_chkbuf(filename->s_nchars + 80))
+                return 1;
+            sprintf(ici_buf, "could not find \"%s\" on path", fname);
+            ici_error = ici_buf;
             return 1;
         }
         if (ici_call(SS(fopen), "o=s", &f, fname))
@@ -1305,7 +1308,19 @@ f_exit()
 static int
 f_vstack()
 {
-    return ici_ret_with_decref(copy(objof(&ici_vs)));
+    int                 depth;
+
+    if (NARGS() == 0)
+        return ici_ret_with_decref(copy(objof(&ici_vs)));
+
+    if (!isint(ARG(0)))
+        return ici_argerror(0);
+    depth = intof(ARG(0))->i_value;
+    if (depth < 0)
+        return ici_argerror(0);
+    if (depth >= ici_vs.a_top - ici_vs.a_bot)
+        return ici_null_ret();
+    return ici_ret_no_decref(ici_vs.a_top[-depth - 1]);
 }
 
 static int
@@ -1737,7 +1752,7 @@ f_sprintf()
         case 'a':
             if (nargs <= 0)
                 goto lacking;
-            objname(oname, *o);
+            ici_objname(oname, *o);
             svalue = oname;
             if (ici_chkbuf(i + ICI_OBJNAMEZ + stars[0] + stars[1]))
                 return 1;
@@ -1867,7 +1882,7 @@ f_currentfile()
         {
             if (raw)
                 return ici_ret_no_decref(objof(parseof(*o)->p_file));
-            f = new_file(*o, &ici_parse_ftype, parseof(*o)->p_file->f_name, *o);
+            f = ici_file_new(*o, &ici_parse_ftype, parseof(*o)->p_file->f_name, *o);
             if (f == NULL)
                 return 1;
             return ici_ret_with_decref(objof(f));
@@ -1890,7 +1905,7 @@ f_del()
     }
     else if (isset(s))
     {
-        unassign_set(setof(s), o);
+        ici_set_unassign(setof(s), o);
     }
     else if (isarray(s))
     {
@@ -3022,16 +3037,97 @@ f_cputime()
     return ici_float_ret(t);
 }
 
+string_t                *ici_ver_cache;
+
 static int
 f_version()
 {
-    static string_t     *ver;
 
-    if (ver == NULL && (ver = ici_str_new_nul_term(ici_version_string)) == NULL)
+    if
+    (
+        ici_ver_cache == NULL
+        &&
+        (ici_ver_cache = ici_str_new_nul_term(ici_version_string)) == NULL
+    )
         return 1;
-    return ici_ret_no_decref(objof(ver));
+    return ici_ret_no_decref(objof(ici_ver_cache));
 }
 
+static int
+f_strbuf()
+{
+    string_t            *s;
+    string_t            *is;
+    int                 n;
+
+    is = NULL;
+    n = 10;
+    if (NARGS() > 0)
+    {
+        if (!isstring(ARG(0)))
+            return ici_argerror(0);
+        is = stringof(ARG(0));
+        n = is->s_nchars;
+    }
+    if ((s = ici_str_buf_new(n)) == NULL)
+        return 1;
+    if (is != NULL)
+    {
+        memcpy(s->s_chars, is->s_chars, n);
+        s->s_nchars = n;
+    }
+    return ici_ret_with_decref(objof(s));
+}
+
+static int
+f_strcat()
+{
+    string_t            *s1;
+    string_t            *s2;
+    int                 n;
+    int                 i;
+    int                 si;
+    int                 z;
+    int                 sz;
+
+
+    if (NARGS() < 2)
+        return ici_argcount(2);
+    if (!isstring(ARG(0)))
+        return ici_argerror(0);
+    s1 = stringof(ARG(0));
+    if (isint(ARG(1)))
+    {
+        si = 2;
+        sz = intof(ARG(1))->i_value;
+        if (sz < 0 || sz > s1->s_nchars)
+            return ici_argerror(1);
+    }
+    else
+    {
+        si = 1;
+        sz = s1->s_nchars;
+    }
+    n = NARGS();
+    for (i = si, z = sz; i < n; ++i)
+    {
+        s2 = stringof(ARG(i));
+        if (!isstring(objof(s2)))
+            return ici_argerror(i);
+        z += s2->s_nchars;
+    }
+    if (ici_str_need_size(s1, z))
+        return 1;
+    for (i = si, z = sz; i < n; ++i)
+    {
+        s2 = stringof(ARG(i));
+        memcpy(&s1->s_chars[z], s2->s_chars, s2->s_nchars);
+        z += s2->s_nchars;
+    }
+    if (s1->s_nchars < z)
+        s1->s_nchars = z;
+    return ici_ret_no_decref(objof(s1));
+}
 
 cfunc_t std_cfuncs[] =
 {
@@ -3108,6 +3204,8 @@ cfunc_t std_cfuncs[] =
     {CF_OBJ,    (char *)SS(version),      f_version},
     {CF_OBJ,    (char *)SS(cputime),      f_cputime},
     {CF_OBJ,    (char *)SS(sleep),        f_sleep},
+    {CF_OBJ,    (char *)SS(strbuf),       f_strbuf},
+    {CF_OBJ,    (char *)SS(strcat),       f_strcat},
     {CF_OBJ,    (char *)SS(cmp),          f_coreici, SS(cmp),       SS(core1)},
     {CF_OBJ,    (char *)SS(pathjoin),     f_coreici, SS(pathjoin),  SS(core2)},
     {CF_OBJ,    (char *)SS(basename),     f_coreici, SS(basename),  SS(core2)},

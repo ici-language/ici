@@ -1,47 +1,48 @@
 #
 # For compiling a standard version on Irix.
 #
-FLAVOUR	= irix
+FLAVOUR = irix
 
-TARGET	= ici.$(FLAVOUR)
-LIB	= lib$(FLAVOUR).a
-CONFIG	= conf-$(FLAVOUR).h
+TARGET  = ici.$(FLAVOUR)
+LIB     = lib$(FLAVOUR).a
+CONFIG  = conf-$(FLAVOUR).h
 
 #
 # For installing...
 #
-PREFIX	= /usr/local
-BINDIR	= $(PREFIX)/bin
-MANDIR	= $(PREFIX)/man/man1
-INSTALL	= install -c
+PREFIX  = /usr/local
+BINDIR  = $(PREFIX)/bin
+MANDIR  = $(PREFIX)/man/man1
+INSTALL = install -c
 
-CC	= cc
-LIBS	= -lm -ltermcap
-CFLAGS	= -O2 -DCONFIG_FILE='"$(CONFIG)"' -I. -DPREFIX='"$(PREFIX)"'
-LDFLAGS	=
-RANLIB	= echo
-RM	= rm -f
+CC      = cc
+LIBS    = -lm -ltermcap
+CFLAGS  = -O2 -DCONFIG_FILE='"$(CONFIG)"' -I. -DPREFIX='"$(PREFIX)"'
+LDFLAGS =
+RANLIB  = echo
+RM      = rm -f
 
 #
 # The remainder of this makefile is pretty well generic...
 #
-OBJS	= \
+OBJS    = \
 	$(LIB)(alloc.o) $(LIB)(aplfuncs.o) $(LIB)(arith.o) \
 	$(LIB)(array.o) $(LIB)(call.o) \
 	$(LIB)(catch.o) $(LIB)(cfunc.o) $(LIB)(cfunco.o) \
 	$(LIB)(clib.o) $(LIB)(clib2.o) \
-	$(LIB)(compile.o) $(LIB)(conf.o) $(LIB)(control.o) $(LIB)(exec.o) \
+	$(LIB)(compile.o) $(LIB)(conf.o) $(LIB)(control.o) \
+	$(LIB)(crc.o) $(LIB)(exec.o) \
 	$(LIB)(exerror.o) $(LIB)(file.o) $(LIB)(findpath.o) \
 	$(LIB)(float.o) $(LIB)(forall.o) $(LIB)(func.o) \
 	$(LIB)(handle.o) $(LIB)(icimain.o) $(LIB)(init.o) $(LIB)(int.o) \
 	$(LIB)(lex.o) $(LIB)(load.o) $(LIB)(main.o) \
 	$(LIB)(mark.o) $(LIB)(mem.o) $(LIB)(method.o) \
-	$(LIB)(mkvar.o) $(LIB)(nptrs.o) $(LIB)(null.o) \
+	$(LIB)(mkvar.o) $(LIB)(null.o) \
 	$(LIB)(object.o) $(LIB)(oofuncs.o) $(LIB)(op.o) \
 	$(LIB)(parse.o) $(LIB)(pc.o) \
 	$(LIB)(ptr.o) $(LIB)(refuncs.o) $(LIB)(regexp.o) \
 	$(LIB)(set.o) $(LIB)(sfile.o) $(LIB)(signals.o) \
-	$(LIB)(skt.o) $(LIB)(smash.o) \
+	$(LIB)(smash.o) \
 	$(LIB)(src.o) $(LIB)(sstring.o) $(LIB)(string.o) \
 	$(LIB)(struct.o) $(LIB)(syserr.o) \
 	$(LIB)(thread.o) $(LIB)(trace.o) $(LIB)(unary.o) $(LIB)(uninit.o) \
@@ -52,9 +53,9 @@ OBJS	= \
 $(TARGET): $(LIB)
 	$(CC) $(LDFLAGS) -o $@ $(LIB) $(LIBS)
 
-.c.a	:;
+.c.a    :;
 
-$(LIB)	: $(OBJS)
+$(LIB)  : $(OBJS)
 	$(CC) -c $(CFLAGS) $(?:.o=.c)
 	$(AR) r $@ $?
 	$(RANLIB) $@
@@ -102,7 +103,6 @@ $(LIB)(ptr.o)          : exec.h ptr.h struct.h int.h op.h buf.h
 $(LIB)(regexp.o)       : str.h re.h exec.h op.h buf.h
 $(LIB)(set.o)          : object.h set.h op.h int.h buf.h null.h
 $(LIB)(sfile.o)        : file.h
-$(LIB)(skt.o)          : buf.h exec.h op.h func.h int.h set.h struct.h str.h skt.h
 $(LIB)(smash.o)        :
 $(LIB)(src.o)          : exec.h src.h
 $(LIB)(string.o)       : str.h struct.h exec.h int.h

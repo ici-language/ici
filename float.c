@@ -107,7 +107,7 @@ type_t  float_type =
     free_float,
     hash_float,
     cmp_float,
-    copy_simple,
+    ici_copy_simple,
     ici_assign_fail,
     ici_fetch_fail,
     "float"

@@ -87,7 +87,7 @@ disassemble(int indent, array_t *a)
         else if (isop(*e))
             printf("%s %d\n", opname(opof(*e)), opof(*e)->op_code);
         else
-            printf("%s\n", objname(n1, *e));
+            printf("%s\n", ici_objname(n1, *e));
         if (isarray(*e))
             disassemble(indent + 4, arrayof(*e));
     }
@@ -456,6 +456,7 @@ primary(parse_t *p, expr_t **ep, int exclude)
     char        *token_name = 0;
     int         wasfunc;
     object_t    *name;
+    int         token;
 
     *ep = NULL;
     if ((e = ici_talloc(expr_t)) == NULL)
@@ -477,10 +478,17 @@ primary(parse_t *p, expr_t **ep, int exclude)
             goto fail;
         break;
 
+    case T_REGEXP:
+        e->e_what = T_CONST;
+        token = T_REGEXP;
+        goto gather_string_or_re;
+
     case T_STRING:
         e->e_what = T_STRING;
+        token = T_STRING;
+    gather_string_or_re:
         o = p->p_got.t_obj;
-        while (next(p, NULL) == T_STRING)
+        while (next(p, NULL) == token || (token == T_REGEXP && this == T_STRING))
         {
             register int        i;
 
@@ -502,12 +510,17 @@ primary(parse_t *p, expr_t **ep, int exclude)
             this = T_NONE;
         }
         reject(p);
-        e->e_obj = o;
-        break;
-
-    case T_REGEXP:
-        e->e_what = T_CONST;
-        e->e_obj = p->p_got.t_obj;
+        if (token == T_REGEXP)
+        {
+            e->e_obj = objof(ici_regexp_new(stringof(o), 0));
+            ici_decref(o);
+            if (e->e_obj == NULL)
+                goto fail;
+        }
+        else
+        {
+            e->e_obj = o;
+        }
         break;
 
     case T_NAME:
@@ -608,7 +621,7 @@ primary(parse_t *p, expr_t **ep, int exclude)
                     sprintf(buf, "attempt to do [%s %c %s",
                         stringof(name)->s_chars,
                         is_eq ? '=' : ':',
-                        objname(n, o));
+                        ici_objname(n, o));
                     ici_error = buf;
                     ici_decref(o);
                     goto fail;
@@ -2039,7 +2052,7 @@ parse_module(file_t *f, objwsup_t *s)
  * Return 0 if ok, else -1, usual conventions.
  */
 int
-parse_file(char *mname, char *file, ftype_t *ftype)
+ici_parse_file(char *mname, char *file, ftype_t *ftype)
 {
     objwsup_t           *s;     /* Statics. */
     objwsup_t           *a;     /* Autos. */
@@ -2047,7 +2060,7 @@ parse_file(char *mname, char *file, ftype_t *ftype)
 
     a = NULL;
     f = NULL;
-    if ((f = new_file(file, ftype, ici_str_get_nul_term(mname), NULL)) == NULL)
+    if ((f = ici_file_new(file, ftype, ici_str_get_nul_term(mname), NULL)) == NULL)
         goto fail;
 
     if ((a = objwsupof(ici_struct_new())) == NULL)
@@ -2059,7 +2072,7 @@ parse_file(char *mname, char *file, ftype_t *ftype)
 
     if (parse_module(f, a) < 0)
         goto fail;
-    f_close(f);
+    ici_file_close(f);
     ici_decref(a);
     ici_decref(f);
     return 0;
@@ -2188,9 +2201,9 @@ type_t  parse_type =
 {
     mark_parse,
     free_parse,
-    hash_unique,
-    cmp_unique,
-    copy_simple,
+    ici_hash_unique,
+    ici_cmp_unique,
+    ici_copy_simple,
     ici_assign_fail,
     ici_fetch_fail,
     "parse"

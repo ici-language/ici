@@ -101,7 +101,10 @@ int ici_get_last_win32_error(void);
 /*
  * The ICI version number composed into an 8.8.16 long for simple comparisons.
  */
-#define ICI_VER         ((ICI_VER_MAJOR << 24) | (ICI_VER_MINOR << 16) | ICI_VER_RELEASE)
+#define ICI_VER \
+    (((unsigned long)ICI_VER_MAJOR << 24) \
+    | ((unsigned long)ICI_VER_MINOR << 16) \
+    | ICI_VER_RELEASE)
 
 /*
  * The oldet version number for which the binary interface for seperately
@@ -109,12 +112,12 @@ int ici_get_last_win32_error(void);
  * the exernal interface changes in a way that could break already compiled
  * modules. See ici_interface_check().
  */
-#define ICI_BACK_COMPATIBLE_VER ((4 << 24) | (0 << 16) | 1)
+#define ICI_BACK_COMPAT_VER ((4UL << 24) | (0UL << 16) | 1)
 
 
 /*
  * DLI is defined in some configurations (Windows, in the conf include file)
- * to be a declaration modifyer which must be applied to data objects being
+ * to be a declaration modifier which must be applied to data objects being
  * referenced from a dynamically loaded DLL.
  *
  * If it hasn't been defined yet, define it to be null. Most system don't
@@ -159,10 +162,20 @@ int ici_get_last_win32_error(void);
  * But if it wasn't, this is what we use.
  */
 #ifndef ICI_PTR_HASH
+#define ICI_PTR_HASH(p) \
+     (ici_crc_table[((size_t)(p) >>  4) & 0xFF] \
+    ^ ici_crc_table[((size_t)(p) >> 12) & 0xFF])
+/*
+ * This is an alternative that avoids looking up the crc table.
 #define ICI_PTR_HASH(p) (((unsigned long)(p) >> 12) * 31 ^ ((unsigned long)(p) >> 4) * 17)
+*/
 #endif
- 
+
+#ifndef nels
 #define nels(a)         (sizeof a / sizeof a[0])
+#endif
+
+#define ICI_OBJNAMEZ    30
 
 typedef struct array    array_t;
 typedef struct catchs   catch_t;
@@ -199,11 +212,6 @@ typedef struct ici_handle ici_handle_t;
 typedef struct debug    debug_t;
 #endif
 
-extern DLI object_t     **objs;
-extern DLI object_t     **objs_top;
-extern DLI object_t     **objs_limit;
-extern DLI object_t     **atoms;
-extern DLI int          atomsz;
 extern DLI int_t        *ici_zero;
 extern DLI int_t        *ici_one;
 extern DLI char         *ici_error;
@@ -225,142 +233,63 @@ extern DLI int  ici_dont_record_line_nums;      /* See lex.c */
 extern DLI char *ici_buf;                       /* See buf.h */
 extern DLI int  ici_bufz;                       /* See buf.h */
 
-extern DLI type_t       ici_array_type;
-extern DLI type_t       ici_catch_type;
-extern DLI type_t       ici_exec_type;
-extern DLI type_t       set_type;
-extern DLI type_t       struct_type;
-extern DLI type_t       float_type;
-extern DLI type_t       file_type;
-extern DLI type_t       ici_func_type;
-extern DLI type_t       ici_cfunc_type;
-extern DLI type_t       ici_method_type;
-extern DLI type_t       forall_type;
-extern DLI type_t       int_type;
-extern DLI type_t       mark_type;
-extern DLI type_t       null_type;
-extern DLI type_t       op_type;
-extern DLI type_t       pc_type;
-extern DLI type_t       ptr_type;
-extern DLI type_t       regexp_type;
-extern DLI type_t       src_type;
-extern DLI type_t       string_type;
-extern DLI type_t       parse_type;
-extern DLI type_t       ostemp_type;
-extern DLI type_t       ici_handle_type;
-extern DLI type_t       profilecall_type;
-extern DLI type_t       mem_type;
-
-extern DLI ftype_t      stdio_ftype;
-extern DLI ftype_t      ici_popen_ftype;
-extern DLI ftype_t      ici_parse_ftype;
+extern DLI ftype_t      ici_stdio_ftype;
 
 extern DLI null_t       o_null;
-extern DLI mark_t       o_mark;
 
+#define ici_null        (objof(&o_null))
 
 #ifndef NODEBUGGING
 extern DLI debug_t *ici_debug;
 #endif
 
-extern char     ici_version_string[];
+extern char             ici_version_string[];
 
-#define ici_null_ret() ici_ret_no_decref(objof(&o_null))
+extern unsigned long const ici_crc_table[256];
+extern int              ici_exec_count;
 
-extern char     **smash(char *, int);
-extern char     **ssmash(char *, char *);
-extern char     *ici_binop_name(int);
+#define ici_null_ret()  ici_ret_no_decref(objof(&o_null))
+
 extern object_t *ici_evaluate(object_t *, int);
-extern object_t *copy_simple(object_t *);
+extern object_t *ici_copy_simple(object_t *);
 extern object_t *ici_fetch_fail(object_t *, object_t *);
-extern slot_t   *find_slot(struct_t **, object_t *);
-extern slot_t   *find_raw_slot(struct_t *, object_t *);
-extern object_t *get_token(file_t *);
-extern object_t *get_value(struct_t *, object_t *);
 extern object_t *ici_atom(object_t *, int);
-extern object_t *atom_probe(object_t *, object_t ***);
-extern int_t    *atom_int(long);
-extern int      parse_exec(void);
-extern int      parse_module(file_t *, objwsup_t *);
-extern int      parse_file(char *, char *, ftype_t *);
-extern parse_t  *new_parse(file_t *);
+extern int      ici_parse_file(char *, char *, ftype_t *);
 extern array_t  *ici_array_new(ptrdiff_t);
 extern mem_t    *ici_mem_new(void *, size_t, int, void (*)());
-extern catch_t  *new_catch(object_t *, int, int, int);
 extern string_t *ici_str_new_nul_term(char *);
 extern string_t *ici_str_get_nul_term(char *);
-extern unsigned long    ici_hash_string(object_t *);
 extern set_t    *ici_set_new(void);
 extern struct_t *ici_struct_new(void);
-extern exec_t   *new_exec(void);
 extern float_t  *ici_float_new(double);
-extern file_t   *new_file(void *, ftype_t *, string_t *, object_t *);
-extern func_t   *new_func(void);
+extern file_t   *ici_file_new(void *, ftype_t *, string_t *, object_t *);
 extern int_t    *ici_int_new(long);
-extern int      ici_interface_check(unsigned long ver, char const *name);
-extern string_t *new_string(int);
+extern int      ici_interface_check(unsigned long, unsigned long, char const *);
 extern string_t *ici_str_new(char *, int);
-extern op_t     *new_op(int (*)(), int, int);
-extern pc_t     *new_pc(void);
 extern ptr_t    *ici_ptr_new(object_t *, object_t *);
-extern src_t    *new_src(int, string_t *);
 extern regexp_t *ici_regexp_new(string_t *, int);
 extern int      ici_assign_fail(object_t *, object_t *, object_t *);
 extern file_t   *ici_sopen(char *, int, object_t *);
-extern catch_t  *ici_unwind(void);
-extern void     collect(void);
-extern unsigned long hash_unique(object_t *);
-extern int      cmp_unique(object_t *, object_t *);
-extern int      exec_simple(void);
-extern void     free_simple(object_t *);
-extern int      ici_growarray(array_t *, ptrdiff_t);
-extern int      ici_op_binop(void);
-extern int      ici_op_mklvalue(void);
-extern int      ici_op_onerror(void);
-extern int      ici_op_for(void);
-extern int      ici_op_andand(void);
-extern int      ici_op_switcher(void);
-extern int      ici_op_switch(void);
-extern int      ici_op_forall(void);
-extern int      ici_op_return(void);
-extern int      ici_op_call(void);
-extern int      ici_op_mkptr(void);
-extern int      ici_op_openptr(void);
-extern int      ici_op_fetch(void);
-extern int      ici_op_unary(void);
+extern unsigned long ici_hash_unique(object_t *);
+extern int      ici_cmp_unique(object_t *, object_t *);
+extern void     ici_free_simple(object_t *);
 extern int      ici_get_last_errno(char *, char *);
 extern int      ici_argcount(int);
 extern int      ici_argerror(int);
-extern array_t  *mk_strarray(char **);
 extern void     ici_struct_unassign(struct_t *, object_t *);
-extern int      unassign_set(set_t *, object_t *);
-extern void     grow_objs(object_t *);
-extern char     *objname(char *, object_t *);
-extern void     expand_error(int, string_t *);
-extern int      lex(parse_t *, array_t *);
-extern struct_t *statics_struct(struct_t *, struct_t *);
-extern int      f_close(file_t *f);
+extern int      ici_set_unassign(set_t *, object_t *);
+extern char     *ici_objname(char [ICI_OBJNAMEZ], object_t *);
+extern int      ici_file_close(file_t *f);
 extern int      ici_ret_with_decref(object_t *);
 extern int      ici_int_ret(long);
 extern int      ici_ret_no_decref(object_t *);
-extern void     uninit_cfunc(void);
 extern int      ici_typecheck(char *, ...);
 extern int      ici_retcheck(char *, ...);
-extern int      ici_op_call(void);
-extern int      nptrs(char **);
-extern int      ici_badindex(void);
-extern int      mkstream(char *, FILE *);
 extern int      ici_init(void);
 extern void     ici_uninit(void);
-extern int      exec_forall(void);
-extern exec_t   *ici_new_exec(void);
-extern int      compile_expr(array_t *, expr_t *, int);
-extern void     uninit_compile(void);
 extern file_t   *ici_need_stdin(void);
 extern file_t   *ici_need_stdout(void);
 extern array_t  *ici_need_path(void);
-extern int      set_issubset(set_t *, set_t *);
-extern int      set_ispropersubset(set_t *, set_t *);
 extern void     ici_reclaim(void);
 extern int      ici_str_ret(char *);
 extern int      ici_float_ret(double);
@@ -373,16 +302,10 @@ extern int      ici_cmkvar(objwsup_t *, char *, int, void *);
 extern int      ici_set_val(objwsup_t *, string_t *, int, void *);
 extern int      ici_fetch_num(object_t *, object_t *, double *);
 extern int      ici_fetch_int(object_t *, object_t *, long *);
-extern long     ici_strtol(char const *, char **, int);
-extern int      ici_load(string_t *);
-extern int      ici_init_path(objwsup_t *externs);
-extern int      ici_find_on_path(char [FILENAME_MAX], char *);
 extern int      ici_assign_cfuncs(objwsup_t *, cfunc_t *);
-extern int      def_cfuncs(cfunc_t *);
+extern int      ici_def_cfuncs(cfunc_t *);
 extern int      ici_main(int, char **);
-extern int      ici_init_sstrings(void);
 extern method_t *ici_method_new(object_t *, object_t *);
-extern int      ici_get_foreign_source_code(parse_t *, array_t *, int, int, int, int, int, unsigned long *);
 extern ici_handle_t *ici_handle_new(void *, string_t *, objwsup_t *);
 extern int      ici_register_type(type_t *t);
 extern ptrdiff_t ici_array_nels(array_t *);
@@ -395,15 +318,16 @@ extern object_t *ici_array_pop(array_t *);
 extern object_t *ici_array_rpop(array_t *);
 extern object_t *ici_array_get(array_t *, ptrdiff_t);
 extern void     ici_invalidate_struct_lookaside(struct_t *);
-extern void     ici_drop_all_small_allocations(void);
 extern int      ici_engine_stack_check(void);
-extern void     get_pc(array_t *code, object_t **xs);
 extern void     ici_atexit(void (*)(void), wrap_t *);
 extern objwsup_t *ici_outermost_writeable_struct(void);
 extern objwsup_t *ici_class_new(cfunc_t *cf, objwsup_t *super);
 extern objwsup_t *ici_module_new(cfunc_t *cf);
 extern int      ici_handle_method_check(object_t *, string_t *, ici_handle_t **, void **);
 extern int      ici_method_check(object_t *o, int tcode);
+extern unsigned long ici_crc(unsigned long, unsigned char const *, ptrdiff_t);
+extern int      ici_str_need_size(string_t *, int);
+extern string_t *ici_str_buf_new(int);
 
 extern exec_t   *ici_leave(void);
 extern void     ici_enter(exec_t *);
@@ -415,7 +339,7 @@ extern int      ici_init_thread_stuff(void);
 #ifndef NODEBUGGING
 extern int      ici_maind(int, char **, int);
 extern DLI int  ici_debug_enabled;
-extern int  ici_debug_ign_err;
+extern int      ici_debug_ign_err;
 extern DLI void ici_debug_ignore_errors(void);
 extern DLI void ici_debug_respect_errors(void);
 #else
@@ -462,11 +386,15 @@ extern void     trace_pcall(object_t *);
 /* From object.h */
 
 
+/*
+ * ici_types[] is the map from the small integer type codes found in the
+ * o_tcode field of every object header, to a type structure (below) that
+ * characterises that type of object.  Standard core data types have standard
+ * positions (see TC_* defines below).  Other types are registered at run-time
+ * by calls to ici_register_type() and are given the next available slot.
+ */
 #define ICI_MAX_TYPES   64
-
 extern DLI type_t       *ici_types[ICI_MAX_TYPES];
-
-#define ICI_OBJNAMEZ    30
 
 /*
  * Every object has a header. In the header the o_tcode (type code) field
@@ -523,7 +451,7 @@ struct type
  *              partially allocated object.
  *
  *              Simple object types which just have to free their data
- *              can use the existing function free_simple() as their
+ *              can use the existing function ici_free_simple() as their
  *              implementation of this function.
  *
  * t_cmp(o1, o2) Compare o1 and o2 and return 0 if they are the same, else
@@ -535,7 +463,7 @@ struct type
  *              atomic (for example, objects which are one-to-one with
  *              some other allocated data which they alloc when the are
  *              created and free when they die). For these objects the
- *              existing function cmp_unique() can be used as their
+ *              existing function ici_cmp_unique() can be used as their
  *              implementation of this function.
  *
  *              It is very important in implementing this function not to
@@ -553,7 +481,7 @@ struct type
  *              intrinsically atomic.
  *
  *              Intrinsically atomic objects may use the existing function
- *              copy_simple() as their implemenation of this function.
+ *              ici_copy_simple() as their implemenation of this function.
  *
  * t_hash(o)    Return an unsigned long hash which is sensitive to the
  *              value of the object. Two objects which cmp() equal should
@@ -661,38 +589,6 @@ struct type
 #define assign_base(o,k,v) ((*ici_typeof(o)->t_assign_base)(objof(o), objof(k), objof(v)))
 #define fetch_base(o,k) ((*ici_typeof(o)->t_fetch_base)(objof(o), objof(k)))
 
-#ifndef BUGHUNT
-/*
- * Link an object into the list of objects. We clear the o_leafz field
- * here because that is the safe thing to do and, as of the introduction
- * of this field, much code does not set this field to zero. Objects
- * that want to take advantage of o_leafz must set it after calling rego().
- */
-#define rego(o)         (objof(o)->o_leafz = 0, \
-                          (objs_top < objs_limit \
-                            ? (void)(*objs_top++ = objof(o)) \
-                            : grow_objs(objof(o))))
-#else
-#define rego(o)         bughunt_rego(objof(o))
-extern void             bughunt_rego(object_t *);
-#endif
-
-#if 0
-/*
- * Functions to performs operations on the object.
- */
-extern unsigned long    ici_mark(object_t *);
-extern void             freeo(object_t *);
-extern unsigned long    hash(object_t *);
-extern int              cmp(object_t *, object_t *);
-extern object_t         *copy(object_t *);
-extern object_t         *ici_fetch(object_t *, object_t *);
-extern int              ici_assign(object_t *, object_t *, object_t *);
-#endif
-
-#define ici_atom_hash_index(h)  ((h) & (atomsz - 1))
-
-
 /*
  * References from ordinary machine data objects (ie. variables and stuff,
  * not other objects) are invisible to the garbage collector.  These refs
@@ -701,15 +597,8 @@ extern int              ici_assign(object_t *, object_t *, object_t *);
  * return objects with 1 ref.  The caller is expected to ici_decref() it when
  * they attach it into wherever it is going.
  */
-#ifndef BUGHUNT
 #define ici_incref(o)       (++objof(o)->o_nrefs)
 #define ici_decref(o)       (--objof(o)->o_nrefs)
-#else
-void bughunt_incref(object_t *o);
-void bughunt_decref(object_t *o);
-#define ici_incref(o) bughunt_incref(objof(o))
-#define ici_decref(o) bughunt_decref(objof(o))
-#endif
 
 /*
  * This is the universal header of all objects.
@@ -725,6 +614,31 @@ struct object
      * associated with each object type the type specific stuff follows...
      */
 };
+/*
+ * o_tcode              The small integer type code that characterises
+ *                      this object. Standard core types have well known
+ *                      codes identified by the TC_* defines blow. Other
+ *                      types are registered at run-time and are given
+ *                      the next available code. This code can be used to
+ *                      index ici_types[] to discover a pointer to the
+ *                      type structure (see above).
+ *
+ * o_flags              Some boolean flags. Well known flags that apply to
+ *                      all object occupy the lower 4 bits of this byte.
+ *                      The upper four bits are available for object specific
+ *                      use. See O_* below.
+ *
+ * o_nrefs              A small integer count of the number of references
+ *                      to this object that are *not* otherwise visible
+ *                      to the garbage collector.
+ *
+ * o_leafz              If (and only if) this object does not reference any
+ *                      other objects (i.e. its t_mark() function just sets
+ *                      the O_MARK flag), and its memory cost fits in this
+ *                      signed byte (< 127), then its size can be set here
+ *                      to accelerate the marking phase of the garbage
+ *                      collector. Else it must be zero.
+ */
 #define objof(x)        ((object_t *)(x))
 
 /*
@@ -758,6 +672,27 @@ struct objwsup
 #define OBJ(tc)    {(tc), 0, 1, 0}
 
 /*
+ * Set the basic fields of an object header. This macro is prefered to doing it
+ * by hand in case there is any future change in the structure. See comments
+ * on each field above.
+ */
+#define ICI_OBJ_SET_TFNZ(o, tcode, flags, nrefs, leafz) \
+    (objof(o)->o_tcode = (tcode), \
+     objof(o)->o_flags = (flags), \
+     objof(o)->o_nrefs = (nrefs), \
+     objof(o)->o_leafz = (leafz))
+   /*(*(unsigned long *)(o) = (tcode) | ((flags) << 8) | ((nrefs) << 16) | ((leafz) << 24))
+
+    */
+
+/*
+ * Append an object onto the list of all objects visible to the garbage
+ * collector.  Object that are registered with the garbage collector can get
+ * collected.
+ */
+#define ici_rego(o)     ici_rego_work(objof(o))
+
+/*
  * Flags that may appear in o_flags. The upper nibble is considered available
  * for type specific use.
  */
@@ -767,12 +702,8 @@ struct objwsup
 #define O_SUPER         0x08    /* Has super (is objwsup_t derived). */
 
 /*
- * The o_tcode field is a small int which allows bypassing the o_type
- * pointer for some types.  Any type not listed here will have a value
- * of 0.  The types listed will set a code here to allow some time
- * critical areas of code to make quicker decisions (typically a switch)
- * based on the type.  It also allows faster decisions based on type
- * combinations (see PAIR() and TRI() below).
+ * The o_tcode field is a small int. These are the "well known" core
+ * language types. See comments on o_tcode above and ici_types above.
  */
 #define TC_OTHER        0
 #define TC_PC           1
@@ -790,7 +721,7 @@ struct objwsup
 #define TC_STRUCT       13
 #define TC_SET          14
 
-#define TC_MAX_BINOP    14 /* Max vof 15 dictated by PAIR (below). */
+#define TC_MAX_BINOP    14 /* Max of 15 binary op args. */
 
 #define TC_EXEC         15
 #define TC_FILE         16
@@ -814,78 +745,18 @@ struct objwsup
 
 
 /*
- * Is an object of this type of a size suitable for one of the
- * fast free lists?
- */
-#define ICI_FLOK(t)     (sizeof(t) <= 64)
-
-/*
- * Determine what free list an object of the given type is appropriate
- * for, or the size of the object if it is too big. We assume the
- * compiler will reduce this constant expression to a constant at
- * compile time.
- */
-#define ICI_FLIST(t)    (sizeof(t) <=  8 ? 0  \
-                        : sizeof(t) <= 16 ? 1 \
-                        : sizeof(t) <= 32 ? 2 \
-                        : sizeof(t) <= 64 ? 3 \
-                        : sizeof(t))
-
-/*
  * Allocate an object of the given type. Return NULL on failure, usual
  * conventions. The resulting object *must* be freed with ici_tfree().
  * Note that ici_tfree() also requires to know the type of the object
  * being freed.
- *
- * If the object is too big for a fast free list, this macro should
- * reduce to a simple function call. If it is small, it will reduce
- * to an attempt to pop a block off the correct fast free list, but
- * call the function if the list is empty.
  */
-#if     !ICI_ALLALLOC
+#define ici_talloc(t)   ici_nalloc(sizeof(t))
+#define ici_tfree(p, t) ici_nfree((p), sizeof(t))
 
-#   define ici_talloc(t)   \
-    (ICI_FLOK(t) && (ici_fltmp = ici_flists[ICI_FLIST(t)]) != NULL  \
-        ? (ici_flists[ICI_FLIST(t)] = *(char **)ici_fltmp,          \
-            ici_mem += sizeof(t),                                   \
-            ici_fltmp)                                              \
-        : ici_talloc_work(ICI_FLIST(t), sizeof(t)))
-
-#   define ici_tfree(p, t) \
-    (ICI_FLOK(t)                                        \
-        ? (*(char **)(p) = ici_flists[ICI_FLIST(t)],    \
-            ici_flists[ICI_FLIST(t)] = (char *)(p),     \
-            ici_mem -= sizeof(t))                       \
-        : ici_nfree((p), sizeof(t)))
-
-#elif !ICI_RAWMALLOC
-
-#   define ici_talloc(t)   ici_talloc_work(ICI_FLIST(t), sizeof(t))
-#   define ici_tfree(p, t) ici_nfree((p), sizeof(t))
-
-#else
-
-#   define ici_talloc(t)    (t *)malloc(sizeof(t))
-#   define ici_tfree(p, t)  free(p)
-#   define ici_nalloc       malloc
-#   define ici_nfree(p, z)  free(p)
-#   define ici_alloc        malloc 
-#   define ici_free         free 
-
-#endif  /* ICI_ALLALLOC */
-
-extern DLI char         *ici_flists[4];
-extern DLI char         *ici_fltmp;
-extern DLI long         ici_mem;
-extern long             ici_mem_limit;
-
-#if !ICI_RAWMALLOC
-extern void             *ici_talloc_work(int fi, size_t z);
-extern void             *ici_nalloc(size_t z);
-extern void             ici_nfree(void *p, size_t z);
-extern void             *ici_alloc(size_t z);
-extern void             ici_free(void *p);
-#endif
+extern void             *ici_nalloc(size_t);
+extern void             ici_nfree(void *, size_t);
+extern void             *ici_alloc(size_t);
+extern void             ici_free(void *);
 
 
 /* From buf.h */
@@ -905,22 +776,6 @@ extern int      ici_growbuf(int);
 
 /* From catch.h */
 
-struct catchs
-{
-    object_t    o_head;
-    object_t    *c_catcher;
-    short       c_odepth;       /* Operand stack depth. */
-    short       c_vdepth;       /* Variable stack depth. */
-};
-#define catchof(o)      ((catch_t *)(o))
-#define iscatch(o)      ((o)->o_tcode == TC_CATCH)
-
-/*
- * Flags set stored in the upper nibble of o_head.o_flags (which is
- * allowed to be used by objects.
- */
-#define CF_EVAL_BASE    0x10    /* ici_evaluate should return. */
-#define CF_CRIT_SECT    0x20    /* Critical section guard. */
 
 
 /* From cfunc.h */
@@ -1244,18 +1099,6 @@ struct ici_handle
 /* From mark.h */
 
 
-/*
- * Mark objects are used in a few placed in the interpreter when we need
- * an object that we can guarantee is distinct from any object a user
- * could give us. One use is as the 'label' on the default clause of
- * the struct that represents a switch statement.
- */
-struct marks
-{
-    object_t    o_head;
-};
-#define markof(o)       ((mark_t *)o)
-#define ismark(o)       ((o) == objof(&o_mark))
 
 /* From mem.h */
 
@@ -1445,24 +1288,69 @@ struct src
 /* From str.h */
 
 
+/*
+ * This define enables keeping of the string hash in the string structure to
+ * save re-computation. It is potentially recomputed when the atom pool is
+ * rebuilt or atoms are being removed from it. Changes to hashing and atom
+ * pool usage have reduced the number of times hashes are recomputer and it
+ * now seems that *not* keeping the hash value makes things faster overall
+ * than keeping it (which must be due to memory bandwidth and cache misses).
+ * So it is now ifdefed out. However it's a close thing and it could go back
+ * in one day.
+ */
+#define KEEP_STRING_HASH 0
+
 struct string
 {
     object_t    o_head;
     struct_t    *s_struct;      /* Where we were last found on the vs. */
     slot_t      *s_slot;        /* And our slot. */
     long        s_vsver;        /* The vs version at that time. */
-    unsigned long s_hash;       /* String hash code or 0 if not yet computed */
+#   if KEEP_STRING_HASH
+        unsigned long s_hash;  /* String hash code or 0 if not yet computed */
+#   endif
     int         s_nchars;
-    char        s_chars[1];     /* And following bytes. */
+    char        *s_chars;
+    union
+    {
+        int     su_nalloc;
+        char    su_inline_chars[1]; /* And following bytes. */
+    }
+                s_u;
 };
+/*
+ * s_nchars             The actual number of characters in the string. Note
+ *                      that room is always allocated for a guard '\0' beyond
+ *                      this amount.
+ *
+ * s_chars              This points to the characters of the string, which
+ *                      *may* be in a seperate allocation, or may be following
+ *                      directly on in the same allocation. The flag
+ *                      S_SEP_ALLOC reveals which (see below).
+ *
+ * s_u.su_nalloc        The number of bytes allocaed at s_chars iff it
+ *                      is a seperate allocation (ICI_S_SEP_ALLOC set in
+ *                      o_head.o_flags).
+ *
+ * su.su_inline_chars   If ICI_S_SEP_ALLOC is *not* set, this is where s_chars will
+ *                      be pointing. The actual string chars follow on from this.
+ */
 #define stringof(o)     ((string_t *)o)
 #define isstring(o)     ((o)->o_tcode == TC_STRING)
 
 /*
- * This flag indicates that the lookup-lookaside mechanism is referencing
- * an atomic struct. It is stored in the allowed area of o_flags in o_head.
+ * This flag (in o_head.o_flags) indicates that the lookup-lookaside mechanism
+ * is referencing an atomic struct.  It is stored in the allowed area of
+ * o_flags in o_head.
  */
 #define S_LOOKASIDE_IS_ATOM 0x10
+
+/*
+ * This flag (in o_head.o_flags) indicates that s_chars points to seperately
+ * allocated memory.  If this is the case, s_u.su_nalloc is significant and
+ * the memory was allocated with ici_nalloc(s_u.su_nalloc).
+ */
+#define ICI_S_SEP_ALLOC     0x20
 
 /*
  * Macros to assist external modules in getting ICI strings. To use, make

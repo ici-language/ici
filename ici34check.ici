@@ -1,5 +1,3 @@
-check = #\b(null_ret|ici_call|ici_func|ici_funcv|ici_callv|a_top|new_array|assign|assign_simple|atom|decref|fetch|fetch_simpe|new_float|float_ret|syserr|incref|new_int|int_ret|mark|new_mem|ici_new_method|need_stdin|need_stdout|o_one|new_ptr|new_regexp|new_set|unassign_set|get_cname|new_name|new_cname|str_ret|new_struct|unassign_struct|ici_alloc|o_zero)\b#;
-
 note = [struct
 
     a_top = "use %s only if a stack, see array.h",
@@ -40,9 +38,33 @@ note = [struct
     ici_func = "%s now returns an int",
     ici_funcv = "%s now returns an int and has an extra arg",
     null_ret = "%s->ici_%s",
+    cmp_unique = "%s->ici_%s",
+    copy_simple = "%s->ici_%s",
+    def_cfuncs = "%s->ici_%s",
+    new_file = "%s->ici_file_new",
+    f_close = "%s->ici_file_close",
+    free_simple = "deleted",
+    hash_unique = "%s->ici_%s",
+    o_null = "objof(&o_null)->ici_null",
+    objname = "%s->ici_%s",
+    parse_file = "%s->ici_%s",
+    rego = "%s->ici_%s",
+    stdio_ftype = "%s->ici_%s",
 ];
 
+/*
+ * Build a regular expression from the keys of the above struct...
+ */
+check := strbuf("\\b(");
+forall (n, k in note)
+    strcat(check, k, "|");
+check[nels(check) - 1] = ')';
+strcat(check, "\\b");
+check = regexp(check);
 
+/*
+ * Use it to report on all matches in *.[ch] in the current dir...
+ */
 forall (fname in dir(#((\.[cC])|(\.[hH]))$#))
 {
     printf("%s...\n", fname);
@@ -52,7 +74,7 @@ forall (fname in dir(#((\.[cC])|(\.[hH]))$#))
     {
         if (match = l ~~ check)
         {
-            printf("%s, %d: ", fname, lineno, l);
+            printf("%s, %d: ", fname, lineno);
             if (note[match] != NULL)
             {
                 printf("[");

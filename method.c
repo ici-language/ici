@@ -14,8 +14,8 @@ objname_method(object_t *o, char p[ICI_OBJNAMEZ])
     char    n1[ICI_OBJNAMEZ];
     char    n2[ICI_OBJNAMEZ];
 
-    objname(n1, methodof(o)->m_subject);
-    objname(n2, methodof(o)->m_callable);
+    ici_objname(n1, methodof(o)->m_subject);
+    ici_objname(n2, methodof(o)->m_callable);
     sprintf(p, "(%.13s:%.13s)", n1, n2);
 }
 
@@ -84,8 +84,8 @@ call_method(object_t *o, object_t *subject)
         char    n2[ICI_OBJNAMEZ];
 
         sprintf(buf, "attempt to call %s:%s",
-            objname(n1, m->m_subject),
-            objname(n2, m->m_callable));
+            ici_objname(n1, m->m_subject),
+            ici_objname(n2, m->m_callable));
         ici_error = buf;
         return 1;
     }
@@ -96,9 +96,9 @@ type_t  ici_method_type =
 {
     mark_method,
     free_method,
-    hash_unique,
-    cmp_unique,
-    copy_simple,
+    ici_hash_unique,
+    ici_cmp_unique,
+    ici_copy_simple,
     ici_assign_fail,
     fetch_method,
     "method",

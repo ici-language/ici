@@ -2,15 +2,16 @@
 #define ICI_ALLOC_H
 
 /*
- * Define this to 1 to prevent the use of fast free lists. All
- * allocations go to the native malloc. We allow it to be set
- * in the configuration file - but that would be rare. It will
- * slow performance considerably. Can be very useful to set,
- * along with ALLCOLLECT in object.c, during debug and test.
+ * Define this to 1 to prevent the use of fast free lists.  All allocations will go
+ * to the native malloc.  Can be very useful to set, along with ALLCOLLECT in
+ * object.c, during debug and test.
+ *
+ * It's possible some systems have a malloc so efficient that the overhead
+ * code for the dense object allocations will make this is a net penalty.  So
+ * we allow the config file to set it ahead of this definition.
  */
-#if     !ICI_ALLALLOC
+#if     !defined(ICI_ALLALLOC)
 #define ICI_ALLALLOC    0   /* Always call malloc, no caches. */
-#define ICI_RAWMALLOC   0   /* If ALLALLOC, just use malloc. */
 #endif
 
 /*
@@ -18,6 +19,32 @@
  */
 
 /*
+ * Allocate an object of the given type. Return NULL on failure, usual
+ * conventions. The resulting object *must* be freed with ici_tfree().
+ * Note that ici_tfree() also requires to know the type of the object
+ * being freed.
+ */
+#define ici_talloc(t)   ici_nalloc(sizeof(t))
+#define ici_tfree(p, t) ici_nfree((p), sizeof(t))
+
+extern void             *ici_nalloc(size_t);
+extern void             ici_nfree(void *, size_t);
+extern void             *ici_alloc(size_t);
+extern void             ici_free(void *);
+
+/*
+ * End of ici.h export. --ici.h-end--
+ */
+
+#if     !ICI_ALLALLOC
+/*
+ * In the core, ici_talloc and ici_tfree are done semi in-line, (unless
+ * ICI_ALLALLOC is set).  This way they often result in no function calls.
+ * They are *not* done this way in the extension API because it would make the
+ * binary interface too fragile with respect changes in the internals.
+ */
+ 
+ /*
  * Is an object of this type of a size suitable for one of the
  * fast free lists?
  */
@@ -36,25 +63,20 @@
                         : sizeof(t))
 
 /*
- * Allocate an object of the given type. Return NULL on failure, usual
- * conventions. The resulting object *must* be freed with ici_tfree().
- * Note that ici_tfree() also requires to know the type of the object
- * being freed.
- *
- * If the object is too big for a fast free list, this macro should
- * reduce to a simple function call. If it is small, it will reduce
- * to an attempt to pop a block off the correct fast free list, but
- * call the function if the list is empty.
+ * If the object is too big for a fast free list, these macros should reduce
+ * to a simple function call.  If it is small, it will reduce to an attempt to
+ * pop a block off the correct fast free list, but call the function if the
+ * list is empty.
  */
-#if     !ICI_ALLALLOC
-
+#   undef  ici_talloc
 #   define ici_talloc(t)   \
     (ICI_FLOK(t) && (ici_fltmp = ici_flists[ICI_FLIST(t)]) != NULL  \
         ? (ici_flists[ICI_FLIST(t)] = *(char **)ici_fltmp,          \
             ici_mem += sizeof(t),                                   \
             ici_fltmp)                                              \
-        : ici_talloc_work(ICI_FLIST(t), sizeof(t)))
+        : ici_nalloc(sizeof(t)))
 
+#   undef ici_tfree
 #   define ici_tfree(p, t) \
     (ICI_FLOK(t)                                        \
         ? (*(char **)(p) = ici_flists[ICI_FLIST(t)],    \
@@ -62,37 +84,11 @@
             ici_mem -= sizeof(t))                       \
         : ici_nfree((p), sizeof(t)))
 
-#elif !ICI_RAWMALLOC
-
-#   define ici_talloc(t)   ici_talloc_work(ICI_FLIST(t), sizeof(t))
-#   define ici_tfree(p, t) ici_nfree((p), sizeof(t))
-
-#else
-
-#   define ici_talloc(t)    (t *)malloc(sizeof(t))
-#   define ici_tfree(p, t)  free(p)
-#   define ici_nalloc       malloc
-#   define ici_nfree(p, z)  free(p)
-#   define ici_alloc        malloc 
-#   define ici_free         free 
-
-#endif  /* ICI_ALLALLOC */
-
-extern DLI char         *ici_flists[4];
-extern DLI char         *ici_fltmp;
-extern DLI long         ici_mem;
+extern char             *ici_flists[4];
+extern char             *ici_fltmp;
+extern long             ici_mem;
 extern long             ici_mem_limit;
 
-#if !ICI_RAWMALLOC
-extern void             *ici_talloc_work(int fi, size_t z);
-extern void             *ici_nalloc(size_t z);
-extern void             ici_nfree(void *p, size_t z);
-extern void             *ici_alloc(size_t z);
-extern void             ici_free(void *p);
-#endif
-
-/*
- * End of ici.h export. --ici.h-end--
- */
+#endif  /* ICI_ALLALLOC */
 
 #endif /* ICI_ALLOC_H */

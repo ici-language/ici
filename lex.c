@@ -443,8 +443,6 @@ lex(parse_t *p, array_t *a)
 
     case '#':
     {
-        string_t *regexp_str;
-
         i = 0;
         while ((c = get(p, a)) != '#' && c != '\n' && c != EOF)
         {
@@ -457,15 +455,8 @@ lex(parse_t *p, array_t *a)
             ici_error = "newline in #...#";
             goto fail;
         }
-        buf[i] = '\0';
-        /* XXX Recognise regexp option suffixes a la Perl? */
-        regexp_str = ici_str_new_nul_term(buf);
-        if ((p->p_got.t_obj = objof(ici_regexp_new(regexp_str, 0))) == NULL)
-        {
-            ici_decref(regexp_str);
+        if ((p->p_got.t_obj = objof(ici_str_new(buf, i))) == NULL)
             goto fail;
-        }
-        ici_decref(regexp_str);
         t = T_REGEXP;
         break;
     }

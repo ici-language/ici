@@ -64,7 +64,7 @@ static int      xfwrite();
 extern int      system();
 #endif
 
-ftype_t stdio_ftype =
+ftype_t ici_stdio_ftype =
 {
     fgetc,
     ungetc,
@@ -224,7 +224,7 @@ f_getfile()
             char    n1[ICI_OBJNAMEZ];
 
             sprintf(ici_buf, "getfile() given %s instead of a file",
-                objname(n1, objof(f)));
+                ici_objname(n1, objof(f)));
             ici_error = ici_buf;
             goto finish;
         }
@@ -378,7 +378,7 @@ f_fopen()
         return ici_get_last_errno("open", name);
     }
     ici_enter(x);
-    if ((f = new_file((char *)stream, &stdio_ftype, stringof(ARG(0)), NULL)) == NULL)
+    if ((f = ici_file_new((char *)stream, &ici_stdio_ftype, stringof(ARG(0)), NULL)) == NULL)
     {
         fclose(stream);
         return 1;
@@ -434,7 +434,7 @@ f_popen()
         return ici_get_last_errno("popen", name);
     }
     ici_enter(x);
-    if ((f = new_file((char *)stream, &ici_popen_ftype, stringof(ARG(0)), NULL)) == NULL)
+    if ((f = ici_file_new((char *)stream, &ici_popen_ftype, stringof(ARG(0)), NULL)) == NULL)
     {
         pclose(stream);
         return 1;
@@ -473,7 +473,7 @@ f_fclose()
     if (!isfile(o))
         return ici_argerror(0);
 	x = ici_leave();
-	r = f_close(fileof(o));
+	r = ici_file_close(fileof(o));
 	ici_enter(x);
 	if (r)
 		return 1;

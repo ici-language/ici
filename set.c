@@ -199,7 +199,7 @@ grow_set(set_t *s)
  * Remove the key from the set.
  */
 int
-unassign_set(set_t *s, object_t *k)
+ici_set_unassign(set_t *s, object_t *k)
 {
     register object_t   **sl;
     register object_t   **ss;
@@ -258,7 +258,7 @@ assign_set(object_t *o, object_t *k, object_t *v)
     }
     if (isfalse(v))
     {
-        return unassign_set(setof(o), k);
+        return ici_set_unassign(setof(o), k);
     }
     else
     {

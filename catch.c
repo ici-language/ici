@@ -106,9 +106,9 @@ type_t  ici_catch_type =
 {
     mark_catch,
     free_catch,
-    hash_unique,
-    cmp_unique,
-    copy_simple,
+    ici_hash_unique,
+    ici_cmp_unique,
+    ici_copy_simple,
     ici_assign_fail,
     ici_fetch_fail,
     "catch"

@@ -69,27 +69,33 @@ t2()
     }
 }
 
-thread(t1);
+t1x := thread(t1);
+if (t1x.status != "active")
+    fail("thread status was not active");
 thread(t2);
 
 waitfor (typeof(state) == "int"; "done")
     ;
 if (state != 10)
     fail("failed to waitfor/wakeup correctly");
-
+if (t1x.status != "finished")
+    fail("thread status was not finished");
 
 error := NULL;
-x := thread(fail, "bad thread");
+x := thread(fail, "deliberate sub-thread failure");
 
 if (x.junk != NULL)
-	fail("non-existent thread key not NULL");
+    fail("non-existent thread key not NULL");
 
 try
 {
-	waitfor(x.result != NULL; x)
-		;
+    waitfor(x.result != NULL; x)
+        ;
 }
 onerror
-	;
-if (error !~ #bad thread#)
-	fail("failed to propogate error from thread");
+    ;
+if (error !~ #deliberate#)
+    fail("failed to propogate error from thread");
+    
+if (x.status != "failed")
+    fail("thread status was not failed");

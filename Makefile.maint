@@ -4,55 +4,59 @@
 #
 # These targets are used for creating releases,
 #
-#	dist		Create the distribution archive. This creates a
-#			tar file containing the source, documentation and
-#			test programs. The tar file is made in the parent
-#			directory and is called ici-$(RELEASE).tar (see
-#			definition of the RELEASE macro below). The tar
-#			file includes the path of the current directory
-#			in the file names placed in it. I.e., the tar
-#			file is created from the parent directory and
-#			includes the relative path of the directory that
-#			actually contains the sources. This is usually
-#			named after the release version, e.g., ici-2.0.3.
-#			This makes "good" tar files.
+#   dist        Create the distribution archive. This creates a
+#               tar file containing the source, documentation and
+#               test programs. The tar file is made in the parent
+#               directory and is called ici-$(RELEASE).tar (see
+#               definition of the RELEASE macro below). The tar
+#               file includes the path of the current directory
+#               in the file names placed in it. I.e., the tar
+#               file is created from the parent directory and 
+#               includes the relative path of the directory that
+#               actually contains the sources. This is usually
+#               named after the release version, e.g., ici-2.0.3.
+#               This makes "good" tar files.
 #
-#	dist-gz		As above but gzip the tar file.
+#   dist-gz     As above but gzip the tar file.
 #
 # The remaining targets aren't as useful,
 #
-#	tar		Create a tar file of the files that go in the
-#			distribution. Similar to the dist target but
-#			doesn't include a directory path.
-#	tar-gz		As above and gzip it.
-#	cpio		Make a cpio archive of the distribution.
-#	cpio-B		As above but use big blocks.
-#	file-list	List the files in the distribution.
-#	version		Create the VERSION file with the current date.
+#   tar         Create a tar file of the files that go in the
+#               distribution. Similar to the dist target but
+#               doesn't include a directory path.
+#   tar-gz      As above and gzip it.
+#   cpio        Make a cpio archive of the distribution.
+#   cpio-B      As above but use big blocks.
+#   file-list   List the files in the distribution.
+#   version     Create the VERSION file with the current date.
 #
 
-RELEASE	= 4.0.0
+RELEASE = 4.0.3
 
-FILES	= \
+FILES   = \
 	BUILDING CHANGES CREDITS README PLATFORM TODO VERSION\
 	\
 	doc/building.html\
 	doc/ici.pdf\
 	doc/ici-a4.ps doc/ici-ltr.ps doc/ici.pdf doc/ici.txt\
-	doc/tute-for-c-prog.fm\
-	doc/tute-for-c-prof.pdf\
 	doc/ici.1 doc/ici.1.txt\
 	doc/switches.txt doc/ici-index.txt\
 	doc/fix-fm-html.ici doc/mk-index.ici doc/Makefile\
-	\
-	html/* \
 	\
 	Makefile.bsd Makefile.hp Makefile.irix Makefile.linux\
 	Makefile.maint Makefile.next Makefile.sco Makefile.sol2\
 	Makefile.sun Makefile.ultrix Makefile.beos\
 	Makefile.w32 ici.mak ici.def\
 	\
-	ici_init.ici icicore.ici icicore1.ici icicore2.ici icicore3.ici\
+	win32/ici.dsw\
+	win32/ici.dsp win32/ici4.dsp win32/ici4widb.dsp win32/icisdk.dsp\
+	win32/ici4install.dsp win32/iciw.dsp\
+	win32/ici4-sdk-install.nsi win32/ici-v4-install.nsi\
+	win32/ici4install.mak win32/icisdk.mak\
+	win32/prof.bat win32/README.txt\
+	\
+	ici_init.ici ici4core.ici ici4core1.ici ici4core2.ici ici4core3.ici\
+	ici34check.ici test-core.ici \
 	\
 	mk-ici-h.ici ici.h icistr-setup.h\
 	\
@@ -61,24 +65,24 @@ FILES	= \
 	conf-w32.h confdos.h conf-beos_x86.h\
 	\
 	alloc.h array.h binop.h buf.h catch.h cfunc.h exec.h file.h\
-	float.h forall.h func.h fwd.h int.h mark.h mem.h method.h \
+	float.h forall.h func.h fwd.h handle.h int.h mark.h mem.h method.h \
 	null.h object.h op.h parse.h pc.h profile.h primes.h ptr.h re.h\
-	set.h skt.h src.h sstring.h str.h struct.h trace.h wrap.h\
+	set.h src.h sstring.h str.h struct.h trace.h wrap.h\
 	\
 	alloc.c aplfuncs.c arith.c array.c\
 	buf.c\
 	call.c catch.c cfunc.c cfunco.c clib.c clib2.c\
-	    compile.c conf.c control.c\
+	    compile.c conf.c control.c crc.c\
 	events.c exec.c exerror.c\
 	file.c findpath.c float.c forall.c func.c\
 	handle.c icimain.c idb.c idb2.c init.c int.c\
 	lex.c load.c load-beos.h load-w32.h\
 	main.c mark.c mem.c method.c mkvar.c\
-	nptrs.c null.c\
+	null.c\
 	object.c oofuncs.c op.c\
 	parse.c pc.c profile.c ptr.c\
 	refuncs.c regexp.c\
-	set.c sfile.c signals.c skt.c smash.c src.c sstring.c string.c\
+	set.c sfile.c signals.c smash.c src.c sstring.c string.c\
 	    strtol.c struct.c syserr.c\
 	thread.c trace.c\
 	unary.c uninit.c\
@@ -86,16 +90,19 @@ FILES	= \
 	\
 	test/tst-all.ici\
 	test/tst-bino.ici\
+	test/tst-types.ici\
 	test/tst-del.ici\
 	test/tst-eof.ici\
 	test/tst-feof.ici test/tst-flow.ici test/tst-func.ici\
 	    test/tst-ici-func.c\
-	test/tst-many.ici test/tst-math.ici\
+	test/tst-many.ici test/tst-math.ici test/tst-misc.ici\
 	test/tst-oner.ici\
-	test/tst-parse.ici\
+	test/tst-parse.ici test/tst-prof.ici\
 	test/tst-regexp.dat test/tst-regexp.ici\
-	test/tst-sets.ici test/tst-signals.ici test/tst-skt.ici\
+	test/tst-sets.ici test/tst-signals.ici\
 	    test/tst-stmt.ici test/tst-subset.ici\
+	test/tst-thread.ici\
+	test/data/amodule.ici\
 	\
 	pcre/ChangeLog pcre/LICENCE pcre/Makefile pcre/README pcre/README.ICI\
 	pcre/RunTest pcre/Tech.Notes pcre/chartables.c pcre/dftables.c\
@@ -113,7 +120,7 @@ FILES	= \
 	widb/widb_todo.txt widb/widb_viewobj.c widb/widb_wnd.c\
 	widb/widb_wnd.h widb/widb-priv.h widb/widb_main.c
 
-dist	:
+dist    :
 	(\
 	  d=`pwd`;\
 	  d=`basename $$d`;\
@@ -121,25 +128,25 @@ dist	:
 	  tar cvf ici-$(RELEASE).tar `(cd $$d; ls $(FILES)|sed "s/^/$$d\\//")`\
 	)
 
-dist-gz	: dist
+dist-gz : dist
 	gzip -9 ../ici-$(RELEASE).tar
 
-cpio	:
+cpio    :
 	ls $(FILES) |  cpio -oc > ici-$(RELEASE).cpio
 
-tar	:
+tar     :
 	tar cvf ici-$(RELEASE).tar $(FILES)
 
-tar-gz	: tar
+tar-gz  : tar
 	gzip -9 ici-$(RELEASE).tar
 
-version	:
+version :
 	{ echo -n $(RELEASE) ''; date; } > VERSION
 
 #
 # For cpio'ing directly onto a device...
 #
-cpio-B	:
+cpio-B  :
 	@ls $(FILES) | cpio -ocB
 
 file-list:

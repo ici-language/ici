@@ -2,18 +2,6 @@
 #include "fwd.h"
 
 /*
- * A chunk of memory in which to keep dense allocations of small
- * objects to avoid boundary word overheads and allow simple fast
- * free lists.
- */
-typedef struct achunk   achunk_t;
-struct achunk
-{
-    char                c_data[1024];
-    achunk_t            *c_next;
-};
-
-/*
  * The amount of memory we currently have allocated, and a limit.
  * When we reach the limit, a garbage collection is triggered (which
  * will presumably reduce ici_mem and re-evaluate the limit).
@@ -28,6 +16,20 @@ long                    ici_mem_limit;
 int                     ici_n_allocs;
 long                    ici_alloc_mem;
 
+#if !ICI_ALLALLOC
+
+/*
+ * A chunk of memory in which to keep dense allocations of small
+ * objects to avoid boundary word overheads and allow simple fast
+ * free lists.
+ */
+typedef struct achunk   achunk_t;
+struct achunk
+{
+    char                c_data[1024];
+    achunk_t            *c_next;
+};
+
 /*
  * Temporary pointer used in the ici_talloc/ici_tfree macros.
  */
@@ -37,9 +39,6 @@ char                    *ici_fltmp;
  * The base pointers of our four fast free lists.
  */
 char                    *ici_flists[4];
-
-#if !ICI_RAWMALLOC
-
 
 /*
  * The current next available block, and limits, within each of
@@ -55,30 +54,43 @@ static char             *mem_limit[4];
  */
 static achunk_t         *ici_achunks;
 
+#endif /* ICI_ALLALLOC */
+
+
 /*
- * Function to do the work for the ici_talloc() macro and ici_nalloc().
- * 'fi' is the free list number if small, else the same as z. 'z' is
- * the size being allocated.
+ * Allocate an object of the given size. Return NULL on failure, usual
+ * conventions. The resulting object *must* be freed with ici_nfree().
+ * Note that ici_nfree() also requires to know the size of the object
+ * being freed.
  *
- * Returns the newly allocated block, else NULL on error, ususal
- * convention.
+ * This function is preferable to ici_alloc(). It should be used if
+ * you can know the size of the allocation when the free happens so
+ * you can call ici_nfree(). If this isn't the case you will have to
+ * use ici_alloc().
  */
 void *
-ici_talloc_work(int fi, size_t z)
+ici_nalloc(size_t z)
 {
+    int                 fi;
     char                *r;
-    char                **fp;
-    int                 cz;
-    achunk_t            *c;
+    static char const   which_flist[] = {0, 1, 2, 2, 3, 3, 3, 3};
 
-#if !ALLCOLLECT
+
     if ((ici_mem += z) > ici_mem_limit)
-#endif
         collect();
 
 #if !ICI_ALLALLOC
+
+    if (z <= 64)
+        fi = which_flist[(z - 1) >> 3];
+    else
+        fi = z;
     if (fi < nels(ici_flists))
     {
+        char                **fp;
+        int                 cz;
+        achunk_t            *c;
+
         /*
          * Small block. Try to get it off one of the fast free lists.
          */
@@ -117,6 +129,7 @@ ici_talloc_work(int fi, size_t z)
         return r;
     }
 #endif /* ICI_ALLALLOC */
+
     if ((r = malloc(z)) == NULL)
     {
         collect();
@@ -128,31 +141,6 @@ ici_talloc_work(int fi, size_t z)
 fail:
     ici_error = "ran out of memory";
     return NULL;
-}
-
-
-/*
- * Allocate an object of the given size. Return NULL on failure, usual
- * conventions. The resulting object *must* be freed with ici_nfree().
- * Note that ici_nfree() also requires to know the size of the object
- * being freed.
- *
- * This function is preferable to ici_alloc(). It should be used if
- * you can know the size of the allocation when the free happens so
- * you can call ici_nfree(). If this isn't the case you will have to
- * use ici_alloc().
- */
-void *
-ici_nalloc(size_t z)
-{
-    int                 fi;
-    static char const   which_flist[] = {0, 1, 2, 2, 3, 3, 3, 3};
-
-    if (z <= 64)
-        fi = which_flist[(z - 1) >> 3];
-    else
-        fi = z;
-    return ici_talloc_work(fi, z);
 }
 
 /*
@@ -266,48 +254,3 @@ ici_drop_all_small_allocations(void)
         free(c);
     }
 }
-
-#else /* ICI_RAWMALLOC */
-
-#undef ici_nalloc
-#undef ici_nfree
-#undef ici_alloc
-#undef ici_free
-
-void *
-ici_talloc_work(int fi, size_t z)
-{
-    assert(0);
-    return NULL;
-}
-
-void *
-ici_nalloc(size_t z)
-{
-    return malloc(z);
-}
-
-void
-ici_nfree(void *p, size_t z)
-{
-    free(p);
-}
-
-void *
-ici_alloc(size_t z)
-{
-    return malloc(z);
-}
-
-void
-ici_free(void *p)
-{
-    free(p);
-}
-
-void
-ici_drop_all_small_allocations(void)
-{
-}
-
-#endif /* ICI_RAWMALLOC */

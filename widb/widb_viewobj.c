@@ -321,7 +321,7 @@ get_simple_value(object_t *o)
 {
     static char retval[256];
 
-    /* Any type-specific output the objname() is not good enough for. */
+    /* Any type-specific output the ici_objname() is not good enough for. */
     if (isfile(o))
         sprintf(retval, "file(%s)", fileof(o)->f_name);
     else if (issrc(o))
@@ -349,8 +349,8 @@ get_simple_value(object_t *o)
     else
     {
         char n[30];
-        /* objname() handles common cases. */
-        strcpy(retval, objname(n, o));
+        /* ici_objname() handles common cases. */
+        strcpy(retval, ici_objname(n, o));
     }
 
     // Add a flag if it's atomic.
@@ -499,7 +499,7 @@ objcmp(void const *elem1, void const *elem2)
 
     case 1:
         /* Functions */
-        return strcmp(objname(n1, o1), objname(n2, o2));
+        return strcmp(ici_objname(n1, o1), ici_objname(n2, o2));
 
     case 2:
         /* profilecall_t */
@@ -713,6 +713,7 @@ static LRESULT CALLBACK tree_wnd_proc
         case WM_CHAR:
             switch (wParam)
             {
+#if 0
                 case 'M':
                 case 'm':
                 {
@@ -766,6 +767,7 @@ static LRESULT CALLBACK tree_wnd_proc
                     MessageBox(hWnd, usage, "Total Memory Usage", MB_OK);
                     return 0;
                 }
+#endif
             }
     }
 
@@ -915,7 +917,7 @@ WIDB_view_object(object_t *o, HWND parent)
     }
 }
 
-
+#if 0
 /*
  * Pops up a message box showing the memory used by a particular item in the
  * tree and everything below it.
@@ -1003,7 +1005,7 @@ display_mem_use(object_t *o, HWND hDlg, HWND tree, HTREEITEM tv_item)
     );
     MessageBox(hDlg, usage, "Memory Usage", MB_OK);
 }
-
+#endif
 
 /*
  * edit_object

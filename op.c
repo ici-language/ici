@@ -82,7 +82,7 @@ type_t  op_type =
     free_op,
     hash_op,
     cmp_op,
-    copy_simple,
+    ici_copy_simple,
     ici_assign_fail,
     ici_fetch_fail,
     "op"

@@ -87,7 +87,7 @@ ici_debug_fncall(object_t *o, object_t **ap, int nargs)
 
         // Make a new entry.
         VERIFY(0 == ici_stk_push_chk(widb_exec_name_stack, 1));
-        objname(n1, o);
+        ici_objname(n1, o);
         VERIFY(NULL != (name = ici_str_get_nul_term(n1)));
         *widb_exec_name_stack->a_top++ = objof(name);
 

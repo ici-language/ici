@@ -28,7 +28,7 @@ CFG=icisdk - Win32 Debug
 
 !IF  "$(CFG)" == "icisdk - Win32 Release"
 
-# PROP BASE Use_MFC
+# PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
 # PROP BASE Output_Dir "icisdk___Win32_Release"
 # PROP BASE Intermediate_Dir "icisdk___Win32_Release"
@@ -37,7 +37,7 @@ CFG=icisdk - Win32 Debug
 # PROP BASE Target_File "icisdk.exe"
 # PROP BASE Bsc_Name "icisdk.bsc"
 # PROP BASE Target_Dir ""
-# PROP Use_MFC
+# PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
 # PROP Output_Dir "icisdk___Win32_Release"
 # PROP Intermediate_Dir "icisdk___Win32_Release"
@@ -49,7 +49,7 @@ CFG=icisdk - Win32 Debug
 
 !ELSEIF  "$(CFG)" == "icisdk - Win32 Debug"
 
-# PROP BASE Use_MFC
+# PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
 # PROP BASE Output_Dir "icisdk___Win32_Debug"
 # PROP BASE Intermediate_Dir "icisdk___Win32_Debug"
@@ -58,7 +58,7 @@ CFG=icisdk - Win32 Debug
 # PROP BASE Target_File "icisdk.exe"
 # PROP BASE Bsc_Name "icisdk.bsc"
 # PROP BASE Target_Dir ""
-# PROP Use_MFC
+# PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "icisdk___Win32_Debug"
 # PROP Intermediate_Dir "icisdk___Win32_Debug"
@@ -81,6 +81,10 @@ CFG=icisdk - Win32 Debug
 
 !ENDIF 
 
+# Begin Source File
+
+SOURCE=..\ici.h
+# End Source File
 # Begin Source File
 
 SOURCE=".\ici4-sdk-install.nsi"

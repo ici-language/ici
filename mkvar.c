@@ -49,7 +49,7 @@ ici_set_val(objwsup_t *s, string_t *name, int type, void *vp)
         break;
 
     case 'u':
-        o = objof(new_file((char *)vp, &stdio_ftype, name, NULL));
+        o = objof(ici_file_new((char *)vp, &ici_stdio_ftype, name, NULL));
         o->o_flags |= F_NOCLOSE;
         break;
 
@@ -85,9 +85,9 @@ ici_fetch_mismatch(object_t *o, object_t *k, object_t *v, char *expected)
     if (ici_chkbuf(200))
         return 1;
     sprintf(buf, "read %s from %s keyed by %s, but expected %s",
-        objname(n1, v),
-        objname(n2, o),
-        objname(n3, k),
+        ici_objname(n1, v),
+        ici_objname(n2, o),
+        ici_objname(n3, k),
         expected);
     ici_error = buf;
     return 1;

@@ -9,11 +9,15 @@
  * The following portion of this file exports to ici.h. --ici.h-start--
  */
 
+/*
+ * ici_types[] is the map from the small integer type codes found in the
+ * o_tcode field of every object header, to a type structure (below) that
+ * characterises that type of object.  Standard core data types have standard
+ * positions (see TC_* defines below).  Other types are registered at run-time
+ * by calls to ici_register_type() and are given the next available slot.
+ */
 #define ICI_MAX_TYPES   64
-
 extern DLI type_t       *ici_types[ICI_MAX_TYPES];
-
-#define ICI_OBJNAMEZ    30
 
 /*
  * Every object has a header. In the header the o_tcode (type code) field
@@ -70,7 +74,7 @@ struct type
  *              partially allocated object.
  *
  *              Simple object types which just have to free their data
- *              can use the existing function free_simple() as their
+ *              can use the existing function ici_free_simple() as their
  *              implementation of this function.
  *
  * t_cmp(o1, o2) Compare o1 and o2 and return 0 if they are the same, else
@@ -82,7 +86,7 @@ struct type
  *              atomic (for example, objects which are one-to-one with
  *              some other allocated data which they alloc when the are
  *              created and free when they die). For these objects the
- *              existing function cmp_unique() can be used as their
+ *              existing function ici_cmp_unique() can be used as their
  *              implementation of this function.
  *
  *              It is very important in implementing this function not to
@@ -100,7 +104,7 @@ struct type
  *              intrinsically atomic.
  *
  *              Intrinsically atomic objects may use the existing function
- *              copy_simple() as their implemenation of this function.
+ *              ici_copy_simple() as their implemenation of this function.
  *
  * t_hash(o)    Return an unsigned long hash which is sensitive to the
  *              value of the object. Two objects which cmp() equal should
@@ -208,35 +212,6 @@ struct type
 #define assign_base(o,k,v) ((*ici_typeof(o)->t_assign_base)(objof(o), objof(k), objof(v)))
 #define fetch_base(o,k) ((*ici_typeof(o)->t_fetch_base)(objof(o), objof(k)))
 
-#ifndef BUGHUNT
-/*
- * Append an object onto the list of all objects visible to the garbage
- * collector.
- */
-#define ici_rego(o)     (objs_top < objs_limit \
-                            ? (void)(*objs_top++ = objof(o)) \
-                            : grow_objs(objof(o)))
-#else
-#define ici_rego(o)     bughunt_rego(objof(o))
-extern void             bughunt_rego(object_t *);
-#endif
-
-#if 0
-/*
- * Functions to performs operations on the object.
- */
-extern unsigned long    ici_mark(object_t *);
-extern void             freeo(object_t *);
-extern unsigned long    hash(object_t *);
-extern int              cmp(object_t *, object_t *);
-extern object_t         *copy(object_t *);
-extern object_t         *ici_fetch(object_t *, object_t *);
-extern int              ici_assign(object_t *, object_t *, object_t *);
-#endif
-
-#define ici_atom_hash_index(h)  ((h) & (atomsz - 1))
-
-
 /*
  * References from ordinary machine data objects (ie. variables and stuff,
  * not other objects) are invisible to the garbage collector.  These refs
@@ -245,15 +220,8 @@ extern int              ici_assign(object_t *, object_t *, object_t *);
  * return objects with 1 ref.  The caller is expected to ici_decref() it when
  * they attach it into wherever it is going.
  */
-#ifndef BUGHUNT
 #define ici_incref(o)       (++objof(o)->o_nrefs)
 #define ici_decref(o)       (--objof(o)->o_nrefs)
-#else
-void bughunt_incref(object_t *o);
-void bughunt_decref(object_t *o);
-#define ici_incref(o) bughunt_incref(objof(o))
-#define ici_decref(o) bughunt_decref(objof(o))
-#endif
 
 /*
  * This is the universal header of all objects.
@@ -269,6 +237,31 @@ struct object
      * associated with each object type the type specific stuff follows...
      */
 };
+/*
+ * o_tcode              The small integer type code that characterises
+ *                      this object. Standard core types have well known
+ *                      codes identified by the TC_* defines blow. Other
+ *                      types are registered at run-time and are given
+ *                      the next available code. This code can be used to
+ *                      index ici_types[] to discover a pointer to the
+ *                      type structure (see above).
+ *
+ * o_flags              Some boolean flags. Well known flags that apply to
+ *                      all object occupy the lower 4 bits of this byte.
+ *                      The upper four bits are available for object specific
+ *                      use. See O_* below.
+ *
+ * o_nrefs              A small integer count of the number of references
+ *                      to this object that are *not* otherwise visible
+ *                      to the garbage collector.
+ *
+ * o_leafz              If (and only if) this object does not reference any
+ *                      other objects (i.e. its t_mark() function just sets
+ *                      the O_MARK flag), and its memory cost fits in this
+ *                      signed byte (< 127), then its size can be set here
+ *                      to accelerate the marking phase of the garbage
+ *                      collector. Else it must be zero.
+ */
 #define objof(x)        ((object_t *)(x))
 
 /*
@@ -303,7 +296,8 @@ struct objwsup
 
 /*
  * Set the basic fields of an object header. This macro is prefered to doing it
- * by hand in case there is any future change in the structure.
+ * by hand in case there is any future change in the structure. See comments
+ * on each field above.
  */
 #define ICI_OBJ_SET_TFNZ(o, tcode, flags, nrefs, leafz) \
     (objof(o)->o_tcode = (tcode), \
@@ -315,6 +309,13 @@ struct objwsup
     */
 
 /*
+ * Append an object onto the list of all objects visible to the garbage
+ * collector.  Object that are registered with the garbage collector can get
+ * collected.
+ */
+#define ici_rego(o)     ici_rego_work(objof(o))
+
+/*
  * Flags that may appear in o_flags. The upper nibble is considered available
  * for type specific use.
  */
@@ -324,12 +325,8 @@ struct objwsup
 #define O_SUPER         0x08    /* Has super (is objwsup_t derived). */
 
 /*
- * The o_tcode field is a small int which allows bypassing the o_type
- * pointer for some types.  Any type not listed here will have a value
- * of 0.  The types listed will set a code here to allow some time
- * critical areas of code to make quicker decisions (typically a switch)
- * based on the type.  It also allows faster decisions based on type
- * combinations (see PAIR() and TRI() below).
+ * The o_tcode field is a small int. These are the "well known" core
+ * language types. See comments on o_tcode above and ici_types above.
  */
 #define TC_OTHER        0
 #define TC_PC           1
@@ -347,7 +344,7 @@ struct objwsup
 #define TC_STRUCT       13
 #define TC_SET          14
 
-#define TC_MAX_BINOP    14 /* Max vof 15 dictated by PAIR (below). */
+#define TC_MAX_BINOP    14 /* Max of 15 binary op args. */
 
 #define TC_EXEC         15
 #define TC_FILE         16
@@ -370,9 +367,35 @@ struct objwsup
  * End of ici.h export. --ici.h-end--
  */
 
+#ifndef BUGHUNT
+
+/*
+ * In the core we use a macro for ici_rego.
+ */
+#undef  ici_rego
+#define ici_rego(o)     (objs_top < objs_limit \
+                            ? (void)(*objs_top++ = objof(o)) \
+                            : grow_objs(objof(o)))
+#else
+#undef  ici_rego
+#define ici_rego(o)     bughunt_rego(objof(o))
+extern void             bughunt_rego(object_t *);
+#endif
+
 #define ICI_STORE_ATOM_AND_COUNT(po, s) \
         ((*(po) = objof(s)), \
         ((++ici_natoms > atomsz / 2) ? \
             ici_grow_atoms(atomsz * 2) : 0))
 
+#define ici_atom_hash_index(h)  ((h) & (atomsz - 1))
+
+#ifdef BUGHUNT
+#   undef ici_incref
+#   undef ici_decref
+    void bughunt_incref(object_t *o);
+    void bughunt_decref(object_t *o);
+#   define ici_incref(o) bughunt_incref(objof(o))
+#   define ici_decref(o) bughunt_decref(objof(o))
 #endif
+
+#endif /* ICI_OBJECT_H */

@@ -1,6 +1,8 @@
 #define ICI_CORE
 #include "fwd.h"
 
+#error nptrs.c is obsolete. Please remove from your make.
+
 /*
  * Return the number of pointers in a NULL terminated array of pointers.
  */

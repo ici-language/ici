@@ -29,15 +29,15 @@ ici_method_check(object_t *o, int tcode)
     if (o == NULL)
     {
         sprintf(buf, "attempt to call method %s as a function",
-            objname(n1, ici_os.a_top[-1]));
+            ici_objname(n1, ici_os.a_top[-1]));
         ici_error = buf;
         return 1;
     }
     if (!hassuper(o) || (tcode != 0 && o->o_tcode != tcode))
     {
         sprintf(buf, "attempt to apply method %s to %s",
-            objname(n1, ici_os.a_top[-1]),
-            objname(n2, o));
+            ici_objname(n1, ici_os.a_top[-1]),
+            ici_objname(n2, o));
         ici_error = buf;
         return 1;
     }

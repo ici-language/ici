@@ -70,7 +70,7 @@ cfunc_t *funcs[] =
  * Note that the version number also occurs in some defines in fwd.h (ICI_*_VER).
  */
 char ici_version_string[] =
-    "@(#)ICI 4.0.2, "
+    "@(#)ICI 4.0.3, "
     CONFIG_FILE ", "
     __DATE__ " " __TIME__ ", "
     CONFIG_STR
@@ -117,6 +117,6 @@ char ici_version_string[] =
 
 #else /* __STDC__ */
 
-char ici_version_string[] = "@(#)ICI 4.0.1";
+char ici_version_string[] = "@(#)ICI 4.0.3";
 
 #endif

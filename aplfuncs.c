@@ -80,7 +80,7 @@ buildxx(object_t **r, object_t **dnext, struct context *c)
             {
                 sprintf(ici_buf,
                     "build(..\"a\"..) given %s instead of an array for content",
-                    objname(n1, *c->c_cnext));
+                    ici_objname(n1, *c->c_cnext));
                 ici_error = ici_buf;
                 return 1;
             }
@@ -117,7 +117,7 @@ buildxx(object_t **r, object_t **dnext, struct context *c)
 
         default:
             sprintf(buf, "option \"%c\" given to %s is not one of c, r, a, i or l",
-                c->c_option, objname(n1, ici_os.a_top[-1]));
+                c->c_option, ici_objname(n1, ici_os.a_top[-1]));
             ici_error = buf;
             return 1;
         }
@@ -181,7 +181,7 @@ buildxx(object_t **r, object_t **dnext, struct context *c)
     else
     {
         sprintf(buf, "%s supplied as a dimension to %s",
-            objname(n1, *dnext), objname(n2, ici_os.a_top[-1]));
+            ici_objname(n1, *dnext), ici_objname(n2, ici_os.a_top[-1]));
         ici_error = buf;
         return 1;
     }
@@ -237,7 +237,7 @@ f_build()
             if (!isint(*c.c_cnext))
             {
                 sprintf(ici_buf, "%s given as auto-increment start is not an int",
-                    objname(n1, *c.c_cnext));
+                    ici_objname(n1, *c.c_cnext));
                 ici_error = ici_buf;
                 return 1;
             }
@@ -248,7 +248,7 @@ f_build()
                 if (!isint(*c.c_cnext))
                 {
                     sprintf(ici_buf, "%s given as auto-increment step is not an int",
-                        objname(n1, *c.c_cnext));
+                        ici_objname(n1, *c.c_cnext));
                     ici_error = ici_buf;
                     return 1;
                 }

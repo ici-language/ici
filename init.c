@@ -122,17 +122,46 @@ ici_init(void)
     return 0;
 }
 
+/*
+ * Check that the seperately compiled module that calls this function has been
+ * compiled against a compatible versions of the ICI core that is now trying
+ * to load it. An external module should call this like:
+ *
+ *     if (ici_interface_check(ICI_VER, ICI_BACK_COMPAT_VER, "myname"))
+ *         return NULL;
+ *
+ * As soon as it can on load.  ICI_VER and ICI_BACK_COMPAT_VER come from ici.h
+ * at the time that module was compiled.  This functions compares the values
+ * passed from the external modules with the values the core was compiled
+ * with, and fails (usual conventions) if there is any incompatibility.
+ */
 int
-ici_interface_check(unsigned long ver, char const *name)
+ici_interface_check(unsigned long mver, unsigned long bver, char const *name)
 {
-    if (ver >= ICI_BACK_COMPATIBLE_VER)
-        return 0;
+    if (ICI_VER < mver)
+    {
+        /*
+         * Ooh, I'm an old ICI being called by a newer module. Does the module
+         * think I'm recent enought?
+         */
+        if (ICI_VER >= bver)
+            return 0;
+    }
+    else
+    {
+        /*
+         * I'm a relatively up-to-date ICI, but is that module new enough
+         * for me?
+         */
+        if (mver >= ICI_BACK_COMPAT_VER)
+            return 0;
+    }
     sprintf(ici_buf,
         "%s module was built for ICI %d.%d.%d, which is incompatible with this version %d.%d.%d",
         name,
-        (ver >> 24),
-        (ver >> 16) & 0xFF,
-        (ver & 0xFFFF),
+        (int)(mver >> 24),
+        (int)(mver >> 16) & 0xFF,
+        (int)(mver & 0xFFFF),
         ICI_VER_MAJOR,
         ICI_VER_MINOR,
         ICI_VER_RELEASE);

@@ -50,12 +50,7 @@ ici_regexp_new(string_t *s, int flags)
     ICI_OBJ_SET_TFNZ(r, TC_REGEXP, 0, 1, 0);
     r->r_re  = re;
     r->r_rex = rex;
-    if ((r->r_pat = stringof(copy(s))) == NULL)
-    {
-        ici_tfree(r, regexp_t);    /* Okay, prior to rego() */
-        goto fail;
-    }
-    ici_decref(r->r_pat);
+    r->r_pat = stringof(ici_atom(objof(s), 0));
     ici_rego(r);
     return regexpof(ici_atom(objof(r), 1));
 
@@ -154,7 +149,7 @@ type_t  regexp_type =
     free_regexp,
     hash_regexp,
     cmp_regexp,
-    copy_simple,
+    ici_copy_simple,
     ici_assign_fail,
     fetch_regexp,
     "regexp"

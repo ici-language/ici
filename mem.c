@@ -142,7 +142,7 @@ type_t  mem_type =
     free_mem,
     hash_mem,
     cmp_mem,
-    copy_simple,
+    ici_copy_simple,
     assign_mem,
     fetch_mem,
     "mem"

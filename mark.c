@@ -15,10 +15,10 @@ mark_mark(object_t *o)
 type_t  mark_type =
 {
     mark_mark,
-    free_simple,
-    hash_unique,
-    cmp_unique,
-    copy_simple,
+    NULL,
+    ici_hash_unique,
+    ici_cmp_unique,
+    ici_copy_simple,
     ici_assign_fail,
     ici_fetch_fail,
     "mark"

@@ -47,9 +47,9 @@ type_t  pc_type =
 {
     mark_pc,
     free_pc,
-    hash_unique,
-    cmp_unique,
-    copy_simple,
+    ici_hash_unique,
+    ici_cmp_unique,
+    ici_copy_simple,
     ici_assign_fail,
     ici_fetch_fail,
     "pc"

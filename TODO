@@ -37,15 +37,9 @@ Modules
 	to a ``module'' object so it can remain mapped while it is
 	still referenced.
 
-	It would be nice if there were some method to define a module
-	hierarchy directly in ICI rather than via the ICIPATH environment
-	variable.
-
 Trivial fixes
 
 	Add esc() function.
-
-	Add iota() & rho() equivalents.
 
 	str = string(mem) ? Does that work?
 
@@ -57,11 +51,6 @@ Make waitfor be able to wait on a set.
 
 ---
 
-Make sure static strings don't get registered with the gc, but do
-get their leafz set (to 1?)
-
----
-
 Update all the extension modules to ici4
 
 ---
@@ -70,19 +59,11 @@ Mention the old form of smash in the documentation.
 
 ---
 
-Document wrap.
-
----
-
 Document things defined in icicore.ici
 
 ---
 
 Resurrect win stuff as an extension module and document.
-
----
-
-Verify the Makefile.maint is up-to-date and working.
 
 ---
 
@@ -148,19 +129,11 @@ Add getfile(fname) documentation.
 
 ---
 
-Document new %a format in sprintf.
-
----
-
 Add ptr - int operator to documentation.
 
 ---
 
 Make seek() documentation mention meaning of whence.
-
----
-
-Emphasis that you need this:xxx() in ICI as opposed to C++ xxx()
 
 ---
 
@@ -172,11 +145,7 @@ General C function to get to hash of a C string (for external libs).
 
 ---
 
-Make arrays shrink during collection.
-
----
-
-Seperate out extension module docs?
+Make arrays shrink during collection?
 
 ---
 
@@ -184,23 +153,5 @@ Upgrade sys to ici4
 
 ---
 
-The thread.result value is ambiguous for thread functions that return NULL.
-And using waitfor to wait for termination is a bit verbose. Add join()?
 
----
 
-Special int count loop construct?
-
----
-
-Make sort() return the sorted array & document.
-
----
-
-Add icinet.html and icisys.html to cvs.
-
----
-
-Add an 'interface version' to extern dlls.
-
----

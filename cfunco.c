@@ -74,7 +74,7 @@ ici_assign_cfuncs(objwsup_t *s, cfunc_t *cf)
 
     while (cf->cf_name != NULL)
     {
-        assert(ici_typeof(cf) == &ici_cfunc_type);
+        assert(cf->o_head.o_tcode == TC_CFUNC);
         if (cf->cf_name[0] == TC_STRING)
         {
             /*
@@ -103,7 +103,7 @@ ici_assign_cfuncs(objwsup_t *s, cfunc_t *cf)
 }
 
 /*
- * def_cfuncs
+ * ici_def_cfuncs
  *
  * Define the given intrinsic functions in the current static scope.
  * See ici_assign_cfuncs() above for details.
@@ -111,7 +111,7 @@ ici_assign_cfuncs(objwsup_t *s, cfunc_t *cf)
  * Returns non-zero on error, in which case error is set, else zero.
  */
 int
-def_cfuncs(cfunc_t *cf)
+ici_def_cfuncs(cfunc_t *cf)
 {
     return ici_assign_cfuncs(objwsupof(ici_vs.a_top[-1])->o_super, cf);
 }
@@ -169,10 +169,10 @@ call_cfunc(object_t *o, object_t *subject)
 type_t  ici_cfunc_type =
 {
     mark_cfunc,
-    free_simple,
-    hash_unique,
-    cmp_unique,
-    copy_simple,
+    NULL, /* No free. Only statically declared, not allocated. */
+    ici_hash_unique,
+    ici_cmp_unique,
+    ici_copy_simple,
     ici_assign_fail,
     fetch_cfunc,
     "func",

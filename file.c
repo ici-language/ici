@@ -22,7 +22,7 @@ static void
 free_file(object_t *o)
 {
     if (!(o->o_flags & (F_CLOSED|F_NOCLOSE)))
-        f_close(fileof(o));
+        ici_file_close(fileof(o));
     ici_tfree(o, file_t);
 }
 
@@ -38,7 +38,7 @@ free_file(object_t *o)
  * some object. It may be NULL if not required.
  */
 file_t *
-new_file(void *fp, ftype_t *ftype, string_t *name, object_t *ref)
+ici_file_new(void *fp, ftype_t *ftype, string_t *name, object_t *ref)
 {
     register file_t     *f;
 
@@ -54,7 +54,7 @@ new_file(void *fp, ftype_t *ftype, string_t *name, object_t *ref)
 }
 
 int
-f_close(file_t *f)
+ici_file_close(file_t *f)
 {
     if (objof(f)->o_flags & F_CLOSED)
     {
@@ -87,9 +87,9 @@ type_t  file_type =
 {
     mark_file,
     free_file,
-    hash_unique,
+    ici_hash_unique,
     cmp_file,
-    copy_simple,
+    ici_copy_simple,
     ici_assign_fail,
     ici_fetch_fail,
     "file"

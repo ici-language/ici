@@ -12,9 +12,6 @@
 #include "object.h"
 #endif
 
-/*
- * The following portion of this file exports to ici.h. --ici.h-start--
- */
 struct catchs
 {
     object_t    o_head;
@@ -27,10 +24,14 @@ struct catchs
 
 /*
  * Flags set stored in the upper nibble of o_head.o_flags (which is
- * allowed to be used by objects.
+ * allowed to be used by objects).
  */
 #define CF_EVAL_BASE    0x10    /* ici_evaluate should return. */
 #define CF_CRIT_SECT    0x20    /* Critical section guard. */
+
+/*
+ * The following portion of this file exports to ici.h. --ici.h-start--
+ */
 
 /*
  * End of ici.h export. --ici.h-end--

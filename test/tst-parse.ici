@@ -23,43 +23,43 @@ if (x[0] != #abc#)
 static
 method(this, arg1)
 {
-	return this.value + arg1;
+    return this.value + arg1;
 }
 
 static c = struct();
 
 c.method :=
 [func(this, arg1)
-	{
-		return this.value + arg1;
-	}
+    {
+        return this.value + arg1;
+    }
 ];
 
 static o = struct(c, "value", 2);
 
 if (o@method(3) != 5)
-	fail("object@method() returned incorrect value");
+    fail("object@method() returned incorrect value");
 
 error := NULL;
 try
-	parse("a syntax error");
+    parse("a syntax error");
 onerror
-	;
+    ;
 if (error == NULL)
-	fail("didn't propogate parse error correctly");
-	
+    fail("didn't propogate parse error correctly");
+    
 static
 bad(s)
 {
-	auto bs = [struct a = 1, b = 2, c = 3];
+    auto bs = [struct a = 1, b = 2, c = 3];
 
-	error := NULL;
-	try
-		parse(s, bs);
-	onerror
-		;
-	if (error == NULL)
-		fail(sprintf("failed to fail on parse of \"%s\"", s));
+    error := NULL;
+    try
+        parse(s, bs);
+    onerror
+        ;
+    if (error == NULL)
+        fail(sprintf("failed to fail on parse of \"%s\"", s));
 }
 
 /*
@@ -94,20 +94,20 @@ bad("c||(1?2);");
 a:=1;
 1&&a++;
 if (a != 2)
-	fail("failed to do && for effect");
+    fail("failed to do && for effect");
 
 bad("(1?2)+3;");
 bad("3+(1?2);");
 a:= 1;
 1+a++;
 if (a != 2)
-	fail("failed to do + for effect");
+    fail("failed to do + for effect");
 
 1+2+$(3+2)+4+5;
 bad("$(1?2);");
 bad("$(fail(\"x\"));");
 if (+1 != 1)
-	fail("unary plus failed");
+    fail("unary plus failed");
 bad("+(1?2);");
 
 bad("(a?b)++;");
@@ -117,7 +117,7 @@ bad("++(a?b);");
 bad("c=-(1?2);");
 
 if (~0 != -1)
-	fail("~ failed");
+    fail("~ failed");
 -a=2;
 ~a=2;
 bad("c=~(1?2);");
@@ -137,7 +137,7 @@ bad("*(1?2);");
 a := 2;
 *(&a) = 1;
 if (a != 1)
-	fail("unary * for lavalue didn't work");
+    fail("unary * for lavalue didn't work");
 
 bad("(1?2)[3];");
 bad("1[1?2];");
@@ -153,7 +153,7 @@ bad("(1?2)->a;");
 a := [struct a = 1, b = 2];
 (&a)->a;
 if ((&a)->a != 1)
-	fail("-> failed");
+    fail("-> failed");
 bad("(1?2).a;");
 bad("a.(1?2);");
 
@@ -173,66 +173,66 @@ a := 1 + $1;
 
 c := 0;
 forall (a in [set 1, 2, 3])
-	c += a;
+    c += a;
 if (c != 6)
-	fail("failed to forall over a set");
+    fail("failed to forall over a set");
 c := 0;
 forall (a, b in [set 1, 2, 3])
 {
-	if (a != 1)
-		fail("forall over set, index wrong");
-	c += b;
+    if (a != 1)
+        fail("forall over set, index wrong");
+    c += b;
 }
 if (c != 6)
-	fail("failed to forall over a set");
+    fail("failed to forall over a set");
 
 c := 0;
 forall (a in [array 1, 2, 3])
-	c += a;
+    c += a;
 if (c != 6)
-	fail("failed to forall over a array");
+    fail("failed to forall over a array");
 c := 0;
 forall (a, b in [array 1, 2, 3])
 {
-	if (b != a - 1)
-		fail("forall over array, index wrong");
-	c += a;
+    if (b != a - 1)
+        fail("forall over array, index wrong");
+    c += a;
 }
 if (c != 6)
-	fail("failed to forall over a set");
+    fail("failed to forall over a set");
 
 
 c := "";
 forall (a in "abc")
-	c += a;
+    c += a;
 if (c != "abc")
-	fail("failed to forall over a string");
+    fail("failed to forall over a string");
 c := "";
 forall (a, b in "abc")
 {
-	if (b != toint(a) - 'a')
-		fail("forall over string, index wrong");
-	c += a;
+    if (b != toint(a) - 'a')
+        fail("forall over string, index wrong");
+    c += a;
 }
 if (c != "abc")
-	fail("failed to forall over a string");
+    fail("failed to forall over a string");
 
 try
-	parse(sopen("123;\r\nfail(\"bad\");\r\n456;\r\n", "rb"));
+    parse(sopen("123;\r\nfail(\"bad\");\r\n456;\r\n", "rb"));
 onerror
-	;
+    ;
 if (error !~ #\b2:#)
-	fail("bad line number counting");
+    fail("bad line number counting");
 
 try
-	parse(sopen("123;\r\n\r\nfail(\"bad\");\r\n456;\r\n", "rb"));
+    parse(sopen("123;\r\n\r\nfail(\"bad\");\r\n456;\r\n", "rb"));
 onerror
-	;
+    ;
 if (error !~ #\b3:#)
-	fail("bad line number counting 2");
+    fail("bad line number counting 2");
 
 if (.123 != 0.123)
-	fail("bad float lex");
+    fail("bad float lex");
 
 a := "\
 \n\t\v\b\r\f\a\e\\\'\"\?\cA\ca\x41\112\112\7\07";
@@ -240,7 +240,7 @@ a := "\
 b := "\012\011\013\010\015\014\007\033\134\047\042\077\001\001\101\x4a\x4A\a\a";
 
 if (a != b)
-	fail("failed to lex escape chars correctly");
+    fail("failed to lex escape chars correctly");
 
 bad("\"\\z\"");
 
@@ -252,61 +252,61 @@ bad("\"ab\ncb\";");
 
 a = struct(".10e_", 2);
 if (a..10e_ != 2)
-	fail("float, name lex mixup");
+    fail("float, name lex mixup");
 
 if (eof(currentfile()))
-	fail("currentfile indicated eof");
+    fail("currentfile indicated eof");
 
 {
-	if ((a := getline(currentfile())) != "xyz")
-		fail("bad getline on currentfile");
+    if ((a := getline(currentfile())) != "xyz")
+        fail("bad getline on currentfile");
 }xyz
 
 a := [class];
 m := a:new;
 if (sprintf("%a", m) !~ #new#)
-	fail("failed to get reasonable name from method");
+    fail("failed to get reasonable name from method");
 b := @m;
 if (m.callable != new)
-	fail("failed to index method to get callable");
+    fail("failed to index method to get callable");
 if (m.subject != a)
-	fail("failed to index method to get subject");
+    fail("failed to index method to get subject");
 if (m.not_a_key != NULL)
-	fail("failed to index method to get NULL");
+    fail("failed to index method to get NULL");
 m := NULL;
 
 if (nels(sprintf("%a", "a long string that is more than 30 chars")) > 40)
-	fail("%a made too long a string");
+    fail("%a made too long a string");
 
 error = NULL; try new(); onerror;
 if (error == NULL)
-	fail("failed to fail on new() as function call");
+    fail("failed to fail on new() as function call");
 
 m := [class
 
-	func()
-	{
-	}
+    func()
+    {
+    }
 ];
 
 mm := [class:m,
 
-	func()
-	{
-	}
+    func()
+    {
+    }
 ];
 
 if (!mm:isa(m))
-	fail("isa failed");
+    fail("isa failed");
 
 if (mm:isa([class]))
-	fail("isa failed 2");
+    fail("isa failed 2");
 
 if (!mm:respondsto("func"))
-	fail("respondsto failed");
+    fail("respondsto failed");
 
 if (mm:respondsto("notadefinedname"))
-	fail("respondtsto failed 2");
+    fail("respondtsto failed 2");
 
 bad("for (i");
 bad("[func");
@@ -325,7 +325,7 @@ bad("if (");
 bad("(");
 bad("(1");
 if ("this " "string" != "this string")
-	fail("failed to concat strings");
+    fail("failed to concat strings");
 bad("[");
 bad("[array ");
 bad("[array +");
@@ -334,7 +334,7 @@ bad("[module= ]");
 bad("[module=1 ]");
 a:=struct();
 if ([module=a] != a)
-	fail("module= failed");
+    fail("module= failed");
 bad("[module=[struct]");
 bad("[module:[struct]");
 bad("[module fail(\"xx\");]");
@@ -374,10 +374,10 @@ bad("while");
 bad("while(0)");
 a := 0;
 do
-	a += 1;
+    a += 1;
 while (a < 10);
 if (a != 10)
-	fail("do-while failed");
+    fail("do-while failed");
 bad("do");
 bad("do 1;");
 bad("do 1; while");
@@ -425,3 +425,9 @@ bad("waitfor(1;");
 bad("waitfor(1;1");
 bad("waitfor(1;1)");
 bad("[module ;");
+
+if ("hello" !~ #[o# #]#)
+    fail("failed to concat regexps");
+    
+if ("xx#xx" !~ ## "#")
+    fail("failed to combine regexp and string");

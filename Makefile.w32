@@ -3,12 +3,12 @@
 #
 # Useful targets in this makefile are:
 #
-#    all		The default. Builds executables.
+#    all                The default. Builds executables.
 #
-#    sdk		Makes a zip archive of files suitable for export
-#			as an ICI software development kit.
+#    sdk                Makes a zip archive of files suitable for export
+#                       as an ICI software development kit.
 #
-#    clean		Removes (almost) all generated files.
+#    clean              Removes (almost) all generated files.
 #
 #
 CC  = cl /nologo
@@ -35,7 +35,7 @@ SDK=ici4-win32-sdk
 # /O2p- Optimisation level, and a float thing.
 #       (O2 implies /Og /Oi /Ot /Oy /Ob1 /Gs /Gf /Gy)
 # /GF   Merged and read-only strings.
-# /Wn	Warning level n.
+# /Wn   Warning level n.
 #
 CFLAGS  = /GB /MD /Zi /O2p-b2 /GF /DNDEBUG /W3 /I.
 LDFLAGS = /MD /Zi
@@ -50,11 +50,11 @@ LIBS    = user32.lib wsock32.lib advapi32.lib winmm.lib
 OBJS    = \
     alloc.obj aplfuncs.obj arith.obj array.obj call.obj \
     catch.obj cfunc.obj cfunco.obj clib.obj clib2.obj \
-    compile.obj conf.obj control.obj events.obj exec.obj \
+    compile.obj conf.obj control.obj crc.obj events.obj exec.obj \
     exerror.obj file.obj findpath.obj float.obj forall.obj \
     func.obj handle.obj icimain.obj init.obj int.obj \
     lex.obj load.obj mark.obj mem.obj method.obj \
-    mkvar.obj nptrs.obj null.obj \
+    mkvar.obj null.obj \
     object.obj oofuncs.obj op.obj parse.obj pc.obj profile.obj \
     ptr.obj refuncs.obj regexp.obj set.obj sfile.obj \
     signals.obj smash.obj src.obj \
@@ -70,7 +70,7 @@ PCREOBJS=\
 WIDBSOURCES = \
     widb/widb_ici.c widb/widb_sources.c widb/widb_viewobj.c \
     widb/widb_wnd.c widb/widb.res
-	
+        
 SDKFILES = \
     ici$(VER).dll ici$(VER).lib ici$(VER).pdb \
     ici4core.ici ici4core1.ici ici4core2.ici ici4core3.ici \
@@ -79,52 +79,52 @@ SDKFILES = \
     doc\ici.pdf \
     ici$(VER)widb.dll
 
-all		: ici$(VER).dll ici.h ici.exe iciw.exe ici$(VER)widb.dll
+all             : ici$(VER).dll ici.h ici.exe iciw.exe ici$(VER)widb.dll
 
-sdk		: ici$(VER)-win32-sdk.zip
+sdk             : ici$(VER)-win32-sdk.zip
 
-$(SDK).zip 	: $(SDKFILES)
-		-del $(SDK).zip
-		-del /Q $(SDK)\*
-		-mkdir $(SDK)
-		@-for %%f in ( $(SDKFILES) ) do copy %%f $(SDK)
-		zip -o -r $@ $(SDK)
+$(SDK).zip      : $(SDKFILES)
+                -del $(SDK).zip
+                -del /Q $(SDK)\*
+                -mkdir $(SDK)
+                @-for %%f in ( $(SDKFILES) ) do copy %%f $(SDK)
+                zip -o -r $@ $(SDK)
 
-ici$(VER).dll:	$(OBJS) $(PCREOBJS) ici.def
-		$(CC) $(LDFLAGS) -Fe$@ $(OBJS) $(PCREOBJS) $(LIBS) /link /DEBUG /DEBUGTYPE:BOTH /DLL /def:ici.def
+ici$(VER).dll:  $(OBJS) $(PCREOBJS) ici.def
+                $(CC) $(LDFLAGS) -Fe$@ $(OBJS) $(PCREOBJS) $(LIBS) /link /DEBUG /DEBUGTYPE:BOTH /DLL /def:ici.def
 
-ici.h		: mk-ici-h.ici
-		$(SAFEICI) mk-ici-h.ici conf-w32.h
+ici.h           : mk-ici-h.ici
+                $(SAFEICI) mk-ici-h.ici conf-w32.h
 
-ici.exe		: main.obj ici$(VER).dll
-		$(CC) $(LDFLAGS) -Fe$@ main.obj setargv.obj ici$(VER).lib
+ici.exe         : main.obj ici$(VER).dll
+                $(CC) $(LDFLAGS) -Fe$@ main.obj setargv.obj ici$(VER).lib
 
 
-iciw.exe:	winmain.obj ici$(VER).dll
-		$(CC) $(LDFLAGS) -Fe$@ winmain.obj ici$(VER).lib user32.lib
+iciw.exe:       winmain.obj ici$(VER).dll
+                $(CC) $(LDFLAGS) -Fe$@ winmain.obj ici$(VER).lib user32.lib
 
-ici$(VER)widb.dll:	$(WIDBSOURCES)
-		rc widb/widb.rc
-		$(CC) $(CFLAGS) -Fe$@ ici$(VER).lib $(LIBS) comctl32.lib $(WIDBSOURCES) /link /DLL /export:ici_widb_library_init
+ici$(VER)widb.dll:      $(WIDBSOURCES)
+                rc widb/widb.rc
+                $(CC) $(CFLAGS) -Fe$@ ici$(VER).lib $(LIBS) comctl32.lib $(WIDBSOURCES) /link /DLL /export:ici_widb_library_init
 
-main.obj	: main.c
-		$(CC) -c -Fo$@ $(CFLAGS) main.c
+main.obj        : main.c
+                $(CC) -c -Fo$@ $(CFLAGS) main.c
 
-winmain.obj	: winmain.c
-		$(CC) -c -Fo$@ $(CFLAGS) winmain.c
+winmain.obj     : winmain.c
+                $(CC) -c -Fo$@ $(CFLAGS) winmain.c
 
-study.obj	: pcre/study.c
-		$(CC) -c -Fo$@ $(CFLAGS) pcre/study.c
+study.obj       : pcre/study.c
+                $(CC) -c -Fo$@ $(CFLAGS) pcre/study.c
 
-maketables.obj	: pcre/maketables.c
-		$(CC) -c -Fo$@ $(CFLAGS) pcre/maketables.c
+maketables.obj  : pcre/maketables.c
+                $(CC) -c -Fo$@ $(CFLAGS) pcre/maketables.c
 
-pcre.obj	: pcre/pcre.c
-		$(CC) -c -Fo$@ $(CFLAGS) pcre/pcre.c
+pcre.obj        : pcre/pcre.c
+                $(CC) -c -Fo$@ $(CFLAGS) pcre/pcre.c
 
 clean:
-		@-for %%f in ( $(OBJS) $(PCREOBJS) $(TARGET) *.ilk *.pdb ici$(VER).lib ici$(VER).exp ) do $(RM) %%f
-		rmdir /s /q $(SDK)
+                @-for %%f in ( $(OBJS) $(PCREOBJS) $(TARGET) *.ilk *.pdb ici$(VER).lib ici$(VER).exp ) do $(RM) %%f
+                rmdir /s /q $(SDK)
 
 ici.h : conf-w32.h fwd.h object.h alloc.h buf.h catch.h \
     cfunc.h array.h int.h float.h exec.h file.h forall.h func.h \

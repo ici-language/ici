@@ -129,9 +129,9 @@ type_t profilecall_type =
 {
     mark_profilecall,
     free_profilecall,
-    hash_unique,
-    cmp_unique,
-    copy_simple,
+    ici_hash_unique,
+    ici_cmp_unique,
+    ici_copy_simple,
     ici_assign_fail,
     ici_fetch_fail,
     "profile call"
@@ -295,7 +295,7 @@ write_outfile(FILE *of, profilecall_t *pc, int indent)
         {
             char    n1[ICI_OBJNAMEZ];
 
-            objname(n1, sl->sl_key);
+            ici_objname(n1, sl->sl_key);
             fprintf(of, "%*s(\"", indent + 2, "");
             for (p = n1; *p != '\0'; ++p)
             {

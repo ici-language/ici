@@ -499,6 +499,19 @@ fail:
     return 1;
 }
 
+/*
+ * Return the number of pointers in a NULL terminated array of pointers.
+ */
+static int
+nptrs(char **p)
+{
+    register int        i;
+
+    i = 0;
+    while (*p++ != NULL)
+        ++i;
+    return i;
+}
 
 /*
  * The original smash() function which we would like to phase out.
@@ -543,6 +556,8 @@ fail:
     return 1;
 }
 
+regexp_t     *ici_smash_default_re;
+
 /*
  * f_smash()
  *
@@ -557,7 +572,6 @@ f_smash()
     int                 n_repls;
     array_t             *a;
     string_t            *default_repl[2];
-    static regexp_t     *default_re;
     int                 i;
     int                 include_remainder;
     int                 nargs;
@@ -583,12 +597,12 @@ f_smash()
 
     if (nargs < 2)
     {
-        if (default_re == NULL)
+        if (ici_smash_default_re == NULL)
         {
-            if ((default_re = ici_regexp_new(SS(sloshn), 0)) == NULL)
+            if ((ici_smash_default_re = ici_regexp_new(SS(sloshn), 0)) == NULL)
                 return 1;
         }
-        re = default_re;
+        re = ici_smash_default_re;
     }
     else
     {

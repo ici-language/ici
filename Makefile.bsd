@@ -1,27 +1,27 @@
 #
 # For compiling a standard version on FreeBSD {2,3,4}.x
 #
-PROG	= ici4
-VERSION	= "`awk '{print $$1}' VERSION`"
-PREFIX	?= /usr/local
+PROG    = ici4
+VERSION = "`awk '{print $$1}' VERSION`"
+PREFIX  ?= /usr/local
 # Keep all symbol information please.  Used by bsd.prog.mk's install target
-STRIP	=
-BINDIR	= $(PREFIX)/bin
-OPTIM	=
+STRIP   =
+BINDIR  = $(PREFIX)/bin
+OPTIM   =
 LDFLAGS = -g
-LDADD	= -lm
-DEFS	= -DCONFIG_FILE='"conf-bsd.h"' -DPREFIX='"$(PREFIX)"' -D_THREAD_SAFE -pthread
+LDADD   = -lm
+DEFS    = -DCONFIG_FILE='"conf-bsd.h"' -DPREFIX='"$(PREFIX)"' -D_THREAD_SAFE -pthread
 LDEXTRA != osv=`uname -r`; [ `expr "$osv" : "'^2'"` = 0 ] && echo ' -export-dynamic'
-LDFLAGS	+= $(LDEXTRA)
-CFLAGS	+= $(OPTIM) -g -Wall -ansi -I. $(DEFS)
+LDFLAGS += $(LDEXTRA)
+CFLAGS  += $(OPTIM) -g -Wall -ansi -I. $(DEFS)
 
-SRCS	= \
+SRCS    = \
 	alloc.c aplfuncs.c arith.c array.c\
 	call.c catch.c cfunc.c cfunco.c clib.c clib2.c\
-	compile.c conf.c control.c events.c exec.c exerror.c file.c\
+	compile.c conf.c control.c crc.c events.c exec.c exerror.c file.c\
 	findpath.c float.c forall.c\
 	func.c handle.c icimain.c init.c int.c lex.c load.c main.c mark.c mem.c\
-	method.c mkvar.c nptrs.c null.c object.c oofuncs.c op.c parse.c pc.c\
+	method.c mkvar.c null.c object.c oofuncs.c op.c parse.c pc.c\
 	ptr.c refuncs.o regexp.c set.c\
 	sfile.c signals.c smash.c src.c sstring.c string.c\
 	struct.c syserr.c thread.c trace.c unary.c uninit.c \
@@ -30,26 +30,26 @@ SRCS	= \
 PCRESRCS= \
 	pcre/study.c pcre/maketables.c pcre/pcre.c
 
-OBJS	+= study.o maketables.o pcre.o
-MANDIR	= $(PREFIX)/man/man
-MAN1	= doc/ici3.1
+OBJS    += study.o maketables.o pcre.o
+MANDIR  = $(PREFIX)/man/man
+MAN1    = doc/ici3.1
 
 .include <bsd.prog.mk>
 
-study.o	: pcre/study.c
+study.o : pcre/study.c
 	$(CC) -c -o $@ $(CFLAGS) pcre/study.c
 
-maketables.o	: pcre/maketables.c
+maketables.o    : pcre/maketables.c
 	$(CC) -c -o $@ $(CFLAGS) pcre/maketables.c
 
-pcre.o	: pcre/pcre.c
+pcre.o  : pcre/pcre.c
 	$(CC) -c -o $@ $(CFLAGS) pcre/pcre.c
 
 # Headers that are potentially used in module writing are made public
 ICIHDRS=\
 	alloc.h array.h buf.h catch.h cfunc.h conf-bsd.h exec.h file.h\
 	float.h forall.h func.h fwd.h ici.h int.h mark.h mem.h method.h\
-	null.h object.h op.h parse.h pc.h primes.h ptr.h re.h set.h skt.h\
+	null.h object.h op.h parse.h pc.h primes.h ptr.h re.h set.h\
 	src.h str.h struct.h trace.h wrap.h
 
 PCREHDRS=\

@@ -180,7 +180,7 @@ ici_maind(int argc, char *argv[], int debugging)
             ici_error = buf;
             goto fail;
         }
-        if (parse_file(argv[1], (char *)stream, &stdio_ftype))
+        if (ici_parse_file(argv[1], (char *)stream, &ici_stdio_ftype))
             goto fail;
     }
     else
@@ -191,7 +191,7 @@ ici_maind(int argc, char *argv[], int debugging)
                 continue;
             if (argv[i][1] == '\0')
             {
-                if (parse_file("stdin", (char *)stdin, &stdio_ftype))
+                if (ici_parse_file("stdin", (char *)stdin, &ici_stdio_ftype))
                     goto fail;
                 continue;
             }
@@ -244,7 +244,7 @@ ici_maind(int argc, char *argv[], int debugging)
                         ici_error = buf;
                         goto fail;
                     }
-                    if (parse_file(buf, (char *)stream, &stdio_ftype))
+                    if (ici_parse_file(buf, (char *)stream, &ici_stdio_ftype))
                         goto fail;
                     break;
 
@@ -257,7 +257,7 @@ ici_maind(int argc, char *argv[], int debugging)
                         ici_error = buf;
                         goto fail;
                     }
-                    if (parse_file(arg0, (char *)stream, &stdio_ftype))
+                    if (ici_parse_file(arg0, (char *)stream, &ici_stdio_ftype))
                         goto fail;
                     continue;
 

@@ -8,10 +8,10 @@
  */
 #if KEEP_STRING_HASH
 #   define SSTRING(name, str)    sstring_t ici_ss_##name \
-        = {{TC_STRING, 0, 1, 1}, NULL, NULL, 0, 0, (sizeof str) - 1, str};
+        = {{TC_STRING, 0, 1, 1}, NULL, NULL, 0, 0, (sizeof str) - 1, NULL, str};
 #else
 #   define SSTRING(name, str)    sstring_t ici_ss_##name \
-        = {{TC_STRING, 0, 1, 1}, NULL, NULL, 0, (sizeof str) - 1, str};
+        = {{TC_STRING, 0, 1, 1}, NULL, NULL, 0, (sizeof str) - 1, NULL, str};
 #endif
 #include "sstring.h"
 #undef  SSTRING
@@ -25,7 +25,9 @@ ici_init_sstrings(void)
 {
     if
     (
-#define SSTRING(name, str) ici_atom(SSO(name), 1) == SSO(name) &&
+#define SSTRING(name, str) \
+    (SS(name)->s_chars = SS(name)->s_u.su_inline_chars, ici_atom(SSO(name), 1)) == SSO(name) \
+    &&
 #include "sstring.h"
 #undef SSTRING
         1

@@ -104,7 +104,7 @@ ici_sopen(char *data, int size, object_t *ref)
         return NULL;
     sf->sf_size = size;
     sf->sf_eof = 0;
-    if (sf->sf_foreign_data = ref != NULL)
+    if (sf->sf_foreign_data = (ref != NULL))
     {
         sf->sf_data = data;
         sf->sf_ptr = data;
@@ -119,7 +119,7 @@ ici_sopen(char *data, int size, object_t *ref)
         memcpy(sf->sf_data, data, size);
         sf->sf_ptr = sf->sf_data;
     }
-    if ((f = new_file((char *)sf, &string_ftype, NULL, ref)) == NULL)
+    if ((f = ici_file_new((char *)sf, &string_ftype, NULL, ref)) == NULL)
     {
         if (ref == NULL)
         {

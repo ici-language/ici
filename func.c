@@ -215,7 +215,7 @@ call_func(object_t *o, object_t *subject)
         {
             char        n1[30];
 
-            sprintf(buf, "attempt to call method on %s", objname(n1, subject));
+            sprintf(buf, "attempt to call method on %s", ici_objname(n1, subject));
             ici_error = buf;
             goto fail;
         }
@@ -302,7 +302,7 @@ type_t  ici_func_type =
     free_func,
     hash_func,
     cmp_func,
-    copy_simple,
+    ici_copy_simple,
     ici_assign_fail,
     fetch_func,
     "func",

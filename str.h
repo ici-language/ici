@@ -31,16 +31,47 @@ struct string
         unsigned long s_hash;  /* String hash code or 0 if not yet computed */
 #   endif
     int         s_nchars;
-    char        s_chars[1];     /* And following bytes. */
+    char        *s_chars;
+    union
+    {
+        int     su_nalloc;
+        char    su_inline_chars[1]; /* And following bytes. */
+    }
+                s_u;
 };
+/*
+ * s_nchars             The actual number of characters in the string. Note
+ *                      that room is always allocated for a guard '\0' beyond
+ *                      this amount.
+ *
+ * s_chars              This points to the characters of the string, which
+ *                      *may* be in a seperate allocation, or may be following
+ *                      directly on in the same allocation. The flag
+ *                      S_SEP_ALLOC reveals which (see below).
+ *
+ * s_u.su_nalloc        The number of bytes allocaed at s_chars iff it
+ *                      is a seperate allocation (ICI_S_SEP_ALLOC set in
+ *                      o_head.o_flags).
+ *
+ * su.su_inline_chars   If ICI_S_SEP_ALLOC is *not* set, this is where s_chars will
+ *                      be pointing. The actual string chars follow on from this.
+ */
 #define stringof(o)     ((string_t *)o)
 #define isstring(o)     ((o)->o_tcode == TC_STRING)
 
 /*
- * This flag indicates that the lookup-lookaside mechanism is referencing
- * an atomic struct. It is stored in the allowed area of o_flags in o_head.
+ * This flag (in o_head.o_flags) indicates that the lookup-lookaside mechanism
+ * is referencing an atomic struct.  It is stored in the allowed area of
+ * o_flags in o_head.
  */
 #define S_LOOKASIDE_IS_ATOM 0x10
+
+/*
+ * This flag (in o_head.o_flags) indicates that s_chars points to seperately
+ * allocated memory.  If this is the case, s_u.su_nalloc is significant and
+ * the memory was allocated with ici_nalloc(s_u.su_nalloc).
+ */
+#define ICI_S_SEP_ALLOC     0x20
 
 /*
  * Macros to assist external modules in getting ICI strings. To use, make
@@ -97,7 +128,8 @@ struct sstring
         unsigned long s_hash;   /* String hash code or 0 if not yet computed */
 #   endif
     int         s_nchars;
-    char        s_chars[12];    /* Longest string in sstring.h */
+    char        *s_chars;
+    char        s_inline_chars[12]; /* Longest string in sstring.h */
 };
 
 #define SSTRING(name, str)    extern sstring_t ici_ss_##name;

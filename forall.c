@@ -190,7 +190,7 @@ exec_forall()
         }
         goto next;
     }
-    sprintf(buf, "attempt to forall over %s", objname(n, fa->fa_aggr));
+    sprintf(buf, "attempt to forall over %s", ici_objname(n, fa->fa_aggr));
     ici_error = buf;
     return 1;
 
@@ -208,9 +208,9 @@ type_t  forall_type =
 {
     mark_forall,
     free_forall,
-    hash_unique,
-    cmp_unique,
-    copy_simple,
+    ici_hash_unique,
+    ici_cmp_unique,
+    ici_copy_simple,
     ici_assign_fail,
     ici_fetch_fail,
     "forall"

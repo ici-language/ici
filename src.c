@@ -46,9 +46,9 @@ type_t  src_type =
 {
     mark_src,
     free_src,
-    hash_unique,
-    cmp_unique,
-    copy_simple,
+    ici_hash_unique,
+    ici_cmp_unique,
+    ici_copy_simple,
     ici_assign_fail,
     ici_fetch_fail,
     "src"

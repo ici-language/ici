@@ -97,7 +97,7 @@ type_t  int_type =
     free_int,
     hash_int,
     cmp_int,
-    copy_simple,
+    ici_copy_simple,
     ici_assign_fail,
     ici_fetch_fail,
     "int"

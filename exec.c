@@ -131,7 +131,7 @@ free_exec(object_t *o)
         CloseHandle(x->x_thread_handle);
 #endif
 #ifdef ICI_USE_POSIX_THREADS
-    if (x->x_thread_handle != NULL)
+    if ((void *)x->x_thread_handle != NULL)
         pthread_join(x->x_thread_handle, NULL);
     (void)sem_destroy(&x->x_semaphore);
 #endif
@@ -150,12 +150,15 @@ fetch_exec(object_t *o, object_t *k)
     x = execof(o);
     if (k == SSO(result))
     {
-        if (x->x_state == XS_ACTIVE)
-            return objof(&o_null);
-        if (x->x_state == XS_RETURNED)
-            return x->x_result;
-        if (x->x_state == XS_FAILED)
+        switch (x->x_state)
         {
+        case XS_ACTIVE:
+            return objof(&o_null);
+
+        case XS_RETURNED:
+            return x->x_result;
+
+        case XS_FAILED:
             if (x->x_result == NULL)
                 ici_error = "failed";
             else
@@ -166,6 +169,19 @@ fetch_exec(object_t *o, object_t *k)
                 ici_error = buf;
             }
             return NULL;
+
+        default:
+            assert(0);
+        }
+    }
+    else if (k == SSO(status))
+    {
+        switch (x->x_state)
+        {
+        case XS_ACTIVE:     return SSO(active);
+        case XS_RETURNED:   return SSO(finished);
+        case XS_FAILED:     return SSO(failed);
+        default:            assert(0);
         }
     }
     return objof(&o_null);
@@ -645,7 +661,7 @@ ici_evaluate(object_t *code, int n_operands)
                         if (!hassuper(o))
                         {
                             sprintf(buf, "\"class\" evaluated to %s in :^ operation",
-                                objname(n1, o));
+                                ici_objname(n1, o));
                             ici_error = buf;
                             goto fail;
                         }
@@ -694,7 +710,7 @@ ici_evaluate(object_t *code, int n_operands)
                 {
                     char    n1[30];
 
-                    sprintf(buf, "attempt to call %s", objname(n1, ici_os.a_top[-1]));
+                    sprintf(buf, "attempt to call %s", ici_objname(n1, ici_os.a_top[-1]));
                     ici_error = buf;
                     if (o != NULL)
                         ici_decref(o);
@@ -1273,9 +1289,9 @@ type_t  ici_exec_type =
 {
     mark_exec,
     free_exec,
-    hash_unique,
-    cmp_unique,
-    copy_simple,
+    ici_hash_unique,
+    ici_cmp_unique,
+    ici_copy_simple,
     ici_assign_fail,
     fetch_exec,
     "exec"

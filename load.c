@@ -235,7 +235,7 @@ f_load(void)
             fclose(stream);
             goto fail;
         }
-        file = new_file((char *)stream, &stdio_ftype, fn, NULL);
+        file = ici_file_new((char *)stream, &ici_stdio_ftype, fn, NULL);
         ici_decref(fn);
         if (file == NULL)
         {
@@ -260,7 +260,7 @@ f_load(void)
         externs->o_head.o_super = outer;
         if (parse_module(file, objwsupof(autos)) < 0)
             goto fail;
-        f_close(file);
+        ici_file_close(file);
         ici_decref(autos);
         ici_decref(file);
     }

@@ -8,7 +8,7 @@
 #include "str.h"
 
 /*
- * Format a human readable version of the object in 30 chars or less.
+ * Format a human readable version of the object in less than 30 chars.
  */
 static void
 objname_handle(object_t *o, char p[ICI_OBJNAMEZ])
@@ -50,8 +50,7 @@ static int
 cmp_handle(object_t *o1, object_t *o2)
 {
     return handleof(o1)->h_ptr != handleof(o2)->h_ptr
-        || handleof(o1)->h_name != handleof(o2)->h_name
-        || ((objof(o1)->o_flags ^ objof(o2)->o_flags) & H_CLOSED);
+        || handleof(o1)->h_name != handleof(o2)->h_name;
 }
 
 /*
@@ -62,8 +61,7 @@ static unsigned long
 hash_handle(object_t *o)
 {
     return ICI_PTR_HASH(handleof(o)->h_ptr)
-        ^ (ICI_PTR_HASH(handleof(o)->h_name) >> 2)
-        ^ (objof(o)->o_flags & H_CLOSED);
+         ^ ICI_PTR_HASH(handleof(o)->h_name);
 }
 
 /*
@@ -77,7 +75,7 @@ ici_handle_new(void *ptr, string_t *name, objwsup_t *super)
 {
     ici_handle_t        *h;
     object_t            **po;
-    static ici_handle_t proto = {{TC_HANDLE, O_SUPER, 1, 0}};
+    static ici_handle_t proto = {{{TC_HANDLE, O_SUPER, 1, 0}, NULL}};
 
     proto.h_ptr = ptr;
     proto.h_name = name;
@@ -258,8 +256,8 @@ ici_handle_method_check(object_t *inst, string_t *name, ici_handle_t **h, void *
     if (handleof(inst)->h_name != name)
     {
         sprintf(buf, "attempt to apply method %s to %s",
-            objname(n1, ici_os.a_top[-1]),
-            objname(n2, inst));
+            ici_objname(n1, ici_os.a_top[-1]),
+            ici_objname(n2, inst));
         ici_error = buf;
         return 1;
     }
@@ -277,7 +275,7 @@ type_t  ici_handle_type =
     free_handle,
     hash_handle,
     cmp_handle,
-    copy_simple,
+    ici_copy_simple,
     assign_handle,
     fetch_handle,
     "handle",

@@ -6,10 +6,6 @@
 #endif
 
 /*
- * The following portion of this file exports to ici.h. --ici.h-start--
- */
-
-/*
  * Mark objects are used in a few placed in the interpreter when we need
  * an object that we can guarantee is distinct from any object a user
  * could give us. One use is as the 'label' on the default clause of
@@ -21,6 +17,11 @@ struct marks
 };
 #define markof(o)       ((mark_t *)o)
 #define ismark(o)       ((o) == objof(&o_mark))
+
+/*
+ * The following portion of this file exports to ici.h. --ici.h-start--
+ */
+
 /*
  * End of ici.h export. --ici.h-end--
  */

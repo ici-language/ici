@@ -718,9 +718,9 @@
             char        n2[30];
 
             sprintf(buf, "attempt to perform \"%s %s %s\"",
-                objname(n1, o0),
+                ici_objname(n1, o0),
                 ici_binop_name(opof(o)->op_code),
-                objname(n2, o1));
+                ici_objname(n2, o1));
         }
         ici_error = buf;
         goto fail;

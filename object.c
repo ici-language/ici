@@ -30,6 +30,32 @@ char            *ici_error;
  * core. NB: The positions of these must exactly match the TC_* defines
  * in object.h.
  */
+extern type_t           ici_array_type;
+extern type_t           ici_catch_type;
+extern type_t           ici_exec_type;
+extern type_t           set_type;
+extern type_t           struct_type;
+extern type_t           float_type;
+extern type_t           file_type;
+extern type_t           ici_func_type;
+extern type_t           ici_cfunc_type;
+extern type_t           ici_method_type;
+extern type_t           forall_type;
+extern type_t           int_type;
+extern type_t           mark_type;
+extern type_t           null_type;
+extern type_t           op_type;
+extern type_t           pc_type;
+extern type_t           ptr_type;
+extern type_t           regexp_type;
+extern type_t           src_type;
+extern type_t           string_type;
+extern type_t           parse_type;
+extern type_t           ostemp_type;
+extern type_t           ici_handle_type;
+extern type_t           profilecall_type;
+extern type_t           mem_type;
+
 type_t          *ici_types[ICI_MAX_TYPES] =
 {
     NULL,
@@ -80,10 +106,10 @@ int             ici_natoms;     /* Number of atomic objects. */
 int             ici_supress_collect;
 
 /*
- * Format a human readable version of the object in 30 chars or less.
+ * Format a human readable version of the object in less than 30 chars.
  */
 char *
-objname(char *p, object_t *o)
+ici_objname(char p[ICI_OBJNAMEZ], object_t *o)
 {
     if (ici_typeof(o)->t_objname != NULL)
     {
@@ -131,22 +157,11 @@ ici_register_type(type_t *t)
 }
 
 /*
- * Free this object and associated memory (but not other objects).
- * See the comments on t_free() in object.h.
- */
-void
-free_simple(object_t *o)
-{
-    ici_free(o);
-}
-
-
-/*
  * Return a copy of the given object, or NULL on error.
  * See the comment on t_copy() in object.h.
  */
 object_t *
-copy_simple(object_t *o)
+ici_copy_simple(object_t *o)
 {
     ici_incref(o);
     return o;
@@ -169,9 +184,9 @@ ici_assign_fail(object_t *o, object_t *k, object_t *v)
     char        n3[30];
 
     sprintf(buf, "attempt to set %s keyed by %s to %s",
-        objname(n1, o),
-        objname(n2, k),
-        objname(n3, v));
+        ici_objname(n1, o),
+        ici_objname(n2, k),
+        ici_objname(n3, v));
     ici_error = buf;
     return 1;
 }
@@ -192,8 +207,8 @@ ici_fetch_fail(object_t *o, object_t *k)
     char        n2[30];
 
     sprintf(buf, "attempt to read %s keyed by %s",
-        objname(n1, o),
-        objname(n2, k));
+        ici_objname(n1, o),
+        ici_objname(n2, k));
     ici_error = buf;
     return NULL;
 }
@@ -204,7 +219,7 @@ ici_fetch_fail(object_t *o, object_t *k)
  * See the comments on t_cmp() in object.h.
  */
 int
-cmp_unique(object_t *o1, object_t *o2)
+ici_cmp_unique(object_t *o1, object_t *o2)
 {
     return o1 != o2;
 }
@@ -214,9 +229,9 @@ cmp_unique(object_t *o1, object_t *o2)
  * See the comment on t_hash() in object.h
  */
 unsigned long
-hash_unique(object_t *o)
+ici_hash_unique(object_t *o)
 {
-    return ((unsigned long)o >> 4) * UNIQUE_PRIME;
+    return ICI_PTR_HASH(o);
 }
 
 /*
@@ -498,6 +513,17 @@ grow_objs(object_t *o)
     *objs_top++ = o;
 }
 
+void
+ici_rego_work(object_t *o)
+{
+    if (objs_top < objs_limit)
+    {
+        *objs_top++ = o;
+        return;
+    }
+    grow_objs(o);
+}
+
 /*
  * Mark sweep garbage collection.  Should be safe to do any time, as new
  * objects are created without the nrefs == 0 which allows them to be
@@ -516,7 +542,7 @@ collect(void)
     register object_t   **a;
     register object_t   *o;
     register object_t   **b;
-    register int        ndead_atoms;
+    /*register int        ndead_atoms;*/
     register long       mem;    /* Total mem tied up in refed objects. */
 
     if (ici_supress_collect)
@@ -532,10 +558,12 @@ collect(void)
 
 #   ifndef NDEBUG
     /*
-     * In debug builds we take this opportunity to check the consistency of
-     * of the atom pool. We check that each entry has the O_ATOM flag set,
-     * and that it can be found in the pool (i.e. that its hash is the same
-     * as when it was inserted.
+     * In debug builds we take this opportunity to check the consistency of of
+     * the atom pool.  We check that each entry has the O_ATOM flag set, and
+     * that it can be found in the pool (i.e.  that its hash is the same as
+     * when it was inserted).  A failure here is a common result of a hash
+     * and/or cmp function that considers information that changes during the
+     * life of the object.
      */
     {
         object_t    **a;
@@ -680,7 +708,7 @@ ici_dump_refs(void)
             printf("The following ojects have spurious left-over reference counts...\n");
             spoken = 1;
         }
-        printf("%d 0x%08X: %s\n", (*a)->o_nrefs, *a, objname(n, *a));
+        printf("%d 0x%08X: %s\n", (*a)->o_nrefs, (unsigned long)*a, ici_objname(n, *a));
     }
 
 }

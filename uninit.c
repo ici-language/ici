@@ -31,20 +31,21 @@ ici_uninit(void)
 {
     int                 i;
     exec_t              *x;
-    extern int          ici_n_allocs;
-    extern struct_t     *ici_environ;
     extern void         ici_dump_refs(void);
-
+    extern string_t     *ici_ver_cache;
+    extern regexp_t     *ici_smash_default_re;
 
     /*
      * This catches the case where ici_uninit() is called without ici_init
      * ever being called.
      */
     assert(ici_zero != NULL);
+    if (ici_zero == NULL)
+        return;
 
     /*
      * Clean up anything registered by modules that are only optionally
-     * compiled in.
+     * compiled in, or loaded modules that register wrap-up functions.
      */
     while (wraps != NULL)
     {
@@ -52,12 +53,18 @@ ici_uninit(void)
         wraps = wraps->w_next;
     }
 
-    /* Clean up ICI variables used by various bits of ICI. */
+    /*
+     * Clean up ICI variables used by various bits of ICI.
+     */
     for (i = 0; i < nels(ici_small_ints); ++i)
     {
         ici_decref(ici_small_ints[i]);
         ici_small_ints[i] = NULL;
     }
+    if (ici_ver_cache != NULL)
+        ici_decref(ici_ver_cache);
+    if (ici_smash_default_re != NULL)
+        ici_decref(ici_smash_default_re);
 
     /* Call uninitialisation functions for compulsory bits of ICI. */
     uninit_compile();
@@ -68,24 +75,33 @@ ici_uninit(void)
      * for their exec structs. But finished ones will have none. We don't
      * really care. Just zap them all and let the garbage collector sort
      * them out. This routine doesn't really handle shutdown with outstanding
-     * threads running.
+     * threads running (not that they can actually be running -- we have the
+     * mutex).
      */
     for (x = ici_execs; x != NULL; x = x->x_next)
         x->o_head.o_nrefs = 0;
 
     /*
-     * We don't decref the static cached copies of our stacks, because
-     * if we did the garbage collector would try to free them (but they
-     * are static objects). However we do empty the stacks.
+     * We don't decref the static cached copies of our stacks, because if we
+     * did the garbage collector would try to free them (they are static
+     * objects, so that would be bad).  However we do empty the stacks.
      */
     ici_vs.a_top = ici_vs.a_base;
     ici_os.a_top = ici_os.a_base;
     ici_xs.a_top = ici_xs.a_base;
 
-    /* The first call moves them to the fast free list and the second actually
-     * cleans up and free()s their memory. */
+    /*
+     * OK, so do one final garbage collect to free all this stuff that should
+     * now be unreferenced.
+     */
     ici_reclaim();
-    ici_reclaim();
+
+    /*
+     * Now free the allocated part of our three special static stacks.
+     */
+    ici_nfree(ici_vs.a_base, (ici_vs.a_limit - ici_vs.a_base) * sizeof(object_t *));
+    ici_nfree(ici_os.a_base, (ici_os.a_limit - ici_os.a_base) * sizeof(object_t *));
+    ici_nfree(ici_xs.a_base, (ici_xs.a_limit - ici_xs.a_base) * sizeof(object_t *));
 
 #if 1 && !defined(NDEBUG)
     ici_decref(&ici_vs);
@@ -99,7 +115,9 @@ ici_uninit(void)
     ici_buf = NULL;
     ici_bufz = 0;
 
-    /* Destroy the now empty tables. */
+    /*
+     * Destroy the now empty atom pool and list of registered objects.
+     */
     ici_nfree(atoms, atomsz * sizeof(object_t *));
     atoms = NULL;
     ici_nfree(objs, (objs_limit - objs) * sizeof(object_t *));

@@ -104,7 +104,7 @@ call_ptr(object_t *o, object_t *subject)
     {
         char    n1[30];
 
-        sprintf(buf, "attempt to call a ptr pointing to %s", objname(n1, o));
+        sprintf(buf, "attempt to call a ptr pointing to %s", ici_objname(n1, o));
         ici_error = buf;
         return 1;
     }
@@ -179,7 +179,7 @@ ici_op_openptr()
 
     if (!isptr(objof(p = ptrof(ici_os.a_top[-1]))))
     {
-        sprintf(buf, "pointer required, but %s given", objname(n, ici_os.a_top[-1]));
+        sprintf(buf, "pointer required, but %s given", ici_objname(n, ici_os.a_top[-1]));
         ici_error = buf;
         return 1;
     }
@@ -201,7 +201,7 @@ ici_op_fetch()
 
     if (!isptr(objof(p = ptrof(ici_os.a_top[-1]))))
     {
-        sprintf(buf, "pointer required, but %s given", objname(n, ici_os.a_top[-1]));
+        sprintf(buf, "pointer required, but %s given", ici_objname(n, ici_os.a_top[-1]));
         ici_error = buf;
         return 1;
     }
@@ -218,7 +218,7 @@ type_t  ptr_type =
     free_ptr,
     hash_ptr,
     cmp_ptr,
-    copy_simple,
+    ici_copy_simple,
     assign_ptr,
     fetch_ptr,
     "ptr",
