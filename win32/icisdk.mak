@@ -4,7 +4,6 @@ ici4-sdk-install.exe : \
 				Release\ici4.dll \
 				Release\ici.exe \
 				Release\iciw.exe \
-                ..\ici.h \
 				..\mk-ici-h.ici
 		cd ..
 		ici mk-ici-h.ici conf-w32.h

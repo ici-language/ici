@@ -83,10 +83,6 @@ CFG=icisdk - Win32 Debug
 
 # Begin Source File
 
-SOURCE=..\ici.h
-# End Source File
-# Begin Source File
-
 SOURCE=".\ici4-sdk-install.nsi"
 # End Source File
 # Begin Source File
