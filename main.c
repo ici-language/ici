@@ -1,3 +1,6 @@
+#ifdef __INTEL_COMPILER
+#include <stddef.h> /* for wchar_t definition */
+#endif
 #include <stdlib.h>
 
 extern int      ici_main();
