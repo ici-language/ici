@@ -1,3 +1,12 @@
+*   Added the default location to the initialisation of path[]
+    for UNIX-like systems. This is to cope with the case where
+    the interpreter is being run from a directory that is not
+    in PATH which is often the case when ici programs are run
+    as CGI scripts under a web server, e.g. Apache.  The default
+    location is based on the value of PREFIX as specified in the
+    Unix makefiles and passed as a macro when building, i.e. the
+    directory PREFIX/lib/ici4 is added to path[].
+
 *   Makefile.osx updated for ici4 and a ProjectBuilder project,
     macosx/ici.pbproj, added to build a static library and
     executable.  Threads are not enabled due to lack of a

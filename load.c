@@ -380,43 +380,49 @@ push_os_path_elements(ici_array_t *a)
     char                *q;
     ici_str_t           *s;
     ici_obj_t           **e;
-    char		*path;
+    char                *path;
     char                fname[FILENAME_MAX];
 
-    if ((path = getenv("PATH")) == NULL)
-        return 0;
-    for (p = path; *p != '\0'; p = *q == '\0' ? q : q + 1)
+    if ((path = getenv("PATH")) != NULL)
     {
-        if ((q = strchr(p, ':')) == NULL)
-            q = p + strlen(p);
-        if (q - 4 < p || memcmp(q - 4, "/bin", 4) != 0 || q - p >= FILENAME_MAX - 10)
-            continue;
-        memcpy(fname, p, (q - p) - 4);
-        strcpy(fname + (q - p) - 4, "/lib/ici4");
-        /*
-         * Don't add inaccessable dirs...
-         */
-        if (access(fname, 0) != 0)
-            continue;
-        if ((s = ici_str_new_nul_term(fname)) == NULL)
-            return 1;
-        /*
-         * Don't add duplicates...
-         */
-        for (e = a->a_base; e < a->a_top; ++e)
+        for (p = path; *p != '\0'; p = *q == '\0' ? q : q + 1)
         {
-            if (*e == objof(s))
-                goto skip;
-        }
-        if (ici_stk_push_chk(a, 1))
-        {
+            if ((q = strchr(p, ':')) == NULL)
+                q = p + strlen(p);
+            if (q - 4 < p || memcmp(q - 4, "/bin", 4) != 0 || q - p >= FILENAME_MAX - 10)
+                continue;
+            memcpy(fname, p, (q - p) - 4);
+            strcpy(fname + (q - p) - 4, "/lib/ici4");
+            /*
+             * Don't add inaccessable dirs...
+             */
+            if (access(fname, 0) != 0)
+                continue;
+            if ((s = ici_str_new_nul_term(fname)) == NULL)
+                return 1;
+            /*
+             * Don't add duplicates...
+             */
+            for (e = a->a_base; e < a->a_top; ++e)
+            {
+                if (*e == objof(s))
+                    goto skip1;
+            }
+            if (ici_stk_push_chk(a, 1))
+            {
+                ici_decref(s);
+                return 1;
+            }
+            *a->a_top++ = objof(s);
+        skip1:
             ici_decref(s);
-            return 1;
         }
-        *a->a_top++ = objof(s);
-    skip:
-        ici_decref(s);
     }
+    /*
+     * Put a default location at the end of the path in case PATH doesn't
+     * contain the directory from which the interpreter was run.
+     */
+    push_path_elements(a, PREFIX "/lib/ici4");
     return 0;
 }
 #endif /* End of selection of which push_os_path_elements() to use */
