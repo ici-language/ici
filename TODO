@@ -59,6 +59,11 @@ intrinsic functions properly.
 
 ---
 
+Make the -e option and a ';' if no trailing ';' or }
+(or allow EOF to terminate statements).
+
+---
+
 Todo before 4.1 release:
 * Either update man pages, or flag them out-of-date.
 * Add at least minimal help to extension modules and make simultaneous release.

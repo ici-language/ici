@@ -18,7 +18,7 @@
 #undef  NOSTARTUPFILE   /* Parse a standard file of ICI code at init time. */
 #undef  NODEBUGGING     /* Debugger interface and functions */
 #define NOEVENTS        /* Event loop and associated processing. */
-#define NOPROFILE       /* Profiler, see profile.c. */
+#undef  NOPROFILE       /* Profiler, see profile.c. */
 #undef  NOSIGNALS       /* ICI level signal handling */
 
 /*
