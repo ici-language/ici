@@ -276,17 +276,17 @@ f_thread()
     if (ici_stk_push_chk(x->x_os, NARGS() + 80))
         goto fail;
     for (i = 1; i < NARGS(); ++i)
-        x->x_os->a_top[NARGS() - i] = ARG(i);
+        x->x_os->a_top[NARGS() - i - 1] = ARG(i);
     x->x_os->a_top += NARGS() - 1;
     /*
      * Now push the number of actuals and the object to call on the
      * new operand stack.
      */
-    if ((x->x_os->a_top[-1] = objof(new_int(NARGS() - 1))) == NULL)
+    if ((*x->x_os->a_top = objof(new_int(NARGS() - 1))) == NULL)
         goto fail;
-    decref(x->x_os->a_top[-1]);
-    ++x->x_os->a_top;
-    *x->x_os->a_top = ARG(0);
+    decref(*x->x_os->a_top);
+	++x->x_os->a_top;
+    *x->x_os->a_top++ = ARG(0);
     /*
      * Create the native machine thread. We incref x to give the new thread
      * it's own reference.

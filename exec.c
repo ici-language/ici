@@ -286,7 +286,6 @@ ici_evaluate(object_t *code, int n_operands)
     }
     ++ici_xs.a_top;
 
-
     /*
      * The execution loop.
      */
