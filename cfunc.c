@@ -909,13 +909,25 @@ f_int()
     register ici_obj_t  *o;
     register long       v;
 
-    if (NARGS() != 1)
+    if (NARGS() < 1)
         return ici_argcount(1);
     o = ARG(0);
     if (isint(o))
         return ici_ret_no_decref(o);
     else if (isstring(o))
-        v = ici_strtol(stringof(o)->s_chars, NULL, 0);
+    {
+        int             base = 0;
+
+        if (NARGS() > 1)
+        {
+            if (!isint(ARG(1)))
+                return ici_argerror(1);
+            base = intof(ARG(1))->i_value;
+            if (base != 0 && (base < 2 || base > 36))
+                return ici_argerror(1);
+        }
+        v = ici_strtol(stringof(o)->s_chars, NULL, base);
+    }
     else if (isfloat(o))
         v = (long)floatof(o)->f_value;
     else
@@ -961,7 +973,17 @@ f_num()
         return ici_ret_no_decref(o);
     else if (isstring(o))
     {
-        i = ici_strtol(stringof(o)->s_chars, &s, 0);
+        int             base = 0;
+
+        if (NARGS() > 1)
+        {
+            if (!isint(ARG(1)))
+                return ici_argerror(1);
+            base = intof(ARG(1))->i_value;
+            if (base != 0 && (base < 2 || base > 36))
+                return ici_argerror(1);
+        }
+        i = ici_strtol(stringof(o)->s_chars, &s, base);
         if (*s == '\0')
             return ici_int_ret(i);
         f = strtod(stringof(o)->s_chars, &s);
