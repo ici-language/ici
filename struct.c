@@ -381,7 +381,7 @@ ici_struct_unassign(ici_struct_t *s, ici_obj_t *k)
  * and 1 if was found. If found, the value is stored in *v.
  *
  * If not NULL, b is a struct that was the base element of this
- * assignment. This is used to mantain the lookup lookaside mechanism.
+ * fetch. This is used to mantain the lookup lookaside mechanism.
  */
 static int
 fetch_super_struct(ici_obj_t *o, ici_obj_t *k, ici_obj_t **v, ici_struct_t *b)
@@ -416,7 +416,7 @@ fetch_super_struct(ici_obj_t *o, ici_obj_t *k, ici_obj_t **v, ici_struct_t *b)
 
     } while (isstruct(o)); /* Merge tail recursion on structs. */
 
-    return fetch_super(o, k, v, b);
+    return ici_fetch_super(o, k, v, b);
 }
 
 /*
@@ -515,7 +515,7 @@ assign_super_struct(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v, ici_struct_t *b)
 
     } while (isstruct(o)); /* Merge tail recursion. */
 
-    return assign_super(o, k, v, b);
+    return ici_assign_super(o, k, v, b);
 }
 
 /*
@@ -569,7 +569,7 @@ assign_struct(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v)
     }
     if (structof(o)->o_head.o_super != NULL)
     {
-        switch (assign_super(structof(o)->o_head.o_super, k, v, structof(o)))
+        switch (ici_assign_super(structof(o)->o_head.o_super, k, v, structof(o)))
         {
         case -1: return 1; /* Error. */
         case 1:  return 0; /* Done. */

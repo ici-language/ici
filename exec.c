@@ -472,7 +472,7 @@ ici_evaluate(ici_obj_t *code, int n_operands)
                  * looked up this name since the last change to the scope
                  * or structures etc.
                  */
-                assert(fetch_super(ici_vs.a_top[-1], o, ici_os.a_top, NULL) == 1);
+                assert(ici_fetch_super(ici_vs.a_top[-1], o, ici_os.a_top, NULL) == 1);
                 assert(*ici_os.a_top == stringof(o)->s_slot->sl_value);
                 *ici_os.a_top++ = stringof(o)->s_slot->sl_value;
             }
@@ -488,7 +488,7 @@ ici_evaluate(ici_obj_t *code, int n_operands)
                  */
                 switch
                 (
-                    fetch_super
+                    ici_fetch_super
                     (
                         ici_vs.a_top[-1],
                         o,
@@ -520,7 +520,7 @@ ici_evaluate(ici_obj_t *code, int n_operands)
                     --ici_xs.a_top;
                     switch
                     (
-                        fetch_super
+                        ici_fetch_super
                         (
                             ici_vs.a_top[-1],
                             o,

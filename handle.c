@@ -242,7 +242,7 @@ fetch_super_handle(ici_obj_t *o, ici_obj_t *k, ici_obj_t **v, ici_struct_t *b)
     }
     if (handleof(o)->o_head.o_super == NULL)
         return 0;
-    return fetch_super(handleof(o)->o_head.o_super, k, v, b);
+    return ici_fetch_super(handleof(o)->o_head.o_super, k, v, b);
 }
 
 static ici_obj_t *
@@ -384,7 +384,7 @@ assign_handle(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v)
      */
     if (handleof(o)->o_head.o_super != NULL)
     {
-        switch (assign_super(h->o_head.o_super, k, v, NULL))
+        switch (ici_assign_super(h->o_head.o_super, k, v, NULL))
         {
         case -1: return 1;
         case 1:  return 0;
@@ -417,7 +417,7 @@ assign_super_handle(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v, ici_struct_t *b)
         return ici_assign_fail(o, k, v);
     if (handleof(o)->o_head.o_super == NULL)
         return 0;
-    return assign_super(handleof(o)->o_head.o_super, k, v, b);
+    return ici_assign_super(handleof(o)->o_head.o_super, k, v, b);
 }
 
 /*

@@ -290,7 +290,8 @@ struct ici_type
 /*
  * Fetch the value of the key 'k' from the object 'o', but only consider
  * the base object, even if there is a super chain. See the notes on
- * 'ici_fetch()', which also apply here.
+ * 'ici_fetch()', which also apply here. The object 'o' *must* be one that
+ * supports super types (such as a 'struct' or a 'handle').
  *
  * This --macro-- forms part of the --ici-api--.
  */
@@ -299,6 +300,41 @@ struct ici_type
  * This version retained for backwards compatibility.
  */
 #define fetch_base(o,k) ((*ici_typeof(o)->t_fetch_base)(objof(o), objof(k)))
+
+/*
+ * Fetch the value of the key 'k' from 'o' and store it through 'v', but only
+ * if the item 'k' is already an element of 'o' or one of its supers.  See the
+ * notes on 'ici_fetch()', which also apply here.  The object 'o' *must* be
+ * one that supports supers (such as a 'struct' or a 'handle').
+ *
+ * This function is used internally in fetches up the super chain (thus the
+ * name).  In this context the argument 'b' indicates the base struct of the
+ * fetch and is used to maintain the internal lookup look-aside mechanism.  If
+ * not used in this manner, 'b' should be supplied as NULL.
+ *
+ * Return -1 on error, 0 if it was not found, and 1 if it was found.  If
+ * found, the value is stored in *v.
+ *
+ * This --macro-- forms part of the --ici-api--.
+ */
+#define ici_fetch_super(o,k,v,b) ((*ici_typeof(o)->t_fetch_super)(objof(o), objof(k), v, b))
+
+/*
+ * Assign the value 'v' at the key 'k' of the object 'o', but only if the key
+ * 'k' is already an element of 'o' or one of its supers.  The object 'o'
+ * *must* be one that supports supers (such as a 'struct' or a 'handle').
+ *
+ * This function is used internally in assignments up the super chain (thus
+ * the name).  In this context the argument 'b' indicates the base struct of
+ * the assign and is used to maintain the internal lookup look-aside
+ * mechanism.  If not used in this manner, 'b' should be supplied as NULL.
+ *
+ * Return -1 on error, 0 if it was not found, and 1 if the assignment was
+ * completed.
+ *
+ * This --macro-- forms part of the --ici-api--.
+ */
+#define ici_assign_super(o,k,v,b) ((*ici_typeof(o)->t_assign_super)(objof(o), objof(k), objof(v), b))
 
 /*
  * Increment the object 'o's reference count.  References from ordinary
@@ -492,7 +528,7 @@ struct ici_objwsup
 #define TC_STRUCT       13
 #define TC_SET          14
 
-#define TC_MAX_BINOP    14 /* Max of 15 binary op args. */
+#define TC_MAX_BINOP    14 /* Max of 15 for binary op args. */
 
 #define TC_EXEC         15
 #define TC_FILE         16
@@ -520,8 +556,6 @@ struct ici_objwsup
 #define hash(o)         ((*ici_typeof(o)->t_hash)(objof(o)))
 #define cmp(o1,o2)      ((*ici_typeof(o1)->t_cmp)(objof(o1), objof(o2)))
 #define copy(o)         ((*ici_typeof(o)->t_copy)(objof(o)))
-#define assign_super(o,k,v,b) ((*ici_typeof(o)->t_assign_super)(objof(o), objof(k), objof(v), b))
-#define fetch_super(o,k,v,b) ((*ici_typeof(o)->t_fetch_super)(objof(o), objof(k), v, b))
 
 #ifndef BUGHUNT
 
