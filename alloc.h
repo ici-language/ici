@@ -70,7 +70,7 @@ extern void             ici_free(void *);
                         : sizeof(t) <= 16 ? 1 \
                         : sizeof(t) <= 32 ? 2 \
                         : sizeof(t) <= 64 ? 3 \
-                        : sizeof(t))
+                        : 0)
 
 /*
  * If the object is too big for a fast free list, these macros should reduce
@@ -92,7 +92,7 @@ extern void             ici_free(void *);
         ? (*(char **)(p) = ici_flists[ICI_FLIST(t)],    \
             ici_flists[ICI_FLIST(t)] = (char *)(p),     \
             ici_mem -= sizeof(t))                       \
-        : ici_nfree((p), sizeof(t)))
+        : (ici_nfree((p), sizeof(t)), 0))
 
 extern char             *ici_flists[4];
 extern char             *ici_fltmp;

@@ -538,7 +538,7 @@ extern void             bughunt_rego(ici_obj_t *);
 #define ICI_STORE_ATOM_AND_COUNT(po, s) \
         ((*(po) = objof(s)), \
         ((++ici_natoms > atomsz / 2) ? \
-            ici_grow_atoms(atomsz * 2) : 0))
+            ici_grow_atoms(atomsz * 2), 0 : 0))
 
 #define ici_atom_hash_index(h)  ((h) & (atomsz - 1))
 
