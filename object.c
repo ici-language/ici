@@ -21,7 +21,12 @@
 #define ALLCOLLECT      0       /* Collect on every alloc call. */
 
 /*
- * The global error message pointer.
+ * The global error message pointer. The ICI error return convention
+ * dictacts that the originator of an error sets this to point to a
+ * short human readable string, in addition to returning the functions
+ * error condition. See 'The error return convention' for more details.
+ *
+ * This --variable-- forms part of the --ici-api--.
  */
 char            *ici_error;
 
@@ -106,8 +111,9 @@ int             ici_natoms;     /* Number of atomic objects. */
 int             ici_supress_collect;
 
 /*
- * Format a human readable version of the object in less than 30 chars.
- * Returns 'p'.
+ * Format a human readable version of the object 'o' into the buffer
+ * 'p' in less than 30 chars. Returns 'p'. See 'The error return
+ * convention' for some examples.
  *
  * This --func-- forms part of the --ici-api--.
  */
@@ -162,8 +168,19 @@ ici_register_type(ici_type_t *t)
 }
 
 /*
- * Return a copy of the given object, or NULL on error.
- * See the comment on t_copy() in object.h.
+ * This is a convenience function which can be used directly as the 't_copy'
+ * entry in a type's 'ici_type_t' struction if object of this type are
+ * intrinsically unique (i.e.  are one-to-one with the memory they occupy, and
+ * can't be merged) or intrinsically atomic (i.e.  are one-to-one with their
+ * value, are are always merged).  An object type would be instrinsically
+ * unique if you didn't want to support comparison that considered the
+ * contents, and/or didn't want to support copying.  An intrinsically atomic
+ * object type would also use this function because, by definition, if you
+ * tried to copy the object, you'd just end up with the same one anyway.
+ *
+ * It increfs 'o', and returns it.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 ici_obj_t *
 ici_copy_simple(ici_obj_t *o)
@@ -173,13 +190,16 @@ ici_copy_simple(ici_obj_t *o)
 }
 
 /*
- * Assign to key k of the object o the value v. Return 1 on error, else 0.
- * See the comment on t_assign() in object.h.
+ * This is a convenience function which can be used directly as the 't_assign'
+ * entry in a type's 'ici_type_t' struction if the type doesn't support
+ * asignment.  It sets 'ici_error' to a message of the form:
  *
- * This is a generic function which can be used directly as the assign
- * function of a type which doesn't support assignment, or called from
- * within a custom assign function in cases where the particular assignment
- * is illegal.
+ *  attempt to set %s keyed by %s to %s
+ *
+ * and returns 1.  Also, it can b called from within a custom assign function
+ * in cases where the particular assignment is illegal.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 int
 ici_assign_fail(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v)
@@ -197,13 +217,16 @@ ici_assign_fail(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v)
 }
 
 /*
- * Return the object at key k of the obejct o, or NULL on error.
- * See the comment on t_fetch in object.h.
+ * This is a convenience function which can be used directly as the 't_fetch'
+ * entry in a type's 'ici_type_t' struction if the type doesn't support
+ * fetching.  It sets 'ici_error' to a message of the form:
  *
- * This is a generic function which can be used directly as the fetch
- * function of a type which doesn't support fetching, or called from
- * within a custom fetch function in cases where the particular fetch
- * is illegal.
+ *  attempt to read %s keyed by %
+ *
+ * and returns 1.  Also, it can b called from within a custom assign function
+ * in cases where the particular fetch is illegal.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 ici_obj_t *
 ici_fetch_fail(ici_obj_t *o, ici_obj_t *k)
@@ -219,9 +242,17 @@ ici_fetch_fail(ici_obj_t *o, ici_obj_t *k)
 }
 
 /*
- * Returns 0 if these objects are equal, else non-zero.
- * For objects which can't be copied and are intrinsically unique.
- * See the comments on t_cmp() in object.h.
+ * This is a convenience function which can be used directly as the 't_cmp'
+ * entry in a type's 'ici_type_t' struction if object of this type are
+ * intrinsically unique.  That is, the object is one-to-one with the memory
+ * allocated to hold it.  An object type would be instrinsically unique if you
+ * didn't want to support comparison that considered the contents, and/or
+ * didn't want to support copying.  If you use this function you should almost
+ * certainly also be using 'ici_hash_unique' and 'ici_copy_simple'.
+ *
+ * It returns 0 if the objects are the same object, else 1.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 int
 ici_cmp_unique(ici_obj_t *o1, ici_obj_t *o2)
@@ -230,8 +261,17 @@ ici_cmp_unique(ici_obj_t *o1, ici_obj_t *o2)
 }
 
 /*
- * Return a hash sensitive to the value of the object.
- * See the comment on t_hash() in object.h
+ * This is a convenience function which can be used directly as the 't_hash'
+ * entry in a type's 'ici_type_t' struction if object of this type are
+ * intrinsically unique.  That is, the object is one-to-one with the memory
+ * allocated to hold it.  An object type would be instrinsically unique if you
+ * didn't want to support comparison that considered the contents, and/or
+ * didn't want to support copying.  If you use this function you should almost
+ * certainly also be using 'ici_cmp_unique' and 'ici_copy_simple'.
+ *
+ * It returns hash based on the address 'o'.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 unsigned long
 ici_hash_unique(ici_obj_t *o)
@@ -304,17 +344,31 @@ ici_grow_atoms(ptrdiff_t newz)
     ici_grow_atoms_core(newz);
 }
 
-
-
 /*
- * Return an object equal to the one given, but possibly shared by others.
- * Never fails, at worst it just returns its argument.  If the lone flag
- * is given, the object is free'd if it isn't used.  ("lone" because the
- * caller has the lone reference to it and will replace that with what
- * atom returns anyway.)  If the lone flag is not given, and the object
- * would be used, a copy will be used.  Also note that if lone is true and
- * the object is not used, the nrefs of the passed object will be transfered
- * to the object being returned.
+ * Return the atomic form of the given object 'o'.  This will be an object
+ * equal to the one given, but read-only and possibly shared by others.  (If
+ * the object it already the atomic form, it is just returned.)
+ *
+ * This is achieved by looking for an object of equal value in the
+ * 'atom pool'. The atom pool is a hash table of all atoms. The object's
+ * 't_hash' and 't_cmp' functions will be used it this lookup process
+ * (from this object's 'ici_type_t' struct).
+ * 
+ * If an existing atomic form of the object is found in the atom pool,
+ * it is returned.
+ *
+ * If the 'lone' flag is 1, the object is free'd if it isn't used.
+ * ("lone" because the caller has the lone reference to it and will replace
+ * that with what atom returns anyway.) If the 'lone' flag is zero, and the
+ * object would be used (rather than returning an equal object already in the
+ * atom pool), a copy will made and that copy stored in the atom pool and
+ * returned.  Also note that if lone is 1 and the object is not used, the
+ * nrefs of the passed object will be transfered to the object being returned.
+ *
+ * Never fails, at worst it just returns its argument (for historical
+ * reasons).
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 ici_obj_t *
 ici_atom(ici_obj_t *o, int lone)
@@ -396,41 +450,18 @@ atom_probe(ici_obj_t *o, ici_obj_t ***ppo)
 
 /*
  * Probe the atom pool for an atomic form of o.  If found, return that atomic
- * form, else NULL.  Used by various new_*() routines.  These routines
- * generally set up a dummy version of the object being made which is passed
- * to this probe.  If it finds a match, that is returned, thus avoiding the
- * allocation of an object that may be thrown away anyway.
+ * form, else NULL.  This can be use by *_new() routines of intrinsically
+ * atomic objects.  These routines generally set up a dummy version of the
+ * object being made which is passed to this probe.  If it finds a match, that
+ * is returned, thus avoiding the allocation of an object that may be thrown
+ * away anyway.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 ici_obj_t *
 ici_atom_probe(ici_obj_t *o)
 {
     return atom_probe(o, NULL);
-}
-
-/*
- * Quick search for an int to save allocation/deallocation if it already
- * exists.
- */
-ici_int_t *
-atom_int(long i)
-{
-    ici_obj_t   *o;
-    ici_obj_t   **po;
-
-    /*
-     * NB: There is an in-line version of this code in binop.h
-     */
-    for
-    (
-        po = &atoms[ici_atom_hash_index((unsigned long)i * INT_PRIME)];
-        (o = *po) != NULL;
-        --po < atoms ? po = atoms + atomsz - 1 : NULL
-    )
-    {
-        if (isint(o) && intof(o)->i_value == i)
-            return intof(o);
-    }
-    return NULL;
 }
 
 /*

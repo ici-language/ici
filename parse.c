@@ -2013,10 +2013,16 @@ none:
 }
 
 /*
- * s    Scope; autos, statics, externs.
+ * Parse the given file 'f' in the given scope 's'. It is common to call
+ * this function with 's' being 'ici_vs.a_top[-1]', that is, the current
+ * scope.
+ *
+ * Returns non-zero on error, usual conventions.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 int
-parse_module(ici_file_t *f, ici_objwsup_t *s)
+ici_parse(ici_file_t *f, ici_objwsup_t *s)
 {
     ici_parse_t         *p;
     ici_obj_t           *o;
@@ -2038,11 +2044,13 @@ parse_module(ici_file_t *f, ici_objwsup_t *s)
 }
 
 /*
- * Parse a file as a new top-level module.  This function takes a generic
- * file-like stream.  The specific stream is identified by 'file' and the
- * stdio-like access functions required to read it are contained in the
- * structure pointed to by 'ftype'.  A name for the module, for use in error
- * messages, is supplied in 'mname' (typically the name of the file).
+ * Parse a file as a new top-level module.  This function create new auto and
+ * static scopes, and makes the current static scope the exern scope of the
+ * new module.  This function takes a generic file-like stream.  The specific
+ * stream is identified by 'file' and the stdio-like access functions required
+ * to read it are contained in the structure pointed to by 'ftype'.  A name
+ * for the module, for use in error messages, is supplied in 'mname'
+ * (typically the name of the file).
  *
  * This function can be used when the source of data to be parsed is not a
  * real file, but some other source like a resource.
@@ -2050,6 +2058,8 @@ parse_module(ici_file_t *f, ici_objwsup_t *s)
  * The file is closed prior to a successful return, but not a failure.
  *
  * Return 0 if ok, else -1, usual conventions.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 int
 ici_parse_file(char *mname, char *file, ici_ftype_t *ftype)
@@ -2070,7 +2080,7 @@ ici_parse_file(char *mname, char *file, ici_ftype_t *ftype)
     ici_decref(s);
     s->o_super = objwsupof(ici_vs.a_top[-1])->o_super;
 
-    if (parse_module(f, a) < 0)
+    if (ici_parse(f, a) < 0)
         goto fail;
     ici_file_close(f);
     ici_decref(a);

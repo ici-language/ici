@@ -100,6 +100,12 @@ free_struct(ici_obj_t *o)
     ++ici_vsver;
 }
 
+/*
+ * Return a new ICI struct object. The returned struct has been increfed.
+ * Returns NULL on error, usual conventions.
+ *
+ * This --func-- forms part of the --ici-api--.
+ */
 ici_struct_t *
 ici_struct_new(void)
 {
@@ -314,7 +320,9 @@ grow_struct(ici_struct_t *s)
 }
 
 /*
- * Remove the key from the structure, ignoring super-structs.
+ * Remove the key 'k' from the ICI struct object 's', ignoring super-structs.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 void
 ici_struct_unassign(ici_struct_t *s, ici_obj_t *k)

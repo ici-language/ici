@@ -351,6 +351,7 @@ extern int              ici_method_check(ici_obj_t *o, int tcode);
 extern unsigned long    ici_crc(unsigned long, unsigned char const *, ptrdiff_t);
 extern int              ici_str_need_size(ici_str_t *, int);
 extern ici_str_t        *ici_str_buf_new(int);
+extern int              ici_parse(ici_file_t *, ici_objwsup_t *);
 
 extern ici_exec_t       *ici_leave(void);
 extern void             ici_enter(ici_exec_t *);
@@ -426,9 +427,7 @@ extern char             *ici_binop_name(int);
 extern ici_sslot_t      *find_slot(ici_struct_t **, ici_obj_t *);
 extern ici_sslot_t      *find_raw_slot(ici_struct_t *, ici_obj_t *);
 extern ici_obj_t        *atom_probe(ici_obj_t *, ici_obj_t ***);
-extern ici_int_t        *atom_int(long);
 extern int              parse_exec(void);
-extern int              parse_module(ici_file_t *, ici_objwsup_t *);
 extern ici_parse_t      *new_parse(ici_file_t *);
 extern ici_catch_t      *new_catch(ici_obj_t *, int, int, int);
 extern ici_func_t       *new_func(void);

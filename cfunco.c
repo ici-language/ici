@@ -51,17 +51,17 @@ fetch_cfunc(ici_obj_t *o, ici_obj_t *k)
 }
 
 /*
- * Assign the structure s all the intrinsic functions listed in the array
- * of ici_cfunc_t structures pointed to by cf. The array must be terminated by
- * an entry with a cf_name of NULL. Typically, entries in the array are
- * formated as:
+ * Assign into the structure 's' all the intrinsic functions listed in the
+ * array of 'ici_cfunc_t' structures pointed to by 'cf'.  The array must be
+ * terminated by an entry with a 'cf_name' of NULL.  Typically, entries in the
+ * array are formated as:
  *
  *  {CF_OBJ,    "func",     f_func},
  *
- * Where CF_OBJ is a convenience macro from to take care of the
- * normal object header, "func" is the name your function will be assigned
- * to in the given struct, and 'f_func' is a C function obeying the rules
- * of ICI intrinsic functions.
+ * Where CF_OBJ is a convenience macro to take care of the normal object
+ * header, "func" is the name your function will be assigned to in the given
+ * struct, and 'f_func' is a C function obeying the rules of ICI intrinsic
+ * functions.
  *
  * Returns non-zero on error, in which case error is set, else zero.
  *

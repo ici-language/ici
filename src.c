@@ -2,36 +2,6 @@
 #include "exec.h"
 #include "src.h"
 
-#ifdef NOTDEF
-/*
- * Search a the code array the given 'pc' references for the source
- * marker that is just before or at pc->pc_next. Return that source
- * marker (NULL if none) without incref.
- */
-ici_src_t *
-ici_find_src(ici_pc_t *pc)
-{
-    ici_src_t           *candidate;
-    int                 code_index;
-    object_t            **e;
-
-    /*
-     * Code arrarys are always stacks, so it is save to do this.
-     */
-    code_index = pc->pc_next - pc->pc_code->pc_bot;
-    candidate = NULL;
-    for (e = pc->pc_code->pc_bot; e < pc->pc_code->pc_top; ++e)
-    {
-        if (!issrc(*e))
-            continue;
-        if (srcof(*e)->s_code_index >= code_index)
-            break;
-        candidate = *e;
-    }
-    return candidate;
-}
-#endif
-
 /*
  * Mark this and referenced unmarked objects, return memory costs.
  * See comments on t_mark() in object.h.

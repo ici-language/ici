@@ -221,10 +221,6 @@ SOURCE=..\load.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\PCRE\maketables.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\mark.c
 # End Source File
 # Begin Source File

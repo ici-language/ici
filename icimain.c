@@ -218,7 +218,7 @@ ici_main(int argc, char *argv[])
                     if ((f = ici_sopen(s, strlen(s), NULL)) == NULL)
                         goto fail;
                     f->f_name = SS(empty_string);
-                    if (parse_module(f, objwsupof(ici_vs.a_top[-1])) < 0)
+                    if (ici_parse(f, objwsupof(ici_vs.a_top[-1])) < 0)
                         goto fail;
                     ici_decref(f);
                     break;

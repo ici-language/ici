@@ -21,7 +21,7 @@ long                    ici_n_active_threads;
  * or static variables. You would want to call this because you are
  * about to do something that uses a lot of CPU time or blocks for
  * any real time. But you must not even sniff any of ICI's data until
- * after you call ici_enter() again. ici_leave() releases the global
+ * after you call 'ici_enter()' again. 'ici_leave()' releases the global
  * ICI mutex that stops ICI threads from simultaneous access to common data.
  * All ICI objects are "common data" because they are shared between
  * threads.
@@ -32,7 +32,15 @@ long                    ici_n_active_threads;
  * call to ici_enter() you will make some time in the future.
  *
  * If the current thread is in an ICI level critical section (e.g.
- * the test or body of a watifor) this will have no effect.
+ * the test or body of a watifor) this will have no effect (but should
+ * still be matched with a call to 'ici_enter()'.
+ *
+ * This function never fails.
+ *
+ * Note that even ICI implementations without thread support provide this
+ * function. In these implemnetations it has no effect.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 ici_exec_t *
 ici_leave(void)
@@ -77,14 +85,19 @@ ici_leave(void)
 /*
  * Enter code that uses ICI data. ICI data referes to *any* ICI objects
  * or static variables. You must do this after having left ICI's mutex
- * domain, by calling ici_leave(), before you again access any ICI data.
+ * domain, by calling 'ici_leave()', before you again access any ICI data.
  * This call will re-acquire the global ICI mutex that gates access to
  * common ICI data. You must pass in the ICI execution context pointer
- * that you remembered from the previous matching call to ici_leave().
+ * that you remembered from the previous matching call to 'ici_leave()'.
  *
- * If the thread was in an ICI level critical section when the ici_leave()
+ * If the thread was in an ICI level critical section when the 'ici_leave()'
  * call was made, then this will have no effect (mirroring the no effect
  * that happened when the ici_leave() was done).
+ *
+ * Note that even ICI implementations without thread support provide this
+ * function. In these implemnetations it has no effect.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 void
 ici_enter(ici_exec_t *x)
@@ -134,7 +147,15 @@ ici_enter(ici_exec_t *x)
 
 /*
  * Allow a switch away from, and back to, this ICI thread, otherwise
- * no effect.
+ * no effect. This allows other ICI threads to run, but by the time
+ * this function returns, the ICI mutex has be re-acquired for the
+ * current thread. This is the same as as 'ici_enter(ici_leave())',
+ * except it is more efficient when no actual switching was required.
+ *
+ * Note that even ICI implementations without thread support provide this
+ * function. In these implemnetations it has no effect.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 void
 ici_yield(void)
@@ -192,9 +213,23 @@ ici_yield(void)
 
 /*
  * Wait for the given object to be signaled. This is the core primitive of
- * the waitfor ICI language construct. It expects to be called within (one
- * level of) critical section, and releases it (by one level only) around
- * the actual wait.
+ * the waitfor ICI language construct. However this function only does the
+ * actual waiting part. When called, it will release the ICI mutex, and
+ * wait for the object 'o' to be signaled by an 'ici_wakeup' call. It will
+ * the re-aquire the mutex and return. It should always be assumed that
+ * any particular object could be "woken up" for reasons that are not
+ * aparent to the waiter. In other words, always check that the condition
+ * that necessitates you waiting has really finished.
+ *
+ * The caller of this function would use a loop such as:
+ *
+ *  while (condition-not-met)
+ *      waitfor(object);
+ *
+ * Returns non-zero on error. Usual conventions. Note that this function
+ * will always fail in implementations without thread support.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 int
 ici_waitfor(ici_obj_t *o)
@@ -204,7 +239,6 @@ ici_waitfor(ici_obj_t *o)
 
     e = NULL;
     ici_exec->x_waitfor = o;
-    --ici_exec->x_critsect;
     x = ici_leave();
 #ifdef ICI_USE_WIN32_THREADS
     /*
@@ -224,7 +258,6 @@ ici_waitfor(ici_obj_t *o)
 # endif
 #endif
     ici_enter(x);
-    ++ici_exec->x_critsect;
     if (e != NULL)
     {
         ici_error = e;
@@ -236,6 +269,8 @@ ici_waitfor(ici_obj_t *o)
 /*
  * Wake up all ICI threads that are waiting for the given object (and
  * thus allow them re-evaluate their wait expression).
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 int
 ici_wakeup(ici_obj_t *o)

@@ -1128,7 +1128,7 @@ f_parse()
         return ici_argerror(0);
     }
 
-    if (parse_module(f, objwsupof(a)) < 0)
+    if (ici_parse(f, objwsupof(a)) < 0)
         goto fail;
 
     if (isstring(o))
@@ -1198,7 +1198,7 @@ f_include()
 #ifndef NODEBUGGING
     ici_debug_respect_errors();
 #endif
-    rc = parse_module(f, objwsupof(a));
+    rc = ici_parse(f, objwsupof(a));
     ici_call(SS(close), "o", f);
     ici_decref(f);
     return rc < 0 ? 1 : ici_ret_no_decref(objof(a));

@@ -67,6 +67,12 @@ free_set(ici_obj_t *o)
     ici_tfree(o, ici_set_t);
 }
 
+/*
+ * Return a new ICI set object. The returned set has been increfed.
+ * Returns NULL on error, usual conventions.
+ *
+ * This --func-- forms part of the --ici-api--.
+ */
 ici_set_t *
 ici_set_new()
 {

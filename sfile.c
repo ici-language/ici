@@ -88,11 +88,17 @@ ici_ftype_t string_ftype =
 };
 
 /*
- * Create a file object that treats the given data (of length size) as
- * a read-only file. If ref is non-NULL it is assumed to be an object
- * that must hang around for this data to stay valid, and the data is
- * used in-place. But if ref is NULL, it is assumed that the data must
- * be copied.
+ * Create an ICI file object that treats the given 'data' (of length 'size')
+ * as a read-only file.  If 'ref' is non-NULL it is assumed to be an object
+ * that must hang around for this data to stay valid, and the data is used
+ * in-place (this is used when reading an ICI string as a file).  But if 'ref'
+ * is NULL, it is assumed that the data must be copied into a private
+ * allocation first.
+ * The private allocation will be freed when the file is closed.
+ *
+ * Returns NULL on error, usual conventions.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 ici_file_t *
 ici_sopen(char *data, int size, ici_obj_t *ref)

@@ -127,6 +127,16 @@ call_ptr(ici_obj_t *o, ici_obj_t *subject)
     return (*ici_typeof(f)->t_call)(f, NULL);
 }
 
+/*
+ * Return a new ICI pointer object. The pointer will point to the element
+ * keyed by 'k' in the object 'a'.
+ *
+ * The returned object has had it' reference count incremented.
+ *
+ * Returns NULL on error, usual conventions.
+ *
+ * This --func-- forms part of the --ici-api--.
+ */
 ici_ptr_t *
 ici_ptr_new(ici_obj_t *a, ici_obj_t *k)
 {

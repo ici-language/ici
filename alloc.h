@@ -19,12 +19,22 @@
  */
 
 /*
- * Allocate an object of the given type. Return NULL on failure, usual
- * conventions. The resulting object *must* be freed with ici_tfree().
- * Note that ici_tfree() also requires to know the type of the object
+ * Allocate an object of the given type 't'. Return NULL on failure, usual
+ * conventions. The resulting object *must* be freed with 'ici_tfree()'.
+ * Note that 'ici_tfree()' also requires to know the type of the object
  * being freed.
+ *
+ * This --macro-- forms part of the --ici-api--.
  */
 #define ici_talloc(t)   ici_nalloc(sizeof(t))
+
+/*
+ * Free the object 'o' which was allocated by a call to 'ici_talloc()' with
+ * the type 't'.  The object *must* have been allocated with 'ici_talloc()'.
+ *
+ * This --macro-- forms part of the --ici-api--.
+ */
+
 #define ici_tfree(p, t) ici_nfree((p), sizeof(t))
 
 extern void             *ici_nalloc(size_t);

@@ -19,6 +19,8 @@
  * methods) is present (indicating a method call was made) and is an
  * object with a super and, (if tcode != TC_NONE) has the given type
  * code. Else return 1 and set error appropriately.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 int
 ici_method_check(ici_obj_t *o, int tcode)

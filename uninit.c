@@ -6,12 +6,14 @@
 static ici_wrap_t       *wraps;
 
 /*
- * Register the function func to be called at ICI interpreter shutdown
- * (i.e. ici_uninit() call).
+ * Register the function 'func' to be called at ICI interpreter shutdown
+ * (i.e. 'ici_uninit()' call).
  *
- * The caller must supply a ici_wrap_t struct, which is usually statically
+ * The caller must supply a 'ici_wrap_t' struct, which is usually statically
  * allocated. This structure will be linked onto an internal list and
- * be unavailable till after ici_uninit() is called.
+ * be unavailable till after 'ici_uninit()' is called.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 void
 ici_atexit(void (*func)(void), ici_wrap_t *w)
@@ -22,9 +24,18 @@ ici_atexit(void (*func)(void), ici_wrap_t *w)
 }
 
 /*
- * Shut down the interpreter and clean up any allocations.
+ * Shut down the interpreter and clean up any allocations.  This function is
+ * the reverse of 'ici_init()'.  It's first action is to call any wrap-up
+ * functions registered through 'ici_atexit()'
  *
- * This function is the reverse of ici_init().
+ * Calling 'ici_init()' again after calling this hasn't been adequately
+ * tested.
+ *
+ * This routine currently does not handle shutdown of other threads,
+ * either gracefully or ungracefully. They are all left blocked on the
+ * global ICI mutex without any help of recovery.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 void
 ici_uninit(void)

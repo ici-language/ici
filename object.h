@@ -207,12 +207,13 @@ struct ici_type
                                 : (*ici_typeof(o)->t_mark)(objof(o))) \
                             : 0L)
 
+#define ici_fetch(o,k)      ((*ici_typeof(o)->t_fetch)(objof(o), objof(k)))
+#define ici_assign(o,k,v)   ((*ici_typeof(o)->t_assign)(objof(o), objof(k), objof(v)))
+
 #define freeo(o)        ((*ici_typeof(o)->t_free)(objof(o)))
 #define hash(o)         ((*ici_typeof(o)->t_hash)(objof(o)))
 #define cmp(o1,o2)      ((*ici_typeof(o1)->t_cmp)(objof(o1), objof(o2)))
-#define ici_fetch(o,k)      ((*ici_typeof(o)->t_fetch)(objof(o), objof(k)))
 #define copy(o)         ((*ici_typeof(o)->t_copy)(objof(o)))
-#define ici_assign(o,k,v)   ((*ici_typeof(o)->t_assign)(objof(o), objof(k), objof(v)))
 #define assign_super(o,k,v,b) ((*ici_typeof(o)->t_assign_super)(objof(o), objof(k), objof(v), b))
 #define fetch_super(o,k,v,b) ((*ici_typeof(o)->t_fetch_super)(objof(o), objof(k), v, b))
 #define assign_base(o,k,v) ((*ici_typeof(o)->t_assign_base)(objof(o), objof(k), objof(v)))
@@ -246,12 +247,12 @@ struct ici_obj
 /*
  * o_tcode              The small integer type code that characterises
  *                      this object. Standard core types have well known
- *                      codes identified by the TC_* defines below. Other
+ *                      codes identified by the TC_* defines. Other
  *                      types are registered at run-time and are given
  *                      the next available code.
  *
  *                      This code can be used to index ici_types[] to discover
- *                      a pointer to the type structure (see above).
+ *                      a pointer to the type structure.
  *
  * o_flags              Some boolean flags. Well known flags that apply to
  *                      all object occupy the lower 4 bits of this byte.
@@ -304,18 +305,28 @@ struct ici_objwsup
 #define OBJ(tc)    {(tc), 0, 1, 0}
 
 /*
- * Set the basic fields of an object header. This macro is prefered to doing it
- * by hand in case there is any future change in the structure. See comments
- * on each field above.
+ * Set the basic fields of the object header of 'o'.  'o' can be any struct
+ * declared with an object header (this macro casts it).  This macro is
+ * prefered to doing it by hand in case there is any future change in the
+ * structure.  See comments on each field of 'ici_obj_t'.  This is normally
+ * the first thing done after allocating a new bit of memory to hold an ICI
+ * object.
+ *
+ * This --macro-- forms part of the --ici-api--.
  */
 #define ICI_OBJ_SET_TFNZ(o, tcode, flags, nrefs, leafz) \
     (objof(o)->o_tcode = (tcode), \
      objof(o)->o_flags = (flags), \
      objof(o)->o_nrefs = (nrefs), \
      objof(o)->o_leafz = (leafz))
-   /*(*(unsigned long *)(o) = (tcode) | ((flags) << 8) | ((nrefs) << 16) | ((leafz) << 24))
 
-    */
+/*
+ * I was really hoping that most compilers would reduce the above to a
+ * single word write. Especially as they are all constants most of the
+ * time. Maybe in future we can have some endian specific code to to
+ * it manually.
+ (*(unsigned long *)(o) = (tcode) | ((flags) << 8) | ((nrefs) << 16) | ((leafz) << 24))
+ */
 
 /*
  * Append an object onto the list of all objects visible to the garbage

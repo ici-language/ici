@@ -6,9 +6,12 @@
 #include <windows.h>
 
 /*
- * Convert the current Win32 error into an ICI error message.
- * Returns 1 so it can be use directly in a return from an
- * ICI instrinsic function.
+ * Windows only.  Convert the current Win32 error (that is, the value of
+ * 'GetLastError()') into an ICI error message and sets ici_error to point to
+ * it.  Returns 1 so it can be use directly in a return from an ICI instrinsic
+ * function.
+ *
+ * This --func-- forms part of the --ici-api--.
  */
 int
 ici_get_last_win32_error(void)

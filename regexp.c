@@ -21,6 +21,14 @@
 int     re_bra[(NSUBEXP + 1) * 3];
 int     re_nbra;
 
+/*
+ * Return a new ICI regxep compiled from the given string 's'. 'flags'
+ * may contain PCRE option settings as descriped in man pcre.3
+ *
+ * The returned object has had it' reference count incremented.
+ *
+ * Returns NULL on error, usual conventions.
+ */
 ici_regexp_t *
 ici_regexp_new(ici_str_t *s, int flags)
 {

@@ -275,7 +275,7 @@ forall (file in files)
                      * right. Why? I can't work it out. Maybe it's a bug
                      * in FM. Maybe I just don't understand.
                      */
-                    strcatf(mml, "<CodeIn1cm>\\ %s", para);
+                    strcatf(mml, "<CodeIn1cm><pts 9>\\ %s", para);
                 }
                 tag = "CodeIn1cm";
             }

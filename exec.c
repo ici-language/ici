@@ -311,7 +311,7 @@ get_pc(ici_array_t *code, ici_obj_t **xs)
  * Then many of the op_type operations got unrolled in the loop in the same
  * way. Gotos got added to short-circuit some of the steps where possible.
  * Then they got removed, apart from the fail exits. Then one got added
- * again.
+ * again. And again.
  *
  * Note that binop.h is included half way down this function.
  */
@@ -345,14 +345,11 @@ ici_evaluate(ici_obj_t *code, int n_operands)
      * It's not registered with the garbage collector, so after that, it's
      * just gone.  We do this to save allocation/collection of an object on
      * every call from C to ICI.  This object *will* be seen by the mark phase
-     * of the garbage collection, which may occur is a thread other than this
+     * of the garbage collection, which may occur in a thread other than this
      * one.  This is likely to cause a good memory integrity checking system
      * to complain.
      */
-    frame.o_head.o_tcode = TC_CATCH;
-    frame.o_head.o_flags = CF_EVAL_BASE;
-    frame.o_head.o_nrefs = 0;
-    frame.o_head.o_leafz = 0;
+    ICI_OBJ_SET_TFNZ(&frame, TC_CATCH, CF_EVAL_BASE, 0, 0);
     frame.c_catcher = NULL;
     frame.c_odepth = (ici_os.a_top - ici_os.a_base) - n_operands;
     frame.c_vdepth = ici_vs.a_top - ici_vs.a_base;
@@ -769,8 +766,6 @@ ici_evaluate(ici_obj_t *code, int n_operands)
                  *                => value (os, for value)
                  *                => aggr key (os, for lvalue)
                  */
-                if (ici_debug_active)
-                    ici_debug->idbg_watch(ici_vs.a_top[-1], ici_os.a_top[-2], ici_os.a_top[-1]);
                 if (assign_base(ici_vs.a_top[-1], ici_os.a_top[-2],ici_os.a_top[-1]))
                     goto fail;
                 switch (opof(o)->op_code)
@@ -806,8 +801,6 @@ ici_evaluate(ici_obj_t *code, int n_operands)
                  *                => value (os, for value)
                  *                => aggr key (os, for lvalue)
                  */
-                if (ici_debug_active)
-                    ici_debug->idbg_watch(ici_os.a_top[-3], ici_os.a_top[-2], ici_os.a_top[-1]);
                 if
                 (
                     stringof(ici_os.a_top[-2])->s_struct == structof(ici_os.a_top[-3])
@@ -832,8 +825,6 @@ ici_evaluate(ici_obj_t *code, int n_operands)
                  *                => value (os, for value)
                  *                => aggr key (os, for lvalue)
                  */
-                if (ici_debug_active)
-                    ici_debug->idbg_watch(ici_os.a_top[-3], ici_os.a_top[-2], ici_os.a_top[-1]);
                 if (hassuper(ici_os.a_top[-3]))
                 {
                     if (assign_base(ici_os.a_top[-3], ici_os.a_top[-2], ici_os.a_top[-1]))
@@ -1186,7 +1177,9 @@ ici_evaluate(ici_obj_t *code, int n_operands)
                 /*
                  * obj => - (os)
                  */
+                --ici_exec->x_critsect;
                 ici_waitfor(ici_os.a_top[-1]);
+                ++ici_exec->x_critsect;
                 --ici_os.a_top;
                 goto stable_stacks_continue;
 

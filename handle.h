@@ -33,9 +33,6 @@ struct ici_handle
  *                      valid (it has probably been freed). This flag
  *                      exists for the convenience of users, as the
  *                      core handle code doesn't touch this much.
- *						Although it is significant in handle comparisons
- *						(a closed handle doesn't match a non-closed one
- *						even if the h_name and h_ptr are equal).
  *                      Use of this latent feature depends on needs.
  *
  * H_HAS_PRIV_STRUCT    This handle has had a private struct allocated

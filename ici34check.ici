@@ -51,6 +51,11 @@ note = [struct
     rego = "%s->ici_%s",
     stdio_ftype = "%s->ici_%s",
     new_string = "%s->ici_str_alloc",
+    atom_probe = "%s->ici_%s",
+    talloc = "%s->ici_%s, but *must* free with ici_tfree()",
+    v_top = "%s->ici_vs.a_top",
+    x_top = "%s->ici_xs.a_top",
+    o_top = "%s->ici_os.a_top",
 ];
 
 /*

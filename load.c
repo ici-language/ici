@@ -247,7 +247,7 @@ f_load(void)
         }
         statics->o_head.o_super = objwsupof(externs);
         externs->o_head.o_super = outer;
-        if (parse_module(file, objwsupof(autos)) < 0)
+        if (ici_parse(file, objwsupof(autos)) < 0)
             goto fail;
         ici_file_close(file);
         ici_decref(autos);

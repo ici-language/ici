@@ -83,12 +83,15 @@ struct ici_array
 #define isarray(o)  ((o)->o_tcode == TC_ARRAY)
 
 /*
- * Check that there is room for n new elements on the end of a.  May
+ * Check that there is room for 'n' new elements on the end of 'a'.  May
  * reallocate array memory to get more room. Return non-zero on failure,
  * usual conventions.
  *
  * This macro can only be used where the array has never had elements
- * rpush()ed or rpop()ed.
+ * rpush()ed or rpop()ed. See the discussion on
+ * 'Accessing ICI array object from C' before using.
+ *
+ * This --macro-- forms part of the --ici-ap--.
  */
 #define ici_stk_push_chk(a, n) \
                 ((a)->a_limit - (a)->a_top < (n) ? ici_grow_stack((a), (n)) : 0)
@@ -102,18 +105,47 @@ struct ici_array
                 : 0)
 
 /*
- * Macros to assist in doing for loops over the elements of an array.
+ * A macro to assist in doing for loops over the elements of an array.
  * Use as:
- *    object **e;
- *    for (e = ici_astart(a); e != ici_alimit(a); e = ici_anext(a, e))
- *        ...
+ *
+ *  ici_array_t  *a;
+ *  ici_obj_t    **e;
+ *  for (e = ici_astart(a); e != ici_alimit(a); e = ici_anext(a, e))
+ *      ...
+ *
+ * This --macro-- forms part of the --ici-api--.
  */
 #define ici_astart(a)   ((a)->a_bot == (a)->a_limit && (a)->a_bot != (a)->a_top \
                             ? (a)->a_base : (a)->a_bot)
+
+/*
+ * A macro to assist in doing for loops over the elements of an array.
+ * Use as:
+ *
+ *  ici_array_t  *a;
+ *  ici_obj_t    **e;
+ *  for (e = ici_astart(a); e != ici_alimit(a); e = ici_anext(a, e))
+ *      ...
+ *
+ * This --macro-- forms part of the --ici-api--.
+ */
 #define ici_alimit(a)   ((a)->a_top)
+
+/*
+ * A macro to assist in doing for loops over the elements of an array.
+ * Use as:
+ *
+ *  ici_array_t  *a;
+ *  ici_obj_t    **e;
+ *  for (e = ici_astart(a); e != ici_alimit(a); e = ici_anext(a, e))
+ *      ...
+ *
+ * This --macro-- forms part of the --ici-api--.
+ */
 #define ici_anext(a, e) ((e) + 1 == (a)->a_limit && (a)->a_limit != (a)->a_top \
                             ? (a)->a_base : (e) + 1)
-/*
+
+ /*
  * End of ici.h export. --ici.h-end--
  */
 #endif
