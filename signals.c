@@ -25,7 +25,7 @@
  *
  * Andy Newman <atrn@zeta.org.au>
  */
-
+#define	ICI_CORE
 #include "fwd.h"
 
 #ifndef NOSIGNALS
@@ -33,6 +33,7 @@
 #include "exec.h"
 #include "op.h"
 #include "func.h"
+#include "str.h"
 #include "method.h"
 #include "str.h"
 #include "int.h"
