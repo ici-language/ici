@@ -60,7 +60,7 @@ mark_struct(ici_obj_t *o)
     do /* Merge tail recursion on o_head.o_super. */
     {
         o->o_flags |= O_MARK;
-        mem = sizeof(ici_struct_t) + structof(o)->s_nslots * sizeof(slot_t);
+        mem = sizeof(ici_struct_t) + structof(o)->s_nslots * sizeof(ici_sslot_t);
         if (structof(o)->s_nels != 0)
         {
             for
@@ -95,7 +95,7 @@ static void
 free_struct(ici_obj_t *o)
 {
     if (structof(o)->s_slots != NULL)
-        ici_nfree(structof(o)->s_slots, structof(o)->s_nslots * sizeof(slot_t));
+        ici_nfree(structof(o)->s_slots, structof(o)->s_nslots * sizeof(ici_sslot_t));
     ici_tfree(o, ici_struct_t);
     ++ici_vsver;
 }
@@ -121,12 +121,12 @@ ici_struct_new(void)
     s->s_slots = NULL;
     s->s_nels = 0;
     s->s_nslots = 4; /* Must be power of 2. */
-    if ((s->s_slots = (ici_sslot_t*)ici_nalloc(4 * sizeof(slot_t))) == NULL)
+    if ((s->s_slots = (ici_sslot_t*)ici_nalloc(4 * sizeof(ici_sslot_t))) == NULL)
     {
         ici_tfree(s, ici_struct_t);
         return NULL;
     }
-    memset(s->s_slots, 0, 4 * sizeof(slot_t));
+    memset(s->s_slots, 0, 4 * sizeof(ici_sslot_t));
     ici_rego(s);
     return s;
 }
@@ -239,9 +239,9 @@ copy_struct(ici_obj_t *o)
     ns->s_nslots = 0;
     ns->s_slots = NULL;
     ici_rego(ns);
-    if ((ns->s_slots = (ici_sslot_t*)ici_nalloc(s->s_nslots * sizeof(slot_t))) == NULL)
+    if ((ns->s_slots = (ici_sslot_t*)ici_nalloc(s->s_nslots * sizeof(ici_sslot_t))) == NULL)
         goto fail;
-    memcpy((char *)ns->s_slots, (char *)s->s_slots, s->s_nslots*sizeof(slot_t));
+    memcpy((char *)ns->s_slots, (char *)s->s_slots, s->s_nslots*sizeof(ici_sslot_t));
     ns->s_nels = s->s_nels;
     ns->s_nslots = s->s_nslots;
     if (ns->s_nslots <= 16)
@@ -267,7 +267,7 @@ copy_autos(ici_func_t *f)
         return structof(copy_struct(f->f_autos));
     s = f->f_autos;
     nslots = f->f_nautos + (f->f_nautos >> 1);
-    ns = (ici_struct_t *)ici_nalloc(sizeof(ici_struct_t) + nslots * sizeof(slot_t));
+    ns = (ici_struct_t *)ici_nalloc(sizeof(ici_struct_t) + nslots * sizeof(ici_sslot_t));
     if (ns == NULL)
         return NULL;
     ICI_OBJ_SET_TFNZ(ns, TC_STRUCT, O_SUPER, 1, 0);
@@ -275,7 +275,7 @@ copy_autos(ici_func_t *f)
     ns->s_nels = 0;
     ns->s_nslots = 0;
     ns->s_slots = (ici_sslot_t*)(ns + 1);
-    memcpy((char *)ns->s_slots, (char *)s->s_slots, s->s_nslots*sizeof(slot_t));
+    memcpy((char *)ns->s_slots, (char *)s->s_slots, s->s_nslots*sizeof(ici_sslot_t));
     ns->s_nels = s->s_nels;
     ns->s_nslots = nslots;
     ici_rego(ns);
@@ -301,7 +301,7 @@ grow_struct(ici_struct_t *s)
     register ici_sslot_t *oldslots;
     register int        i;
 
-    i = (s->s_nslots * 2) * sizeof(slot_t);
+    i = (s->s_nslots * 2) * sizeof(ici_sslot_t);
     if ((sl = (ici_sslot_t*)ici_nalloc(i)) == NULL)
         return 1;
     memset((char *)sl, 0, i);
@@ -314,7 +314,7 @@ grow_struct(ici_struct_t *s)
         if (oldslots[i].sl_key != NULL)
             *find_raw_slot(s, oldslots[i].sl_key) = oldslots[i];
     }
-    ici_nfree((char *)oldslots, (s->s_nslots / 2) * sizeof(slot_t));
+    ici_nfree((char *)oldslots, (s->s_nslots / 2) * sizeof(ici_sslot_t));
     ++ici_vsver;
     return 0;
 }
