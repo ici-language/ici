@@ -766,8 +766,13 @@ usef:
      * In-line expansion of float creation.
      */
     {
-        register ici_obj_t      **po;
-        double                  v;
+        ici_obj_t               **po;
+        union
+        {
+            double              f;
+            long                l[2];
+        }
+            v;
         unsigned long           h;
 
         /*
@@ -775,8 +780,8 @@ usef:
          * to hash_float().
          */
         assert(sizeof floatof(o)->f_value == 2 * sizeof(unsigned long));
-        v = f;
-        h = FLOAT_PRIME + ((unsigned long *)&v)[0] + ((unsigned long *)&v)[1] * 31;
+        v.f = f;
+        h = FLOAT_PRIME + v.l[0] + v.l[1] * 31;
         h ^= (h >> 12) ^ (h >> 24);
         for
         (
@@ -785,7 +790,7 @@ usef:
             --po < atoms ? po = atoms + atomsz - 1 : NULL
         )
         {
-            if (isfloat(o) && floatof(o)->f_value == f)
+            if (isfloat(o) && DBL_BIT_CMP(&floatof(o)->f_value, &v.l))
                 goto useo;
         }
         ++ici_supress_collect;
