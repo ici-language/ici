@@ -28,17 +28,6 @@ typedef void    *dll_t;
 #define valid_dll(dll)  ((dll) != NULL)
 #endif /* NODLOAD */
 
-/*
- * Push path elements specific to UNIX-like systems onto the array a (which
- * is the ICI path array used for finding dynamically loaded modules and
- * stuff). These are in addition to the ICIPATH environment variable.
- */
-static int
-push_os_path_elements(ici_array_t *a)
-{
-    return push_path_elements(a, PREFIX "/lib/ici4");
-}
-
 # endif /* _WIN32, __BEOS__ */
 
 #ifndef NODLOAD
@@ -289,6 +278,147 @@ fail:
         ici_decref(result);
     return 1;
 }
+
+#if defined(__BEOS__)
+/*
+ * Get library path. Needed even without dynamic loading of binaries, to
+ * load ICI files dynamically
+ */
+#include <FindDirectory.h>
+
+/*
+ * Push path elements specific to BeOS onto the array a (which is the ICI
+ * path array used for finding dynamically loaded modules and stuff). These
+ * are in addition to the ICIPATH environment variable.
+ */
+static int
+push_os_path_elements(ici_array_t *a)
+{
+    char                path[FILENAME_MAX];
+
+    if (find_directory(B_USER_ADDONS_DIRECTORY, 0, false, path, sizeof(path) - 6) == 0)
+    {
+        strcat(path, "/ici");
+        if (push_path_elements(a, path))
+            return 1;
+    }
+    if (find_directory(B_USER_LIB_DIRECTORY, 0, false, path, sizeof(path) - 6) == 0)
+    {
+        strcat(path, "/ici");
+        if (push_path_elements(a, path))
+            return 1;
+    }
+    return 0;
+}
+#elif defined(_WIN32)
+/*
+ * Push path elements specific to Windows onto the array a (which is the ICI
+ * path array used for finding dynamically loaded modules and stuff). These
+ * are in addition to the ICIPATH environment variable. We try to mimic
+ * the search behaviour of LoadLibrary() (that being the Windows thing to
+ * do).
+ */
+static int
+push_os_path_elements(ici_array_t *a)
+{
+    char                fname[MAX_PATH];
+    char                *p;
+
+    if (GetModuleFileName(NULL, fname, sizeof fname - 10) > 0)
+    {
+        if ((p = strrchr(fname, ICI_DIR_SEP)) != NULL)
+            *p = '\0';
+        if (push_path_elements(a, fname))
+            return 1;
+        p = fname + strlen(fname);
+        *p++ = ICI_DIR_SEP;
+        strcpy(p, "ici");
+        if (push_path_elements(a, fname))
+            return 1;
+    }
+    if (push_path_elements(a, "."))
+        return 1;
+    if (GetSystemDirectory(fname, sizeof fname - 10) > 0)
+    {
+        if (push_path_elements(a, fname))
+            return 1;
+        p = fname + strlen(fname);
+        *p++ = ICI_DIR_SEP;
+        strcpy(p, "ici");
+        if (push_path_elements(a, fname))
+            return 1;
+    }
+    if (GetWindowsDirectory(fname, sizeof fname - 10) > 0)
+    {
+        if (push_path_elements(a, fname))
+            return 1;
+        p = fname + strlen(fname);
+        *p++ = ICI_DIR_SEP;
+        strcpy(p, "ici");
+        if (push_path_elements(a, fname))
+            return 1;
+    }
+    if ((p = getenv("PATH")) != NULL)
+    {
+        if (push_path_elements(a, p))
+            return 1;
+    }
+    return 0;
+}
+#else
+/*
+ * Assume a UNIX-like sytem.
+ *
+ * Push path elements specific to UNIX-like systems onto the array a (which
+ * is the ICI path array used for finding dynamically loaded modules and
+ * stuff). These are in addition to the ICIPATH environment variable.
+ */
+static int
+push_os_path_elements(ici_array_t *a)
+{
+    char                *p;
+    char                *q;
+    ici_str_t           *s;
+    ici_obj_t           **e;
+    char                fname[MAX_PATH];
+
+    if ((path = getenv("PATH)) == NULL)
+        return 0;
+    for (p = path; *p != '\0'; p = *q == '\0' ? q : q + 1)
+    {
+        if ((q = strchr(p, ':')) == NULL)
+            q = p + strlen(p);
+        if (q - 4 < p || memcmp(q - 4, "/bin:", 5) != 0 || q - p >= MAX_PATH - 10)
+            continue;
+        memcpy(fname, p, q - p - 4);
+        strcpy(fname + q - p - 4, "/lib/ici4");
+        /*
+         * Don't add inaccessable dirs...
+         */
+        if (access(fname, 0) != 0)
+            continue;
+        if ((s = ici_str_new_nul_term(fname)) == NULL)
+            return 1;
+        /*
+         * Don't add duplicates...
+         */
+        for (e = a->a_base; e < a->a_top; ++e)
+        {
+            if (*e == objof(s))
+                goto skip;
+        }
+        if (ici_stk_push_chk(a, 1))
+        {
+            ici_decref(s);
+            return 1;
+        }
+        *a->a_top++ = objof(s);
+    skip:
+        ici_decref(s);
+    }
+    return 0;
+}
+#endif /* End of selection of which push_os_path_elements() to use */
 
 /*
  * Push one or more file names from path, seperated by the local system

@@ -219,7 +219,7 @@ ici_maind(int argc, char *argv[], int debugging)
                     break;
 
                 case 'l':
-#ifdef  MSDOS
+#ifdef  _WIN32
                     fmt = "C:\\ICI\\LIB%s.ICI";
 #else
                     fmt = PREFIX "/lib/ici4/%s.ici";

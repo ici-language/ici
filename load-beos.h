@@ -121,33 +121,4 @@ void dlinfo( dll_t image, dll_info * d_info )
 
 #endif /* NODLOAD */
 
-/** Get library path. Needed even without dynamic loading of binaries, to
-    load ICI files dynamically **/
-#include <FindDirectory.h>
-
-/*
- * Push path elements specific to BeOS onto the array a (which is the ICI
- * path array used for finding dynamically loaded modules and stuff). These
- * are in addition to the ICIPATH environment variable.
- */
-static int
-push_os_path_elements(ici_array_t *a)
-{
-    char                path[FILENAME_MAX];
-
-    if (find_directory(B_USER_ADDONS_DIRECTORY, 0, false, path, sizeof(path) - 6) == 0)
-    {
-        strcat(path, "/ici");
-        if (push_path_elements(a, path))
-            return 1;
-    }
-    if (find_directory(B_USER_LIB_DIRECTORY, 0, false, path, sizeof(path) - 6) == 0)
-    {
-        strcat(path, "/ici");
-        if (push_path_elements(a, path))
-            return 1;
-    }
-    return 0;
-}
-
 #endif  /* ICI_LOAD_BEOS_H */
