@@ -196,16 +196,30 @@ ici_module_new(ici_cfunc_t *cf)
 static int
 call_cfunc(ici_obj_t *o, ici_obj_t *subject)
 {
-    int                 result;
+    if (ici_debug_active || ici_profile_active)
+    {
+        ici_obj_t       **xt;
+        int             result;
 
-    result = (*cfuncof(o)->cf_cfunc)(subject);
-#ifndef NOPROFILE
-    if (ici_profile_active)
-        ici_profile_return();
-#endif
-    if (ici_debug_active)
-        ici_debug->idbg_fnresult(ici_os.a_top[-1]);
-    return result;
+        /*
+         * Not all function calls that go stright to C code are complete
+         * function calls in the ICI sense. Some push stuff to execute on
+         * the ICI execution stack and the return will happen later by the
+         * usual return mechanism. Only those that come back with the
+         * execution stack at the same level are considered to be returning
+         * now.
+         */
+        xt = ici_xs.a_top;
+        result = (*cfuncof(o)->cf_cfunc)(subject);
+        if (xt != ici_xs.a_top)
+            return result;
+        if (ici_profile_active)
+            ici_profile_return();
+        if (ici_debug_active)
+            ici_debug->idbg_fnresult(ici_os.a_top[-1]);
+        return result;
+    }
+    return (*cfuncof(o)->cf_cfunc)(subject);
 }
 
 ici_type_t  ici_cfunc_type =

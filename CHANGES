@@ -1,5 +1,12 @@
 Changes in version 4.1.0 (a beta release) <- ###Planned, not done yet###
 
+*   Removed the Windows ICI debugger from the Windows build. It
+    is now in ici-modules. (timl)
+
+*   Stacked source markers on the execution stack during function
+    calls. This stops them being wrong between function return, and
+    the next source line. (timl) 
+
 *   Changed icistr-setup.h and related macros in str.h (exported
     to ici.h) to avoid duplicate symbols in modules.  The
     init_ici_str() function is now made static to limit its
