@@ -1,26 +1,37 @@
 #
 # For compiling a standard version on Mac OS X
 #
-FLAVOUR = osx
-VERSION = "`awk '{print $$1}' VERSION`"
-PROG    = ici4
+PROG    = ici
 LIB     = libici4.a
 CC      = cc -pipe
 LIBS    = -framework Foundation
-CFLAGS  = -g -Wall -O2 -I.
+CFLAGS  = -g -Wall -O2 -I. -DNDEBUG
 LDFLAGS = -g
 RM      = rm -f
 
+MAN1	= doc/man1/ici.1\
+	  doc/man1/icifuncs.1\
+	  doc/man1/icioo.1\
+	  doc/man1/iciops.1\
+	  doc/man1/icire.1\
+	  doc/man1/icistmt.1\
+	  doc/man1/icitypes.1
+
 #
-# For installing...
+# Where things get installed.
 #
 PREFIX  = /usr/local
 BINDIR  = $(PREFIX)/bin
 MANDIR  = $(PREFIX)/man/man1
+INCDIR	= $(PREFIX)/include
+LIBDIR	= $(PREFIX)/lib
+ICILIBDIR = $(LIBDIR)/ici4
+DOCDIR	= $(PREFIX)/share/doc
+
 INSTALL = install -c
 
 #
-# The remainder of this makefile is pretty well generic...
+# Interpreter object files
 #
 OBJS    = \
 	alloc.o aplfuncs.o arith.o array.o call.o \
@@ -29,7 +40,7 @@ OBJS    = \
 	exerror.o file.o findpath.o \
 	float.o forall.o \
 	func.o handle.o icimain.o init.o int.o \
-	lex.o load.o main.o \
+	lex.o load.o \
 	mark.o mem.o method.o \
 	mkvar.o null.o \
 	object.o oofuncs.o op.o parse.o pc.o \
@@ -38,7 +49,9 @@ OBJS    = \
 	struct.o syserr.o\
 	thread.o trace.o unary.o uninit.o\
 	buf.o strtol.o \
-	idb.o idb2.o profile.o \
+	idb.o idb2.o profile.o
+
+OSXOBJS=\
 	dlfcn_simple.o
 
 PCREOBJS=\
@@ -46,15 +59,15 @@ PCREOBJS=\
 
 default: $(PROG) ici.h
 
-$(PROG): $(LIB)
-	$(CC) $(LDFLAGS) -o $@ $(LIB) $(LIBS)
+$(PROG): main.o $(LIB)
+	$(CC) $(LDFLAGS) -o $@ main.o $(LIB) $(LIBS)
 
 all:    $(PROG)
 
 .PRECIOUS: $(LIB)
 
-$(LIB)  : $(OBJS) $(PCREOBJS)
-	libtool -static -o $@ $(OBJS) $(PCREOBJS)
+$(LIB)  : $(OBJS) $(PCREOBJS) $(OSXOBJS)
+	libtool -static -o $@ $(OBJS) $(PCREOBJS) $(OSXOBJS)
 
 study.o : pcre/study.c
 	$(CC) -c -o $@ $(CFLAGS) pcre/study.c
@@ -69,18 +82,10 @@ dlfcn_simple.o : macosx/dlfcn_simple.c
 	$(CC) -c -o $@ $(CFLAGS) macosx/dlfcn_simple.c
 
 # Headers that are potentially used in module writing are made public
-ICIHDRS=\
-	ici.h\
-	icistr-setup.h\
-	conf-osx.h
-
-PCREHDRS=\
-	pcre/internal.h\
-	pcre/pcre.h
+ICIHDRS= ici.h icistr-setup.h
 
 # Useful public documentation
-DOCS=\
-	doc/ici.pdf
+DOCS= doc/ici.pdf
 
 ici.h: $(PROG)
 	ICIPATH=. ./$(PROG) mk-ici-h.ici conf-osx.h
@@ -88,88 +93,52 @@ ici.h: $(PROG)
 # Install the init file, headers and docs.
 install: $(PROG) $(LIB) ici.h
 	@echo '=========================================='
-	@echo 'Installing ici interpreter and manual page'
-	@echo '=========================================='
-	-mkdir -p $(PREFIX)/bin
-	$(INSTALL) $(PROG) $(BINDIR)
-	-mkdir -p $(MANDIR)
-	$(INSTALL) doc/ici.1 $(MANDIR)
-	@echo '=========================================='
 	@echo 'Creating installation directories'
 	@echo '=========================================='
-	-mkdir -p $(PREFIX)/lib/ici4
-	-mkdir -p $(PREFIX)/include/ici4
-	-mkdir -p $(PREFIX)/include/ici4/pcre
-	-mkdir -p $(PREFIX)/share/doc/ici4
+	[ -d $(BINDIR) ] || mkdir -p $(BINDIR)
+	-mkdir -p $(MANDIR)
+	-mkdir -p $(INCDIR)
+	-mkdir -p $(LIBDIR)
+	-mkdir -p $(ICILIBDIR)
+	-mkdir -p $(DOCDIR)
+	@echo '=========================================='
+	@echo 'Installing ici interpreter and manual pages'
+	@echo '=========================================='
+	$(INSTALL) -m 555 $(PROG) $(BINDIR)
+	for f in $(MAN1); do\
+	    $(INSTALL) -m 444 $$f $(MANDIR);\
+	done
 	@echo '=========================================='
 	@echo 'Installing ici library'
 	@echo '=========================================='
-	install -c -m 444 $(LIB) $(PREFIX)/lib
-	ranlib $(PREFIX)/lib/$(LIB)
+	$(INSTALL) -m 444 $(LIB) $(LIBDIR)
+	ranlib $(LIBDIR)/$(LIB)
 	@echo '=========================================='
-	@echo 'Startup file'
+	@echo 'Core files'
 	@echo '=========================================='
-	install -c -m 444 ici4core.ici $(PREFIX)/lib/ici4
-	install -c -m 444 ici4core1.ici $(PREFIX)/lib/ici4
-	install -c -m 444 ici4core2.ici $(PREFIX)/lib/ici4
-	install -c -m 444 ici4core3.ici $(PREFIX)/lib/ici4
+	$(INSTALL) -m 444 ici4core.ici $(ICILIBDIR)
+	$(INSTALL) -m 444 ici4core1.ici $(ICILIBDIR)
+	$(INSTALL) -m 444 ici4core2.ici $(ICILIBDIR)
+	$(INSTALL) -m 444 ici4core3.ici $(ICILIBDIR)
 	@echo '=========================================='
 	@echo 'Headers'
 	@echo '=========================================='
-	install -c -m 444 $(ICIHDRS) $(PREFIX)/include/ici4
-	install -c -m 444 $(PCREHDRS) $(PREFIX)/include/ici4/pcre
+	$(INSTALL) -m 444 $(ICIHDRS) $(INCDIR)
 	@echo '=========================================='
 	@echo 'Documentation'
 	@echo '=========================================='
-	install -c -m 444 $(DOCS) $(PREFIX)/share/doc/ici4
+	$(INSTALL) -m 444 $(DOCS) $(DOCDIR)
 	@echo '=========================================='
 	@echo 'Install done'
 	@echo '=========================================='
 
 clean:
-	$(RM) $(PROG) $(LIB) $(OBJS) $(PCREOBJS) ici.h
+	$(RM) $(PROG) $(LIB) main.o $(OBJS) $(PCREOBJS) $(OSXOBJS) ici.h
 
-#
-# No mention of fwd.h or alloc.h, 3but everything depends on it.
-#
-alloc.o        : trace.h
-arith.o        : exec.h float.h int.h op.h parse.h ptr.h str.h struct.h buf.h binop.h
-array.o        : ptr.h exec.h op.h int.h buf.h
-call.o         : buf.h exec.h func.h int.h float.h str.h null.h op.h
-catch.o        : exec.h catch.h op.h func.h
-cfunc.o        : exec.h func.h str.h int.h float.h struct.h set.h op.h ptr.h buf.h file.h re.h null.h parse.h mem.h
-clib.o         : file.h func.h op.h int.h float.h str.h buf.h exec.h
-clib2.o        : buf.h func.h
-compile.o      : parse.h array.h op.h str.h
-conf.o         : func.h
-control.o      : exec.h op.h int.h buf.h pc.h struct.h null.h forall.h catch.h
-exec.o         : exec.h op.h catch.h ptr.h func.h str.h buf.h pc.h int.h struct.h set.h parse.h float.h re.h src.h null.h forall.h trace.h binop.h
-exerror.o      : str.h buf.h
-file.o         : file.h
-float.o        : float.h
-forall.o       : exec.h struct.h set.h forall.h str.h buf.h
-func.o         : func.h exec.h ptr.h struct.h op.h pc.h str.h catch.h buf.h mark.h null.h
-icimain.o      : ptr.h exec.h file.h str.h struct.h buf.h wrap.h func.h
-init.o         : func.h buf.h struct.h
-int.o          : int.h
-lex.o          : parse.h file.h buf.h src.h array.h trace.h
-mark.o         : mark.h
-mem.o          : mem.h int.h buf.h
-mkvar.o        : exec.h struct.h
-null.o         : null.h
-object.o       : exec.h buf.h int.h str.h float.h func.h
-op.o           : op.h exec.h
-parse.o        : parse.h func.h str.h struct.h buf.h file.h op.h exec.h
-pc.o           : exec.h pc.h
-ptr.o          : exec.h ptr.h struct.h int.h op.h buf.h
-regexp.o       : str.h re.h exec.h op.h buf.h
-set.o          : object.h set.h op.h int.h buf.h null.h
-sfile.o        : file.h
-smash.o        :
-src.o          : exec.h src.h
-string.o       : str.h struct.h exec.h int.h
-struct.o       : struct.h ptr.h exec.h func.h op.h int.h buf.h str.h pc.h
-syserr.o       :
-trace.o        : func.h object.h trace.h file.h set.h struct.h array.h re.h str.h int.h float.h exec.h op.h
-unary.o        : exec.h float.h int.h op.h parse.h buf.h null.h
-wrap.o         : wrap.h
+clobber: clean
+	rm -f .depend
+
+depend:
+	mkdep $(CFLAGS) $(OBJS:.o=.c)
+
+-include .depend
