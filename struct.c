@@ -11,7 +11,13 @@
 #include "primes.h"
 
 /*
- * Version number of the variable stack.
+ * Generation number of look-up look-asides.  All strings that hold a look-up
+ * look-aside to shortcut struct lookups also record a generation number.
+ * Whenever something happens that would invalidate such a look-aside (that we
+ * can't recover from by some local operation) we bump the generation number.
+ * This has the effect of globally invalidating all the current look-asides.
+ *
+ * This is the global generation (version) number.
  */
 long    ici_vsver   = 1;
 

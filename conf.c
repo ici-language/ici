@@ -1,5 +1,5 @@
 #define ICI_CORE
-#include <fwd.h>
+#include "fwd.h"
 #include "func.h"
 
 extern cfunc_t  std_cfuncs[];

@@ -151,6 +151,8 @@ if (!eq(string(456), "456"))
     fail("string() failed to convert 456 to \"456\"");
 if (!eq(string([array]), "<array>"))
     fail("string() failed to convert an array to \"<array>\"");
+if (!eq(string(#^xx$#), "^xx$"))
+    fail("string() failed convert from regexp");
 
 if (struct("a", 1, "b", 2) != [struct a=1, b=2])
     fail("struct() failed to produce the expected result");
@@ -397,3 +399,278 @@ if (x + y != [array 0, 1, 2, -1, 0, 1, 2, 3])
 /* import() not tested here. */
 /* vstack() not tested here. */
 /* sprintf() not tested here. */
+
+x := build(2, 3);
+if (typeof(x) != "array" || nels(x) != 2 || nels(x[1]) != 3)
+	fail("failed to build() 2x3 array");
+
+x := build([array "x", "y"], 2);
+if (typeof(x) != "struct" || typeof(x.y) != "array" || nels(x.y) != 2)
+	fail("failed tp build() struct of arrays");
+
+x := build([array "a", "b"], [array "x", "y"], "c", 0, "z");
+if (x.b.y != "z" || x.b.x != 0)
+	fail("failed to initialise in build()");
+
+x := build([array "a", "b"], [array "x", "y"], "l", 0, "z");
+if (x.b.y != "z" || x.b.x != "z")
+	fail("failed to initialise in build() with last-repeat");
+
+if (build() != NULL)
+	fail("build() with no args didn't return NULL");
+
+error = NULL;
+try
+	x := build(2, "x", 1);
+onerror
+	;
+if (error == NULL)
+	fail("failed to fail on bad build");
+
+a := array();
+for (i = 0; i < 100; ++i)
+	push(a, i);
+for (i = 0; i < 100; ++i)
+	if (a[i] != i)
+		fail("bad array fill");
+for (i = 0; i < 50; ++i)
+{
+	if (rpop(a) != i)
+		fail("bad rpop");
+}
+for (i = 50; i < 100; ++i)
+{
+	if (a[i - 50] != i)
+		fail("bad array fill rpops");
+}
+
+for (i = 100; i < 150; ++i)
+	push(a, i);
+for (i = 50; i < 150; ++i)
+{
+	if (a[i - 50] != i)
+		fail("bad array fill rpops");
+}
+for (i = 150; i < 200; ++i)
+	push(a, i);
+
+b := array();
+for (i = 0; i < 100; ++i)
+{
+	push(b, i);
+	rpop(b);
+}
+
+error = NULL;
+try
+	push(@[array 1, 2], 3);
+onerror
+	;
+if (error == NULL)
+	fail("failed to error on atomic push");
+
+error = NULL;
+try
+	rpush(@[array 1, 2], 3);
+onerror
+	;
+if (error == NULL)
+	fail("failed to error on atomic rpush");
+
+error = NULL;
+try
+	pop(@[array 1, 2]);
+onerror
+	;
+if (error == NULL)
+	fail("failed to error on atomic pop");
+
+error = NULL;
+try
+	rpop(@[array 1, 2]);
+onerror
+	;
+if (error == NULL)
+	fail("failed to error on atomic rpop");
+
+a := array();
+for (i = 0; i < 100; ++i)
+	push(a, i);
+for (i = 0; i < 50; ++i)
+	rpop(a);
+for (i = 100; i < 150; ++i)
+	push(a, i);
+for (i = 49; i >= 0; --i)
+	rpush(a, i);
+
+a := array();
+for (i = 0; i < 100; ++i)
+	push(a, i);
+for (i = 0; i < 50; ++i)
+	rpop(a);
+for (i = 100; i < 150; ++i)
+	push(a, i);
+for (i = 0; i < 100; ++i)
+	pop(a);
+if (nels(a) != 0)
+	fail("unexpected size array from pops");
+if (pop(a) != NULL)
+	fail("pop empty array didn't give NULL");
+
+a := array();
+for (i = 0; i < 100; ++i)
+	push(a, i);
+for (i = 0; i < 50; ++i)
+	rpop(a);
+for (i = 100; i < 150; ++i)
+	push(a, i);
+for (i = 0; i < 100; ++i)
+	rpop(a);
+if (nels(a) != 0)
+	fail("unexpected size array from rpops");
+if (rpop(a) != NULL)
+	fail("rpop empty array didn't give NULL");
+
+a := array(1, 2, 3);
+a[1] = 4;
+if (a != [array 1, 4, 3])
+	fail("array assignment failed");
+
+a[4] = 5;
+if (a != [array 1, 4, 3, NULL, 5])
+	fail("array extension failed");
+
+if (a[100] != NULL)
+	fail("failed to read NULL from non-existent array element");
+
+error = NULL;
+try
+	a[-3] = 1;
+onerror
+	;
+if (error == NULL)
+	fail("failed to fail on -ve array index write");
+
+error = NULL;
+try
+	a["x"] = 1;
+onerror
+	;
+if (error == NULL)
+	fail("failed to fail on non-int array index write");
+
+error = NULL;
+try
+	b = a["x"];
+onerror
+	;
+if (error == NULL)
+	fail("failed to fail on non-int array index read");
+
+if (*&1 != 1)
+	fail("failed to make array lvalue");
+
+x = sort(array(2,5,6,8,9,1,0,3,4,7));
+if (x != [array 0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+	fail("sort incorrect");
+
+error = NULL;
+try
+	x = sort(@array(2,5,6,8,9,1,0,3,4,7));
+onerror
+	;
+if (error == NULL)
+	fail("failed to fail on atomic sort");
+
+a := array();
+for (i = 0; i < 100; ++i)
+	push(a, i);
+for (i = 0; i < 50; ++i)
+	rpop(a);
+for (i = 100; i < 150; ++i)
+	push(a, i);
+a = sort(a);
+
+error = NULL;
+try 
+	sin("a");
+onerror
+	;
+if (error == NULL)
+	fail("math func on non-numeric didn't fail");
+
+try 
+	log(0.0);
+onerror
+	;
+if (error == NULL)
+	fail("failed to fail on math range error");
+
+try 
+	pow(0.0, -1);
+onerror
+	;
+if (error == NULL)
+	fail("failed to fail on 2 arg math range error");
+
+error = NULL; try struct("b"); onerror;
+if (error == NULL)
+	fail("failed to fail on bad super in struct()");
+
+a = struct(NULL, "a", "b");
+if (a != [struct a = "b"])
+	fail("failed to make struct with explicit NULL super");
+
+a = [class]:new():copy();
+if (nels(a) != 0)
+	fail("failed to do method copy");
+
+error = NULL; try copy(); onerror;
+if (error == NULL)
+	fail("failed to fail zero-arg copy");
+
+error = NULL; try num("xxx"); onerror;
+if (error == NULL)
+	fail("failed to fail bad num()");
+
+if (top([array 1, 2, 3]) != 3)
+	fail("top with 1 arg incorrect");
+
+if (top([array 1, 2, 3], -1) != 2)
+	fail("top with 2 arg incorrect");
+
+error = NULL; try parse(1); onerror;
+if (error == NULL)
+	fail("failed to fail on bad parse() arg 1");
+
+error = NULL; try parse("auto a;", "wrong"); onerror;
+if (error == NULL)
+	fail("failed to fail on bad parse() arg 2");
+
+a = struct(struct());
+include("data/amodule.ici", a);
+if (a.static_func_of_amodule() != "amodule return")
+	fail("failed to include module in small scope");
+
+include("data/amodule.ici");
+if (static_func_of_amodule() != "amodule return")
+	fail("failed to include module");
+
+auto path = [array "data"];
+include("amodule.ici");
+if (static_func_of_amodule() != "amodule return")
+	fail("failed to include module found on path");
+del(scope(), "path");
+
+error = NULL; try include("non existent file"); onerror;
+if (error == NULL)
+	fail("failed to fail on include() on no existent file");
+
+error = NULL; try call(nels, "wrong"); onerror;
+if (error == NULL)
+	fail("failed to fail on bad calls() last arg");
+
+if (typeof(vstack()) != "array")
+	fail("vstack() didn't return an array");
+if (!eq(top(vstack()), scope()))
+	fail("top(vstack) is not scope()");

@@ -28,7 +28,7 @@ ici_find_on_path(char name[FILENAME_MAX], char *ext)
     if ((a = ici_need_path()) == NULL)
         return 0;
     xlen = 1 + strlen(name) + (ext != NULL ? strlen(ext) : 0) + 1;
-    for (e = ici_astart(a); e < ici_alimit(a); e = ici_anext(a, e))
+    for (e = ici_astart(a); e != ici_alimit(a); e = ici_anext(a, e))
     {
         if (!isstring(*e))
             continue;

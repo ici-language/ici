@@ -1,5 +1,5 @@
 #define ICI_CORE
-#include <fwd.h>
+#include "fwd.h"
 #include <ctype.h>
 
 /*

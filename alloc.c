@@ -1,5 +1,5 @@
 #define ICI_CORE
-#include <fwd.h>
+#include "fwd.h"
 
 /*
  * A chunk of memory in which to keep dense allocations of small

@@ -215,6 +215,7 @@ ici_new_exec(void)
 #endif
     x->x_state = XS_ACTIVE;
     x->x_count = 20;
+    x->x_n_engine_recurse = 0;
     x->x_next = ici_execs;
     ici_execs = x;
     return x;
@@ -314,16 +315,28 @@ ici_evaluate(object_t *code, int n_operands)
                         ? stringof(k)->s_slot->sl_value \
                         : ici_fetch(s, k)
 
+    src = &default_src;
+    ici_incref(src);
+
+    if (++ici_exec->x_n_engine_recurse > 100)
+    {
+        ici_error = "excessive recursive invocations of the main interpreter";
+        goto badfail;
+    }
+
     if (ici_engine_stack_check())
-        goto fail;
+        goto badfail;
     /*
-     * This is pretty scary. An object on the C stack. But it should
-     * be OK because it's only on the execution stack and there should be
-     * no way for it to escape into the world at large, so no-one should
-     * be able to have a reference to it after we return. It will get
-     * poped off before we do. It's not registered with the garbage
-     * collector, so after that, it's just gone. We do this to save
-     * allocation/collection of an object on every call from C to ICI.
+     * This is pretty scary.  An object on the C stack.  But it should be OK
+     * because it's only on the execution stack and there should be no way for
+     * it to escape into the world at large, so no-one should be able to have
+     * a reference to it after we return.  It will get poped off before we do.
+     * It's not registered with the garbage collector, so after that, it's
+     * just gone.  We do this to save allocation/collection of an object on
+     * every call from C to ICI.  This object *will* be seen by the mark phase
+     * of the garbage collection, which may occur is a thread other than this
+     * one.  This is likely to cause a good memory integrity checking system
+     * to complain.
      */
     frame.o_head.o_tcode = TC_CATCH;
     frame.o_head.o_flags = CF_EVAL_BASE;
@@ -343,8 +356,6 @@ ici_evaluate(object_t *code, int n_operands)
     /*
      * The execution loop.
      */
-    src = &default_src;
-    ici_incref(src);
     for (;;)
     {
         if (--ici_exec->x_count == 0)
@@ -526,7 +537,8 @@ ici_evaluate(object_t *code, int n_operands)
                     undefined:
                         if (ici_chkbuf(stringof(o)->s_nchars + 20))
                             goto fail;
-                        sprintf(buf, "\"%s\" undefined", stringof(o)->s_chars);
+                        sprintf(buf, "load() failed to define \"%s\"",
+                            stringof(o)->s_chars);
                         ici_error = buf;
                         goto fail;
                     }
@@ -560,6 +572,7 @@ ici_evaluate(object_t *code, int n_operands)
                 ici_incref(o);
                 ici_unwind();
                 ici_decref(src);
+                --ici_exec->x_n_engine_recurse;
                 return o;
             }
             if (o->o_flags & CF_CRIT_SECT)
@@ -669,8 +682,8 @@ ici_evaluate(object_t *code, int n_operands)
                 }
 
             case OP_CALL:
-                *ici_xs.a_top++ = o; /* Restore to formal state. */
-                o = NULL;     /* That is, no subject object. */
+                *ici_xs.a_top++ = o;        /* Restore to formal state. */
+                o = NULL;                   /* No subject object. */
             do_call:
                 if (ici_typeof(ici_os.a_top[-1])->t_call == NULL)
                 {
@@ -992,12 +1005,82 @@ ici_evaluate(object_t *code, int n_operands)
                 ici_error = "break not within loop or switch";
                 goto fail;
 
+            case OP_ANDAND:
+                /*
+                 * bool obj => bool (os) OR pc (xs)
+                 */
+                {
+                    int         c;
+
+                    if ((c = !isfalse(ici_os.a_top[-2])) == opof(o)->op_code)
+                    {
+                        /*
+                         * Have to test next part of the condition.
+                         */
+                        get_pc(arrayof(ici_os.a_top[-1]), ici_xs.a_top);
+                        ++ici_xs.a_top;
+                        ici_os.a_top -= 2;
+                        goto stable_stacks_continue;
+                    }
+                    /*
+                     * Reduce the value to 0 or 1.
+                     */
+                    ici_os.a_top[-2] = objof(c ? ici_one : ici_zero);
+                    --ici_os.a_top;
+                }
+                goto stable_stacks_continue;
+            
+            case OP_CONTINUE:
+                /*
+                 * Pop the execution stack until a looper is found.
+                 */
+                {
+                    object_t    **s;
+
+                    for (s = ici_xs.a_top; s > ici_xs.a_base + 1; --s)
+                    {
+                        if (iscatch(s[-1]))
+                        {
+                            if (s[-1]->o_flags & CF_EVAL_BASE)
+                                break;
+                            if (s[-1]->o_flags & CF_CRIT_SECT)
+                            {
+                                --ici_exec->x_critsect;
+                                ici_exec->x_count = 1;
+                            }
+                        }
+                        if (s[-1] == objof(&o_looper) || isforall(s[-1]))
+                        {
+                            ici_xs.a_top = s;
+                            goto cont;
+                        }
+                    }
+                }
+                ici_error = "continue not within loop";
+                goto fail;
+
             case OP_REWIND:
                 /*
                  * This is the end of a code array that is the subject
                  * of a loop. Rewind the pc back to its start.
                  */
                 pcof(ici_xs.a_top[-1])->pc_next = pcof(ici_xs.a_top[-1])->pc_code->a_base;
+                goto stable_stacks_continue;
+
+            case OP_LOOPER:
+                /*
+                 * obj self     => obj self pc (xs)
+                 *              => (os)
+                 *
+                 * We have fallen out of a code array that is the subject of
+                 * a loop. Push a new pc pointing to the start of the code array
+                 * back on the stack. This doesn't happen very often now, because
+                 * the OP_REWIND (above) does the common case of comming to the
+                 * end of a code array that should loop.
+                 */
+                *ici_xs.a_top++ = o; /* Restore formal state.*/
+                get_pc(arrayof(ici_xs.a_top[-2]), ici_xs.a_top);
+                ++ici_xs.a_top;
                 goto stable_stacks_continue;
 
             case OP_ENDCODE:
@@ -1024,6 +1107,45 @@ ici_evaluate(object_t *code, int n_operands)
                 ++ici_xs.a_top;
                 --ici_os.a_top;
                 continue;
+
+            case OP_SWITCHER:
+                /*
+                 * NULL self (xs) =>
+                 *
+                 * This only happens when we fall of the bottom of a switch
+                 * without a break.
+                 */
+                --ici_xs.a_top;
+                goto stable_stacks_continue;
+
+            case OP_SWITCH:
+                /*
+                 * value array struct => (os)
+                 *           => NULL switcher (pc(array) + struct.value) (xs)
+                 */
+                {
+                    register slot_t     *sl;
+
+                    if ((sl = find_raw_slot(structof(ici_os.a_top[-1]), ici_os.a_top[-3]))->sl_key == NULL)
+                    {
+                        if ((sl = find_raw_slot(structof(ici_os.a_top[-1]), objof(&o_mark)))->sl_key == NULL)
+                        {
+                            /*
+                             * No matching case, no default. Pop everything of and
+                             * continue;
+                             */
+                            ici_os.a_top -= 3;
+                            goto stable_stacks_continue;
+                        }
+                    }
+                    *ici_xs.a_top++ = objof(&o_null);
+                    *ici_xs.a_top++ = objof(&o_switcher);
+                    get_pc(arrayof(ici_os.a_top[-2]), ici_xs.a_top);
+                    pcof(*ici_xs.a_top)->pc_next += intof(sl->sl_value)->i_value;
+                    ++ici_xs.a_top;
+                    ici_os.a_top -= 3;
+                }
+                goto stable_stacks_continue;
 
             case OP_CRITSECT:
                 {
@@ -1053,6 +1175,10 @@ ici_evaluate(object_t *code, int n_operands)
                 --ici_os.a_top;
                 goto stable_stacks_continue;
 
+            case OP_POP:
+                --ici_os.a_top;
+                goto stable_stacks_continue;
+
             case OP_BINOP:
             case OP_BINOP_FOR_TEMP:
 #ifndef BINOPFUNC
@@ -1062,6 +1188,9 @@ ici_evaluate(object_t *code, int n_operands)
                     goto fail;
 #endif
                 goto stable_stacks_continue;
+
+            default:
+                assert(0);
             }
             continue;
         }
@@ -1102,6 +1231,7 @@ ici_evaluate(object_t *code, int n_operands)
 #endif
             expand_error(src->s_lineno, src->s_filename);
             ici_decref(src);
+            --ici_exec->x_n_engine_recurse;
             return NULL;
         }
 

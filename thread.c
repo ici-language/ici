@@ -10,7 +10,7 @@
 HANDLE                  ici_mutex;
 #endif
 #ifdef ICI_USE_POSIX_THREADS
-pthread_mutex_t     ici_mutex;
+pthread_mutex_t         ici_mutex;
 static pthread_mutex_t  n_active_threads_mutex;
 #endif
 

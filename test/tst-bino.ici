@@ -298,3 +298,30 @@ forall (binop in binops)
 a := 1 ? 0 + 1 : 2;
 if (a != 1)
     fail("incorrect ? : result");
+
+a := 1;
+b := 2;
+c := 3;
+a <=> b <=> c;
+if (a != 3 || b != 1 || c != 2)
+	fail("<=> failure");
+
+a := 1;
+b := 2;
+c = a <=> b;
+if (c != 2)
+	fail("<=> for value failed");
+
+a := 2;
+b = a++;
+if (b != 2)
+	fail("postfix ++ for value didn't work");
+
+(a := 2) = 3;
+if (a != 3)
+	fail(":= for lvalue didn't work");
+
+a := set();
+a.x := 1;
+if (a.x != 1)
+	fail("failed to := to non-super supporting object");

@@ -13,8 +13,8 @@ expand_error(int lineno, string_t *fname)
     char        *s;
     int         z;
 
-    s = strchr(ici_error, ':');
-    if (s > ici_error && s[-1] >= '0' && s[-1] <= '9')
+    s = strchr(ici_error + 2, ':');
+    if (s != NULL && s > ici_error && s[-1] >= '0' && s[-1] <= '9')
         return;
 
     /*

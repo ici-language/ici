@@ -1,5 +1,5 @@
 This file documents a list of things that ICI needs. If you feel like
-doing one of them then by all means do so and if you are public minded 
+doing one of them then by all means do so and if you are public minded
 donate your changes.
 
 General
@@ -56,11 +56,11 @@ Future Changes
 Trivial fixes
 
 	Add esc() function.
-	
+
 	Add iota() & rho() equivalents.
-	
+
 	str = string(mem) ? Does that work?
-	
+
 	How about ''...'' for strings without \'s?
 
 ---
@@ -136,5 +136,24 @@ Put --help and/or /? help into ici.exe
 ---
 
 Make the Windows path include ici sub-dir of module dir.
+
+---
+
+The documentation on the copy() function seem to be missing.
+Huh?
+
+---
+
+Documentation on include() doesn't mention how it searches for
+the file on the current path.
+
+---
+
+Document that on Windows fopen allows / as dir sep?
+
+---
+
+include document doesn't mention that it calls close() function of
+current scope.
 
 ---

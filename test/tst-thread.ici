@@ -76,3 +76,20 @@ waitfor (typeof(state) == "int"; "done")
     ;
 if (state != 10)
     fail("failed to waitfor/wakeup correctly");
+
+
+error := NULL;
+x := thread(fail, "bad thread");
+
+if (x.junk != NULL)
+	fail("non-existent thread key not NULL");
+
+try
+{
+	waitfor(x.result != NULL; x)
+		;
+}
+onerror
+	;
+if (error != "bad thread")
+	fail("failed to propogate error from thread");

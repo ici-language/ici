@@ -397,17 +397,37 @@ fail:
 }
 
 /*
- * Generate a generic error message to indicate that argument i of the
- * current intrinsic function is bad. Despite being generic, this message
- * is generally pretty informative and useful.
+ * Generate a generic error message to indicate that argument i of the current
+ * intrinsic function is bad.  Despite being generic, this message is
+ * generally pretty informative and useful.  It has the form:
  *
- * The argument number is base 0. I.e. ici_argerror(0) indicates the
- * 1st argument is bad.
+ *   argument %d of %s incorrectly supplied as %s
  *
- * Returns 1, and is suitable for using in a direct return from an
- * intrinsic function, as in:
+ * The argument number is base 0.  I.e.  ici_argerror(0) indicates the 1st
+ * argument is bad.
  *
- *      return ici_argerror(2);
+ * The function returns 1, for use in a direct return from an intrinsic
+ * function.
+ *
+ * This function may only be called from the implementation of an intrinsic
+ * function.  It takes the function name from the current operand stack, which
+ * therefore should not have been distured (which is normal for intrincic
+ * functions).  This function is typically used from C coded functions that
+ * are not using ici_typecheck() to process arguments.  For example, a
+ * function that just takes a single mem object as an argument might start:
+ *
+ *  static int
+ *  myfunc()
+ *  {
+ *      object_t   *o;
+ *
+ *      if (NARGS() != 1)
+ *          return ici_argcount(1);
+ *      if (!ismem(ARG(0)))
+ *          return ici_argerror(0);
+ *      . . .
+ *
+ * This function is part of the ICI core's external API.
  */
 int
 ici_argerror(int i)
@@ -425,13 +445,34 @@ ici_argerror(int i)
 
 /*
  * Generate a generic error message to indicate that the wrong number of
- * arguments have been supplied to this intrinsic function, and that
- * it really (or normally) takes n.
+ * arguments have been supplied to an intrinsic function, and that it really
+ * (or most commonly) takes n.  This function sets the error descriptor
+ * (ici_error) to a message like:
  *
- * Returns 1, and is suitable for using in a direct return from an
- * intrinsic function, as in:
+ *   %d arguments given to %s, but it takes %d
  *
- *      return ici_argcount(2);
+ * and then returns 1.
+ *
+ * This function may only be called from the implementation of an intrinsic
+ * function.  It takes the number of actual argument and the function name
+ * from the current operand stack, which therefore should not have been
+ * distured (which is normal for intrincic functions).  It takes the number of
+ * arguments the function should have been supplied with (or typically is)
+ * from n.  This function is typically used from C coded functions that are
+ * not using ici_typecheck() to process arguments.  For example, a function
+ * that just takes a single object as an argument might start:
+ *
+ *  static int
+ *  myfunc()
+ *  {
+ *      object_t   *o;
+ *
+ *      if (NARGS() != 1)
+ *          return ici_argcount(1);
+ *      o = ARG(0);
+ *      . . .
+ *
+ * This function is part of the ICI core's external API.
  */
 int
 ici_argcount(int n)
@@ -1130,8 +1171,6 @@ f_call(void)
 
     if (NARGS() < 2)
         return ici_argcount(2);
-    func = ARG(0);
-    ici_incref(func);
     nargso = NULL;
     base = &ARG(NARGS() - 1);
     if (isarray(*base))
@@ -1145,6 +1184,8 @@ f_call(void)
     else
         naargs = ici_array_nels(aa);
     nargs = naargs + NARGS() - 2;
+    func = ARG(0);
+    ici_incref(func);
     /*
      * On the operand stack, we have...
      *    [aa] [argn]...[arg2] [arg1] [func] [nargs] [us] [    ]
@@ -1175,7 +1216,7 @@ f_call(void)
     if (naargs > 0)
     {
         i = naargs;
-        for (e = ici_astart(aa); e < ici_alimit(aa); e = ici_anext(aa, e))
+        for (e = ici_astart(aa); e != ici_alimit(aa); e = ici_anext(aa, e))
             base[--i] = *e;
     }
     /*
@@ -1224,10 +1265,12 @@ f_exit()
     case 0:
         rc = objof(&o_null);
         break;
+
     case 1:
         if (ici_typecheck("o", &rc))
-        return 1;
+            return 1;
         break;
+
     default:
         return ici_argcount(1);
     }
@@ -1404,7 +1447,7 @@ f_implode()
     if (ici_typecheck("a", &a))
         return 1;
     i = 0;
-    for (o = ici_astart(a); o < ici_alimit(a); o = ici_anext(a, o))
+    for (o = ici_astart(a); o != ici_alimit(a); o = ici_anext(a, o))
     {
         switch ((*o)->o_tcode)
         {
@@ -1420,7 +1463,7 @@ f_implode()
     if ((s = new_string(i)) == NULL)
         return 1;
     p = s->s_chars;
-    for (o = ici_astart(a); o < ici_alimit(a); o = ici_anext(a, o))
+    for (o = ici_astart(a); o != ici_alimit(a); o = ici_anext(a, o))
     {
         switch ((*o)->o_tcode)
         {
@@ -1493,6 +1536,7 @@ f_mopen()
     return ici_ret_with_decref(objof(f));
 }
 
+/*### Up to here with coverage. ###*/
 int
 f_sprintf()
 {
@@ -1806,12 +1850,12 @@ f_del()
         object_t        **prev_e;
 
         a = arrayof(s);
-        for (e = ici_astart(a); e < ici_alimit(a); e = ici_anext(a, e))
+        for (e = ici_astart(a); e != ici_alimit(a); e = ici_anext(a, e))
         {
             if (*e == o)
             {
                 prev_e = e;
-                for (e = ici_anext(a, e); e < ici_alimit(a); e = ici_anext(a, e))
+                for (e = ici_anext(a, e); e != ici_alimit(a); e = ici_anext(a, e))
                 {
                     *prev_e = *e;
                     prev_e = e;
@@ -3014,6 +3058,7 @@ cfunc_t std_cfuncs[] =
     {CF_OBJ,    (char *)SS(cmp),          f_coreici, SS(cmp),       SS(core1)},
     {CF_OBJ,    (char *)SS(pathjoin),     f_coreici, SS(pathjoin),  SS(core2)},
     {CF_OBJ,    (char *)SS(basename),     f_coreici, SS(basename),  SS(core2)},
+    {CF_OBJ,    (char *)SS(dirname),      f_coreici, SS(dirname),   SS(core2)},
     {CF_OBJ,    (char *)SS(pfopen),       f_coreici, SS(pfopen),    SS(core2)},
     {CF_OBJ,    (char *)SS(use),          f_coreici, SS(use),       SS(core2)},
     {CF_OBJ,    (char *)SS(min),          f_coreici, SS(min),       SS(core3)},

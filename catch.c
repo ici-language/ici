@@ -32,6 +32,7 @@ ici_unwind()
             return c;
         }
     }
+    assert(0);
     return NULL;
 }
 

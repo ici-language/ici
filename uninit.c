@@ -63,9 +63,11 @@ ici_uninit(void)
     /* Ensure that the stacks don't stop anything being collected. */
     for (x = ici_execs; x != NULL; x = x->x_next)
         ici_decref(x);
-    ici_decref(&ici_os);
-    ici_decref(&ici_xs);
-    ici_decref(&ici_vs);
+    /*
+     * We don't decref the static cached copies of our stacks, because
+     * if we did the garbage collector would try to free them (but they
+     * are static objects). However we do empty the stacks.
+     */
     ici_vs.a_top = ici_vs.a_base;
     ici_os.a_top = ici_os.a_base;
     ici_xs.a_top = ici_xs.a_base;

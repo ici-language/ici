@@ -179,7 +179,7 @@ function(parse_t *p, string_t *name)
     *f->f_code->a_top++ = objof(&o_return);
     *f->f_code->a_top++ = objof(&o_end);
     f->f_args = f->f_args;
-    f->f_autos = structof(ici_atom(objof(f->f_autos), 1));
+    f->f_autos = structof(ici_atom(objof(f->f_autos), 2));
     p->p_got.t_obj = ici_atom(objof(f), 1);
     p->p_func = saved_func;
     return 1;

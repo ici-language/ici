@@ -1,12 +1,34 @@
-auto f;
 auto n;
 
-auto tests =
-[array
-    "parse", "stmt", "bino", "sets", "del", "many", "func", "regexp",
+rpush(path, ".");
+
+rpush(path, "..");
+
+base := dirname(argv[0]);
+
+/*
+ * Use core extensions functions from this directory, even after we
+ * change to the test directory.
+ */
+rpush(path, base);
+
+chdir(base);
+
+tests := [array
+
+    "parse",
+	"stmt",
+	"bino",
+	"flow",
+	"sets",
+	"del",
+	"many",
+	"func",
+	"regexp",
     "math",
     "thread",
     "misc",
+//	"exit",
     "oner",
 ];
 
@@ -14,6 +36,6 @@ printf("Should finish with \"deliberate failure\".\n");
 forall (n in tests)
 {
     printf("%s...\n", n);
-    parse(f = fopen("tst-" + n + ".ici", "r"));
+    parse(f := fopen("tst-" + n + ".ici", "r"));
     close(f);
 }

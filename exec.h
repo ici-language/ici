@@ -40,6 +40,7 @@ struct exec
     array_t     *x_pc_closet;           /* See below. */
     array_t     *x_os_temp_cache;       /* See below. */
     exec_t      *x_next;
+    int         x_n_engine_recurse;
     int         x_critsect;
     object_t    *x_waitfor;
     int         x_state;
@@ -81,19 +82,30 @@ struct exec
  *                      a pc at that slot in the execution stack.
  *
  * x_os_temp_cache      An array of pseudo int/float objects that shadows the
- *                      operand stack. The objects in this array (apart
- *                      from the NULLs) are unions of int and float objects
- *                      that can be used as intermediate results in specific
- *                      circumstances as flaged by the compiler. Specifically,
- *                      they are known to be immediately consumed by some
- *                      operator that is only sensitive to the value, not the
- *                      address, of the object. See binop.h.
+ *                      operand stack.  The objects in this array (apart from
+ *                      the NULLs) are unions of int and float objects that
+ *                      can be used as intermediate results in specific
+ *                      circumstances as flaged by the compiler.
+ *                      Specifically, they are known to be immediately
+ *                      consumed by some operator that is only sensitive to
+ *                      the value, not the address, of the object.  See
+ *                      binop.h.
  *
- * x_next               Link to the next execution context on the list of
- *                      all existing execution contexts.
+ * x_next               Link to the next execution context on the list of all
+ *                      existing execution contexts.
  *
- * x_waitfor            If this thread is sleeping, an aggragate object that it
- *                      is waiting to be signaled. NULL if it is not sleeping.
+ * x_n_engine_recurse   A count of the number of times the main interpreter
+ *                      has been recursively entered in this thread (which is
+ *                      *not* caused by recursion in the user's ICI code).
+ *                      Only certain user constructs can cause this recusion
+ *                      (recursive parsing for example).  Native machine stack
+ *                      overflow is a nasty catastrophic error that we can't
+ *                      otherwise detect, so we don't allow too much of this
+ *                      sort of thing. See top of evaluate().
+ *
+ * x_waitfor            If this thread is sleeping, an aggragate object that
+ *                      it is waiting to be signaled.  NULL if it is not
+ *                      sleeping.
  */
 
 /*

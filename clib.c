@@ -455,13 +455,14 @@ f_fclose()
     if (NARGS() != 1)
         return ici_argcount(1);
     o = ARG(0);
-    x = ici_leave();
-    if (isfile(o))
-        r = f_close(fileof(o)) ? 1 : ici_null_ret();
-    else
-        r = ici_argerror(0);
-    ici_enter(x);
-    return r;
+    if (!isfile(o))
+        return ici_argerror(0);
+	x = ici_leave();
+	r = f_close(fileof(o));
+	ici_enter(x);
+	if (r)
+		return 1;
+	return ici_null_ret();
 }
 
 static int

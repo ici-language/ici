@@ -1,5 +1,5 @@
 /*
- * $Id: icicore2.ici,v 1.3 2002/03/03 03:18:05 timl Exp $
+ * $Id: ici4core2.ici,v 1.1 2002/03/17 03:21:45 timl Exp $
  *
  * Standard ICI startup file. This is parsed when the ICI interpreter is
  * initialised and allows simple functions to be written in ICI.
@@ -24,7 +24,7 @@ dirname(path)
 {
     auto        s;
 
-    if (path !~ #/# || !(s = path ~~ #(.*)/.*$#))
+    if (path !~ #/|\\# || !(s = path ~~ #(.*)(/|\\)([^/\\]*)$#))
         s = ".";
     return s;
 }
@@ -38,7 +38,7 @@ basename(path, ext)
     auto        s;
     auto        ext = NULL;
 
-    s = path ~~ #.*/(.*)#;
+	s = path ~~ #.*/|\\([^/\\]*)$#;
     if (s == NULL)
         s = path;
     if (ext)

@@ -33,7 +33,7 @@
  *
  * When a string is returned it is a pointer to the character data of an
  * internal ICI string object. It will only remain valid until the next
- * call to any ICI function because it is not necessarily held agains
+ * call to any ICI function because it is not necessarily held against
  * garbage collection.  When an object is returned it has been ici_incref'ed
  * (i.e. it is held against garbage collection).
  *

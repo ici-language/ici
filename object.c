@@ -238,7 +238,7 @@ grow_atoms(ptrdiff_t newz)
         if (olda[i] != NULL)
         {
             olda[i]->o_flags &= ~O_ATOM;
-            ici_atom(olda[i], 1);
+            ici_atom(olda[i], 2);
         }
     }
     ici_nfree(olda, oldz * sizeof(object_t *));
@@ -258,6 +258,8 @@ object_t *
 ici_atom(object_t *o, int lone)
 {
     object_t    **po;
+
+	assert(!(lone == 1 && o->o_nrefs == 0));
 
     if (o->o_flags & O_ATOM)
         return o;
@@ -349,7 +351,17 @@ atom_int(long i)
     return NULL;
 }
 
-static void
+/*
+ * Remove an object from the atom pool. This is only done because the
+ * object is being garbage collected. Even then, it is only done if there
+ * are a minority of atomic objects being collected. See collect() for
+ * the only call.
+ *
+ * Normally returns 0, but if the object could not be found in the pool,
+ * returns 1. In theory this can't happen. But this return allows for a
+ * little more robustness if something is screwy.
+ */
+static int
 unatom(object_t *o)
 {
     register object_t   **sl;
@@ -366,8 +378,13 @@ unatom(object_t *o)
         if (o == *ss)
            goto delete;
     }
+    /*
+     * The object isn't in the pool. This would seem to indicate that
+     * we have been given a bad pointer, so the O_ATOM flag of some object
+     * has been set spuriously.
+     */
     assert(0);
-    return;
+    return 1;
 
 delete:
     o->o_flags &= ~O_ATOM;
@@ -401,6 +418,7 @@ delete:
         }
     }
     *ss = NULL;
+    return 0;
 }
 
 void
@@ -497,8 +515,17 @@ collect(void)
                 *a = NULL;
         }
         natoms -= ndead_atoms;
-        ici_mem_limit = LONG_MAX; /* Prevent recursive collects. */
-        grow_atoms(atomsz); /* No actual size change. Should we? */
+        /*
+         * Override the size trigger for collection so that allocation
+         * in grow_atoms doesn't trigger an recursive collect.
+         */
+        ici_mem_limit = LONG_MAX;
+        /*
+         * Call grow_atoms() to reuild the atom pool. On entry it isn't
+         * a legal hash table, but grow_atoms() doesn't care. We make the
+         * new one the same size as the old one. Should we?
+         */
+        grow_atoms(atomsz);
 
         for (a = b = objs; a < objs_top; ++a)
         {
@@ -523,9 +550,8 @@ collect(void)
         {
             if (((o = *a)->o_flags & O_MARK) == 0)
             {
-                if (o->o_flags & O_ATOM)
-                    unatom(o);
-                freeo(o);
+                if ((o->o_flags & O_ATOM) == 0 || unatom(o) == 0)
+                	freeo(o);
             }
             else
             {

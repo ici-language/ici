@@ -108,7 +108,7 @@ buildxx(object_t **r, object_t **dnext, struct context *c)
         a = arrayof(*dnext);
         if ((s = ici_struct_new()) == NULL)
             return 1;
-        for (e = ici_astart(a); e < ici_alimit(a); e = ici_anext(a, e))
+        for (e = ici_astart(a); e != ici_alimit(a); e = ici_anext(a, e))
         {
             if (buildxx(&o, dnext + c->c_dstep, c))
             {

@@ -1,5 +1,5 @@
 #define ICI_CORE
-#include <fwd.h>
+#include "fwd.h"
 
 /*
  * Return an argv style array of pointers to each of the elemnts of

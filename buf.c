@@ -1,5 +1,5 @@
 #define ICI_CORE
-#include <fwd.h>
+#include "fwd.h"
 #include "buf.h"
 
 char    *ici_buf;       /* #define'd to buf in buf.h. */

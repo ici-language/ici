@@ -1,8 +1,6 @@
 /*
  * Test some basic parser features.
  */
-
-
 static
 func1()
 {
@@ -41,3 +39,12 @@ static o = struct(c, "value", 2);
 
 if (o@method(3) != 5)
 	fail("object@method() returned incorrect value");
+
+error := NULL;
+try
+	parse("a syntax error");
+onerror
+	;
+if (error == NULL)
+	fail("didn't propogate parse error correctly");
+	

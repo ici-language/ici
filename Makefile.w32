@@ -37,15 +37,15 @@ SDK=ici4-win32-sdk
 # /GF   Merged and read-only strings.
 # /Wn	Warning level n.
 #
-#CFLAGS  = /GB /MD /Zi /O2p-b2 /GF /DNDEBUG /W3 /I.
-#LDFLAGS = /MD /Zi
+CFLAGS  = /GB /MD /Zi /O2p-b2 /GF /DNDEBUG /W3 /I.
+LDFLAGS = /MD /Zi
 LIBS    = user32.lib wsock32.lib advapi32.lib winmm.lib
 
 #
 # If you want to debug...
 #
-CFLAGS = /GB /MDd /Zi /Od /Op- /W3 -I.
-LDFLAGS = /MDd /Zi
+#CFLAGS = /GB /MDd /Zi /Od /Op- /W3 -I.
+#LDFLAGS = /MDd /Zi
 
 OBJS    = \
     alloc.obj aplfuncs.obj arith.obj array.obj call.obj \

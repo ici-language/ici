@@ -300,12 +300,9 @@ extern int      ici_op_binop(void);
 extern int      ici_op_mklvalue(void);
 extern int      ici_op_onerror(void);
 extern int      ici_op_for(void);
-extern int      ici_op_looper(void);
-extern int      ici_op_continue(void);
 extern int      ici_op_andand(void);
 extern int      ici_op_switcher(void);
 extern int      ici_op_switch(void);
-extern int      ici_op_pop(void);
 extern int      ici_op_forall(void);
 extern int      ici_op_return(void);
 extern int      ici_op_call(void);
@@ -571,14 +568,21 @@ struct type
  *              Objects which are intrinsically unique and atomic often
  *              support assignments.
  *
- * t_fetch(o, k) Fetch the value of key k of the object o. Return NULL on
+ * t_fetch(o, k) Fetch the value of key k of the object o.  Return NULL on
  *              error.
+ *              
+ *              Note that the returned object does not have any extra
+ *              reference count; however, in some circumstances it may not
+ *              have any garbage collector visible references to it.  That is,
+ *              it may be vunerable to a garbage collection if it is not
+ *              either incref()ed or hooked into a referenced object
+ *              immediately. Callers are responsible for taking care.
  *
- *              The existing function ici_fetch_fail() may be used both as
- *              the implementation of this function for object types which
- *              do not support any assignment, and as a simple method of
- *              generating an error for particular fetches which break
- *              some rule of the object.
+ *              The existing function ici_fetch_fail() may be used both as the
+ *              implementation of this function for object types which do not
+ *              support any assignment, and as a simple method of generating
+ *              an error for particular fetches which break some rule of the
+ *              object.
  *
  * t_name       The name of this type. Use for the implementation of
  *              typeof() and in error messages. But apart from that, type
@@ -588,7 +592,11 @@ struct type
  * t_objname(o, p) Place a short (30 chars or less) human readable
  *              representation of the object in the given buffer. This
  *              is not intended as a basis for re-parsing or serialisation.
- *              It is just for diagnostics and debug.
+ *              It is just for diagnostics and debug. An implementation of
+ *              t_objname() must not allocate memory or otherwise allow the
+ *              garbage collector to run. It is often used to generate
+ *              formatted failure messages after an error has occured, but before
+ *              cleanup has completed.
  *
  * t_call(o, s) Call the object o. If s is non-NULL this is a method call
  *              and s is the subject object of the call. Return 1 on error,
@@ -789,7 +797,7 @@ struct objwsup
 
 /*
  * Determine what free list an object of the given type is appropriate
- * for, of the size of the object if it is too big. We assume the
+ * for, or the size of the object if it is too big. We assume the
  * compiler will reduce this constant expression to a constant at
  * compile time.
  */

@@ -144,9 +144,9 @@ ici_op_return()
     ici_xs.a_top = x;
 
     /*
-     * If convenient, record the total nels the autos that this function
-     * ended up with, as a hint for the auto struct allocation on next
-     * call. If it isn't convenient, do it occasionally anyway.
+     * If convenient, record the total nels of the autos that this function
+     * ended up with, as a hint for the auto struct allocation on next call.
+     * If it isn't convenient, do it occasionally anyway.
      */
     if
     (

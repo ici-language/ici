@@ -38,9 +38,8 @@ ici_method_new(object_t *subject, object_t *callable)
 
     if ((m = ici_talloc(method_t)) == NULL)
         return NULL;
-    objof(m)->o_tcode = TC_MEM;
+    objof(m)->o_tcode = TC_METHOD;
     assert(ici_typeof(m) == &ici_method_type);
-    objof(m)->o_tcode = 0;
     objof(m)->o_nrefs = 1;
     objof(m)->o_flags = 0;
     rego(m);

@@ -61,6 +61,12 @@ enum
     OP_ASSIGNLOCALVAR,
     OP_CRITSECT,
     OP_WAITFOR,
+    OP_POP,
+    OP_CONTINUE,
+    OP_LOOPER,
+    OP_ANDAND,
+    OP_SWITCH,
+    OP_SWITCHER,
 };
 
 /*

@@ -100,13 +100,14 @@ struct array
                 : 0)
 
 /*
- * Macros to assist in doing for for loop over the elements of an array.
+ * Macros to assist in doing for loops over the elements of an array.
  * Use as:
  *    object **e;
- *    for (e = ici_astart(a); e < ici_alimit(a); e = ici_anext(a, e))
+ *    for (e = ici_astart(a); e != ici_alimit(a); e = ici_anext(a, e))
  *        ...
  */
-#define ici_astart(a)   ((a)->a_bot == (a)->a_limit ? (a)->a_base : (a)->a_bot)
+#define ici_astart(a)   ((a)->a_bot == (a)->a_limit && (a)->a_bot != (a)->a_top \
+                            ? (a)->a_base : (a)->a_bot)
 #define ici_alimit(a)   ((a)->a_top)
 #define ici_anext(a, e) ((e) + 1 == (a)->a_limit && (a)->a_limit != (a)->a_top \
                             ? (a)->a_base : (e) + 1)

@@ -114,7 +114,15 @@ ici_array_span(array_t *a, int i, ptrdiff_t *np)
 
 /*
  * Copy n objects of the given array, starting at index start, to b.
- * The span must cover existing elements of the array.
+ * The span must cover existing elements of the array (that is, don't
+ * try to read from negative or excessive indexes).
+ *
+ * This function is used to copy objects out of an array into a contiguous
+ * destination area. You can't easily just memcpy, because the span of elements
+ * you want may wrap around he end. For example, the implementaion of interval()
+ * uses this to copy the span of elements it wants into a new array.
+ *
+ * This function is part of the ICI core's external API.
  */
 void
 ici_array_gather(object_t **b, array_t *a, ptrdiff_t start, ptrdiff_t n)

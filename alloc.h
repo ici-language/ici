@@ -6,7 +6,7 @@
  * allocations go to the native malloc. We allow it to be set
  * in the configuration file - but that would be rare. It will
  * slow performance considerably. Can be very useful to set,
- * along with ALLCOLLECT in alloc.c, during debug and test.
+ * along with ALLCOLLECT in object.c, during debug and test.
  */
 #if     !ICI_ALLALLOC
 #define ICI_ALLALLOC    0   /* Always call malloc, no caches. */
@@ -24,7 +24,7 @@
 
 /*
  * Determine what free list an object of the given type is appropriate
- * for, of the size of the object if it is too big. We assume the
+ * for, or the size of the object if it is too big. We assume the
  * compiler will reduce this constant expression to a constant at
  * compile time.
  */

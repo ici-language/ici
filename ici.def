@@ -84,20 +84,14 @@ EXPORTS ici_need_stdout
 EXPORTS ici_new_exec
 EXPORTS ici_nfree
 EXPORTS ici_one DATA
-EXPORTS ici_op_andand
-EXPORTS ici_op_continue
 EXPORTS ici_op_fetch
 EXPORTS ici_op_for
 EXPORTS ici_op_forall
-EXPORTS ici_op_looper
 EXPORTS ici_op_mklvalue
 EXPORTS ici_op_mkptr
 EXPORTS ici_op_onerror
 EXPORTS ici_op_openptr
-EXPORTS ici_op_pop
 EXPORTS ici_op_return
-EXPORTS ici_op_switch
-EXPORTS ici_op_switcher
 EXPORTS ici_op_unary
 EXPORTS ici_os DATA
 EXPORTS ici_outermost_writeable_struct
