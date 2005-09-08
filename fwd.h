@@ -326,7 +326,7 @@ extern ici_str_t        *ici_str_new(char *, int);
 extern ici_ptr_t        *ici_ptr_new(ici_obj_t *, ici_obj_t *);
 extern ici_regexp_t     *ici_regexp_new(ici_str_t *, int);
 extern int              ici_assign_fail(ici_obj_t *, ici_obj_t *, ici_obj_t *);
-extern ici_file_t       *ici_sopen(char *, int, ici_obj_t *);
+extern ici_file_t       *ici_open_charbuf(char *, int, ici_obj_t *, int);
 extern unsigned long    ici_hash_unique(ici_obj_t *);
 extern int              ici_cmp_unique(ici_obj_t *, ici_obj_t *);
 extern int              ici_get_last_errno(const char *, const char *);
@@ -402,6 +402,12 @@ extern DLI int          ici_debug_enabled;
 extern int              ici_debug_ign_err;
 extern DLI void         ici_debug_ignore_errors(void);
 extern DLI void         ici_debug_respect_errors(void);
+
+/*
+ * ici_sopen() is now a macro that calls ici_open_charbuf() for read-only access.
+ * Included only for backward compatibility; use ici_open_charbuf() instead.
+ */
+#define ici_sopen(data, size, ref) ici_open_charbuf(data, size, ref, 1)
 
 #ifdef NODEBUGGING
     /*
