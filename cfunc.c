@@ -1579,18 +1579,26 @@ f_sopen()
     ici_file_t  *f;
     char        *str;
     char        *mode;
+    int         readonly;
 
     mode = "r";
     if (ici_typecheck(NARGS() > 1 ? "ss" : "s", &str, &mode))
         return 1;
+    readonly = 1;
     if (strcmp(mode, "r") != 0 && strcmp(mode, "rb") != 0)
     {
-        ici_chkbuf(strlen(mode) + 50);
-        sprintf(buf, "attempt to use mode \"%s\" in sopen()", mode);
-        ici_error = buf;
-        return 1;
+        if (strcmp(mode, "r+") != 0 && strcmp(mode, "r+b") != 0)
+        {
+            if (!ici_chkbuf(strlen(mode) + 50))
+            {
+		sprintf(buf, "attempt to use mode \"%s\" in sopen()", mode);
+		ici_error = buf;
+            }
+            return 1;
+        }
+        readonly = 0;
     }
-    if ((f = ici_sopen(str, stringof(ARG(0))->s_nchars, ARG(0))) == NULL)
+    if ((f = ici_open_charbuf(str, stringof(ARG(0))->s_nchars, ARG(0), readonly)) == NULL)
         return 1;
     f->f_name = SS(empty_string);
     return ici_ret_with_decref(objof(f));
@@ -1602,26 +1610,31 @@ f_mopen()
     ici_mem_t   *mem;
     ici_file_t  *f;
     char        *mode;
+    int         readonly;
 
-    if (ici_typecheck("os", &mem, &mode))
-    {
-        if (ici_typecheck("o", &mem))
-            return 1;
-        mode = "r";
-    }
-    if (!ismem(objof(mem)))
-        return ici_argerror(0);
+    mode = "r";
+    if (ici_typecheck(NARGS() > 1 ? "ms" : "m", &mem, &mode))
+        return 1;
+    readonly = 1;
     if (strcmp(mode, "r") && strcmp(mode, "rb"))
     {
-        ici_error = "bad open mode for mopen";
-        return 1;
+        if (strcmp(mode, "r+") && strcmp(mode, "r+b"))
+        {
+            if (!ici_chkbuf(strlen(mode) + 50))
+            {
+		sprintf(buf, "attempt to use mode \"%s\" in mopen()", mode);
+		ici_error = buf;
+            }
+            return 1;
+        }
+        readonly = 0;
     }
     if (mem->m_accessz != 1)
     {
         ici_error = "memory object must have access size of 1 to be opened";
         return 1;
     }
-    if ((f = ici_sopen(mem->m_base, (int)mem->m_length, objof(mem))) == NULL)
+    if ((f = ici_open_charbuf(mem->m_base, (int)mem->m_length, objof(mem), readonly)) == NULL)
         return 1;
     f->f_name = SS(empty_string);
     return ici_ret_with_decref(objof(f));
