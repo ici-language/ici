@@ -133,10 +133,10 @@ if (version() ~ #trace#)
 a := strbuf("xy");
 a[4] = 'z';
 if (a != "xy  z")
-    fail("failed to assign to and extend string");
+    fail("failed to assign to and extend mutable string");
 a[1] = 'A';
 if (a != "xA  z")
-    fail("failed to assign to to string");
+    fail("failed to assign to middle of mutable string");
 error = NULL; try "hello"[1] = 2; onerror; if (error == NULL)
     fail("failed to fail on write to atomic string");
 error = NULL; try a["x"] = 2; onerror; if (error == NULL)
@@ -145,3 +145,49 @@ error = NULL; try a[1] = "x"; onerror; if (error == NULL)
     fail("failed to fail on bad string write");
 error = NULL; try a[-1] = 2; onerror; if (error == NULL)
     fail("failed to fail on bad string write");
+
+a := strbuf();
+s := sopen(a, "r+");
+printf(s, "printf ");
+put("put", s);
+if (a != "printf put")
+    fail("failed to write to mutable string");
+seek(s, 0, 0);
+if (getfile(s) != "printf put")
+    fail("failed to read data written to mutable string");
+
+m := mopen(alloc(20, 1), "r+");
+printf(m, "printf ");
+put("put", m);
+seek(m, 0, 0);
+if (gettoken(m, "\0") != "printf put")
+    fail("failed to read data written to mem object");
+seek(m, 20 - 5, 0);
+put("write", m);
+seek(m, 20 - 4, 0);
+error = NULL; try put("write", m); onerror;
+if (error == NULL)
+    fail("failed to fail on write past end of mem object");
+seek(m, 0, 0);
+if (getfile(m) != "printf put\0\0\0\0\0wwrit")
+    fail("write did not truncate");
+
+/*
+ * This test causes ici 4.1.0 to print garbage.  It can also
+ * cause a crash if the buffer is extended significantly.
+ * This bug in sfile.c was fixed 8/9/2005.
+ */
+a := strbuf("A sequence of characters.\n");
+s := sopen(a, "r"); /* s keeps a pointer into the buffer */
+strcat(a, "Add some more characters.\n"); /* moves the buffer */
+for (i = 0; i < 100; i++); /* churn some objects */
+getfile(s);
+
+/*
+ * This test causes ici 4.1.0 to try to write at an address
+ * outside the process's legal address space.
+ * This bug in sfile.c was fixed 8/9/2005.
+ */
+static xyz = sopen("{seek(xyz, 1000000, 0);rejectchar(currentfile(),\" \");}");
+parse(xyz);
+
