@@ -1,3 +1,10 @@
+*   Allowed modes "r+" and "r+b" to be passed to sopen() and mopen(),
+    giving stream-based read/write access to mutable strings and mem
+    objects. Added the new function ici_open_charbuf() to support this.
+    ici_sopen() is now a macro that uses ici_open_charbuf(). Being able
+    to write formatted output to a mutable string could remove the need
+    for temp files in many situations. (richard)
+
 *   Corrected error in parser that caused a crash if a default
     or case label was at the very end of the switch block and
     had no statement after it. This fix also corrects the mis-reporting
