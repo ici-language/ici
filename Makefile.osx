@@ -8,7 +8,9 @@
 # functions are in libc so we don't have to provide the
 # simple implementation of them.
 
+ifeq ($(shell uname -r),8.5.0)
 MACOSX_VERSION = Tiger
+endif
 
 PREFIX	= /usr/local
 PROG    = ici
