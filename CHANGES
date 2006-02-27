@@ -1,3 +1,13 @@
+*   Registered mutable string buffers with the garbage collector.
+    Previously they were never freed.  Also fixed the calculation of
+    memory consumption by mutable string buffers. (richard)
+
+*   Added flags controlling I/O behaviour to ici_ftype_t. Currently
+    the only flag defined is FT_NOMUTEX, which causes ICI to release
+    the mutex during I/O on the file. Previously this was always the
+    case, but I/O on mutable string buffers accesses ICI data so the
+    mutex must NOT be released. (richard)
+
 *   Allowed modes "r+" and "r+b" to be passed to sopen() and mopen(),
     giving stream-based read/write access to mutable strings and mem
     objects. Added the new function ici_open_charbuf() to support this.
