@@ -648,7 +648,7 @@ compile_branch(int options, int *brackets, uschar **codeptr,
   int *reqchar, int *countlits, compile_data *cd)
 {
 int repeat_type, op_type;
-int repeat_min, repeat_max;
+int repeat_min = 0, repeat_max = 0;
 int bravalue, length;
 int greedy_default, greedy_non_default;
 int prevreqchar;
@@ -2075,7 +2075,7 @@ clever for #-comments. */
 ptr = (const uschar *)(pattern - 1);
 while ((c = *(++ptr)) != 0)
   {
-  int min, max;
+  int min = 0, max = 0;
   int class_charcount;
 
   if ((options & PCRE_EXTENDED) != 0)
