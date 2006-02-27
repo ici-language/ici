@@ -1,6 +1,15 @@
 #
 # For compiling a standard version on Mac OS X
 #
+
+#
+# Specify the version of OS X in use.  The only important
+# value is "Tiger" which means the dlopen() family of
+# functions are in libc so we don't have to provide the
+# simple implementation of them.
+
+MACOSX_VERSION = Tiger
+
 PREFIX	= /usr/local
 PROG    = ici
 LIB     = libici4.a
@@ -52,9 +61,10 @@ OBJS    = \
 	buf.o strtol.o \
 	idb.o idb2.o profile.o
 
-OSXOBJS=\
-	dlfcn_simple.o \
-	semaphore.o
+OSXOBJS=semaphore.o
+ifneq ($(MACOSX_VERSION),Tiger)
+OSXOBJS+=dlfcn_simple.o
+endif
 
 PCREOBJS=\
 	study.o maketables.o pcre.o
@@ -80,8 +90,10 @@ maketables.o    : pcre/maketables.c
 pcre.o  : pcre/pcre.c
 	$(CC) -c -o $@ $(CFLAGS) pcre/pcre.c
 
+ifneq ($(MACOSX_VERSION),Tiger)
 dlfcn_simple.o : macosx/dlfcn_simple.c
 	$(CC) -c -o $@ $(CFLAGS) macosx/dlfcn_simple.c
+endif
 
 semaphore.o : macosx/semaphore.c
 	$(CC) -c -o $@ $(CFLAGS) macosx/semaphore.c
