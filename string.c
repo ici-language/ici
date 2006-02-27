@@ -194,6 +194,7 @@ ici_str_buf_new(int n)
     s->s_struct = NULL;
     s->s_slot = NULL;
     s->s_vsver = 0;
+    ici_rego(s);
     return s;
 }
 
@@ -238,7 +239,10 @@ static unsigned long
 mark_string(ici_obj_t *o)
 {
     o->o_flags |= O_MARK;
-    return STR_ALLOCZ(stringof(o)->s_nchars);
+    if (o->o_flags & ICI_S_SEP_ALLOC)
+        return sizeof(ici_str_t) + stringof(o)->s_u.su_nalloc;
+    else
+        return STR_ALLOCZ(stringof(o)->s_nchars);
 }
 
 /*
@@ -283,8 +287,14 @@ static void
 free_string(ici_obj_t *o)
 {
     if (o->o_flags & ICI_S_SEP_ALLOC)
+    {
         ici_nfree(stringof(o)->s_chars, stringof(o)->s_u.su_nalloc);
-    ici_nfree(o, STR_ALLOCZ(stringof(o)->s_nchars));
+        ici_tfree(o, ici_str_t);
+    }
+    else
+    {
+        ici_nfree(o, STR_ALLOCZ(stringof(o)->s_nchars));
+    }
 }
 
 /*
