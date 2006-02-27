@@ -81,6 +81,12 @@ ici_uninit(void)
     uninit_cfunc();
 
     /*
+     * Do a GC to free things that might require reference to the
+     * exec state before we discard it.
+     */
+    ici_reclaim();
+
+    /*
      * Active threads, including the main one, will count reference counts
      * for their exec structs. But finished ones will have none. We don't
      * really care. Just zap them all and let the garbage collector sort

@@ -6,8 +6,8 @@ PROG    = ici
 LIB     = libici4.a
 CC      = cc -pipe
 LIBS    = -framework Foundation
-COPT	?= -O3
-CFLAGS  = -g -Wall $(COPT) -I. -Imacosx -DNDEBUG
+COPT	?= -O3 -DNDEBUG
+CFLAGS  = -g -Wall $(COPT) -I. -Imacosx
 LDFLAGS = -g
 RM      = rm -f
 

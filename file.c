@@ -113,7 +113,7 @@ ici_file_new(void *fp, ici_ftype_t *ftype, ici_str_t *name, ici_obj_t *ref)
 int
 ici_file_close(ici_file_t *f)
 {
-    ici_exec_t  *x;
+    ici_exec_t  *x = NULL;
     int         r;
 
     if (objof(f)->o_flags & F_CLOSED)
