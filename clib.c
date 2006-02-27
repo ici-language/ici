@@ -66,6 +66,7 @@ extern int      system();
 
 ici_ftype_t ici_stdio_ftype =
 {
+    FT_NOMUTEX,
     fgetc,
     ungetc,
     fputc,
@@ -92,6 +93,7 @@ xpclose(FILE *f)
 
 ici_ftype_t  ici_popen_ftype =
 {
+    FT_NOMUTEX,
     fgetc,
     ungetc,
     fputc,
@@ -121,9 +123,11 @@ f_getchar()
             return 1;
     }
     ici_signals_blocking_syscall(1);
-    x = ici_leave();
+    if (f->f_type->ft_flags & FT_NOMUTEX)
+        x = ici_leave();
     c = (*f->f_type->ft_getch)(f->f_file);
-    ici_enter(x);
+    if (f->f_type->ft_flags & FT_NOMUTEX)
+        ici_enter(x);
     ici_signals_blocking_syscall(0);
     if (c == EOF)
     {
@@ -163,16 +167,22 @@ f_getline()
     file = f->f_file;
     if ((b = malloc(buf_size = 128)) == NULL)
         goto nomem;
-    ici_signals_blocking_syscall(1);
-    x = ici_leave();
+    if (f->f_type->ft_flags & FT_NOMUTEX)
+    {
+        ici_signals_blocking_syscall(1);
+        x = ici_leave();
+    }
     for (i = 0; (c = (*get)(file)) != '\n' && c != EOF; ++i)
     {
         if (i == buf_size && (b = realloc(b, buf_size *= 2)) == NULL)
             break;
         b[i] = c;
     }
-    ici_enter(x);
-    ici_signals_blocking_syscall(0);
+    if (f->f_type->ft_flags & FT_NOMUTEX)
+    {
+        ici_enter(x);
+        ici_signals_blocking_syscall(0);
+    }
     if (b == NULL)
         goto nomem;
     if (i == 0 && c == EOF)
@@ -238,16 +248,22 @@ f_getfile()
     file = f->f_file;
     if ((b = malloc(buf_size = 128)) == NULL)
         goto nomem;
-    ici_signals_blocking_syscall(1);
-    x = ici_leave();
+    if (f->f_type->ft_flags & FT_NOMUTEX)
+    {
+        ici_signals_blocking_syscall(1);
+        x = ici_leave();
+    }
     for (i = 0; (c = (*get)(file)) != EOF; ++i)
     {
         if (i == buf_size && (b = realloc(b, buf_size *= 2)) == NULL)
             break;
         b[i] = c;
     }
-    ici_enter(x);
-    ici_signals_blocking_syscall(0);
+    if (f->f_type->ft_flags & FT_NOMUTEX)
+    {
+        ici_enter(x);
+        ici_signals_blocking_syscall(0);
+    }
     if (b == NULL)
         goto nomem;
     str = ici_str_new(b, i);
@@ -292,7 +308,8 @@ f_put()
     }
     if (!isstring(objof(s)))
         return ici_argerror(0);
-    x = ici_leave();
+    if (f->f_type->ft_flags & FT_NOMUTEX)
+        x = ici_leave();
     if
     (
         (*f->f_type->ft_write)(s->s_chars, s->s_nchars, f->f_file)
@@ -300,11 +317,13 @@ f_put()
         s->s_nchars
     )
     {
-        ici_enter(x);
+        if (f->f_type->ft_flags & FT_NOMUTEX)
+            ici_enter(x);
         ici_error = "write failed";
         return 1;
     }
-    ici_enter(x);
+    if (f->f_type->ft_flags & FT_NOMUTEX)
+        ici_enter(x);
     return ici_null_ret();
 }
 
@@ -324,14 +343,17 @@ f_fflush()
         if ((f = ici_need_stdout()) == NULL)
             return 1;
     }
-    x = ici_leave();
+    if (f->f_type->ft_flags & FT_NOMUTEX)
+        x = ici_leave();
     if ((*f->f_type->ft_flush)(f->f_file) == -1)
     {
-        ici_enter(x);
+        if (f->f_type->ft_flags & FT_NOMUTEX)
+            ici_enter(x);
         ici_error = "flush failed";
         return 1;
     }
-    ici_enter(x);
+    if (f->f_type->ft_flags & FT_NOMUTEX)
+        ici_enter(x);
     return ici_null_ret();
 }
 
@@ -465,18 +487,17 @@ f_system()
 static int
 f_fclose()
 {
-    ici_obj_t   *o;
+    ici_file_t  *f;
     ici_exec_t  *x;
     int         r;
 
-    if (NARGS() != 1)
-        return ici_argcount(1);
-    o = ARG(0);
-    if (!isfile(o))
-        return ici_argerror(0);
-    x = ici_leave();
-    r = ici_file_close(fileof(o));
-    ici_enter(x);
+    if (ici_typecheck("u", &f))
+        return 1;
+    if (f->f_type->ft_flags & FT_NOMUTEX)
+        x = ici_leave();
+    r = ici_file_close(f);
+    if (f->f_type->ft_flags & FT_NOMUTEX)
+        ici_enter(x);
     if (r)
         return 1;
     return ici_null_ret();
@@ -499,9 +520,11 @@ f_eof()
         if ((f = ici_need_stdin()) == NULL)
             return 1;
     }
-    x = ici_leave();
+    if (f->f_type->ft_flags & FT_NOMUTEX)
+        x = ici_leave();
     r = (*f->f_type->ft_eof)(f->f_file);
-    ici_enter(x);
+    if (f->f_type->ft_flags & FT_NOMUTEX)
+        ici_enter(x);
     return ici_int_ret((long)r);
 }
 

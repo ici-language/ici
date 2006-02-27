@@ -745,6 +745,7 @@ pf_lfail()
 
 ici_ftype_t ici_parse_ftype =
 {
+    0,
     pf_getc,
     pf_ungetc,
     pf_fail,    /* putc */

@@ -122,6 +122,7 @@ cbwrite(char *data, long count, charbuf_t *cb)
  */
 ici_ftype_t ici_charbuf_ftype =
 {
+    0,
     cbgetc,
     cbungetc,
     cbputc,
@@ -203,6 +204,7 @@ sbputc(int c, charbuf_t *sb)
  */
 ici_ftype_t ici_strbuf_ftype =
 {
+    0,
     sbgetc,
     sbungetc,
     sbputc,

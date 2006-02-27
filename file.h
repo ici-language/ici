@@ -23,6 +23,7 @@
  */
 struct ici_ftype
 {
+    int         ft_flags;
     int         (*ft_getch)();
     int         (*ft_ungetch)();
     int         (*ft_putch)();
@@ -32,6 +33,25 @@ struct ici_ftype
     int         (*ft_eof)();
     int         (*ft_write)();
 };
+/*
+ * ft_flags             A combination of FT_* flags, defined below.
+ */
+
+/*
+ * The flags that may appear in ft_flags.  NOTE: If any flag greater than 0x80
+ * is specified, file creation with ici_file_new() will fail.  See that
+ * function for details.
+ *
+ * FT_NOMUTEX           ICI will surround file I/O on this file with
+ *                      ici_leave()/ici_enter().  Using this flag can increase
+ *                      efficiency by allowing other threads to run during a
+ *                      blocking I/O operation; however it must NOT be used if
+ *                      the file's I/O functions can access ICI data.
+ *
+ * --ici-api-- continued.
+ */
+#define FT_NOMUTEX  0x01
+
 
 struct ici_file
 {

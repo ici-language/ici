@@ -1925,9 +1925,11 @@ f_sprintf()
                     return 1;
             }
             memcpy(out_buf, buf, i);
-            x = ici_leave();
+            if (file->f_type->ft_flags & FT_NOMUTEX)
+                x = ici_leave();
             (*file->f_type->ft_write)(out_buf, i, file->f_file);
-            ici_enter(x);
+            if (file->f_type->ft_flags & FT_NOMUTEX)
+                ici_enter(x);
             if (out_buf != small_buf)
                 ici_nfree(out_buf, i);
         }
