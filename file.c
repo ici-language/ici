@@ -3,6 +3,7 @@
 #include "str.h"
 #include "parse.h"
 #include "primes.h"
+#include "buf.h"
 
 /*
  * Returns 0 if these objects are eq, else non-zero.
@@ -112,13 +113,35 @@ ici_file_new(void *fp, ici_ftype_t *ftype, ici_str_t *name, ici_obj_t *ref)
 int
 ici_file_close(ici_file_t *f)
 {
+    ici_exec_t  *x;
+    int         r;
+
     if (objof(f)->o_flags & F_CLOSED)
     {
         ici_error = "file already closed";
         return 1;
     }
     objof(f)->o_flags |= F_CLOSED;
-    return (*f->f_type->ft_close)(f->f_file);
+    if (f->f_type->ft_flags & FT_NOMUTEX)
+        x = ici_leave();
+    r = (*f->f_type->ft_close)(f->f_file);
+    if (f->f_type->ft_flags & FT_NOMUTEX)
+        ici_enter(x);
+#ifndef NOPIPES
+    /*
+     * If this is a pipe opened with popen(), 'r' is actually the exit status
+     * of the process.  If this is non-zero, format it into an error message.
+     * Note: we can't do this within ici_popen_ftype's ft_close(), because
+     * modifying ici_error between calls to ici_leave()/ici_enter() is not
+     * allowed.
+     */
+    if (r != 0 && f->f_type == &ici_popen_ftype)
+    {
+        sprintf(buf, "popen command exit status %d", r);
+        ici_error = buf;
+    }
+#endif
+    return r;
 }
 
 /*

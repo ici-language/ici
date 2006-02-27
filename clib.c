@@ -78,19 +78,6 @@ ici_ftype_t ici_stdio_ftype =
 };
 
 #ifndef NOPIPES
-static int
-xpclose(FILE *f)
-{
-    int rc = pclose(f);
-
-    if (rc != 0)
-    {
-        sprintf(buf, "popen command exit status %d", rc);
-        ici_error = buf;
-    }
-    return rc;
-}
-
 ici_ftype_t  ici_popen_ftype =
 {
     FT_NOMUTEX,
@@ -98,7 +85,7 @@ ici_ftype_t  ici_popen_ftype =
     ungetc,
     fputc,
     fflush,
-    xpclose,
+    pclose,
     xfseek,
     xfeof,
     xfwrite
@@ -488,17 +475,10 @@ static int
 f_fclose()
 {
     ici_file_t  *f;
-    ici_exec_t  *x;
-    int         r;
 
     if (ici_typecheck("u", &f))
         return 1;
-    if (f->f_type->ft_flags & FT_NOMUTEX)
-        x = ici_leave();
-    r = ici_file_close(f);
-    if (f->f_type->ft_flags & FT_NOMUTEX)
-        ici_enter(x);
-    if (r)
+    if (ici_file_close(f))
         return 1;
     return ici_null_ret();
 }
