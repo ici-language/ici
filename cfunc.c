@@ -1913,7 +1913,7 @@ f_sprintf()
         {
             char        small_buf[128];
             char        *out_buf;
-            ici_exec_t  *x;
+            ici_exec_t  *x = NULL;
 
             if (i <= sizeof small_buf)
             {

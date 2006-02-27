@@ -97,7 +97,7 @@ f_getchar()
 {
     ici_file_t          *f;
     int                 c;
-    ici_exec_t          *x;
+    ici_exec_t          *x = NULL;
 
     if (NARGS() != 0)
     {
@@ -134,7 +134,7 @@ f_getline()
     register char       *file;
     ici_file_t          *f;
     int                 (*get)();
-    ici_exec_t          *x;
+    ici_exec_t          *x = NULL;
     char                *b;
     int                 buf_size;
     ici_str_t           *str;
@@ -198,7 +198,7 @@ f_getfile()
     ici_file_t          *f;
     int                 (*get)();
     char                *file;
-    ici_exec_t          *x;
+    ici_exec_t          *x = NULL;
     char                *b;
     int                 buf_size;
     ici_str_t           *str;
@@ -279,7 +279,7 @@ f_put()
 {
     ici_str_t  *s;
     ici_file_t *f;
-    ici_exec_t *x;
+    ici_exec_t *x = NULL;
 
     if (NARGS() > 1)
     {
@@ -318,7 +318,7 @@ static int
 f_fflush()
 {
     ici_file_t          *f;
-    ici_exec_t          *x;
+    ici_exec_t          *x = NULL;
 
     if (NARGS() > 0)
     {
@@ -374,7 +374,7 @@ f_fopen()
     char        *mode;
     ici_file_t  *f;
     FILE        *stream;
-    ici_exec_t  *x;
+    ici_exec_t  *x = NULL;
     int         i;
 
     mode = "r";
@@ -429,7 +429,7 @@ f_popen()
     char        *mode;
     ici_file_t  *f;
     FILE        *stream;
-    ici_exec_t  *x;
+    ici_exec_t  *x = NULL;
     int         i;
     extern int  pclose();
 
@@ -460,7 +460,7 @@ f_system()
 {
     char        *cmd;
     long        result;
-    ici_exec_t  *x;
+    ici_exec_t  *x = NULL;
 
     if (ici_typecheck("s", &cmd))
         return 1;
@@ -487,7 +487,7 @@ static int
 f_eof()
 {
     ici_file_t          *f;
-    ici_exec_t          *x;
+    ici_exec_t          *x = NULL;
     int                 r;
 
     if (NARGS() != 0)
