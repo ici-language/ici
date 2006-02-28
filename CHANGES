@@ -1,3 +1,6 @@
+*   Fixed several accesses to ici_buf and ici_error while the mutex
+    is released, that occur when closing files and pipes. (richard)
+
 *   Registered mutable string buffers with the garbage collector.
     Previously they were never freed.  Also fixed the calculation of
     memory consumption by mutable string buffers. (richard)
