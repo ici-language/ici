@@ -2,16 +2,6 @@
 # For compiling a standard version on Mac OS X
 #
 
-#
-# Specify the version of OS X in use.  The only important
-# value is "Tiger" which means the dlopen() family of
-# functions are in libc so we don't have to provide the
-# simple implementation of them.
-
-ifeq ($(shell uname -r),8.5.0)
-MACOSX_VERSION = Tiger
-endif
-
 PREFIX	= /usr/local
 PROG    = ici
 LIB     = libici4.a
@@ -29,6 +19,12 @@ MAN1	= doc/man1/ici.1\
 	  doc/man1/icire.1\
 	  doc/man1/icistmt.1\
 	  doc/man1/icitypes.1
+
+# Pre-Tiger there was no dlopen/dlsym/etc... in libc and we needed
+# to provide our own.  We run a little script that outputs YES if
+# this OS version has dlopen in the library, or NO if it doesn't,
+# and use that to decide if we build our implementation.
+HAS_DLOPEN = $(shell macosx/has-dlopen)
 
 #
 # Where things get installed.
@@ -64,7 +60,8 @@ OBJS    = \
 	idb.o idb2.o profile.o
 
 OSXOBJS=semaphore.o
-ifneq ($(MACOSX_VERSION),Tiger)
+
+ifeq ($(HAS_DLOPEN),NO)
 OSXOBJS+=dlfcn_simple.o
 endif
 
@@ -92,7 +89,7 @@ maketables.o    : pcre/maketables.c
 pcre.o  : pcre/pcre.c
 	$(CC) -c -o $@ $(CFLAGS) pcre/pcre.c
 
-ifneq ($(MACOSX_VERSION),Tiger)
+ifeq ($(HAS_DLOPEN),NO)
 dlfcn_simple.o : macosx/dlfcn_simple.c
 	$(CC) -c -o $@ $(CFLAGS) macosx/dlfcn_simple.c
 endif

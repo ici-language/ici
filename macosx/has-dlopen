@@ -1,0 +1,8 @@
+#!/bin/sh
+result=NO
+case $(uname -r) in
+8.[5678]*)
+    result=YES
+    ;;
+esac
+echo $result
