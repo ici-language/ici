@@ -1,3 +1,9 @@
+*   Mac OS X build uses pre-compiled header file built from fwd.h.
+    This is removed upon a "make clobber". (andy)
+
+*   Mac OS X version now builds as a dynamic library with the main
+    interpreter program linked against that library. (andy)
+
 *   Parser now detects when a 'break' or 'continue' statement is
     used outside of a context in which they are permitted. (andy)
 

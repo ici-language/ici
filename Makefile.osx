@@ -4,13 +4,15 @@
 
 PREFIX	= /usr/local
 PROG    = ici
-LIB     = libici4.a
+LIB     = libici4.dylib
 CC      = cc -pipe
 LIBS    = -framework Foundation
-COPT	?= -O3 -DNDEBUG
-CFLAGS  = -g -Wall $(COPT) -I. -Imacosx
+COPT	?= -Os -DNDEBUG
+CFLAGS  = -g -Wall $(COPT) -I. -Imacosx -fno-common -dynamic
 LDFLAGS = -g
-RM      = rm -f
+
+PCH	= fwd.h
+GCH	= $(PCH).gch
 
 MAN1	= doc/man1/ici.1\
 	  doc/man1/icifuncs.1\
@@ -22,8 +24,8 @@ MAN1	= doc/man1/ici.1\
 
 # Pre-Tiger there was no dlopen/dlsym/etc... in libc and we needed
 # to provide our own.  We run a little script that outputs YES if
-# this OS version has dlopen in the library, or NO if it doesn't,
-# and use that to decide if we build our implementation.
+# this OS version has dlopen in the library, or NO if it doesn't.
+# Then we use that to decide if we need to use our own dlopen.
 HAS_DLOPEN = $(shell macosx/has-dlopen)
 
 #
@@ -68,6 +70,8 @@ endif
 PCREOBJS=\
 	study.o maketables.o pcre.o
 
+ALL_OBJS = $(OBJS) $(PCREOBJS) $(OSXOBJS)
+
 default: $(PROG) ici.h
 
 $(PROG): main.o $(LIB)
@@ -77,8 +81,13 @@ all:    $(PROG)
 
 .PRECIOUS: $(LIB)
 
-$(LIB)  : $(OBJS) $(PCREOBJS) $(OSXOBJS)
-	libtool -static -o $@ $(OBJS) $(PCREOBJS) $(OSXOBJS)
+$(OBJS) : $(GCH)
+
+$(GCH) : $(PCH)
+	$(CC) $(CFLAGS) $(PCH)
+
+$(LIB)  : $(ALL_OBJS)
+	libtool -dynamic -o $@ $(ALL_OBJS) -lc -lSystem -lSystemStubs
 
 study.o : pcre/study.c
 	$(CC) -c -o $@ $(CFLAGS) pcre/study.c
@@ -149,12 +158,12 @@ install: $(PROG) $(LIB) ici.h
 	@echo '=========================================='
 
 clean:
-	$(RM) $(PROG) $(LIB) main.o $(OBJS) $(PCREOBJS) $(OSXOBJS) ici.h
+	rm -f $(PROG) $(LIB) main.o $(ALL_OBJS) ici.h
 
 clobber: clean
-	rm -f .depend
+	rm -f .depend $(GCH)
 
 depend:
-	mkdep $(CFLAGS) $(OBJS:.o=.c)
+	mkdep $(CFLAGS) $(OBJS:.o=.c) main.c
 
 -include .depend
