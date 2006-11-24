@@ -1,3 +1,6 @@
+*   Parser now detects when a 'break' or 'continue' statement is
+    used outside of a context in which they are permitted. (andy)
+
 *   Fixed several accesses to ici_buf and ici_error while the mutex
     is released, that occur when closing files and pipes. (richard)
 

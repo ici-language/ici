@@ -33,6 +33,8 @@ struct ici_parse
     token_t     p_ungot;
     ici_func_t  *p_func;        /* NULL when not within scope. */
     int         p_module_depth; /* Depth within module, 0 is file level. */
+    int         p_break_depth;
+    int         p_continue_depth;
 };
 /*
  * The following portion of this file exports to ici.h. --ici.h-start--

@@ -110,7 +110,7 @@ disassemble(int indent, ici_array_t *a)
 
 /*
  * next(p, a) and reject(p) are the basic token fetching (and rejecting)
- * functions (or macros). See lex() for the meanins of the 'a'. 'p' is a
+ * functions (or macros). See ici_lex() for the meanins of the 'a'. 'p' is a
  * pointer to the subject parse sructure.
  */
 #ifndef SMALL
@@ -149,6 +149,28 @@ not_followed_by(char *a, char *b)
     sprintf(buf, "\"%s\" %s %s", a, not_by, b);
     ici_error = buf;
     return -1;
+}
+
+static int
+not_allowed(const char *what)
+{
+    sprintf(buf, "%s outside of %sable statement", what, what);
+    ici_error = buf;
+    return -1;
+}
+
+static void
+increment_break_continue_depth(parse_t *p)
+{
+    ++p->p_break_depth;
+    ++p->p_continue_depth;
+}
+
+static void
+decrement_break_continue_depth(parse_t *p)
+{
+    --p->p_break_depth;
+    --p->p_continue_depth;
 }
 
 /*
@@ -1477,7 +1499,7 @@ statement(ici_parse_t *p, ici_array_t *a, ici_struct_t *sw, char *m, int endme)
             case -1: return -1;
             }
             stepz = a->a_top - a->a_bot;
-	        if (stepz > 0 && issrc(a->a_top[-1]))
+                if (stepz > 0 && issrc(a->a_top[-1]))
             {
                 /*
                  * If the last thing in the code array is a source marker,
@@ -1487,7 +1509,7 @@ statement(ici_parse_t *p, ici_array_t *a, ici_struct_t *sw, char *m, int endme)
                  * be trimmed off the array and the jump will land off the
                  * end.
                  */
-	            --stepz;
+                    --stepz;
             }
             if ((i = ici_int_new((long)stepz)) == NULL)
             {
@@ -1523,7 +1545,7 @@ statement(ici_parse_t *p, ici_array_t *a, ici_struct_t *sw, char *m, int endme)
                 return not_followed_by("default", "\":\"");
             }
             stepz = a->a_top - a->a_bot;
-	        if (stepz > 0 && issrc(a->a_top[-1]))
+                if (stepz > 0 && issrc(a->a_top[-1]))
             {
                 /*
                  * If the last thing in the code array is a source marker,
@@ -1533,7 +1555,7 @@ statement(ici_parse_t *p, ici_array_t *a, ici_struct_t *sw, char *m, int endme)
                  * be trimmed off the array and the jump will land off the
                  * end.
                  */
-	            --stepz;
+                    --stepz;
             }
             if ((i = ici_int_new((long)stepz)) == NULL)
                 return -1;
@@ -1618,10 +1640,16 @@ statement(ici_parse_t *p, ici_array_t *a, ici_struct_t *sw, char *m, int endme)
                 return -1;
             }
             *a1->a_top++ = objof(&o_ifnotbreak);
-            if (statement(p, a1, NULL, "while (expr)", 0) == -1)
             {
-                ici_decref(a1);
-                return -1;
+                int rc;
+                increment_break_continue_depth(p);
+                rc = statement(p, a1, NULL, "while (expr)", 0);
+                decrement_break_continue_depth(p);
+                if (rc == -1)
+                {
+                    ici_decref(a1);
+                    return -1;
+                }
             }
             if (ici_stk_push_chk(a1, 1))
             {
@@ -1644,10 +1672,16 @@ statement(ici_parse_t *p, ici_array_t *a, ici_struct_t *sw, char *m, int endme)
             ici_decref(p->p_got.t_obj);
             if ((a1 = ici_array_new(0)) == NULL)
                 return -1;
-            if (statement(p, a1, NULL, "do", 0) == -1)
             {
-                ici_decref(a1);
-                return -1;
+                int rc;
+                increment_break_continue_depth(p);
+                rc = statement(p, a1, NULL, "do", 0);
+                decrement_break_continue_depth(p);
+                if (rc == -1)
+                {
+                    ici_decref(a1);
+                    return -1;
+                }
             }
             if (next(p, a1) != T_NAME || p->p_got.t_obj != SSO(while))
             {
@@ -1746,10 +1780,16 @@ statement(ici_parse_t *p, ici_array_t *a, ici_struct_t *sw, char *m, int endme)
             }
             if ((a1 = ici_array_new(0)) == NULL)
                 return -1;
-            if (statement(p, a1, NULL, "forall (expr [, expr] in expr)", 1) == -1)
             {
-                ici_decref(a1);
-                return -1;
+                int rc;
+                increment_break_continue_depth(p);
+                rc = statement(p, a1, NULL, "forall (expr [, expr] in expr)", 1);
+                decrement_break_continue_depth(p);
+                if (rc == -1)
+                {
+                    ici_decref(a1);
+                    return -1;
+                }
             }
             if (ici_stk_push_chk(a, 2))
             {
@@ -1831,10 +1871,16 @@ statement(ici_parse_t *p, ici_array_t *a, ici_struct_t *sw, char *m, int endme)
                 ici_decref(a1);
                 return not_followed_by("for (expr; expr; expr", "\")\"");
             }
-            if (statement(p, a1, NULL, "for (expr; expr; expr)", 0) == -1)
             {
-                ici_decref(a1);
-                return -1;
+                int rc;
+                increment_break_continue_depth(p);
+                rc = statement(p, a1, NULL, "for (expr; expr; expr)", 0);
+                decrement_break_continue_depth(p);
+                if (rc == -1)
+                {
+                    ici_decref(a1);
+                    return -1;
+                }
             }
             if (ici_stk_push_chk(a1, 1))
             {
@@ -1862,13 +1908,19 @@ statement(ici_parse_t *p, ici_array_t *a, ici_struct_t *sw, char *m, int endme)
                 return -1;
             if ((d = ici_struct_new()) == NULL)
                 return -1;
-            switch (compound_statement(p, d))
             {
-            case 0:
-                not_followed_by("switch (expr)", "a compound statement");
-            case -1:
-                ici_decref(d);
-                return -1;
+                int rc;
+                increment_break_continue_depth(p);
+                rc = compound_statement(p, d);
+                decrement_break_continue_depth(p);
+                switch (rc)
+                {
+                case 0:
+                    not_followed_by("switch (expr)", "a compound statement");
+                case -1:
+                    ici_decref(d);
+                    return -1;
+                }
             }
             if (ici_stk_push_chk(a, 3))
             {
@@ -1886,6 +1938,10 @@ statement(ici_parse_t *p, ici_array_t *a, ici_struct_t *sw, char *m, int endme)
         if (p->p_got.t_obj == SSO(break))
         {
             ici_decref(p->p_got.t_obj);
+            if (p->p_break_depth == 0)
+            {
+                return not_allowed("break");
+            }
             if (next(p, a) != T_SEMICOLON)
             {
                 reject(p);
@@ -1900,6 +1956,10 @@ statement(ici_parse_t *p, ici_array_t *a, ici_struct_t *sw, char *m, int endme)
         if (p->p_got.t_obj == SSO(continue))
         {
             ici_decref(p->p_got.t_obj);
+            if (p->p_continue_depth == 0)
+            {
+                return not_allowed("continue");
+            }
             if (next(p, a) != T_SEMICOLON)
             {
                 reject(p);
@@ -2094,11 +2154,11 @@ statement(ici_parse_t *p, ici_array_t *a, ici_struct_t *sw, char *m, int endme)
     }
     if (endme)
     {
-	    /*
-	     *  Drop any trailing source marker.
-	     */
-	    if (a->a_top > a->a_bot && issrc(a->a_top[-1]))
-	        --a->a_top;
+            /*
+             *  Drop any trailing source marker.
+             */
+            if (a->a_top > a->a_bot && issrc(a->a_top[-1]))
+                --a->a_top;
 
         if (ici_stk_push_chk(a, 1))
             return -1;
@@ -2553,4 +2613,3 @@ ici_cfunc_t parse_cfuncs[] =
 #   endif
     {CF_OBJ}
 };
-
