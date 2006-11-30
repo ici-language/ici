@@ -160,14 +160,14 @@ not_allowed(const char *what)
 }
 
 static void
-increment_break_continue_depth(parse_t *p)
+increment_break_continue_depth(ici_parse_t *p)
 {
     ++p->p_break_depth;
     ++p->p_continue_depth;
 }
 
 static void
-decrement_break_continue_depth(parse_t *p)
+decrement_break_continue_depth(ici_parse_t *p)
 {
     --p->p_break_depth;
     --p->p_continue_depth;
