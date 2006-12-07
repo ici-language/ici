@@ -160,6 +160,18 @@ not_allowed(const char *what)
 }
 
 static void
+increment_break_depth(ici_parse_t *p)
+{
+    ++p->p_break_depth;
+}
+
+static void
+decrement_break_depth(ici_parse_t *p)
+{
+    --p->p_break_depth;
+}
+
+static void
 increment_break_continue_depth(ici_parse_t *p)
 {
     ++p->p_break_depth;
@@ -1910,9 +1922,9 @@ statement(ici_parse_t *p, ici_array_t *a, ici_struct_t *sw, char *m, int endme)
                 return -1;
             {
                 int rc;
-                increment_break_continue_depth(p);
+                increment_break_depth(p);
                 rc = compound_statement(p, d);
-                decrement_break_continue_depth(p);
+                decrement_break_depth(p);
                 switch (rc)
                 {
                 case 0:
