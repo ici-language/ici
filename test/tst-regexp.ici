@@ -207,6 +207,25 @@ static  test_funcs = [struct
 ];
 
 /*
+ */
+static
+test_regexpi()
+{
+    re1 := regexp("a");
+    re2 := regexpi("A");
+    if (re1 == re2)
+	fail("== broken");
+    if (eq(re1, re2))
+	fail("eq broken");
+    if ("A" ~ re1)
+	fail("mis-matched cases match");
+    if (!("A" ~ re2))
+	fail("should have matched");
+    if (!("a" ~ re2))
+	fail("should have matched");
+}
+
+/*
  * Run the test cases...
  */
 
@@ -221,3 +240,5 @@ onerror
 close(f);
 if (e)
     fail(e);
+
+test_regexpi();

@@ -102,7 +102,9 @@ static unsigned long
 hash_regexp(ici_obj_t *o)
 {
     /* static unsigned long     primes[] = {0xBF8D, 0x9A4F, 0x1C81, 0x6DDB}; */
-    return (unsigned long)regexpof(o)->r_pat * 0x9A4F;
+    int re_options;
+    pcre_info(regexpof(o)->r_re, &re_options, NULL);
+    return ((unsigned long)regexpof(o)->r_pat + re_options) * 0x9A4F;
 }
 
 /*
@@ -112,7 +114,11 @@ hash_regexp(ici_obj_t *o)
 static int
 cmp_regexp(ici_obj_t *o1, ici_obj_t *o2)
 {
-    return cmp(regexpof(o1)->r_pat, regexpof(o2)->r_pat);
+    int re1_options;
+    int re2_options;
+    pcre_info(regexpof(o1)->r_re, &re1_options, NULL);
+    pcre_info(regexpof(o2)->r_re, &re2_options, NULL);
+    return re1_options != re2_options ? 1 : cmp(regexpof(o1)->r_pat, regexpof(o2)->r_pat);
 }
 
 static ici_obj_t *
