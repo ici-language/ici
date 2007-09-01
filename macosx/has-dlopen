@@ -1,7 +1,7 @@
 #!/bin/sh
 result=NO
 case $(uname -r) in
-8.[5678]*)
+8.[5678]*|8.10.*)
     result=YES
     ;;
 esac
