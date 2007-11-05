@@ -1,3 +1,5 @@
+*   Added support for truncate() on Win32. (richard)
+
 *   Mac OS X build uses pre-compiled header file built from fwd.h.
     This is removed upon a "make clobber". (andy)
 
