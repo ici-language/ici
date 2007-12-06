@@ -381,7 +381,10 @@ f_fopen()
     if (ici_typecheck(NARGS() > 1 ? "ss" : "s", &name, &mode))
         return 1;
     x = ici_leave();
-    if ((stream = fopen(name, mode)) == NULL)
+    ici_signals_blocking_syscall(1);
+    stream = fopen(name, mode);
+    ici_signals_blocking_syscall(0);
+    if (stream == NULL)
     {
         i = errno;
         ici_enter(x);
