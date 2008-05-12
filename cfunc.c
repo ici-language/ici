@@ -1276,6 +1276,9 @@ f_call(void)
      */
     if (ici_stk_push_chk(&ici_os, naargs + 80))
         goto fail;
+    base = &ARG(NARGS() - 1);
+    if (aa != NULL)
+        aa = arrayof(*base);
     if ((nargso = ici_int_new(nargs)) == NULL)
         goto fail;
     /*
