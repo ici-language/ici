@@ -124,8 +124,6 @@ free_exec(ici_obj_t *o)
         CloseHandle(x->x_thread_handle);
 #endif
 #ifdef ICI_USE_POSIX_THREADS
-    if ((void *)x->x_thread_handle != NULL)
-        pthread_join(x->x_thread_handle, NULL);
     (void)sem_destroy(&x->x_semaphore);
 #endif
     ici_tfree(o, ici_exec_t);

@@ -14,17 +14,17 @@ sem_init(sem_t *sem, int pshared, unsigned int count)
 
     (void)pshared;
 
-    if (pthread_mutexattr_init(&mutex_attr) == -1)
+    if (pthread_mutexattr_init(&mutex_attr) != 0)
 	return -1;
     pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE);
-    if (pthread_mutex_init(&sem->sem_mutex, &mutex_attr) == -1)
+    if (pthread_mutex_init(&sem->sem_mutex, &mutex_attr) != 0)
     {
 	pthread_mutexattr_destroy(&mutex_attr);
 	return -1;
     }
     pthread_mutexattr_destroy(&mutex_attr);
     pthread_condattr_init(&condvar_attr);
-    if (pthread_cond_init(&sem->sem_condvar, &condvar_attr) == -1)
+    if (pthread_cond_init(&sem->sem_condvar, &condvar_attr) != 0)
     {
 	pthread_condattr_destroy(&condvar_attr);
 	pthread_mutex_destroy(&sem->sem_mutex);
@@ -47,12 +47,12 @@ sem_destroy(sem_t *sem)
 int
 sem_wait(sem_t *sem)
 {
-    if (pthread_mutex_lock(&sem->sem_mutex) == -1)
+    if (pthread_mutex_lock(&sem->sem_mutex) != 0)
 	return -1;
     ++sem->sem_nwaiters;
     while (sem->sem_count == 0)
     {
-	if (pthread_cond_wait(&sem->sem_condvar, &sem->sem_mutex) == -1)
+	if (pthread_cond_wait(&sem->sem_condvar, &sem->sem_mutex) != 0)
 	{
 	    (void)pthread_mutex_unlock(&sem->sem_mutex);
 	    return -1;
@@ -66,11 +66,11 @@ sem_wait(sem_t *sem)
 int
 sem_post(sem_t *sem)
 {
-    if (pthread_mutex_lock(&sem->sem_mutex) == -1)
+    if (pthread_mutex_lock(&sem->sem_mutex) != 0)
 	return -1;
     if (sem->sem_nwaiters > 0)
     {
-	if (pthread_cond_signal(&sem->sem_condvar) == -1)
+	if (pthread_cond_signal(&sem->sem_condvar) != 0)
 	{
 	    (void)pthread_mutex_unlock(&sem->sem_mutex);
 	    return -1;

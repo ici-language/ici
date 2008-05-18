@@ -66,7 +66,8 @@ ici_leave(void)
         ReleaseMutex(ici_mutex);
 #else
 # ifdef ICI_USE_POSIX_THREADS
-        pthread_mutex_lock(&n_active_threads_mutex);
+        if (pthread_mutex_lock(&n_active_threads_mutex) != 0)
+	    abort();
         --ici_n_active_threads;
         pthread_mutex_unlock(&n_active_threads_mutex);
 
@@ -109,12 +110,13 @@ ici_enter(ici_exec_t *x)
         WaitForSingleObject(ici_mutex, INFINITE);
 #else
 # ifdef ICI_USE_POSIX_THREADS
-        pthread_mutex_lock(&n_active_threads_mutex);
+        if (pthread_mutex_lock(&n_active_threads_mutex) != 0)
+	    abort();
         ++ici_n_active_threads;
         pthread_mutex_unlock(&n_active_threads_mutex);
 
-        if (pthread_mutex_lock(&ici_mutex) == -1)
-            perror("ici_mutex");
+        if (pthread_mutex_lock(&ici_mutex) != 0)
+            abort();
 # else
         /*
          * It is ok to do ici_enter in implementations with
@@ -179,8 +181,8 @@ ici_yield(void)
 # ifdef ICI_USE_POSIX_THREADS
         pthread_mutex_unlock(&ici_mutex);
         sched_yield();
-        if (pthread_mutex_lock(&ici_mutex) == -1)
-            perror("ici_mutex");
+        if (pthread_mutex_lock(&ici_mutex) != 0)
+            abort();
 # else
         /*
          * It is ok to do ici_yield in implementations with
@@ -408,13 +410,13 @@ f_thread()
 
         pthread_attr_init(&thread_attr);
         pthread_attr_setschedpolicy(&thread_attr, SCHED_RR);
-        if (pthread_create(&x->x_thread_handle, NULL, ici_thread_base, x) == -1)
+        pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
+        if (pthread_create(&x->x_thread_handle, NULL, ici_thread_base, x) != 0)
         {
             ici_get_last_errno("create thread", NULL);
             ici_decref(x);
             goto fail;
         }
-        pthread_detach(x->x_thread_handle);
         pthread_attr_destroy(&thread_attr);
     }
 # else
@@ -454,19 +456,19 @@ ici_init_thread_stuff(void)
 #ifdef ICI_USE_POSIX_THREADS
     pthread_mutexattr_t mutex_attr;
 
-    if (pthread_mutexattr_init(&mutex_attr) == -1)
+    if (pthread_mutexattr_init(&mutex_attr) != 0)
     {
         ici_get_last_errno("mutex", NULL);
         return 1;
     }
     pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE);
-    if (pthread_mutex_init(&ici_mutex, &mutex_attr) == -1)
+    if (pthread_mutex_init(&ici_mutex, &mutex_attr) != 0)
     {
         ici_get_last_errno("mutex", NULL);
         pthread_mutexattr_destroy(&mutex_attr);
         return 1;
     }
-    if (pthread_mutex_init(&n_active_threads_mutex, &mutex_attr) == -1)
+    if (pthread_mutex_init(&n_active_threads_mutex, &mutex_attr) != 0)
     {
         ici_get_last_errno("mutex", NULL);
         pthread_mutexattr_destroy(&mutex_attr);
