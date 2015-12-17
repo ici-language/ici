@@ -34,7 +34,7 @@ for the extension modules and SDK."
 ;
 ; Enable and set the text for the install location dialog.
 ;
-DirShow show
+;DirShow show ; DirShow is not used/supported in recent NSIS versions
 DirText "Select the folder for documentation and \
 related files. Core language support will be installed in the \
 Windows system directory." " "

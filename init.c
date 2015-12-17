@@ -53,30 +53,31 @@ ici_init(void)
     }
 #   endif
 
-
+    if (ici_init_alloc())
+        return 1;
     if (ici_chkbuf(120))
         return 1;
-    if ((atoms = (ici_obj_t **)ici_nalloc(64 * sizeof(ici_obj_t *))) == NULL)
+    if (ici_init_object())
         return 1;
-    atomsz = 64; /* Must be power of two. */
-    memset((char *)atoms, 0, atomsz * sizeof(ici_obj_t *));
-    if ((objs = (ici_obj_t **)ici_nalloc(256 * sizeof(ici_obj_t *))) == NULL)
-        return 1;
-    memset((char *)objs, 0, 256 * sizeof(ici_obj_t *));
-    objs_limit = objs + 256;
-    objs_top = objs;
     for (i = 0; i < nels(ici_small_ints); ++i)
     {
         if ((ici_small_ints[i] = ici_int_new(i)) == NULL)
-            return -1;
+            return 1;
     }
     ici_zero = ici_small_ints[0];
     ici_one = ici_small_ints[1];
+    /*
+     * I'm hoping that from this point forward, there should be no risk of
+     * memory leaks in the initialisation: everything is either static or
+     * is registered as it is allocated and thus will be found and freed
+     * by ici_uninit() (ici_uninit() is ruthless with increfed objects and
+     * deletes them anyway -- though it reports an error on the console).
+     */
     if (ici_init_sstrings())
         return 1;
     pcre_free = ici_free;
     pcre_malloc = (void *(*)(size_t))ici_alloc;
-    if (ici_init_thread_stuff())
+    if (ici_init_thread())
         return 1;
     if ((scope = ici_struct_new()) == NULL)
         return 1;

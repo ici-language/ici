@@ -229,7 +229,7 @@ ici_assign_fail(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v)
  *
  *  attempt to read %s keyed by %
  *
- * and returns 1.  Also, it can b called from within a custom assign function
+ * and returns 1.  Also, it can b called from within a custom fetch function
  * in cases where the particular fetch is illegal.
  *
  * This --func-- forms part of the --ici-api--.
@@ -341,7 +341,7 @@ ici_grow_atoms(ptrdiff_t newz)
      * point where we would want to collect anyway, do it and exit early if
      * we managed to reduce the usage of the atom pool alot.
      */
-    if (ici_mem * 3 / 2 > ici_mem_limit)
+    if (ici_mem_used * 3 / 2 > ici_mem_limit)
     {
         collect();
         if (ici_natoms * 8 < newz)
@@ -600,9 +600,9 @@ collect(void)
     if (ici_supress_collect)
     {
         /*
-         * There are some times when it is a bad idea to collect. Basicly
-         * when we are fiddling with the basic data structures like the
-         * atom pool and recursive calls.
+         * There are some times when it is a bad idea to collect. Basically
+         * when we are allocating, or fiddling with, basic data structures like
+         * the atom pool and object list; and during recursive calls.
          */
         return;
     }
@@ -722,22 +722,22 @@ collect(void)
         objs_top = b;
     }
 /*
-printf("mem=%ld vs. %ld, nobjects=%d, ici_natoms=%d\n", mem, ici_mem, objs_top - objs, ici_natoms);
+printf("mem=%ld vs. %ld, nobjects=%d, ici_natoms=%d\n", mem, ici_mem_used, objs_top - objs, ici_natoms);
 */
     /*
      * Set ici_mem_limit (which is the point at which to trigger a
      * new call to us) to twice what is currently allocated, but
      * with a special cases for small sizes.
      */
-    if (ici_mem < 0)
-        ici_mem = 0;
+    if (ici_mem_used < 0)
+        ici_mem_used = 0;
 #   if ALLCOLLECT
         ici_mem_limit = 0;
 #   else
-        if (ici_mem < 16 * 1024)
+        if (ici_mem_used < 16 * 1024)
             ici_mem_limit = 32 * 1024;
         else
-            ici_mem_limit = ici_mem * 2;
+            ici_mem_limit = ici_mem_used * 2;
 #   endif
     --ici_supress_collect;
 }
@@ -748,21 +748,14 @@ ici_dump_refs(void)
 {
     ici_obj_t           **a;
     char                n[30];
-    int                 spoken;
 
-    spoken = 0;
-    for (a = objs; a < objs_top; ++a)
+    if (objs_top > objs + 3)
     {
-        if ((*a)->o_nrefs == 0)
-            continue;
-        if (!spoken)
-        {
-            printf("The following ojects have spurious left-over reference counts...\n");
-            spoken = 1;
-        }
-        printf("%d 0x%08lX: %s\n", (*a)->o_nrefs, (unsigned long)*a, ici_objname(n, *a));
+        printf("The following registered objects have not been freed...\n");
+        for (a = objs; a < objs_top; ++a)
+            if (*a != objof(&ici_xs) && *a != objof(&ici_os) && *a != objof(&ici_vs))
+                printf("%d 0x%08lX: %s\n", (*a)->o_nrefs, (unsigned long)*a, ici_objname(n, *a));
     }
-
 }
 #endif
 
@@ -787,16 +780,16 @@ bughunt_incref(ici_obj_t *o)
 {
     if (o == traceobj)
     {
-        printf("incref traceobj(%d)\n", o->o_tcode);
+        printf("incref traceobj(%d->%d)\n", o->o_nrefs, o->o_nrefs+1);
     }
-    if ((unsigned char)objof(o)->o_nrefs == (unsigned char)0x7F)
+    if ((unsigned char)o->o_nrefs == (unsigned char)0x7F)
     {
         printf("Oops: ref count overflow\n");
         abort();
     }
-    if (++objof(o)->o_nrefs > 50)
+    if (++o->o_nrefs > 50)
     {
-        printf("Warning: nrefs %d > 10\n", objof(o)->o_nrefs);
+        printf("Warning: nrefs %d > 50\n", o->o_nrefs);
         fflush(stdout);
     }
 }
@@ -806,7 +799,7 @@ bughunt_decref(ici_obj_t *o)
 {
     if (o == traceobj)
     {
-        printf("decref traceobj(%d)\n", o->o_tcode);
+        printf("decref traceobj(%d->%d)\n", o->o_nrefs, o->o_nrefs-1);
     }
     if (--o->o_nrefs < 0)
     {
@@ -877,3 +870,49 @@ ici_assign(ici_obj_t *o, ici_obj_t *k, ici_obj_t *v)
 
 #endif
 
+
+/*
+ * Initialize atom pool and list of objects registered with the garbage
+ * collector.
+ */
+int
+ici_init_object(void)
+{
+    ici_supress_collect = 0;
+    objs = NULL;
+    objs_limit = NULL;
+    objs_top = NULL;
+
+    if ((atoms = (ici_obj_t **)ici_nalloc(64 * sizeof(ici_obj_t *))) == NULL)
+        return 1;
+    atomsz = 64; /* Must be power of two. */
+    memset((char *)atoms, 0, atomsz * sizeof(ici_obj_t *));
+    
+    if ((objs = (ici_obj_t **)ici_nalloc(256 * sizeof(ici_obj_t *))) == NULL)
+        return 1;
+    memset((char *)objs, 0, 256 * sizeof(ici_obj_t *));
+    objs_limit = objs + 256;
+    objs_top = objs;
+
+    return 0;
+}
+
+/*
+ * Uninitialize the list of objects registered with the garbage
+ * collector, and the atom pool.
+ */
+void
+ici_uninit_object(void)
+{
+    assert(ici_supress_collect == 0);
+
+    ici_nfree(atoms, atomsz * sizeof(ici_obj_t *));
+    atoms = NULL;
+    atomsz = 0;
+    ici_natoms = 0;
+    
+    ici_nfree(objs, (objs_limit - objs) * sizeof(ici_obj_t *));
+    objs = NULL;
+    objs_limit = NULL;
+    objs_top = NULL;
+}

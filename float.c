@@ -63,7 +63,11 @@ cmp_float(ici_obj_t *o1, ici_obj_t *o2)
 static void
 free_float(ici_obj_t *o)
 {
-    ici_tfree(o, ici_float_t);
+    /* Check if this is actually a ici_ostemp_t and free it correctly. */
+    if (o->o_flags & O_TEMP)
+        ici_tfree(o, ici_ostemp_t);
+    else
+        ici_tfree(o, ici_float_t);
 }
 
 /*

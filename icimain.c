@@ -11,6 +11,17 @@
 #include "profile.h"
 #endif
 
+
+/*
+ * Test that ici_uninit() works, and leaves all state in a completely
+ * re-inittable condition.
+ */
+#define TEST_INIT_UNINIT    0
+
+#if TEST_INIT_UNINIT
+    int test_init_uninit();
+#endif
+
 /*
  * An optional main entry point to the ICI interpreter.  'ici_main' handles a
  * complete interpreter life-cycle based on the given arguments.  A command
@@ -52,6 +63,11 @@ ici_main(int argc, char *argv[])
          */
         fprintf(stderr, "%s: Warning - this is a debug build.\n", argv[0]);
 #   endif
+
+#if TEST_INIT_UNINIT
+    if (test_init_uninit())
+        goto fail;
+#endif
 
     if (ici_init())
         goto fail;
@@ -315,6 +331,10 @@ ici_main(int argc, char *argv[])
 #endif
 
     ici_uninit();
+#if TEST_INIT_UNINIT
+    if (test_init_uninit())
+        goto fail;
+#endif
     return 0;
 
 usage:
@@ -357,5 +377,40 @@ fail:
     fflush(stdout);
     fprintf(stderr, "%s\n", ici_error);
     ici_uninit();
+#if TEST_INIT_UNINIT
+    test_init_uninit();
+#endif
     return 1;
 }
+
+
+
+#if TEST_INIT_UNINIT
+/*
+ * Test that ici_uninit() works, and leaves all state in a completely
+ * re-inittable condition.  Do it a few times for luck.  Returns 1 on
+ * error (ici_init() failed, state is undefined); otherwise 0
+ * (state is uninitialized).
+ *
+ * ici_uninit() can be called whether ici_init() fully completed,
+ * partially completed, or was not called at all.
+ */
+static int test_init_uninit()
+{
+    int i;
+    printf("[starting test_init_uninit()]\n");
+    for (i = 0; i < 3; i++)
+    {
+        if (ici_init())
+        {
+            fprintf(stderr, "test_init_uninit(): %s\n", ici_error);
+            printf("[ici_init() failed on call #%d!]\n", i);
+            return 1;
+        }
+        ici_uninit();
+        ici_uninit(); // Should be able to do this.
+    }
+    printf("[test_init_uninit() succeeded!]\n");
+    return 0;
+}
+#endif

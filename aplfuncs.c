@@ -46,12 +46,13 @@ struct context
 
 /*
  * Build a data structure according to the given dimensions and content.
- * The returned object has been ici_incref()ed.
- *
  * r is a pointer through which to store the resulting object.
  * dnext is a pointer to the dimension of interest to this call.
  * c is a pointer to a struct context containing parameters that are
  * independent of the recursion. See above.
+ * Returns 0 on success, in which case '*r' is the incref'd result
+ * which the caller must decref.
+ * Returns 1 on error, in which case '*r' is invalid.
  */
 static int
 buildxx(ici_obj_t **r, ici_obj_t **dnext, struct context *c)
@@ -64,8 +65,8 @@ buildxx(ici_obj_t **r, ici_obj_t **dnext, struct context *c)
     {
         /*
          * We have run out of dimensions. Time to return an element of
-         * the content. We must then step our content context in accordance
-         * with the supplied option.
+         * the content through '*r', incref'd. We must then step our content context
+         * in accordance with the supplied option.
          */
         switch (c->c_option)
         {
@@ -116,6 +117,7 @@ buildxx(ici_obj_t **r, ici_obj_t **dnext, struct context *c)
             break;
 
         default:
+            ici_decref(*r);
             sprintf(buf, "option \"%c\" given to %s is not one of c, r, a, i or l",
                 c->c_option, ici_objname(n1, ici_os.a_top[-1]));
             ici_error = buf;
@@ -131,6 +133,9 @@ buildxx(ici_obj_t **r, ici_obj_t **dnext, struct context *c)
         /*
          * We have an int dimension. We must make an array that big and
          * recursively fill it based on the next dimension or content.
+         *
+         * Create the array and recursively call buildxx(), receiving the
+         * result of each call into consecutive elements of the array.
          */
         n = intof(*dnext)->i_value;
         if ((a = ici_array_new(n)) == NULL)
@@ -158,6 +163,9 @@ buildxx(ici_obj_t **r, ici_obj_t **dnext, struct context *c)
          * We have an array dimension. This means a struct with the elements
          * of the array as keys. We must recursively build the struct elememts
          * with the next dimension or content.
+         *
+         * Create the struct and recursively call buildxx(), and assign the
+         * result of each call into the correctly named slot of the struct.
          */
         a = arrayof(*dnext);
         if ((s = ici_struct_new()) == NULL)
@@ -171,6 +179,7 @@ buildxx(ici_obj_t **r, ici_obj_t **dnext, struct context *c)
             }
             if (ici_assign(s, *e, o))
             {
+                ici_decref(o);
                 ici_decref(s);
                 return 1;
             }

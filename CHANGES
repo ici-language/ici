@@ -1,3 +1,51 @@
+*   Bumped version to 4.1.1 (richard)
+
+*   Added a workaround to tst-all.ici for some Windows versions, where
+    the MS CRT's tmpnam() function returns a filename that user-level
+    processes are not allowed to write to!  (Apparently MS have now
+    fixed this oversight in their CRT...) (richard)
+
+*   Added some more tests to tst-flow.ici for testing use of "break;"
+    and "continue;" outside suitable block structures. (richard)
+    
+*   Removed the outdated call to DirShow from the NSIS scripts, which
+    cause an error on recent NSIS. (richard)
+    
+*   Modules now decref all their static strings at exit.  This is not
+    as onerous as it sounds: all modules #include icistr-setup.h, which
+    defines init_ici_str() in the module; now it also defines another
+    function called uninit_ici_str(), and init_ici_str() passes that
+    function to ici_atexit().  Even if modules don't get recompiled,
+    the strings will still be freed even though they have one reference
+    (a warning may be printed in debug). (richard)
+
+*   Fixed every memory leak resulting from running test/tst-all.ici,
+    (with the exception of the buffer allocated for putenv(), which is
+    apparently unsolvable given the man page for putenv() says never
+    to free buffers given to it).  The most blatant was the long-ago-
+    reported leak caused by allocating an ici_ostemp_t (12 bytes) and
+    freeing it as an ici_int_t (8 bytes).  Another was not decrefing
+    the cached t_ici_name of ici_type.  Other sneaky leaks existed
+    in rarely-trodden error handling paths in the parser, in build(),
+    and the non-use of ici_uninit().  There may be more, on paths the
+    current test suite doesn't use. (richard)
+
+*   Made ici_uninit() work again.  It now decrefs all objects, frees all
+    memory, resets all globals, and makes ready for a later call to
+    ici_init().  It assumes nothing about the existing state when it is
+    called, so it works whether ici_init() fully or partly completed, or
+    was not called at all.  If ici_error points to ici_buf, it is set to
+    point to a static buffer which the error is copied into.  There is a
+    #define in ici_main() that allows testing all this.  (richard)
+    
+*   Changed win32 timing from using the multimedia timer (which has
+    a too-low-to-be-useful resolution by default) with the CPU
+    performance counters (QueryPerformanceCounter()). (richard)
+
+*   Stopped MSVC complaining about perfectly valid standard functions
+    by #defining _CRT_SECURE_NO_WARNINGS and _CRT_NONSTDC_NO_WARNINGS
+    (richard)
+    
 *   Added support for truncate() on Win32. (richard)
 
 *   Mac OS X build uses pre-compiled header file built from fwd.h.

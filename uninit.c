@@ -26,7 +26,10 @@ ici_atexit(void (*func)(void), ici_wrap_t *w)
 /*
  * Shut down the interpreter and clean up any allocations.  This function is
  * the reverse of 'ici_init()'.  It's first action is to call any wrap-up
- * functions registered through 'ici_atexit()'
+ * functions registered through 'ici_atexit()'.
+ *
+ * ici_uninit() should be able to be called whether ici_init() fully completed,
+ * partially completed, or was not called at all.
  *
  * Calling 'ici_init()' again after calling this hasn't been adequately
  * tested.
@@ -45,14 +48,8 @@ ici_uninit(void)
     extern ici_str_t    *ici_ver_cache;
     extern ici_regexp_t *ici_smash_default_re;
 
-    /*
-     * This catches the case where ici_uninit() is called without ici_init
-     * ever being called.
-     */
-    assert(ici_zero != NULL);
-    if (ici_zero == NULL)
-        return;
-
+    //printf("[start ici_uninit]\n");
+    
     /*
      * Clean up anything registered by modules that are only optionally
      * compiled in, or loaded modules that register wrap-up functions.
@@ -68,13 +65,16 @@ ici_uninit(void)
      */
     for (i = 0; i < nels(ici_small_ints); ++i)
     {
-        ici_decref(ici_small_ints[i]);
+        if (ici_small_ints[i] != NULL)
+            ici_decref(ici_small_ints[i]);
         ici_small_ints[i] = NULL;
     }
     if (ici_ver_cache != NULL)
         ici_decref(ici_ver_cache);
+    ici_ver_cache = NULL;
     if (ici_smash_default_re != NULL)
         ici_decref(ici_smash_default_re);
+    ici_smash_default_re = NULL;
 
     /* Call uninitialisation functions for compulsory bits of ICI. */
     uninit_compile();
@@ -111,44 +111,66 @@ ici_uninit(void)
      * now be unreferenced.
      */
     ici_reclaim();
+    
+    ici_exec = NULL;
+    ici_execs = NULL;
 
     /*
      * Now free the allocated part of our three special static stacks.
+     * We should be resilient against multiple calls with no intervening calls to
+     * ici_init().  So assume nothing.
      */
-    ici_nfree(ici_vs.a_base, (ici_vs.a_limit - ici_vs.a_base) * sizeof(ici_obj_t *));
-    ici_nfree(ici_os.a_base, (ici_os.a_limit - ici_os.a_base) * sizeof(ici_obj_t *));
-    ici_nfree(ici_xs.a_base, (ici_xs.a_limit - ici_xs.a_base) * sizeof(ici_obj_t *));
-
+    {
+        ici_array_t *a[3] = { &ici_vs, &ici_os, &ici_xs }; int i;
+        for (i = 0; i < 3; i++)
+        {
+            if (objof(a[i])->o_nrefs)
+            {
+                ici_decref(a[i]);
+                ici_nfree(a[i]->a_base, (a[i]->a_limit - a[i]->a_base) * sizeof(ici_obj_t *));
+            }
+        }
 #if 1 && !defined(NDEBUG)
-    ici_decref(&ici_vs);
-    ici_decref(&ici_os);
-    ici_decref(&ici_xs);
-    {
-        extern void ici_dump_refs(void);
+        {
+            extern void ici_dump_refs(void);
 
-        ici_dump_refs();
-    }
+            ici_dump_refs();
+        }
 #endif
-
-    if (ici_buf != ici_error)
-    {
-        /* Free the general purpose buffer. ### Hmm... If we do this we can't
-        return ici_error from ici_main.*/
-        ici_nfree(ici_buf, ici_bufz + 1);
     }
-    ici_buf = NULL;
-    ici_bufz = 0;
 
+    /*
+     * Prevent freeing them again in the event of a failed future ici_init()
+     */
+    memset(&ici_vs, 0, sizeof(ici_vs));
+    memset(&ici_os, 0, sizeof(ici_vs));
+    memset(&ici_xs, 0, sizeof(ici_vs));
+
+    ici_uninit_thread();
+
+    /* Free the general purpose buffer. ### Hmm... If we do this we can't
+    return ici_error from ici_main.*/
+    if (ici_buf != NULL)
+    {
+        if (ici_error == ici_buf)
+        {
+            static char ici_static_error[1024];
+            strncpy(ici_static_error, ici_error, 1023);
+            ici_static_error[1023] = 0;
+            ici_error = ici_static_error;
+        }
+        ici_nfree(ici_buf, ici_bufz + 1);
+        ici_buf = NULL;
+        ici_bufz = 0;
+    }
     /*
      * Destroy the now empty atom pool and list of registered objects.
      */
-    ici_nfree(atoms, atomsz * sizeof(ici_obj_t *));
-    atoms = NULL;
-    ici_nfree(objs, (objs_limit - objs) * sizeof(ici_obj_t *));
-    objs = NULL;
-
-    ici_drop_all_small_allocations();
-    /*fprintf(stderr, "ici_mem = %ld, n = %d\n", ici_mem, ici_n_allocs);*/
+    ici_uninit_object();
+    
+    ici_uninit_alloc();
+    ici_uninit_sstrings();
+    /*fprintf(stderr, "ici_mem = %ld, n = %d\n", ici_mem_used, ici_n_allocs);*/
 
 #if 1 && defined(_WIN32) && !defined(NDEBUG)
     _CrtDumpMemoryLeaks();
@@ -157,4 +179,5 @@ ici_uninit(void)
         extern long attempt, miss;
         printf("%d/%d %f\n", miss, attempt, (float)miss/attempt);
     }*/
+    //printf("[end ici_uninit]\n");
 }

@@ -85,7 +85,7 @@ char prof_outfile[512] = "";
  *  duration of the program.
  */
 #ifdef _WIN32
-#define time_in_ms() timeGetTime()
+#define time_in_ms() ((long)timeGetTime())
 #else
 #define time_in_ms() ((long)(clock()))
 #endif
@@ -243,7 +243,7 @@ void
 ici_profile_call(ici_func_t *f)
 {
     profilecall_t *pc;
-    time_t start;
+    long start;
     start = time_in_ms();
 
     /* Has this function been called from the current function before? */

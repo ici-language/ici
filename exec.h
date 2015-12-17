@@ -27,12 +27,6 @@
 #include <semaphore.h>
 #endif /* ICI_USE_POSIX_THREADS */
 
-union ici_ostemp
-{
-    ici_int_t   i;
-    ici_float_t f;
-};
-
 struct ici_exec
 {
     ici_obj_t   o_head;
@@ -109,13 +103,14 @@ struct ici_exec
  *
  * x_os_temp_cache      An array of pseudo int/float objects that shadows the
  *                      operand stack.  The objects in this array (apart from
- *                      the NULLs) are unions of int and float objects that
- *                      can be used as intermediate results in specific
- *                      circumstances as flaged by the compiler.
+ *                      the NULLs) are unions of ici_int_t and ici_float_t
+ *                      objects that are used as intermediate results in
+ *                      specific circumstances as flagged by the compiler.
  *                      Specifically, they are known to be immediately
  *                      consumed by some operator that is only sensitive to
- *                      the value, not the address, of the object.  See
- *                      binop.h.
+ *                      the value, not the address, of the object.  They are
+ *                      not atoms and are recycled with new values (and types)
+ *                      as needed during expression evaluation.  See binop.h.
  *
  * x_next               Link to the next execution context on the list of all
  *                      existing execution contexts.

@@ -4,9 +4,12 @@
 /*
  * The amount of memory we currently have allocated, and a limit.
  * When we reach the limit, a garbage collection is triggered (which
- * will presumably reduce ici_mem and re-evaluate the limit).
+ * will presumably reduce ici_mem_used and re-evaluate the limit).
+ *
+ * (ici_mem_used used to be called ici_mem, but this confused some
+ * symbolic debuggers -- ici_mem is already a struct name.)
  */
-long                    ici_mem;
+long                    ici_mem_used;
 long                    ici_mem_limit;
 
 /*
@@ -76,62 +79,63 @@ static achunk_t         *ici_achunks;
 void *
 ici_nalloc(size_t z)
 {
-    int                 fi;
     char                *r;
     static char const   which_flist[] = {0, 1, 2, 2, 3, 3, 3, 3};
 
 
-    if ((ici_mem += z) > ici_mem_limit)
+    if ((ici_mem_used += z) > ici_mem_limit)
         collect();
 
 #if !ICI_ALLALLOC
-
-    if (z <= 64)
-        fi = which_flist[(z - 1) >> 3];
-    else
-        fi = z;
-    if (fi < nels(ici_flists))
     {
-        char                **fp;
-        int                 cz;
-        achunk_t            *c;
+        int     fi;
+        if (z <= 64)
+            fi = which_flist[(z - 1) >> 3];
+        else
+            fi = z;
+        if (fi < nels(ici_flists))
+        {
+            char                **fp;
+            int                 cz;
+            achunk_t            *c;
 
-        /*
-         * Small block. Try to get it off one of the fast free lists.
-         */
-        fp = &ici_flists[fi];
-        if ((r = *fp) != NULL)
-        {
-            *fp = *(char **)r;
-            return r;
-        }
-        /*
-         * Free list empty. Rip off a bit more memory from the current
-         * chunk.
-         */
-        cz = 8 << fi;
-        if (mem_next[fi] + cz <= mem_limit[fi])
-        {
+            /*
+             * Small block. Try to get it off one of the fast free lists.
+             */
+            fp = &ici_flists[fi];
+            if ((r = *fp) != NULL)
+            {
+                *fp = *(char **)r;
+                return r;
+            }
+            /*
+             * Free list empty. Rip off a bit more memory from the current
+             * chunk.
+             */
+            cz = 8 << fi;
+            if (mem_next[fi] + cz <= mem_limit[fi])
+            {
+                r = mem_next[fi];
+                mem_next[fi] += cz;
+                return r;
+            }
+            /*
+             * Current chunk empty. Allocate another one.
+             */
+            if ((c = (achunk_t *)malloc(sizeof(achunk_t))) == NULL)
+            {
+                collect();
+                if ((c = (achunk_t *)malloc(sizeof(achunk_t))) == NULL)
+                    goto fail;
+            }
+            c->c_next = ici_achunks;
+            ici_achunks = c;
+            mem_next[fi] = (char *)(((unsigned long)c->c_data + 0x3F) & ~0x3F);
+            mem_limit[fi] = &c->c_data[nels(c->c_data)];
             r = mem_next[fi];
             mem_next[fi] += cz;
             return r;
         }
-        /*
-         * Current chunk empty. Allocate another one.
-         */
-        if ((c = (achunk_t *)malloc(sizeof(achunk_t))) == NULL)
-        {
-            collect();
-            if ((c = (achunk_t *)malloc(sizeof(achunk_t))) == NULL)
-                goto fail;
-        }
-        c->c_next = ici_achunks;
-        ici_achunks = c;
-        mem_next[fi] = (char *)(((unsigned long)c->c_data + 0x3F) & ~0x3F);
-        mem_limit[fi] = &c->c_data[nels(c->c_data)];
-        r = mem_next[fi];
-        mem_next[fi] += cz;
-        return r;
     }
 #endif /* ICI_ALLALLOC */
 
@@ -161,13 +165,13 @@ fail:
 void
 ici_nfree(void *p, size_t z)
 {
-    int                 fi;
     static char const   which_flist[] = {0, 1, 2, 2, 3, 3, 3, 3};
 
-    ici_mem -= z;
+    ici_mem_used -= z;
 #if !ICI_ALLALLOC
     if (z <= 64)
     {
+        int     fi;
         /*
          * Small block. Just push it onto one of our fast free lists.
          */
@@ -208,7 +212,7 @@ ici_alloc(size_t z)
 #if ALLCOLLECT
     collect();
 #else
-    if ((ici_mem += z) > ici_mem_limit)
+    if ((ici_mem_used += z) > ici_mem_limit)
         collect();
 #endif
 
@@ -246,14 +250,39 @@ ici_free(void *p)
      * we have. Does a division - yuk.
      */
     z = ici_alloc_mem / ici_n_allocs;
-    if (z > ici_mem)
-        z = ici_mem;
+    if (z > ici_mem_used)
+        z = ici_mem_used;
     if (z > ici_alloc_mem)
         z = ici_alloc_mem;
-    ici_mem -= z;
+    ici_mem_used -= z;
     ici_alloc_mem -= z;
     --ici_n_allocs;
     free(p);
+}
+
+/*
+ * Initialize the memory allocation system.
+ */
+int
+ici_init_alloc(void)
+{
+    ici_supress_collect = 0;
+
+    ici_mem_used = 0;
+    ici_mem_limit = 0;
+
+    ici_n_allocs = 0;
+    ici_alloc_mem = 0;
+
+#if !ICI_ALLALLOC
+    memset(ici_flists, 0, sizeof(ici_flists));
+    memset(mem_next, 0, sizeof(mem_next));
+    memset(mem_limit, 0, sizeof(mem_limit));
+
+    ici_achunks = NULL;
+#endif /* ICI_ALLALLOC */
+
+    return 0;
 }
 
 /*
@@ -262,7 +291,7 @@ ici_free(void *p)
  * cause total disaster if called at any other time.
  */
 void
-ici_drop_all_small_allocations(void)
+ici_uninit_alloc(void)
 {
 #if !ICI_ALLALLOC
     achunk_t            *c;

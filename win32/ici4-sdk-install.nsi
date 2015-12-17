@@ -28,7 +28,7 @@ modules, and using ICI as a component in another program."
 ;
 ; Enable and set the text for the install location dialog.
 ;
-DirShow show
+;DirShow show ; DirShow is not used/supported in recent NSIS versions
 DirText "If you are using MS Visual C++ 6 and install in the \
 VC98 directory, the include files and libs will be found without \
 further Visual C option adjustments."

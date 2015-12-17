@@ -64,7 +64,7 @@
  */
 #define ICI_VER_MAJOR   4
 #define ICI_VER_MINOR   1
-#define ICI_VER_RELEASE 0
+#define ICI_VER_RELEASE 1
 
 /*
  * The ICI version number composed into an 8.8.16 unsigned long for simple
@@ -396,7 +396,6 @@ extern void             ici_enter(ici_exec_t *);
 extern void             ici_yield(void);
 extern int              ici_waitfor(ici_obj_t *);
 extern int              ici_wakeup(ici_obj_t *);
-extern int              ici_init_thread_stuff(void);
 
 extern DLI int          ici_debug_enabled;
 extern int              ici_debug_ign_err;
@@ -460,7 +459,7 @@ extern void     trace_pcall(ici_obj_t *);
  */
 
 typedef struct expr         expr_t;
-typedef union ici_ostemp    ici_ostemp_t;
+typedef struct ici_ostemp   ici_ostemp_t;
 
 extern ici_obj_t        *ici_evaluate(ici_obj_t *, int);
 extern char             **smash(char *, int);
@@ -510,7 +509,9 @@ extern long             ici_strtol(char const *, char **, int);
 extern int              ici_init_path(ici_objwsup_t *externs);
 extern int              ici_find_on_path(char [FILENAME_MAX], char *);
 extern int              ici_init_sstrings(void);
-extern void             ici_drop_all_small_allocations(void);
+extern void             ici_uninit_sstrings(void);
+extern int              ici_init_thread(void);
+extern void             ici_uninit_thread(void);
 extern void             get_pc(ici_array_t *code, ici_obj_t **xs);
 extern ici_objwsup_t    *ici_outermost_writeable_struct(void);
 extern ici_code_t       *ici_code_new(ici_array_t *);

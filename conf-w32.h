@@ -48,18 +48,33 @@ int ici_get_last_win32_error(void);
 #define ICI_PATH_SEP    ';'
 #define ICI_DIR_SEP     '\\'
 #define ICI_DLL_EXT     ".dll"
+
+#define _CRT_SECURE_NO_WARNINGS     // Don't complain about standard functions
+#define _CRT_NONSTDC_NO_WARNINGS    // Don't complain about POSIX names
+
 /*
  * End of ici.h export. --ici.h-end--
  */
 
 #define ICI_USE_WIN32_THREADS
+
+/*
+ * ICI_USE_WIN32_MMTIME can be #defined 1 to use timeGetTime() for profiling.
+ * However, because of the default low granularity of timeGetTime(), we must
+ * also change the timer frequency to 1ms with timeBeginPeriod().  The docs
+ * for timeBeginPeriod() say doing this "can also reduce overall system
+ * performance" and "prevent the CPU power management system from entering
+ * power-saving modes".  So, this is not recommended anymore.  Instead, we use
+ * QueryPerformanceCounter() and QueryPerformanceFrequency().
+ *
+ * Changing this to use timeGetTime() will require also linking with
+ * winmm.lib.
+ */
+#define ICI_USE_WIN32_MMTIME        0
+
 /*
  * Mentioned in the version string.
  */
 #define CONFIG_STR      "Microsoft Win32 platforms"
-
-#define popen           _popen
-#define pclose          _pclose
-#define access          _access
 
 #endif /*ICI_CONF_H*/

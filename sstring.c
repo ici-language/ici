@@ -36,3 +36,19 @@ ici_init_sstrings(void)
     ici_error = "failed to setup static strings";
     return 1;
 }
+
+/*
+ * Reset all our statically initialised strings ready for a future re-initialisation.
+ */
+void
+ici_uninit_sstrings(void)
+{
+#define SSTRING(name, str) \
+    ICI_OBJ_SET_TFNZ(SSO(name), TC_STRING, 0, 1, 1); \
+    ici_ss_##name.s_struct = NULL; \
+    ici_ss_##name.s_slot = NULL; \
+    ici_ss_##name.s_vsver = 0;
+#include "sstring.h"
+#undef SSTRING
+}
+

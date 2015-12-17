@@ -290,11 +290,11 @@ ici_open_charbuf(char *data, int size, ici_obj_t *ref, int readonly)
         {
             if ((cb->cb_data = ici_alloc(size)) != NULL)
             {
-		memcpy(cb->cb_data, data, size);
-		cb->cb_ptr = cb->cb_data;
-		f = ici_file_new((char *)cb, &ici_charbuf_ftype, NULL, ref);
-		if (f == NULL)
-		    ici_free(cb->cb_data);
+                memcpy(cb->cb_data, data, size);
+                cb->cb_ptr = cb->cb_data;
+                f = ici_file_new((char *)cb, &ici_charbuf_ftype, NULL, ref);
+                if (f == NULL)
+                    ici_free(cb->cb_data);
             }
         }
         else

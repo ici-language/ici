@@ -45,7 +45,11 @@ hash_int(ici_obj_t *o)
 static void
 free_int(ici_obj_t *o)
 {
-    ici_tfree(o, ici_int_t);
+    /* Check if this is actually a ici_ostemp_t and free it correctly. */
+    if (o->o_flags & O_TEMP)
+        ici_tfree(o, ici_ostemp_t);
+    else
+        ici_tfree(o, ici_int_t);
 }
 
 

@@ -447,7 +447,7 @@ f_wakeup()
  * made.
  */
 int
-ici_init_thread_stuff(void)
+ici_init_thread(void)
 {
 #ifdef ICI_USE_WIN32_THREADS
     if ((ici_mutex = CreateMutex(NULL, 0, NULL)) == NULL)
@@ -478,6 +478,16 @@ ici_init_thread_stuff(void)
     pthread_mutexattr_destroy(&mutex_attr);
 #endif
     return 0;
+}
+
+void
+ici_uninit_thread(void)
+{
+#ifdef ICI_USE_WIN32_THREADS
+    if (ici_mutex != NULL)
+        CloseHandle(ici_mutex);
+    ici_mutex = NULL;
+#endif
 }
 
 ici_cfunc_t ici_thread_cfuncs[] =

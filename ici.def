@@ -1,4 +1,4 @@
-LIBRARY ici4.dll BASE=0x90000000
+LIBRARY ici4.dll
 VERSION 4.1
 
 EXPORTS ici_aborted DATA
@@ -99,6 +99,7 @@ EXPORTS ici_set_val
 EXPORTS ici_stdio_ftype DATA
 EXPORTS ici_str_alloc
 EXPORTS ici_str_get_nul_term
+EXPORTS ici_str_need_size
 EXPORTS ici_str_new
 EXPORTS ici_str_new_nul_term
 EXPORTS ici_str_ret

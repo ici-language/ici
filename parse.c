@@ -775,6 +775,7 @@ primary(ici_parse_t *p, expr_t **ep, int exclude)
                     {
                         reject(p);
                         not_followed_by("[struct ... (expr", "\")\"");
+                        ici_decref(o);
                         ici_decref(d);
                         goto fail;
                     }
@@ -923,24 +924,24 @@ primary(ici_parse_t *p, expr_t **ep, int exclude)
 
             f = NULL;
             n = NULL;
-            c = NULL;
             s = stringof(p->p_got.t_obj);
             if ((o = ici_eval(s)) == NULL)
                 goto fail_user_parse;
+            // o has been incref'd
             if (ici_typeof(o)->t_call != NULL)
             {
                 c = o;
-                o = NULL;
             }
             else
             {
                 if ((c = ici_fetch(o, SS(parser))) == NULL)
                     goto fail_user_parse;
+                // c has NOT been incref'd, but o is still held
             }
+            // in any case, c can't go away, we only need to decref o.
             f = ici_file_new(objof(p), &ici_parse_ftype, p->p_file->f_name, objof(p));
             if (f == NULL)
                 goto fail_user_parse;
-            ici_incref(c);
             if (ici_func(c, "o=o", &n, f))
                 goto fail_user_parse;
             e->e_what = T_CONST;
@@ -949,7 +950,6 @@ primary(ici_parse_t *p, expr_t **ep, int exclude)
             if (o != NULL)
                 ici_decref(o);
             ici_decref(f);
-            ici_decref(c);
             if (next(p, NULL) != T_OFFSQUARE)
             {
                 reject(p);
@@ -964,8 +964,6 @@ primary(ici_parse_t *p, expr_t **ep, int exclude)
                 ici_decref(o);
             if (f != NULL)
                 ici_decref(f);
-            if (c != NULL)
-                ici_decref(c);
             goto fail;
         }
         break;
@@ -1843,6 +1841,7 @@ statement(ici_parse_t *p, ici_array_t *a, ici_struct_t *sw, char *m, int endme)
             if (next(p, a) != T_SEMICOLON)
             {
                 reject(p);
+                free_expr(e);
                 return not_followed_by("for (expr; expr", "\";\"");
             }
 
@@ -1850,9 +1849,13 @@ statement(ici_parse_t *p, ici_array_t *a, ici_struct_t *sw, char *m, int endme)
              * a1 is the body of the loop.  Get the step expression.
              */
             if ((a1 = ici_array_new(0)) == NULL)
+            {
+                free_expr(e);
                 return -1;
+            }
             if (expression(p, a1, FOR_EFFECT, T_NONE) == -1)
             {
+                free_expr(e);
                 ici_decref(a1);
                 return -1;
             }

@@ -418,13 +418,23 @@ struct ici_obj
  *                      check for this flag and fail the attempt if it is
  *                      set.
  *
+ * O_TEMP               Indicates that this is a temporary object of type
+ *                      ici_ostemp_t, which stores an intermediate result
+ *                      during expression evaluation and will be immediately
+ *                      consumed by some other operator.  Its o_type field
+ *                      is either TC_INT or TC_FLOAT.  It is registered
+ *                      with the garbage collector, but is not an atom and
+ *                      can be recycled with a new value and type as often
+ *                      as needed.  It is stored in x_os_temp_cache.  See
+ *                      binop.h.
+ *
  * O_SUPER              This object can support a super.
  *
  * --ici-api-- continued.
  */
 #define O_MARK          0x01    /* Garbage collection mark. */
 #define O_ATOM          0x02    /* Is a member of the atom pool. */
-#define O_TEMP          0x04    /* Is a re-usable temp (flag for asserts). */
+#define O_TEMP          0x04    /* Is a re-usable operand-stack temp. */
 #define O_SUPER         0x08    /* Has super (is ici_objwsup_t derived). */
 
 
@@ -587,5 +597,18 @@ extern void             bughunt_rego(ici_obj_t *);
 #   define ici_incref(o) bughunt_incref(objof(o))
 #   define ici_decref(o) bughunt_decref(objof(o))
 #endif
+
+extern int              ici_init_object();
+extern void             ici_uninit_object();
+
+struct ici_ostemp
+{
+    ici_obj_t       o_head;
+    union
+    {
+        long        i_value;
+        double      f_value;
+    };
+};
 
 #endif /* ICI_OBJECT_H */

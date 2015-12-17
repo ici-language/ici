@@ -11,7 +11,7 @@
  * we allow the config file to set it ahead of this definition.
  */
 #if     !defined(ICI_ALLALLOC)
-#define ICI_ALLALLOC    0   /* Always call malloc, no caches. */
+#define ICI_ALLALLOC    0   /* If 1, always call malloc, no caches. */
 #endif
 
 /*
@@ -82,7 +82,7 @@ extern void             ici_free(void *);
 #   define ici_talloc(t)   \
     (ICI_FLOK(t) && (ici_fltmp = ici_flists[ICI_FLIST(t)]) != NULL  \
         ? (ici_flists[ICI_FLIST(t)] = *(char **)ici_fltmp,          \
-            ici_mem += sizeof(t),                                   \
+            ici_mem_used += sizeof(t),                              \
             ici_fltmp)                                              \
         : ici_nalloc(sizeof(t)))
 
@@ -91,7 +91,7 @@ extern void             ici_free(void *);
     (ICI_FLOK(t)                                        \
         ? (*(char **)(p) = ici_flists[ICI_FLIST(t)],    \
             ici_flists[ICI_FLIST(t)] = (char *)(p),     \
-            ici_mem -= sizeof(t))                       \
+            ici_mem_used -= sizeof(t))                  \
         : (ici_nfree((p), sizeof(t)), 0))
 
 extern char             *ici_flists[4];
@@ -99,7 +99,10 @@ extern char             *ici_fltmp;
 
 #endif  /* ICI_ALLALLOC */
 
-extern long             ici_mem;
+extern long             ici_mem_used;
 extern long             ici_mem_limit;
+
+extern int              ici_init_alloc();
+extern void             ici_uninit_alloc();
 
 #endif /* ICI_ALLOC_H */

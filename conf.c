@@ -73,7 +73,7 @@ ici_cfunc_t *funcs[] =
  * and Makefile.maint.
  */
 char ici_version_string[] =
-    "@(#)ICI 4.1.0, "
+    "@(#)ICI 4.1.1, "
     CONFIG_FILE ", "
     __DATE__ " " __TIME__ ", "
     CONFIG_STR
@@ -117,6 +117,6 @@ char ici_version_string[] =
 
 #else /* __STDC__ */
 
-char ici_version_string[] = "@(#)ICI 4.1.0";
+char ici_version_string[] = "@(#)ICI 4.1.1";
 
 #endif

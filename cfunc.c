@@ -1594,8 +1594,8 @@ f_sopen()
         {
             if (!ici_chkbuf(strlen(mode) + 50))
             {
-		sprintf(buf, "attempt to use mode \"%s\" in sopen()", mode);
-		ici_error = buf;
+                sprintf(buf, "attempt to use mode \"%s\" in sopen()", mode);
+                ici_error = buf;
             }
             return 1;
         }
@@ -1625,8 +1625,8 @@ f_mopen()
         {
             if (!ici_chkbuf(strlen(mode) + 50))
             {
-		sprintf(buf, "attempt to use mode \"%s\" in mopen()", mode);
-		ici_error = buf;
+                sprintf(buf, "attempt to use mode \"%s\" in mopen()", mode);
+                ici_error = buf;
             }
             return 1;
         }
@@ -3288,6 +3288,15 @@ f_which()
 void
 uninit_cfunc(void)
 {
+    int     i;
+    for (i = 0; i < ICI_MAX_TYPES; i++)
+    {
+        if (ici_types[i] && ici_types[i]->t_ici_name != NULL)
+        {
+            ici_decref(objof(ici_types[i]->t_ici_name));
+            ici_types[i]->t_ici_name = NULL;
+        }
+    }
 }
 
 ici_cfunc_t std_cfuncs[] =
