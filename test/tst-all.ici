@@ -1,5 +1,16 @@
 printf("%s\n", version());
 
+/*
+ * On some Win32, tmpname() (which is a direct map to the CRT tmpnam())
+ * returns a filename in the root of the current drive (eg. "\s62g."),
+ * but processes are not allowed to create files here on recent Win32.
+ * See: http://blogs.msdn.com/b/vcblog/archive/2014/06/18/crt-features-fixes-and-breaking-changes-in-visual-studio-14-ctp1.aspx
+ * Work around this by prepending the TMP environment variable (any
+ * double backslash which may result is ignored).
+ */
+if (version() ~ #Win32# && tmpname()[0] == "\\")
+    tmpname = [func(){return $(getenv("TMP"))+($tmpname)();}];
+
 auto n;
 
 rpush(path, ".");
@@ -19,20 +30,20 @@ chdir(base);
 tests := [array
 
     "parse",
-	"stmt",
-	"types",
-	"bino",
-	"flow",
-	"sets",
-	"del",
-	"many",
-	"func",
-	"regexp",
+    "stmt",
+    "types",
+    "bino",
+    "flow",
+    "sets",
+    "del",
+    "many",
+    "func",
+    "regexp",
     "math",
     "thread",
     "misc",
-	"prof",
-//	"exit",
+    "prof",
+//    "exit",
     "oner",
 ];
 

@@ -55,21 +55,46 @@ for (x = 1; x < 10; ++x)
 if (y != 3)
 	fail("break in critsect executed incorrectly");
 
-error = NULL;
-try
-	break;
-onerror
+// Test use of 'break' outside a loop or switch.
+// Since this is a parse-time error rather than an execution-time error,
+// 'onerror' handlers are not in effect, so the naive approach:
+//   try { break; } onerror { yay, it failed correctly! }
+// won't work (ici will just stop parsing our file).  So to run this test, we
+// need to use parse(), whose runtime failure we can capture.
+forall (str in [array
+    "break;",
+    "static foo() { break; }",
+    "static foo() { try { break; } onerror; }", // Can't break from a 'try'
+    "static foo() { critsect { break; } }", // Can't break from a 'critsect'
+])
+{
+    error = NULL;
+    try
+        parse(str);
+    onerror
 	;
-if (error == NULL)
-	fail("break at top level didn't fail");
+    if (error !~ #break outside of breakable statement#)
+	fail("break outside of breakable statement didn't fail");
+}
 
-x = 0;
-try
-	continue;
-onerror
-	x = 1;
-if (x != 1)
-	fail("failed to fail on continue out of loop");
+// Test use of 'continue' outside a loop.  The above comment applies
+// here too, so we put the continue in its own function.
+forall (str in [array
+    "continue;",
+    "static foo() { continue; }",
+    "static foo() { try { continue; } onerror; }",
+    "static foo() { critsect { continue; } }",
+    "static foo() { switch(0) { case 0: continue; } }",
+])
+{
+    error = NULL;
+    try
+        parse(str);
+    onerror
+	;
+    if (error !~ #continue outside of continueable statement#)
+        fail("continue outside of continueable statement didn't fail");
+}
 
 x = 0;
 switch("a")
