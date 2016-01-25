@@ -1,0 +1,171 @@
+
+; Custom debugger visualizers for ici object types, for Visual Studio 2005 and
+; up.  Copy and paste into the [Visualizer] section of your VS installation's
+; autoexp.dat.  For details, see MSDN or google it.  There are lots of resources
+; online; eg: "Writing custom visualizers for Visual Studio 2005",
+; http://www.virtualdub.org/blog/pivot/entry.php?id=120
+
+; In the near future Microsoft plans to replace autoexp.dat with something
+; called Natvis, for which no work on ici has yet been done.  So this file may
+; stop working in future versions of Visual Studio.  For details see "Create custom
+; views of native objects", https://msdn.microsoft.com/en-us/library/jj620914.aspx 
+
+; ================================== BEGIN ici types ==================================
+
+ici_obj {
+    preview (
+        #switch($e.o_tcode)
+        #case 1 (*(ici_pc*)&$e)       #case 2 (*(ici_src*)&$e)   #case 3 (*(ici_parse*)&$e)
+        #case 4 (*(ici_op*)&$e)       #case 5 (*(ici_str*)&$e)   #case 6 (*(ici_catch*)&$e)
+        #case 7 (*(ici_forall*)&$e)   #case 8 (*(ici_int*)&$e)   #case 9 (*(ici_float*)&$e)
+        #case 10 (*(ici_regexp*)&$e)  #case 11 (*(ici_ptr*)&$e)  #case 12 (*(ici_array*)&$e)
+        #case 13 (*(ici_struct*)&$e)  #case 14 (*(ici_set*)&$e)  #case 15 (*(ici_exec*)&$e)
+        #case 16 (*(ici_file*)&$e)    #case 17 (*(ici_func*)&$e) #case 18 (*(ici_cfunc*)&$e)
+        #case 19 (*(ici_method*)&$e)  #case 20 (*(ici_mark*)&$e) #case 21 (*(ici_null_t*)&$e)
+        #case 22 (*(ici_handle*)&$e)  #case 23 (*(ici_mem*)&$e)  #case 24 (*(profilecall*)&$e)
+        #case 25 (*(ici_code*)&$e)
+        #default ( #if (&$e) ( #( "{", [$e.o_nrefs,i], "} unknown tcode=", [$e.o_tcode,i] ) ) )
+    )
+    children (
+        #switch($e.o_tcode)
+        #case 1 (*(ici_pc*)&$e)       #case 2 (*(ici_src*)&$e)   #case 3 (*(ici_parse*)&$e)
+        #case 4 (*(ici_op*)&$e)       #case 5 (*(ici_str*)&$e)   #case 6 (*(ici_catch*)&$e)
+        #case 7 (*(ici_forall*)&$e)   #case 8 (*(ici_int*)&$e)   #case 9 (*(ici_float*)&$e)
+        #case 10 (*(ici_regexp*)&$e)  #case 11 (*(ici_ptr*)&$e)  #case 12 (*((ici_array*)&$e))
+        #case 13 (*(ici_struct*)&$e)  #case 14 (*(ici_set*)&$e)  #case 15 (*(ici_exec*)&$e)
+        #case 16 (*(ici_file*)&$e)    #case 17 (*(ici_func*)&$e) #case 18 (*(ici_cfunc*)&$e)
+        #case 19 (*(ici_method*)&$e)  #case 20 (*(ici_mark*)&$e) #case 21 (*(ici_null_t*)&$e)
+        #case 22 (*(ici_handle*)&$e)  #case 23 (*(ici_mem*)&$e)  #case 24 (*(profilecall*)&$e)
+        #case 25 (*(ici_code*)&$e)
+        #default ( #if (&$e) ( #( "{", [$e.o_nrefs,i], "} unknown tcode=", [$e.o_tcode,i] ) ) )
+    )
+}
+
+ici_pc {
+    ; Cast ptr to an ici_obj* to show refs, because not all objects have an immediate
+    ; ici_obj member called o_head.  For example: ici_struct (which has an ici_objwsup
+    ; instead), and ici_src (whose ici_obj member is called s_head for some reason).
+    preview  ( #( "{", [((ici_obj*)&$e)->o_nrefs,i], "} pc" ) )
+    children ( #(
+               [raw members]: [$e,!],
+               [code]: [*($e.pc_code)],
+               [next]: [*($e.pc_next)]
+             ) )
+}
+ici_src {
+    preview  ( #( "{", [((ici_obj*)&$e)->o_nrefs,i], "} src=", [$e.s_filename->s_chars,s], " line ", $e.s_lineno ) )
+    children ( #([raw members]: [$e,!]) )
+}
+ici_parse {
+    preview  ( #( "{", [((ici_obj*)&$e)->o_nrefs,i], "} parse" ) )
+    children ( #(
+               [raw members]: [$e,!],
+               [file]: [*$e.p_file],
+               [line]: [$e.p_lineno]
+             ) )
+}
+ici_op {
+    preview  ( #( "{", [((ici_obj*)&$e)->o_nrefs,i], "} op" ) )
+    children ( #([raw members]: [$e,!]) )
+}
+ici_str {
+    preview  ( #( "{", [((ici_obj*)&$e)->o_nrefs,i], "} str=", [$e.s_chars,s] ) )
+    children ( #([raw members]: [$e,!]) )
+}
+ici_catch {
+    preview  ( #( "{", [((ici_obj*)&$e)->o_nrefs,i], "} catch" ) )
+    children ( #([raw members]: [$e,!]) )
+}
+ici_forall {
+    preview  ( #( "{", [((ici_obj*)&$e)->o_nrefs,i], "} forall" ) )
+    children ( #([raw members]: [$e,!]) )
+}
+ici_int {
+    preview  ( #( "{", [((ici_obj*)&$e)->o_nrefs,i], "} int=", $e.i_value ) )
+    children ( #([raw members]: [$c,!]) )
+}
+ici_float {
+    preview  ( #( "{", [((ici_obj*)&$e)->o_nrefs,i], "} float=", $e.f_value ) )
+    children ( #([raw members]: [$e,!]) )
+}
+ici_regexp {
+    preview  ( #( "{", [((ici_obj*)&$e)->o_nrefs,i], "} regexp=", [$e.r_pat->s_chars,s] ) )
+    children ( #([raw members]: [$e,!]) )
+}
+ici_ptr {
+    preview  ( #( "{", [((ici_obj*)&$e)->o_nrefs,i], "} ptr", $e.i_value ) )
+    children ( #([raw members]: [$e,!]) )
+}
+ici_array {
+    preview  ( #( "{", [((ici_obj*)&$e)->o_nrefs,i], "} array nels=", [$e.a_top-$e.a_bot] ) )
+    children ( #(
+               [raw members]: [$e,!],
+               #array (
+                  expr : $e.a_bot[$i],
+                  size : $e.a_top-$e.a_bot
+               )
+             ) )
+}
+ici_struct {
+    preview  ( #( "{", [((ici_obj*)&$e)->o_nrefs,i], "} struct nels=", $e.s_nels ) )
+    children ( #(
+               [raw members]: [$e,!],
+               [super]: [(ici_obj_t*)$e.o_head.o_super],
+              ; #if ($e.o_head.o_super) ( #( [(ici_obj_t*)$e.o_head.o_super] ) ) #else ( "empty" ),
+               #array (
+                  expr : $e.s_slots[$i],
+                  size : $e.s_nslots
+               )
+               : #( ; #if ($e.sl_key) ( #( $e ) ) )
+                   #array (
+                       expr : $e,
+                       size : $e.sl_key!=0,
+                       base : ((int)&$e)
+                   ) )
+             ) )
+}
+ici_set {
+    preview  ( #( "{", [((ici_obj*)&$e)->o_nrefs,i], "} set nels=", $e.s_nels ) )
+    children ( #(
+               [raw members]: [$e,!],
+               #array (
+                  expr : (*$e.s_slots[$i]),
+                  size : $e.s_nslots
+               )
+               : #(
+                   #array (
+                       expr : $e,
+                       size : (&$e)!=0,
+                       base : ((int)(&$e))
+                   ) )
+             ) )
+}
+ici_file {
+    preview  ( #( "{", [((ici_obj*)&$e)->o_nrefs,i], "} file=", [$e.f_name->s_chars,s] ) )
+    children ( #([raw members]: [$e,!]) )
+}
+ici_func {
+    preview  ( #( "{", [((ici_obj*)&$e)->o_nrefs,i], "} func=", [$e.f_name->s_chars,s] ) )
+    children ( #([raw members]: [$e,!]) )
+}
+ici_cfunc {
+    preview  ( #( "{", [((ici_obj*)&$e)->o_nrefs,i], "} cfunc=", [$e.cf_name,s] ) )
+    children ( #([raw members]: [$e,!]) )
+}
+ici_method {
+    preview  ( #( "{", [((ici_obj*)&$e)->o_nrefs,i], "} method" ) )
+    children ( #([raw members]: [$e,!]) )
+}
+ici_mark {
+    preview  ( #( "{", [((ici_obj*)&$e)->o_nrefs,i], "} mark" ) )
+    children ( #([raw members]: [$e,!]) )
+}
+ici_null_t {
+    preview  ( #( "{", [((ici_obj*)&$e)->o_nrefs,i], "} <null>" ) )
+    children ( #([raw members]: [$e,!]) )
+}
+
+ici_sslot { preview ( #( "( ", $e.sl_key, " ) = ( ", $e.sl_value, " )" ) ) }
+
+; ================================== END ici types ==================================
+
