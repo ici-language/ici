@@ -1,0 +1,53 @@
+# New ports collection makefile for:   ici
+# Date created:        27 December 2000
+# Whom:                andy
+#
+# $FreeBSD: ports/lang/ici/Makefile,v 1.7 2000/04/16 11:16:50 knu Exp $
+#
+
+PORTNAME=	ici
+PORTVERSION=	3.0.0
+CATEGORIES=	lang
+MASTER_SITES=	http://www.zeta.org.au/~atrn/ici/distfiles/
+
+MAINTAINER=	atrn@zeta.org.au
+
+MAKEFILE=	Makefile.bsd
+MAN1=		ici3.1
+MANCOMPRESSED=	yes
+
+ICIHDRS= alloc.h array.h buf.h catch.h cfunc.c conf-bsd.h exec.h file.h float.h \
+	forall.h func.h fwd.h ici.h int.h mark.h mem.h method.h null.h object.h op.h \
+	parse.h pc.h primes.h ptr.h re.h set.h skt.h src.h str.h struct.h \
+	trace.h win.h wrap.h
+
+ICIPCREHDRS= pcre/internal.h pcre/pcre.h
+
+ICIDOCS= doc/ici-a4.ps doc/ici-ltr.ps doc/ici.txt doc/ici.pdf
+
+do-install:
+	cd ${WRKSRC} && ${MAKE} -f ${MAKEFILE} libici3.a
+	${INSTALL_PROGRAM} ${WRKSRC}/ici3 ${PREFIX}/bin
+	${INSTALL_DATA} ${WRKSRC}/libici3.a ${PREFIX}/lib
+	${INSTALL_MAN} ${WRKSRC}/ici3.1.gz ${PREFIX}/man/man1
+	${MKDIR} ${PREFIX}/lib/ici3
+	${INSTALL_DATA} ${WRKSRC}/ici3core.ici ${PREFIX}/lib/ici3
+	${INSTALL_DATA} ${WRKSRC}/ici3core1.ici ${PREFIX}/lib/ici3
+	${INSTALL_DATA} ${WRKSRC}/ici3core2.ici ${PREFIX}/lib/ici3
+	${INSTALL_DATA} ${WRKSRC}/ici3core3.ici ${PREFIX}/lib/ici3
+	${MKDIR} ${PREFIX}/include/ici3
+	${MKDIR} ${PREFIX}/include/ici3/pcre
+.for f in ${ICIHDRS}
+	${INSTALL_DATA} ${WRKSRC}/$f ${PREFIX}/include/ici3
+.endfor
+.for f in ${ICIPCREHDRS}
+	${INSTALL_DATA} ${WRKSRC}/$f ${PREFIX}/include/ici3/pcre
+.endfor
+.if !defined(NOPORTDOCS)
+	${MKDIR} ${PREFIX}/share/doc/ici3
+.for f in ${ICIDOCS}
+	${INSTALL_DATA} ${WRKSRC}/$f ${PREFIX}/share/doc/ici3
+.endfor
+.endif
+
+.include <bsd.port.mk>

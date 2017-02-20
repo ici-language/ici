@@ -1,0 +1,17 @@
+auto f;
+auto n;
+
+auto tests =
+[array
+    "parse", "stmt", "bino", "sets", "del", "many", "func", "regexp",
+    "math",
+    "oner",
+];
+
+printf("Should finish with \"deliberate failure\".\n");
+forall (n in tests)
+{
+    printf("%s...\n", n);
+    parse(f = fopen("tst-" + n + ".ici", "r"));
+    close(f);
+}

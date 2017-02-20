@@ -1,0 +1,220 @@
+#define ICI_CORE
+#include "exec.h"
+#include "struct.h"
+#include "set.h"
+#include "forall.h"
+#include "str.h"
+#include "buf.h"
+
+/*
+ * Mark this and referenced unmarked objects, return memory costs.
+ * See comments on t_mark() in object.h.
+ */
+static unsigned long
+mark_forall(object_t *o)
+{
+    register int        i;
+    unsigned long       mem;
+
+    o->o_flags |= O_MARK;
+    mem = sizeof(forall_t);
+    for (i = 0; i < nels(forallof(o)->fa_objs); ++i)
+    {
+        if (forallof(o)->fa_objs[i] != NULL)
+            mem += mark(forallof(o)->fa_objs[i]);
+    }
+    return mem;
+}
+
+/*
+ * va vk ka kk aggr code        => (os)
+ *                              => forall (xs)
+ */
+int
+ici_op_forall()
+{
+    register forall_t   *fa;
+
+    if (ici_os.a_top[-2] == objof(&o_null))
+    {
+        ici_os.a_top -= 6;
+        --ici_xs.a_top;
+        return 0;
+    }
+    if ((fa = ici_talloc(forall_t)) == NULL)
+        return 1;
+    objof(fa)->o_tcode = TC_FORALL;
+    assert(ici_typeof(fa) == &forall_type);
+    objof(fa)->o_flags = 0;
+    objof(fa)->o_nrefs = 0;
+    rego(fa);
+    fa->fa_index = -1;
+    fa->fa_code = *--ici_os.a_top;
+    fa->fa_aggr = *--ici_os.a_top;
+    fa->fa_kkey = *--ici_os.a_top;
+    fa->fa_kaggr = *--ici_os.a_top;
+    fa->fa_vkey = *--ici_os.a_top;
+    fa->fa_vaggr = *--ici_os.a_top;
+    ici_xs.a_top[-1] = objof(fa);
+    return 0;
+}
+
+/*
+ * Free this object and associated memory (but not other objects).
+ * See the comments on t_free() in object.h.
+ */
+static void
+free_forall(object_t *o)
+{
+    ici_tfree(o, forall_t);
+}
+
+/*
+ * forall => forall pc (xs)
+ *  OR
+ * forall => (xs)
+ */
+int
+exec_forall()
+{
+    register forall_t   *fa;
+    char                n[30];
+
+    fa = forallof(ici_xs.a_top[-1]);
+    switch (fa->fa_aggr->o_tcode)
+    {
+    case TC_STRUCT:
+        {
+            register struct_t   *s;
+            register slot_t     *sl;
+
+            s = structof(fa->fa_aggr);
+            while (++fa->fa_index < s->s_nslots)
+            {
+                if ((sl = &s->s_slots[fa->fa_index])->sl_key == NULL)
+                    continue;
+                if (fa->fa_vaggr != objof(&o_null))
+                {
+                    if (assign(fa->fa_vaggr, fa->fa_vkey, sl->sl_value))
+                        return 1;
+                }
+                if (fa->fa_kaggr != objof(&o_null))
+                {
+                    if (assign(fa->fa_kaggr, fa->fa_kkey, sl->sl_key))
+                        return 1;
+                }
+                goto next;
+            }
+        }
+        goto fin;
+
+    case TC_SET:
+        {
+            register set_t      *s;
+            register object_t   **sl;
+
+            s = setof(fa->fa_aggr);
+            while (++fa->fa_index < s->s_nslots)
+            {
+                if (*(sl = &s->s_slots[fa->fa_index]) == NULL)
+                    continue;
+                if (fa->fa_kaggr == objof(&o_null))
+                {
+                    if (fa->fa_vaggr != objof(&o_null))
+                    {
+                        if (assign(fa->fa_vaggr, fa->fa_vkey, *sl))
+                            return 1;
+                    }
+                }
+                else
+                {
+                    if (fa->fa_vaggr != objof(&o_null))
+                    {
+                        if (assign(fa->fa_vaggr, fa->fa_vkey, o_one))
+                            return 1;
+                    }
+                    if (assign(fa->fa_kaggr, fa->fa_kkey, *sl))
+                        return 1;
+                }
+                goto next;
+            }
+        }
+        goto fin;
+
+    case TC_ARRAY:
+        {
+            register array_t    *a;
+            register int_t      *i;
+
+            a = arrayof(fa->fa_aggr);
+            if (++fa->fa_index >= ici_array_nels(a))
+                goto fin;
+            if (fa->fa_vaggr != objof(&o_null))
+            {
+                if (assign(fa->fa_vaggr, fa->fa_vkey, ici_array_get(a, fa->fa_index)))
+                    return 1;
+            }
+            if (fa->fa_kaggr != objof(&o_null))
+            {
+                if ((i = new_int((long)fa->fa_index)) == NULL)
+                    return 1;
+                if (assign(fa->fa_kaggr, fa->fa_kkey, i))
+                    return 1;
+                decref(i);
+            }
+        }
+        goto next;
+
+    case TC_STRING:
+        {
+            register string_t   *s;
+            register int_t      *i;
+
+            s = stringof(fa->fa_aggr);
+            if (++fa->fa_index >= s->s_nchars)
+                goto fin;
+            if (fa->fa_vaggr != objof(&o_null))
+            {
+                if ((s = new_name(&s->s_chars[fa->fa_index], 1)) == NULL)
+                    return 1;
+                if (assign(fa->fa_vaggr, fa->fa_vkey, s))
+                    return 1;
+                decref(s);
+            }
+            if (fa->fa_kaggr != objof(&o_null))
+            {
+                if ((i = new_int((long)fa->fa_index)) == NULL)
+                    return 1;
+                if (assign(fa->fa_kaggr, fa->fa_kkey, i))
+                    return 1;
+                decref(i);
+            }
+        }
+        goto next;
+    }
+    sprintf(buf, "attempt to forall over %s", objname(n, fa->fa_aggr));
+    ici_error = buf;
+    return 1;
+
+next:
+    if ((*ici_xs.a_top = objof(new_pc(arrayof(fa->fa_code), 0))) == NULL)
+        return 1;
+    ++ici_xs.a_top;
+    return 0;
+
+fin:
+    --ici_xs.a_top;
+    return 0;
+}
+
+type_t  forall_type =
+{
+    mark_forall,
+    free_forall,
+    hash_unique,
+    cmp_unique,
+    copy_simple,
+    assign_simple,
+    fetch_simple,
+    "forall"
+};

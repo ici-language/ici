@@ -1,0 +1,17 @@
+/*
+ * Test some basic parser features.
+ */
+
+
+static
+func1()
+{
+    return _funcname_;
+}
+
+if (func1() != "func1")
+    fail("_funcname_ not set correctly");
+
+static x = [array #abc#];
+if (x[0] != #abc#)
+    fail("const regexp incorrectly parsed");

@@ -1,0 +1,331 @@
+#include "fwd.h"
+#ifndef NODEBUGGING
+#include <windows.h>
+#include "widb_ici.h"
+#include "widb-priv.h"
+#include "object.h"
+#include "str.h"
+#include "fwd.h"
+#include "exec.h"
+#include "func.h"
+#include "src.h"
+#include "widb.h"
+#include "widb_wnd.h"
+#include "wrap.h"
+#include "struct.h"
+#include "ptr.h"
+
+
+/*
+ * Remembers whether we've performed necessary initialisation.
+ */
+BOOL widb_ici_initialised = FALSE;
+
+
+/*
+ * This array contains the current execution stack, it may be shown to
+ * the user by the main window.
+ *
+ * The code inside widb_ici.c keeps this up-to-date.
+ */
+array_t *widb_exec_name_stack = NULL;
+static int exec_no_name_count[1000];       // Our recursion is limited.
+static int exec_no_name_index = 0;
+
+
+/*
+ * ici_debug_src - called when a source line marker is encountered.
+ *
+ * Parameters:
+ *
+ *      src     The source marker encountered.
+ */
+static void
+ici_debug_src(src_t *src)
+{
+    if (widb_step_over_depth <= 0)
+    {
+        // Remember the scope in case they want to look at the variables.
+        widb_scope = ici_vs.a_top[-1];
+        incref(widb_scope);
+
+        // Stop executing and show the debugger until the user opts to continue in
+        // some way.
+        incref(src);
+        _ASSERT(src->s_filename != NULL);
+        widb_debug(src);
+        decref(src);
+
+        decref(widb_scope);
+        widb_scope = NULL;
+    }
+}
+
+
+/*
+ * ici_debug_fncall - called prior to a function call.
+ *
+ * Parameters:
+ *
+ *      o       The function being called.
+ *      ap      The parameters to function, a (C) array of objects.
+ *      nargs   The number of parameters in that array.
+ */
+static void
+ici_debug_fncall(object_t *o, object_t **ap, int nargs)
+{
+    char        n1[30];
+    string_t    *name = NULL;
+
+    // Does the function have a valid name?  Only for ICI functions.
+    if (o != NULL && isptr(o))
+    {
+        object_t *agg = ptrof(o)->p_aggr;
+        o = fetch(agg, ptrof(o)->p_key);
+    }
+    if (o != NULL)
+    {
+        //
+        // The function has a name, that means it should appear in the user's
+        // stack trace.
+        //
+
+        // Ensure that the stack exists.
+        if (widb_exec_name_stack == NULL)
+            widb_exec_name_stack = new_array(0);
+
+        // Make a new entry.
+        VERIFY(0 == ici_stk_push_chk(widb_exec_name_stack, 1));
+        objname(n1, o);
+        VERIFY(NULL != (name = get_cname(n1)));
+        *widb_exec_name_stack->a_top++ = objof(name);
+
+        ++ exec_no_name_index;
+    }
+    else
+    {
+        //
+        // The function has no name, but we must count the number of these
+        // unamed functions so that we can detect when named functions
+        // eventually exit (by counting the number of f__debug_return() calls).
+        //
+        ++ exec_no_name_count[exec_no_name_index];
+    }
+
+    // The depth is used by the window.
+    widb_step_over_depth ++;
+}
+
+
+/*
+ * ici_debug_fnresult - called upon function return.
+ *
+ * Parameters:
+ *
+ *      o       The result of the function.
+ */
+static void
+ici_debug_fnresult(object_t *o)
+{
+    if (widb_exec_name_stack != NULL)
+    {
+        if (exec_no_name_count[exec_no_name_index] == 0)
+        {
+            // This must be a named function returning, pop it from the execution
+            // stack.
+            //
+            // Sometimes we've noticed with Rama that it pops beyond the
+            // beginning of the stack.  Perhaps this has to do with debugging
+            // being invoked at a lower level.  Not sure, not important enough
+            // to investigate.  Instead we'll just ignore such things.
+            if (ici_array_nels(widb_exec_name_stack) > 0)
+            {
+                // Popping available.
+                ici_array_pop(widb_exec_name_stack);
+
+                -- exec_no_name_index;
+                VERIFY(exec_no_name_index >= 0);
+            }
+        }
+        else
+        {
+            // Just another unnamed function returning.
+            -- exec_no_name_count[exec_no_name_index];
+        }
+
+        // The depth is used by the window.
+        widb_step_over_depth --;
+    }
+}
+
+
+/*
+ * ici_debug_error - called when the program raises an error.
+ *
+ * Parameters:
+ *
+ *      err     the error being set.
+ *      src     the last source marker encountered.
+ */
+static void
+ici_debug_error(char *err, src_t *src)
+{
+    char debug_str[256];
+    char *filename = "";
+
+    // Translate it into the standard Visual C++ form so that the user can
+    // double-click on it.
+    if
+    (
+        src->s_filename != NULL
+        &&
+        isstring(objof(src->s_filename))
+        &&
+        src->s_lineno != 0
+    )
+    {
+        filename = src->s_filename->s_chars;
+    }
+    sprintf(debug_str, "%s(%ld): %s\n", filename, src->s_lineno, err);
+    OutputDebugString(debug_str);
+
+    // We'll present the exception just like MFC does.
+    switch (MessageBox(widb_wnd, err, "ICI Exception", MB_ICONERROR | MB_ABORTRETRYIGNORE))
+    {
+        case IDABORT:
+            ExitProcess(1);
+
+        case IDRETRY:
+            // Remember the scope in case they want to look at the variables.
+            widb_scope = ici_vs.a_top[-1];
+            incref(widb_scope);
+
+            // Stop executing and show the debugger until the user opts to continue in
+            // some way.
+            incref(src);
+            widb_debug(src);
+            decref(src);
+            decref(widb_scope);
+            widb_scope = NULL;
+            break;
+
+        case IDIGNORE:
+            break;
+    }
+}
+
+
+/*
+ * ici_debug_watch - called upon each assignment.
+ *
+ * Parameters:
+ *
+ *      o       The object being assigned into. For normal variable
+ *              assignments this will be a struct, part of the scope.
+ *      k       The key being used, typically a string, the name of a
+ *              variable.
+ *      v       The value being assigned to the object.
+ */
+static void
+ici_debug_watch(object_t *o, object_t *k, object_t *v)
+{
+}
+
+/*
+ * The interface to the debugging functions.  This replaces the default
+ * interface which consists only of stub functions.
+ */
+debug_t ici_debug_funcs =
+{
+    ici_debug_error,
+    ici_debug_fncall,
+    ici_debug_fnresult,
+    ici_debug_src,
+    ici_debug_watch
+};
+
+/* EXTERN
+ * debug_break - Stops executing ICI code and starts the debugger.
+ *
+ */
+static int
+f_debug_break()
+{
+    // This will ensure that we stop at the very next line.
+    widb_step_over_depth = -99999;
+
+    return null_ret();
+}
+
+
+/* EXTERN
+ * f_WIDB_view_object - Makes WIDB_view_object available to ICI code.
+ *
+ * Parameters:
+ * o            The object to view, this may be of any ICI type, but only
+ *              string, array, struct, float, pointer and int may be decoded.
+ */
+static int
+f_WIDB_view_object()
+{
+    object_t *o;
+    if (ici_typecheck("o", &o))
+        return 1;
+    WIDB_view_object(o, NULL);
+    return null_ret();
+}
+
+
+/*
+ * widb_ici_uninit
+ *
+ *  Cleans up anything allocated by this module.
+ */
+static int
+widb_ici_uninit()
+{
+    if (widb_exec_name_stack != NULL)
+    {
+        decref(widb_exec_name_stack);
+        widb_exec_name_stack = NULL;
+    }
+    return 0;
+}
+
+/*
+ * widb_ici_init
+ *
+ * Registers the ICI functions needed by the ICI debugger.
+ */
+object_t *
+ici_widb_library_init() /* Was widb_ici_init() */
+{
+    static wrap_t   wrap;
+    struct_t        *s;
+
+    static cfunc_t cfuncs[] =
+    {
+        {CF_OBJ, "break",       f_debug_break      },
+        {CF_OBJ, "view",        f_WIDB_view_object },
+        {CF_OBJ}
+    };
+
+    if ((s = new_struct()) == NULL)
+        return NULL;
+    if (ici_assign_cfuncs(s, cfuncs))
+        return NULL;
+    ici_debug = &ici_debug_funcs;
+    ici_debug_enabled = 1;
+    /* To save users the effort of enabling profiling, we'll do it for them. */
+#ifndef NOPROFILE
+    WIDB_enable_profiling_display();
+#endif
+
+    /* Ensure that this module is uninitialised on exit. */
+    wrap.w_func = widb_ici_uninit;
+    wrap.w_next = wraps;
+    wraps = &wrap;
+    return objof(s);
+}
+
+#endif

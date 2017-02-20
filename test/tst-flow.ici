@@ -1,0 +1,14 @@
+static x;
+static y;
+
+y = 0;
+forall (x in [array 4, 5, 6])
+    y += x;
+if (y != 15)
+    fail("forall loop gave wrong sum");
+
+y = 0;
+forall (x in NULL)
+    y += x;
+if (y != 0)
+    fail("NULL forall loop failed");

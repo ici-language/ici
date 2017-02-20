@@ -1,0 +1,213 @@
+#define ICI_CORE
+#include "str.h"
+#include "struct.h"
+#include "exec.h"
+#include "int.h"
+#include "primes.h"
+
+string_t *
+new_string(int nchars)
+{
+    register object_t   *o;
+
+    nchars += sizeof(string_t);
+    if ((o = (object_t *)ici_nalloc(nchars)) == NULL)
+        return NULL;
+    o->o_tcode = TC_STRING;
+    assert(ici_typeof(o) == &string_type);
+    o->o_flags = 0;
+    o->o_nrefs = 1;
+    rego(o);
+    if (sizeof(string_t) + nchars <= 127)
+        o->o_leafz = sizeof(string_t) + nchars;
+    stringof(o)->s_nchars = nchars - sizeof(string_t);
+    stringof(o)->s_chars[stringof(o)->s_nchars] = '\0';
+    stringof(o)->s_struct = NULL;
+    stringof(o)->s_slot = NULL;
+    stringof(o)->s_hash = 0;
+    stringof(o)->s_vsver = 0;
+    return stringof(o);
+}
+
+/*
+ * Note that the memory allocated to a string is always at least one byte
+ * larger than the listed size and the extra byte contains a '\0'.  For
+ * when a C string is needed.
+ */
+string_t *
+new_name(char *p, int nchars)
+{
+    register string_t   *s;
+    static struct
+    {
+        string_t        s;
+        char            d[40];
+    }
+        proto   = {{OBJ(TC_STRING)}};
+
+    assert(nchars >= 0);
+    if ((size_t)nchars < sizeof proto.d)
+    {
+        proto.s.s_nchars = nchars;
+        memcpy(proto.s.s_chars, p, nchars);
+        proto.s.s_chars[nchars] = '\0';
+        proto.s.s_hash = 0;
+        if ((s = stringof(atom_probe(objof(&proto.s)))) != NULL)
+        {
+            incref(s);
+            return s;
+        }
+        nchars += sizeof(string_t);
+        if ((s = (string_t *)ici_nalloc(nchars)) == NULL)
+            return NULL;
+        memcpy((char *)s, (char *)&proto.s, nchars);
+        rego(s);
+        objof(s)->o_leafz = nchars;
+        return stringof(atom(objof(s), 1));
+    }
+    if ((s = (string_t *)ici_nalloc(nchars + sizeof(string_t))) == NULL)
+        return NULL;
+    s->o_head = proto.s.o_head;
+    assert(ici_typeof(s) == &string_type);
+    rego(s);
+    if (sizeof(string_t) + nchars <= 127)
+        objof(s)->o_leafz = sizeof(string_t) + nchars;
+    s->s_nchars = nchars;
+    s->s_struct = NULL;
+    s->s_slot = NULL;
+    s->s_vsver = 0;
+    memcpy(s->s_chars, p, nchars);
+    s->s_chars[nchars] = '\0';
+    s->s_hash = 0;
+    return stringof(atom(objof(s), 1));
+}
+
+string_t *
+new_cname(char *p)
+{
+    register string_t   *s;
+
+    if ((s = new_name(p, strlen(p))) == NULL)
+        return NULL;
+    return s;
+}
+
+/*
+ * Same as new_cname(), except the result is decref.
+ */
+string_t *
+get_cname(char *p)
+{
+    string_t    *s;
+
+    if ((s = new_name(p, strlen(p))) == NULL)
+        return NULL;
+    decref(s);
+    return s;
+}
+
+int
+need_string(string_t **p, char *s)
+{
+    if (*p != NULL)
+        return 0;
+    return (*p = new_cname(s)) == NULL;
+}
+
+/*
+ * Mark this and referenced unmarked objects, return memory costs.
+ * See comments on t_mark() in object.h.
+ */
+static unsigned long
+mark_string(object_t *o)
+{
+    o->o_flags |= O_MARK;
+    return sizeof(string_t) + stringof(o)->s_nchars - 1;
+}
+
+/*
+ * Returns 0 if these objects are equal, else non-zero.
+ * See the comments on t_cmp() in object.h.
+ */
+static int
+cmp_string(object_t *o1, object_t *o2)
+{
+    if (stringof(o1)->s_nchars != stringof(o2)->s_nchars)
+        return 1;
+    return memcmp
+    (
+        stringof(o1)->s_chars,
+        stringof(o2)->s_chars,
+        stringof(o1)->s_nchars
+    );
+}
+
+/*
+ * Free this object and associated memory (but not other objects).
+ * See the comments on t_free() in object.h.
+ */
+static void
+free_string(object_t *o)
+{
+    ici_nfree(o, sizeof(string_t) + stringof(o)->s_nchars);
+}
+
+/*
+ * Return a hash sensitive to the value of the object.
+ * See the comment on t_hash() in object.h
+ */
+unsigned long
+ici_hash_string(object_t *o)
+{
+    unsigned long       h;
+    unsigned char       *p;
+    unsigned char       *ep;
+
+    if (stringof(o)->s_hash)
+        return stringof(o)->s_hash;
+    p = stringof(o)->s_chars;
+    ep = p + stringof(o)->s_nchars;
+    h = STR_PRIME_0;
+    while ((ep - p) & 0x3)
+        h = *p++ + h * 31;
+    while (p < ep)
+    {
+        h = *p++ + h * 17;
+        h = *p++ + h * 19;
+        h = *p++ + h * 23;
+        h = *p++ + h * 31;
+    }
+    return stringof(o)->s_hash = h;
+}
+
+/*
+ * Return the object at key k of the obejct o, or NULL on error.
+ * See the comment on t_fetch in object.h.
+ */
+static object_t *
+fetch_string(object_t *o, object_t *k)
+{
+    register int        i;
+
+    if (!isint(k))
+        return fetch_simple(o, k);
+    if ((i = (int)intof(k)->i_value) < 0 || i >= stringof(o)->s_nchars)
+        k = objof(new_name("", 0));
+    else
+        k = objof(new_name(&stringof(o)->s_chars[i], 1));
+    if (k != NULL)
+        decref(k);
+    return k;
+}
+
+type_t  string_type =
+{
+    mark_string,
+    free_string,
+    ici_hash_string,
+    cmp_string,
+    copy_simple,
+    assign_simple,
+    fetch_string,
+    "string"
+};

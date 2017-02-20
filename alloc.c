@@ -1,0 +1,269 @@
+#define ICI_CORE
+#include <fwd.h>
+
+/*
+ * The following define is useful during debug and testing. It will
+ * cause every call to an allocation function to garbage collect.
+ * It will be very slow, but problems with memory will be tripped
+ * over sooner. To be effective, you really also need to set
+ * ICI_ALLALLOC in alloc.h.
+ */
+#define ALLCOLLECT      0       /* Collect on every alloc call. */
+
+/*
+ * A chunk of memory in which to keep dense allocations of small
+ * objects to avoid boundary word overheads and allow simple fast
+ * free lists.
+ */
+typedef struct achunk   achunk_t;
+struct achunk
+{
+    char                c_data[1024];
+    achunk_t            *c_next;
+};
+
+/*
+ * The amount of memory we currently have allocated, and a limit.
+ * When we reach the limit, a garbage collection is triggered (which
+ * will presumably reduce ici_mem and re-evaluate the limit).
+ */
+unsigned long           ici_mem;
+unsigned long           ici_mem_limit;
+
+/*
+ * A count and estimated total size of outstanding allocs done through
+ * ici_alloc and yet freed with ici_free.
+ */
+int                     ici_n_allocs;
+unsigned long           ici_alloc_mem;
+
+/*
+ * Temporary pointer used in the ici_talloc/ici_tfree macros.
+ */
+char                    *ici_fltmp;
+
+/*
+ * The base pointers of our four fast free lists.
+ */
+char                    *ici_flists[4];
+
+/*
+ * The current next available block, and limits, within each of
+ * the allocation chunks for each of the size categories we have
+ * for small objects.
+ */
+static char             *mem_next[4];
+static char             *mem_limit[4];
+
+/*
+ * The global list of all chunks of small dense objects we have allocated.
+ * We just keep this so we can free them all on interpreter shutdown.
+ */
+static achunk_t         *ici_achunks;
+
+/*
+ * Function to do the work for the ici_talloc() macro and ici_nalloc().
+ * 'fi' is the free list number if small, else the same as z. 'z' is
+ * the size being allocated.
+ *
+ * Returns the newly allocated block, else NULL on error, ususal
+ * convention.
+ */
+void *
+ici_talloc_work(int fi, size_t z)
+{
+    char                *r;
+    char                **fp;
+    int                 cz;
+    achunk_t            *c;
+
+#if !ALLCOLLECT
+    if ((ici_mem += z) > ici_mem_limit)
+#endif
+        collect();
+#if !ICI_ALLALLOC
+    if (fi < nels(ici_flists))
+    {
+        /*
+         * Small block. Try to get it off one of the fast free lists.
+         */
+        fp = &ici_flists[fi];
+        if ((r = *fp) != NULL)
+        {
+            *fp = *(char **)r;
+            return r;
+        }
+        /*
+         * Free list empty. Rip off a bit more memory from the current
+         * chunk.
+         */
+        cz = 8 << fi;
+        if (mem_next[fi] + cz <= mem_limit[fi])
+        {
+            r = mem_next[fi];
+            mem_next[fi] += cz;
+            return r;
+        }
+        /*
+         * Current chunk empty. Allocate another one.
+         */
+        if ((c = (achunk_t *)malloc(sizeof(achunk_t))) == NULL)
+        {
+            collect();
+            if ((c = (achunk_t *)malloc(sizeof(achunk_t))) == NULL)
+                goto fail;
+        }
+        c->c_next = ici_achunks;
+        ici_achunks = c;
+        mem_next[fi] = (char *)(((unsigned long)c->c_data + 0x3F) & ~0x3F);
+        mem_limit[fi] = &c->c_data[nels(c->c_data)];
+        r = mem_next[fi];
+        mem_next[fi] += cz;
+        return r;
+    }
+#endif /* ICI_ALLALLOC */
+    if ((r = malloc(z)) == NULL)
+    {
+        collect();
+        if ((r = malloc(z)) == NULL)
+            goto fail;
+    }
+    return r;
+
+fail:
+    ici_error = "ran out of memory";
+    return NULL;
+}
+
+
+/*
+ * Allocate an object of the given size. Return NULL on failure, usual
+ * conventions. The resulting object *must* be freed with ici_nfree().
+ * Note that ici_nfree() also requires to know the size of the object
+ * being freed.
+ *
+ * This function is preferable to ici_alloc(). It should be used if
+ * you can know the size of the allocation when the free happens so
+ * you can call ici_nfree(). If this isn't the case you will have to
+ * use ici_alloc().
+ */
+void *
+ici_nalloc(size_t z)
+{
+    int                 fi;
+    static char const   which_flist[] = {0, 1, 2, 2, 3, 3, 3, 3};
+
+    if (z <= 64)
+        fi = which_flist[(z - 1) >> 3];
+    else
+        fi = z;
+    return ici_talloc_work(fi, z);
+}
+
+/*
+ * Free an object allocated with ici_nalloc(). The size passed here
+ * must be exactly the same size passed to ici_nalloc() when the
+ * allocation was made. If you don't know the size, you should have
+ * called ici_alloc() in the first place. This function is also used
+ * to do the work for the ici_tfree() macro.
+ */
+void
+ici_nfree(void *p, size_t z)
+{
+    int                 fi;
+    static char const   which_flist[] = {0, 1, 2, 2, 3, 3, 3, 3};
+
+    ici_mem -= z;
+#if !ICI_ALLALLOC
+    if (z <= 64)
+    {
+        /*
+         * Small block. Just push it onto one of our fast free lists.
+         */
+        fi = which_flist[(z - 1) >> 3];
+        *(char **)p = ici_flists[fi];
+        ici_flists[fi] = (char *)p;
+    }
+    else
+#endif
+    {
+        free(p);
+    }
+}
+
+/*
+ * Allocate a block of size z. This just maps to a raw malloc() but
+ * does garbage collection as necessary and attempts to track memory
+ * usage to control when the garbage collector runs. Block allocated
+ * with this should be freed with ici_free().
+ *
+ * It is preferable to use ici_talloc(), or failing that, or ici_nalloc(),
+ * instead of this function. But both require that you can match the
+ * allocation by calling ici_tfree() or ici_nalloc() with the original
+ * type/size you passed in the allocation call. Those functions use
+ * dense fast free lists for small objects, and track memory usage
+ * better.
+ */
+void *
+ici_alloc(size_t z)
+{
+    void                *p;
+#if !ALLCOLLECT
+    if ((ici_mem += z) > ici_mem_limit)
+#endif
+        collect();
+    ++ici_n_allocs;
+    ici_alloc_mem += z;
+    if ((p = malloc(z)) == NULL)
+    {
+        collect();
+        if ((p = malloc(z)) == NULL)
+        {
+            ici_error = "ran out of memory";
+            return NULL;
+        }
+    }
+    return p;
+}
+
+/*
+ * Free a block allocated with ici_alloc().
+ */
+void
+ici_free(void *p)
+{
+    size_t              z;
+
+    /*
+     * This makes a really dodgy attempt to track memory usage. Because
+     * we don't know how big the block being freed is, we just assume it
+     * is 1/Nth the size of the number of such mysterious allocations
+     * we have. Does a division - yuk.
+     */
+    z = ici_alloc_mem / ici_n_allocs;
+    if (z > ici_mem)
+        z = ici_mem;
+    if (z > ici_alloc_mem)
+        z = ici_alloc_mem;
+    ici_mem -= z;
+    ici_alloc_mem -= z;
+    --ici_n_allocs;
+    free(p);
+}
+
+/*
+ * Drop (free) all memory associated with our dense allocations of small
+ * objects and fast free lists. For use in interpreter shutdown. Will
+ * cause total disaster if called at any other time.
+ */
+void
+ici_drop_all_small_allocations(void)
+{
+    achunk_t            *c;
+
+    while ((c = ici_achunks) != NULL)
+    {
+        ici_achunks = c->c_next;
+        free(c);
+    }
+}

@@ -1,0 +1,376 @@
+/*
+ * This is a basic confidence test.  It tests each function against its
+ * basics modes of operation.
+ *
+ * Each test is made with the assumption that all other features of the
+ * interpreter, except the one being tested, work.
+ */
+
+static x;
+static y;
+static z;
+
+if (array("a", 1, "c") != [array "a", 1, "c"])
+    fail("array() did not produce the expected result");
+if (typeof(array()) != "array")
+    fail("array() did not produce an array");
+if (nels(array()) != 0)
+    fail("array() did not produce a zero length array");
+
+if (copy(1) != 1)
+    fail("simple copy failed");
+
+x = [array 1, 2, [array 3, 4]];
+if ((y = copy(x)) != x)
+    fail("copy of array was not equal");
+if (eq(x, y))
+    fail("copy of array was same object");
+
+x = [struct a=1, b=2, c=[array 3, 4]];
+if ((y = copy(x)) != x)
+    fail("copy of struct was not equal");
+if (eq(x, y))
+    fail("copy of struct was same object");
+
+x = [set 1, 2, [array 3, 4]];
+if ((y = copy(x)) != x)
+    fail("copy of set was not equal");
+if (eq(x, y))
+    fail("copy of set was same object");
+
+/*
+x = 123;
+if (eval("x") != 123)
+    fail("eval() failed to evaluate x");
+if (eval(456) != 456)
+    fail("eval() failed to evaluate 456");
+*/
+
+
+x = 1;
+try
+    fail("testing fail");
+onerror
+{
+    if (error != "testing fail")
+        fail("fail failed to set error");
+    x = 0;
+}
+if (x)
+    fail("fail failed to do onerror clause");
+
+if (!eq(float(1.23), 1.23))
+    fail("float() failed to pass through 1.23");
+if (!eq(float(123), 123.0))
+    fail("float() failed to convert 123 to 123.0");
+if (!eq(float("456"), 456.0))
+    fail("float() failed to convert \"456\" to 456.0");
+if (!eq(float([array]), 0.0))
+    fail("float() failed to convert an array to 0.0");
+
+if (!eq(int(123), 123))
+    fail("int() failed to pass through 123");
+if (!eq(int(12.3), 12))
+    fail("int() failed to convert 12.3 to 12");
+if (!eq(int("456"), 456))
+    fail("int() failed to convert \"456\" to 456");
+if (!eq(int([array]), 0))
+    fail("int() failed to convert an array to 0");
+if (!eq(int(" \t\n\r\f-0xFFFFFFFF"), 1))
+    fail("int() failed to do 32 bit unsigned/signed conversion");
+
+if (eq(1, 1.0))
+    fail("1 and 1.0 were eq()");
+if (eq([array], [array]))
+    fail("two distinct arrays were eq()");
+x = [array 1, 2];
+x = y;
+if (!eq(x, y))
+    fail("same objects were not eq()");
+y = copy(x);
+if (eq(x, y))
+    fail("different objects were eq()");
+y = @y;
+x = @x;
+if (!eq(x, y))
+    fail("same atomic objects were !eq()");
+
+x = 0;
+parse("static x = 1;");
+if (x)
+    fail("parse() didn't happen in new module");
+x = 1;
+parse("static x = 0;", scope());
+if (x)
+    fail("parse() didn't happen in current module");
+
+x = 0;
+parse(sopen("static x = 1;", "r"));
+if (x)
+    fail("file parse() didn't happen in new module");
+x = 1;
+parse(sopen("x = 0;", "r"), scope());
+if (x)
+    fail("file parse() didn't happen in current module");
+
+static l1       = 1;
+static l2       = 1;
+parse("parse(\"extern l2 = 3; l1=10;\"); if (l2 != 3) fail(\"bad extern\");");
+if (l1 != 10)
+    fail("bad scope skip");
+if (l2 != 1)
+    fail("excessive extern effect");
+
+x = 123;
+if (super(scope()).x != 123)
+    fail("scope() returned wrong struct");
+
+if (!isatom("abc"))
+    fail("isatom() reported string as non-atom");
+if (isatom([array]))
+    fail("isatom() reported simple array as atom");
+if (!isatom(@[array]))
+    fail("isatom() reported atomic array as non-atom");
+
+if (!eq(regexp(".*"), #.*#))
+    fail("regexp() didn't produce expected result");
+
+if (nels(123) != 1)
+    fail("nels(123) didn't produce 1");
+if (nels("ab") != 2)
+    fail("nels(\"ab\") didn't produce 1");
+if (nels([array 1, 2, [array]]) != 3)
+    fail("nels(array) didn't produce expected result");
+if (nels([struct a=1, b=2, c=[array], d=4]) != 4)
+    fail("nels(struct) didn't produce expected result");
+if (nels([set 1, 2, [array], 4, 5]) != 5)
+    fail("nels(set) didn't produce expected result");
+if (nels(alloc(5, 1)) != 5)
+    fail("nels(alloc(5, 1)) didn't produce expected result");
+if (nels(alloc(6, 2)) != 6)
+    fail("nels(alloc(6, 2)) didn't produce expected result");
+if (nels(alloc(7, 4)) != 7)
+    fail("nels(alloc(7, 4)) didn't produce expected result");
+
+if (!eq(string("123"), "123"))
+    fail("string() failed to pass through \"123\"");
+if (!eq(string(12.30), "12.3"))
+    fail("string() failed to convert 12.30 to \"12.3\"");
+if (!eq(string(456), "456"))
+    fail("string() failed to convert 456 to \"456\"");
+if (!eq(string([array]), "<array>"))
+    fail("string() failed to convert an array to \"<array>\"");
+
+if (struct("a", 1, "b", 2) != [struct a=1, b=2])
+    fail("struct() failed to produce the expected result");
+if (typeof(struct()) != "struct")
+    fail("struct() failed to produce a struct");
+if (nels(struct()) != 0)
+    fail("struct() failed to produce an empty struct");
+
+if (set("a", 1, "b", 2) != [set "a", 1, "b", 2])
+    fail("set() failed to produce the expected result");
+if (typeof(set()) != "set")
+    fail("set() failed to produce a set");
+if (nels(set()) != 0)
+    fail("set() failed to produce an empty set");
+
+forall
+(
+    x in
+    [array
+        [struct name="int",     obj=123],
+        [struct name="float",   obj=123.0],
+        [struct name="string",  obj="123"],
+        [struct name="struct",  obj=[struct]],
+        [struct name="array",   obj=[array]],
+        [struct name="set",     obj=[set]],
+        [struct name="func",    obj=[func(){}]],
+        [struct name="mem",     obj=$alloc(0)],
+        [struct name="ptr",     obj=$&x],
+        [struct name="regexp",  obj=#.#],
+        [struct name="NULL",    obj=NULL],
+        [struct name="file",    obj=currentfile()],
+    ]
+)
+{
+    if (typeof(x.obj) != x.name)
+        fail(sprintf("typeof() failed to identify %s (gave %s)",
+            x.name, typeof(x.obj)));
+}
+
+x = [array 1, 2, 3];
+if (push(x, "a") != "a")
+    fail("push() didn't return expected value");
+if (x != [array 1, 2, 3, "a"])
+    fail("push() didn't have expected effect");
+
+if (pop(x) != "a")
+    fail("pop() didn't return expected value");
+if (x != [array 1, 2, 3])
+    fail("pop() didn't have expected effect");
+
+static
+afunc(a, b)
+{
+    auto        vargs;
+
+    if (a != 1 || b != 2 || vargs != NULL)
+        fail("call() didn't transfer as expected");
+    return 3;
+}
+if (call(afunc, [array 1, 2]) != 3)
+    fail("call() didn't return correctly");
+
+if (call(afunc, 1, [array 2]) != 3)
+    fail("call() didn't return correctly");
+
+if (call(afunc, 1, 2, NULL) != 3)
+    fail("call() didn't return correctly");
+
+x = keys([struct a=1, b=2]);
+if (x != [array "a", "b"] && x != [array "b", "a"])
+    fail("keys() didn't produce the expected result");
+
+if (smash("ab cd ef", " ") != [array "ab", "cd", "ef"])
+    fail("smash() didn't produce the expected result");
+if (smash("ab cd ef", # #, "\\0") != [array "ab", "cd"])
+    fail("smash() didn't produce the expected result");
+if (smash("ab cd ef", # #, "\\0", 0) != [array "ab", "cd"])
+    fail("smash() didn't produce the expected result");
+if (smash("ab cd ef", # #, "\\0", 1) != [array "ab", "cd", "ef"])
+    fail("smash() didn't produce the expected result");
+if (smash("ab cd ef", #(.) #, "x\\0", 1) != [array "xa", "xc", "ef"])
+    fail("smash() didn't produce the expected result");
+if (tochar(0x41) != "A")
+    fail("tochar() didn't produce the expected result");
+
+if (toint("A") != 0x41)
+    fail("toint() didn't produce the expected result");
+
+if (typeof(rand()) != "int")
+    fail("rand() didn't produce an int");
+if (rand() == rand())
+    fail("two successive rand() calls gave same result");
+if (rand(123) != rand(123))
+    fail("two rand() calls with same seed gave different results");
+
+
+if (interval("12345", -1) != "5")
+    fail("interval() with neg offset failed");
+if (interval("12345", -3, 2) != "34")
+    fail("interval() with neg offset and count failed");
+if (interval("12345", 2) != "345")
+    fail("interval() with 1 arg on string count failed");
+if (interval("12345", 2, 2) != "34")
+    fail("interval() with 2 arg on string count failed");
+if (interval("12345", 2, 10) != "345")
+    fail("interval() with 2 arg, 2nd large, on string count failed");
+
+if (interval([array 1, 2, 3, 4, 5], -1) != [array 5])
+    fail("interval() with array and neg offset failed");
+if (interval([array 1, 2, 3, 4, 5], -3, 2) != [array 3, 4])
+    fail("interval() with array and neg offset and count failed");
+if (interval([array 1, 2, 3, 4, 5], 2) != [array 3, 4, 5])
+    fail("interval() with 1 arg on array count failed");
+if (interval([array 1, 2, 3, 4, 5], 2, 2) != [array 3, 4])
+    fail("interval() with 2 arg on array count failed");
+if (interval([array 1, 2, 3, 4, 5], 2, 10) != [array 3, 4, 5])
+    fail("interval() with 2 arg, 2nd large, on array count failed");
+
+if (explode("ABC") != [array 0x41, 0x42, 0x43])
+    fail("explode() didn't produce the expected result");
+
+if (implode([array 0x41, "BC", 0x44]) != "ABCD")
+    fail("implode() didn't produce the expected result");
+
+if (getfile(sopen("ABCD", "r")) != "ABCD")
+    fail("sopen() failed to produce the expected result");
+
+if (num("0x123A") != 0x123A)
+    fail("num(\"0x123A\") returned wrong value");
+if (typeof(num("0x123A")) != "int")
+    fail("num(\"0x123A\") returned wrong type");
+if (num("1.23e2") != 1.23e2)
+    fail("num(\"1.23e2\") returned wrong value");
+if (typeof(num("1.23e2")) != "float")
+    fail("num(\"1.23e2\") returned wrong type");
+if (num(1.23e2) != 1.23e2)
+    fail("num(1.23e2) returned wrong value");
+if (typeof(num(1.23e2)) != "float")
+    fail("num(1.23e2) returned wrong type");
+if (num(123) != 123)
+    fail("num(123) returned wrong value");
+if (typeof(num(123)) != "int")
+    fail("num(123) returned wrong type");
+
+if (!eq(abs(123), 123))
+    fail("abs(123) not eq to 123");
+if (abs(123.5) != 123.5)
+    fail("abs(123.5) != 123.5");
+if (abs(-123) != 123)
+    fail("abs(-123) != 123");
+if (typeof(abs(-123)) != "int")
+    fail("abs(-123) not an int");
+if (abs(-123.5) != 123.5)
+    fail("abs(-123.5) != 123.5");
+
+if (calendar(calendar(0.0)) != 0.0)
+    fail("calendar(calendar(0.0)) != 0.0");
+
+if (calendar(calendar(-12345.0)) != -12345.0)
+    fail("calendar(calendar(-12345.0)) != -12345.0");
+
+x = calendar(0.0);
+++x.second;
+++x.minute;
+++x.hour;
+++x.day;
+if (calendar(x) != 1 + 60 + 60 * 60 + 60 * 60 * 24)
+    fail("failed to advance calendar");
+
+if (typeof(currentfile()) != "file")
+    fail("currentfile() didn't return a file");
+if ((x = getline(currentfile())) != "This is the rest of this line")
+{
+    fail("did not read correct data from currentfile");
+    exit(0);
+}
+else
+    ;This is the rest of this line
+
+x = gettokens(currentfile())
+;  this is  the input
+if (x != [array "this", "is", "the", "input"])
+    fail("simple gettokens returned wrong value");
+
+x = gettokens(currentfile(), ':')
+;::is:input:
+if (x != [array "", "", "is", "input", ""])
+    fail("gettokens returned wrong value");
+
+
+    /* To be done...
+    {CF_OBJ,    "del",          f_del},
+    {CF_OBJ,    "alloc",        f_alloc},
+    {CF_OBJ,    "mem",          f_mem},
+    {CF_OBJ,    "super",        f_super},
+    {CF_OBJ,    "sin",          f_math, (int (*)())sin,         "f=f"},
+    {CF_OBJ,    "cos",          f_math, (int (*)())cos,         "f=f"},
+    {CF_OBJ,    "tan",          f_math, (int (*)())tan,         "f=f"},
+    {CF_OBJ,    "asin",         f_math, (int (*)())asin,        "f=f"},
+    {CF_OBJ,    "acos",         f_math, (int (*)())acos,        "f=f"},
+    {CF_OBJ,    "atan",         f_math, (int (*)())atan,        "f=f"},
+    {CF_OBJ,    "atan2",        f_math, (int (*)())atan2,       "f=ff"},
+    {CF_OBJ,    "exp",          f_math, (int (*)())exp,         "f=f"},
+    {CF_OBJ,    "log",          f_math, (int (*)())log,         "f=f"},
+    {CF_OBJ,    "log10",        f_math, (int (*)())log10,       "f=f"},
+    {CF_OBJ,    "pow",          f_math, (int (*)())pow,         "f=ff"},
+    {CF_OBJ,    "sqrt",         f_math, (int (*)())sqrt,        "f=f"},
+    {CF_OBJ,    "waitfor",      f_waitfor},
+*/
+
+/* exit() not tested here. */
+/* import() not tested here. */
+/* vstack() not tested here. */
+/* sprintf() not tested here. */

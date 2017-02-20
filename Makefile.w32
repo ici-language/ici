@@ -1,0 +1,146 @@
+#
+# For compiling a standard version for WIN32 with Microsoft C
+#
+CC  = cl /nologo
+RM  = del
+SAFEICI = ici
+
+#
+# The major ICI version number.
+#
+VER=4
+
+#
+# And as MS's NMAKE doesn't know about library dependencies there's
+# no point in us using them! So it's back to plain object file dependencies
+# for this makefile (and lots of .obj's littering the directory).
+#
+
+#
+# All these options are in the documentation, but here is a ready-ref:
+# /GB   Optimise for a Pentium, but blend in other processor optimisations.
+# /MD   Use multithreaded release DLL versions of standard libs.
+# /Zi   Us a "program database" for debug info.
+# /O2p- Optimisation level, and a float thing.
+#       (O2 implies /Og /Oi /Ot /Oy /Ob1 /Gs /Gf /Gy)
+# /GF   Merged and read-only strings.
+#
+CFLAGS  = /GB /MD /Zi /O2p-b2 /GF /DNDEBUG /I.
+LDFLAGS = /MD /Zi
+LIBS    = user32.lib wsock32.lib advapi32.lib winmm.lib
+
+#
+# If you want to debug...
+#
+#CFLAGS = /GB /MDd /Zi /Od /Op- -I.
+#LDFLAGS = /MDd /Zi
+
+OBJS    = \
+    alloc.obj aplfuncs.obj arith.obj array.obj call.obj \
+    catch.obj cfunc.obj cfunco.obj clib.obj clib2.obj \
+    compile.obj conf.obj control.obj events.obj exec.obj \
+    exerror.obj file.obj findpath.obj float.obj forall.obj \
+    func.obj handle.obj icimain.obj init.obj int.obj \
+    lex.obj load.obj mark.obj mem.obj method.obj \
+    mkvar.obj nptrs.obj null.obj \
+    object.obj oofuncs.obj op.obj parse.obj pc.obj profile.obj \
+    ptr.obj refuncs.obj regexp.obj set.obj sfile.obj \
+    signals.obj skt.obj smash.obj src.obj \
+    sstring.obj string.obj \
+    struct.obj syserr.obj thread.obj \
+    trace.obj unary.obj uninit.obj win32err.obj \
+    wrap.obj buf.obj strtol.obj \
+    idb.obj idb2.obj
+
+PCREOBJS=\
+    study.obj maketables.obj pcre.obj
+
+WIDBSOURCES = \
+	widb/widb_ici.c widb/widb_sources.c widb/widb_viewobj.c \
+	widb/widb_wnd.c widb/widb.res
+
+all		: ici$(VER).dll ici.h ici.exe wici.exe ici$(VER)widb.dll
+
+ici$(VER).dll:	$(OBJS) $(PCREOBJS) ici.def
+		$(CC) $(LDFLAGS) -Fe$@ $(OBJS) $(PCREOBJS) $(LIBS) /link /DEBUG /DEBUGTYPE:BOTH /DLL /def:ici.def
+
+ici.h		: mk-ici-h.ici
+		$(SAFEICI) mk-ici-h.ici conf-w32.h
+
+ici.exe		: main.obj ici$(VER).dll
+		$(CC) $(LDFLAGS) -Fe$@ main.obj setargv.obj ici$(VER).lib
+
+
+wici.exe:	winmain.obj ici$(VER).dll
+		$(CC) $(LDFLAGS) -Fe$@ winmain.obj ici$(VER).lib user32.lib
+
+ici$(VER)widb.dll:	$(WIDBSOURCES)
+		rc widb/widb.rc
+		$(CC) $(CFLAGS) -Fe$@ ici$(VER).lib $(LIBS) comctl32.lib $(WIDBSOURCES) /link /DLL /export:ici_widb_library_init
+
+main.obj	: main.c
+		$(CC) -c -Fo$@ $(CFLAGS) main.c
+
+winmain.obj	: winmain.c
+		$(CC) -c -Fo$@ $(CFLAGS) winmain.c
+
+study.obj	: pcre/study.c
+		$(CC) -c -Fo$@ $(CFLAGS) pcre/study.c
+
+maketables.obj	: pcre/maketables.c
+		$(CC) -c -Fo$@ $(CFLAGS) pcre/maketables.c
+
+pcre.obj	: pcre/pcre.c
+		$(CC) -c -Fo$@ $(CFLAGS) pcre/pcre.c
+
+clean:
+		@-for %%f in ( $(OBJS) $(PCREOBJS) $(TARGET) *.ilk *.pdb ici$(VER).lib ici.exp ) do $(RM) %%f
+
+#
+# No mention of fwd.h or alloc.h, but everything depends on it.
+#
+string.h         : sstring.h
+alloc.obj        : trace.h
+arith.obj        : exec.h float.h int.h op.h parse.h ptr.h str.h struct.h buf.h binop.h
+array.obj        : ptr.h exec.h op.h int.h buf.h
+call.obj         : buf.h exec.h func.h int.h float.h str.h null.h op.h
+catch.obj        : exec.h catch.h op.h func.h
+cfunc.obj        : exec.h func.h str.h int.h float.h struct.h set.h op.h ptr.h buf.h file.h re.h null.h parse.h mem.h
+clib.obj         : file.h func.h op.h int.h float.h str.h buf.h exec.h
+clib2.obj        : buf.h func.h
+compile.obj      : parse.h array.h op.h str.h
+conf.obj         : func.h
+control.obj      : exec.h op.h int.h buf.h pc.h struct.h null.h forall.h catch.h
+exec.obj         : exec.h op.h catch.h ptr.h func.h str.h buf.h pc.h int.h struct.h set.h parse.h float.h re.h src.h null.h forall.h trace.h binop.h
+exerror.obj      : str.h buf.h
+file.obj         : file.h
+float.obj        : float.h
+forall.obj       : exec.h struct.h set.h forall.h str.h buf.h
+func.obj         : func.h exec.h ptr.h struct.h op.h pc.h str.h catch.h buf.h mark.h null.h
+icimain.obj      : ptr.h exec.h file.h str.h struct.h buf.h wrap.h func.h
+init.obj         : func.h buf.h struct.h
+int.obj          : int.h
+lex.obj          : parse.h file.h buf.h src.h array.h trace.h
+mark.obj         : mark.h
+mem.obj          : mem.h int.h buf.h
+mkvar.obj        : exec.h struct.h
+null.obj         : null.h
+object.obj       : exec.h buf.h int.h str.h float.h func.h
+op.obj           : op.h exec.h
+parse.obj        : parse.h func.h str.h struct.h buf.h file.h op.h exec.h
+pc.obj           : exec.h pc.h
+ptr.obj          : exec.h ptr.h struct.h int.h op.h buf.h
+regexp.obj       : str.h re.h exec.h op.h buf.h
+set.obj          : object.h set.h op.h int.h buf.h null.h
+sfile.obj        : file.h
+skt.obj          : buf.h exec.h op.h func.h int.h set.h struct.h str.h skt.h
+smash.obj        :
+src.obj          : exec.h src.h
+string.obj       : str.h struct.h exec.h int.h
+sstring.obj      : str.h object.h sstring.h
+struct.obj       : struct.h ptr.h exec.h func.h op.h int.h buf.h str.h pc.h
+syscall.obj      : func.h op.h exec.h
+syserr.obj       :
+trace.obj        : func.h object.h trace.h file.h set.h struct.h array.h re.h str.h int.h float.h exec.h op.h
+unary.obj        : exec.h float.h int.h op.h parse.h buf.h null.h
+wrap.obj         : wrap.h

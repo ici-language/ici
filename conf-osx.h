@@ -1,0 +1,36 @@
+#ifndef ICI_CONF_H
+#define ICI_CONF_H
+
+#define float_t ici_float_t
+#define int_t ici_int_t
+
+#include <sys/param.h>
+#undef isset
+
+#define NOEVENTS        /* Event loop and associated processing. */
+
+#define NOPROFILE       /* Profiler, see profile.c. */
+#define NOTRACE         /* For debugging. */
+
+#undef  NOMATH          /* Trig and etc. */
+#undef  NOWAITFOR       /* Requires select() or similar system primitive. */
+#undef  NOSYSTEM        /* Command interpreter (shell) escape. */
+#undef  NOPIPES         /* Requires popen(). */
+#undef  NOSKT           /* BSD style network interface. */
+#undef  NODIR           /* Directory reading function, dir(). */
+#undef  NOPASSWD        /* UNIX password file access */
+#undef  NODLOAD         /* Dynamic loading of native machine code modules. */
+#undef  NOSTARTUPFILE   /* Parse a standard file of ICI code at init time. */
+#undef  NODEBUGGING     /* Debugger interface and functions */
+#undef  NOSIGNALS       /* ICI level signal handling */
+
+#define CONFIG_STR "Mac OS X"
+
+#ifndef PREFIX
+#define PREFIX  "/usr/local/"
+#endif
+
+#define ICI_DLL_EXT     ".dylib"
+#define NEED_UNDERSCORE_ON_SYMBOLS
+
+#endif /*ICI_CONF_H*/

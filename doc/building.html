@@ -1,0 +1,326 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<TITLE>Notes on building ICI</TITLE>
+<META NAME="Generator" CONTENT="TextPad 3.0">
+<META NAME="Author" CONTENT="Tim Long">
+<META NAME="Keywords" CONTENT="ICI">
+<META NAME="Description" CONTENT="ICI low level maintenance and extension">
+</HEAD>
+
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#FF0000" VLINK="#800000" ALINK="#FF00FF" BACKGROUND="?">
+<H1>Notes on building ICI</H1>
+<P ALIGN="left">
+    <I>This documentation is maintained in hand-crafted HTML in order
+    to allow well-behaved revision control and simultaneous edits by
+    different people. Please don't use WYSIWIG editors. Sorry if that
+    makes it hard.</I>
+<P ALIGN="left">
+
+<A NAME="contents">
+<H2>Contents</H2>
+</A>
+
+<UL>
+    <LI><A HREF="#summary_of_platforms">Summary of platforms</A>
+    <LI><A HREF="#supported">Building ICI for a supported UNIX like platform</A>
+    <LI><A HREF="#ICI_on_windows">ICI on Microsoft Windows</A>
+    <LI><A HREF="#Configuration">Configuration</A>
+    <UL>
+        <LI><A HREF="#Config_change">Changing the configuration</A>
+    </UL>
+    <LI><A HREF="#ICI_extentsions">General notes on building ICI and extensions</A>
+    <LI><A HREF="#ICI_as_extentsion">ICI as an extension</A>
+</UL>
+
+<A NAME="summary_of_platforms">
+<H2>Summary of platforms</H2>
+</A>
+<TABLE BORDER=1 CELLSPACING=1 CELLPADDING=1 WIDTH="100%">
+<TR ALIGN="left" VALIGN="top">
+    <TH>Platform</TH>
+    <TH>Makefile</TH>
+    <TH>Config file</TH>
+    <TH>Contacts</TH>
+    <TH>Notes</TH>
+</TR>
+<TR ALIGN="left" VALIGN="top">
+    <TD>Windows (All Win32)</TD>
+    <TD>Makefile.w32</TD>
+    <TD>conf-w32.h</TD>
+    <TD>Tim Long</TD>
+    <TD><A HREF="#ICI_on_Windows">ICI on Microsoft Windows</A></TD>
+</TR>
+<TR ALIGN="left" VALIGN="top">
+    <TD>Linux</TD>
+    <TD>Makefile.linux</TD>
+    <TD>conf-linux.h</TD>
+    <TD>Andy Newman</TD>
+    <TD>&nbsp;</TD>
+</TR>
+<TR ALIGN="left" VALIGN="top">
+    <TD>BeOS (x86)</TD>
+    <TD>Makefile.beos</TD>
+    <TD>conf-beos.h</TD>
+    <TD>XXX</TD>
+    <TD>&nbsp;</TD>
+</TR>
+<TR ALIGN="left" VALIGN="top">
+    <TD>BSD</TD>
+    <TD>Makefile.bsd</TD>
+    <TD>conf-bsd.h</TD>
+    <TD>Andy Newman</TD>
+    <TD><A HREF="#ICI_on_BSD">ICI on BSD Unix</A></TD>
+</TR>
+</TABLE>
+
+<A NAME="supported">
+<H2>Building ICI for a supported UNIX-like platform</H2>
+</A>
+    Building ICI for a supported platform is easy. Simply decide what
+    machine you're on and do a <I>make -f Makefile.$MACHINE</I> (where you
+    replace <I>$MACHINE</I> with the name)
+    to create the library <I>lib$MACHINE.a</I>
+    and the interpreter <I>ici.$MACHINE</I>. For example under SunOS 4.1 we use
+    the name "sun" and <I>Makefile.sun</I> to build <I>libsun.a</I>
+    and <I>ici.sun</I>. Under
+    NeXTSTEP we use <I>Makefile.next</I> etc... To see the list of supported
+    systems it suffices to see what configuration files exist, these files
+    have names in the form <I>conf-$MACHINE.</I>h.
+<P ALIGN="left">
+    To install the interpreter use <I>make -f Makefile.$MACHINE install</I>. This
+    installs the interpreter, library, manual pages, documentation, header
+    and startup files. See the Makefiles for details.
+
+<A NAME="ICI_on_Windows">
+<H2>ICI on Microsoft Windows</H2>
+</A>
+    On Windows platforms (any Win32 varient), ICI is compiled into
+    a DLL (Dynamic Link Library) called <I>ici.dll</I>. A definition file
+    (<I>ici.def</I>) is used to specify which identifiers should be
+    externally visible to other programs. Just about everything is,
+    and if something is missing, just add it. The DLL is linked to use
+    multi-threaded DLL based run-time libraries.
+<P ALIGN="left">
+    To build ICI using the Microsoft Visual C environment, use
+    <I>nmake -f Makefile.w32</I> from a shell prompt.
+<P ALIGN="left">
+    Applications may use the ICI DLL as a run-time component by
+    including the library file <I>ici.lib</I> in their build
+    (<I>ici.lib</I> is
+    produced as a side-effect of the build of <I>ici.dll</I>) and,
+    of course, including relevent include files.
+<P ALIGN="left">
+    Two other programs,
+    <I>cici.exe</I> and <I>wici.exe</I> are also built by
+    <I>Makefile.w32dll</I>. They are just simple
+    stubs to invoke the DLL. The first (<I>cici.exe</I>) is a console
+    application, the second (<I>wici.exe</I>) is a window application.
+    They both take command line arguments, but <I>wici.exe</I> does not
+    support wild-card expansion.
+<P ALIGN="left">
+    If wici.exe is copied to another file name, say xxx.exe, and
+    the file xxx.ici exists in the same directory,
+    xxx.ici will be inserted as the first argument
+    as if it had been provided on the command line. This is a
+    kludge to alleviate the lack of #! support under Windows.
+
+<A NAME="ICI_on_BSD">
+<H2>ICI on BSD Unix</H2>
+</A>
+    The BSD configuration of ICI is intended to be portable to
+    all major variants of BSD 4.4 - FreeBSD, NetBSD, OpenBSD, BSDi
+    and Darwin (Mac OS X). Not all these platforms have been tested
+    although no major problems are expected.
+<P ALIGN="left">
+    Individual BSD variants require somewhat different build
+    methods, essentially different invoccations of make(1) to
+    work around differences in the implementation of the
+    <TT>bsd.prog.mk</TT> include file. The reference
+    platform is FreeBSD on which a simple <TT>make</TT> suffices
+    to build the interpreter and a <TT>make install</TT> to install
+    it.  On other systems extra command line arguments may be required.
+<P ALIGN="left">
+    <TABLE BORDER="1">
+      <TR ALIGN="left" VALIGN="top">
+	<TH WIDTH="20%">Variant</TH>
+	<TH>Version</TH>
+	<TH>Make Command</TH>
+	<TH>Comments</TH>
+      </TR>
+      <TR ALIGN="left" VALIGN="top">
+	<TD>FreeBSD</TD>
+	<TD>2.x, 3.x, 4.x, 5.x</TD>
+	<TD><TT>make</TT></TD>
+	<TD>The reference BSD platform.</TD>
+      </TR>
+      <TR ALIGN="left" VALIGN="top">
+	<TD>NetBSD</TD>
+	<TD>1.4, 1.5</TD>
+	<TD><TT>make MANDIR=${PREFIX}/man</TT></TD>
+	<TD>NetBSD installs manual pages differently to FreeBSD
+	  On NetBSD the pages are formatted and the <EM>cat</EM>
+	  version of the page installed. Select ${PREFIX} according
+	  to where you install ICI, this is usally /usr/local</TD>
+      </TR>
+      <TR ALIGN="left" VALIGN="top">
+	<TD>OpenBSD</TD>
+	<TD>2.7</TD>
+	<TD><TT>make</TT></TD>
+	<TD>No significant differences between OpenBSD and FreeBSD.</TD>
+      </TR>
+      <TR ALIGN="left" VALIGN="top">
+	<TD>BSDi</TD>
+	<TD>?</TD>
+	<TD><TT>make?</TT></TD>
+	<TD>This configuration has yet to be tested</TD>
+      </TR>
+      <TR ALIGN="left" VALIGN="top">
+	<TD>Darwin (Mac OS X)</TD>
+	<TD>10.0.4</TD>
+	<TD><TT>make</TT></TD>
+	<TD>Darwin has an odd dynamic loading mechanism and
+	ICI requires the <em>dlcompat</em> library to supporting
+	loading of native code modules.  This library may be
+	found at numerous Mac OS X sites.
+	</TD>
+      </TR>
+    </TABLE>
+
+<A NAME="Configuration">
+<H2>Configuration</H2>
+</A>
+    The distributed makefiles build the interpreter with the default
+    configuration for that system. The configuration is controlled by the
+    system's <I>conf-$MACHINE.h</I> file. A configuration defines which language
+    extensions (collections of builtin functions) are included in the
+    build and overcomes some portability concerns. The file <I>conf-sample.h</I>
+    contains a prototype configuration.
+
+<A NAME="Config_change">
+<H3>Changing the configuration</H3>
+</A>
+    To change the configuration you edit the system's `conf' header file
+    and define or undefine macros to include/exclude features. The default
+    macros are listed below. Defining the macro REMOVES the feature from
+    the build (which is why the names all start with "NO"). The macros
+    are:
+<DL>
+    <DT>NOMATH<DD>
+            Don't include mathematical builtins such as the
+            trigonometric functions etc... This is useful
+            on small or embedded systems that do not require
+            these. On most hosted environments (i.e. those
+            with a real OS) it is better to leave these in
+            as you'll want them one day.
+
+    <DT>NOWIN<DD>
+            Don't include the ICI text windowing functions
+            (the code in win.c). ICI's text windowing provides
+            a simple curses-like environment (but faster and
+            smaller). There is some documentation in the ICI
+            manual page and the source of course.
+
+    <DT>NODB<DD>
+            Obsolete. Previous versions of ICI supported a
+            text file database package which is no longer
+            included. This name used to control its inclusion.
+
+    <DT>NOTRACE<DD>
+            Don't include the trace() function or its support
+            code. This function was an attempt to include some
+            kind of debug tracing in ICI but isn't all that
+            useful.
+
+    <DT>NOWAITFOR<DD>
+            Don't include the waitfor() function. Useful for
+            systems that don't implement BSD's select().
+
+    <DT>NOPIPES<DD>
+            Don't include pipe support (popen etc.. in clib.c).
+            This is used on systems such as MS-DOS that don't
+            provide this.
+
+    <DT>NOSKT<DD>
+            Don't include the BSD sockets functions (skt.c).
+            Again useful on platforms that don't support or
+            require networking.
+
+    <DT>NOSYSCALL<DD>
+            Don't include Unix-style system calls (syscall.c).
+            Many of these functions work on Win32 systems too.
+
+    <DT>NODIR<DD>
+            Don't include the dir() function.
+
+    <DT>NOPASSWD<DD>
+            Don't include the Unix password file access
+            function.
+
+    <DT>NOSTARTUPFILE<DD>
+            Don't look for a startup file or provide the
+            -s switch to stop that behaviour.
+
+    <DT>NODEBUGGING<DD>
+            Don't include the debugging hooks. This may be
+            used to avoid including the debug code and its
+            tests in the execution loop. Might be useful
+            if performance is an issue.
+
+    <DT>ICI_RAND_IS_C_RAND<DD>
+            If this is defined then ICI's rand() function
+            will be implemented via the C library rand()
+            function otherwise ICI uses its own generator
+            function.
+
+    <DT>NOEVENTS<DD>
+            Don't include the event processing framework, see
+            events.c.
+
+    <DT>NOPROFILE<DD>
+            Don't include the profiling support, see profile.c
+            and profile.h.
+</DL>
+
+<A NAME="ICI_extensions">
+<H2>General notes on building ICI and extensions</H2>
+</A>
+    For all systems except MS Windows (for which it is optional),
+    for both ICI main code
+    builds and extension builds, the preprocessor define
+    <A NAME="CONFIG_FILE"><I>CONFIG_FILE</I></A>
+    must be defined to be the name
+    of the ICI configuration file which is specific to the
+    target. The defined value should include double
+    quotes around the name. For example:
+    <P ALIGN="left">
+    <CODE>"conf-sun.h"<BR></CODE>
+    is the file used by SunOS, and this would be defined on
+    the command line or in the project settings with:<BR>
+    <CODE>-DCONFIG_FILE=\"conf-w32.h\"</CODE>
+
+<A NAME="ICI_as_extension">
+<H2>ICI as an extension</H2>
+</A>
+    We are concerned here with the case where ICI does not
+    supply the main entry point, but is invoked from other
+    code.
+    There are a number build issues involved with this.
+<P ALIGN="left">
+    Firstly, every one of your source files that references some
+    ICI items must include <I>fwd.h</I> from the ICI source directory,
+    and possibly other includes. It is almost essential that
+    the include search path, for those source files at least,
+    has the ICI source directory on it.
+<P ALIGN="left">
+    Secondly, those same source files may need to be primed with the
+    definition of the current platform's ICI configuration include
+    file (CONFIG_FILE). See the note on
+    <A HREF="#CONFIG_FILE">CONFIG_FILE</A>
+    defines.
+<P ALIGN="left">
+    See <A HREF="#ICI_on_Windows">ICI on Microsoft Windows</A>
+    for further details of linking ICI into Window's programs.
+
+</BODY>
+</HTML>
