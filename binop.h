@@ -438,7 +438,7 @@
     case TRI(TC_PTR, TC_INT, T_MINUS):
     case TRI(TC_PTR, TC_INT, T_MINUSEQ):
         if (!isint(ptrof(o0)->p_key))
-            goto mismatch;
+            goto bad_ptr_arith;
         {
             ici_obj_t   *i;
 
@@ -453,13 +453,11 @@
         
     case TRI(TC_INT, TC_PTR, T_PLUS):
     case TRI(TC_INT, TC_PTR, T_PLUSEQ):
-        if (!isint(ptrof(o1)->p_key))
-            goto mismatch;
         SWAP();
     case TRI(TC_PTR, TC_INT, T_PLUS):
     case TRI(TC_PTR, TC_INT, T_PLUSEQ):
         if (!isint(ptrof(o0)->p_key))
-            goto mismatch;
+            goto bad_ptr_arith;
         {
             ici_obj_t   *i;
 
@@ -633,7 +631,7 @@
     case TRI(TC_PTR, TC_PTR, T_MINUS):
     case TRI(TC_PTR, TC_PTR, T_MINUSEQ):
         if (!isint(ptrof(o1)->p_key) || !isint(ptrof(o0)->p_key))
-            goto mismatch;
+            goto bad_ptr_arith;
         if ((o = objof(ici_int_new(intof(ptrof(o0)->p_key)->i_value
               - intof(ptrof(o1)->p_key)->i_value))) == NULL)
               goto fail;
@@ -671,28 +669,28 @@
 
     case TRI(TC_PTR, TC_PTR, T_LESS):
         if (!isint(ptrof(o1)->p_key) || !isint(ptrof(o0)->p_key))
-            goto mismatch;
+            goto bad_ptr_arith;
         if (intof(ptrof(o0)->p_key)->i_value < intof(ptrof(o1)->p_key)->i_value)
             goto use1;
         goto use0;
 
     case TRI(TC_PTR, TC_PTR, T_GRTEQ):
         if (!isint(ptrof(o1)->p_key) || !isint(ptrof(o0)->p_key))
-            goto mismatch;
+            goto bad_ptr_arith;
         if (intof(ptrof(o0)->p_key)->i_value >=intof(ptrof(o1)->p_key)->i_value)
             goto use1;
         goto use0;
 
     case TRI(TC_PTR, TC_PTR, T_LESSEQ):
         if (!isint(ptrof(o1)->p_key) || !isint(ptrof(o0)->p_key))
-            goto mismatch;
+            goto bad_ptr_arith;
         if (intof(ptrof(o0)->p_key)->i_value <=intof(ptrof(o1)->p_key)->i_value)
             goto use1;
         goto use0;
 
     case TRI(TC_PTR, TC_PTR, T_GRT):
         if (!isint(ptrof(o1)->p_key) || !isint(ptrof(o0)->p_key))
-            goto mismatch;
+            goto bad_ptr_arith;
         if (intof(ptrof(o0)->p_key)->i_value > intof(ptrof(o1)->p_key)->i_value)
             goto use1;
         goto use0;
@@ -712,7 +710,6 @@
             goto use0;
         }
         /* Fall through. */
-    mismatch:
         {
             char        n1[30];
             char        n2[30];
@@ -723,6 +720,10 @@
                 ici_objname(n2, o1));
         }
         ici_error = buf;
+        goto fail;
+
+    bad_ptr_arith:
+        ici_error = "attempt to perform pointer arithmetic with non-indexable ptr(s)";
         goto fail;
     }
 

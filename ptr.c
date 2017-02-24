@@ -49,6 +49,11 @@ hash_ptr(ici_obj_t *o)
  * It works for any pointer whoes key into its aggregate is an integer, and
  * of course the key must be an integer too.  The final key is the sum of the
  * two keys.  But if the key is zero, just do *ptr.
+ *
+ * Note that it was previously common for ptrof(o)->p_aggr to itself be a
+ * pointer, so fetch_ptr() was recursive.  That should now be rare, since
+ * ici_op_mkptr() checks for construction of a pointer with another pointer
+ * as p_aggr and bypasses the intermediate pointer if possible.
  */
 static ici_obj_t *
 fetch_ptr(ici_obj_t *o, ici_obj_t *k)
@@ -168,9 +173,57 @@ free_ptr(ici_obj_t *o)
 int
 ici_op_mkptr()
 {
-    register ici_obj_t  *o;
+    ici_obj_t   *o;
+    ici_obj_t   *a = ici_os.a_top[-2];
+    ici_obj_t   *k = ici_os.a_top[-1];
 
-    if ((o = objof(ici_ptr_new(ici_os.a_top[-2], ici_os.a_top[-1]))) == NULL)
+    /*
+     * The topmost 2 elements on the stack, 'a' and 'k', are used as the
+     * aggregate and key respectively of a new pointer.
+     * Suppose we have the ici code:
+     *   p = &"ABCDE"[1];
+     *   q = &p[2];
+     * This sets p = ici_op_mkptr("ABCDE", 1) and q = ici_op_mkptr(p, 2); that
+     * is, q is a ptr with another ptr as p_aggr.  *q gives "D" as expected,
+     * because fetch_ptr() is recursive and adds up the indices.  However, ptr
+     * addition/subtraction/comparison only use the top level indices; thus (q
+     * - p) is (q.p_key - p.p_key), i.e. 1, not 2!!  This can really cause
+     * chaos in pointer arithmetic, so we don't really want ptrs with another
+     * ptr as p_aggr.
+     *
+     * So, if 'a' is a ptr and 'k' is an int, bypass 'a' by adding the indices
+     * and use a->p_aggr as the new aggr.  (We assume that we won't need to go
+     * more than one level down, since this same mechanism should have acted
+     * on the ptr passed as 'a' as well).  Ideally it would be an error if 'a'
+     * is a ptr and 'k' is not an int, but someone may want to create a ptr to
+     * one of the special names by which another ptr can be indexed: "key" and
+     * "aggr".  So let's allow it for now.
+     *
+     * Note that pointers to pointers are a totally different situation:
+     * that's where p_aggr[p_key] is another ptr.  We're talking about the
+     * case where p_aggr itself is a ptr.  Also note that ptrs cannot be
+     * changed once created; pointer arithmetic actually creates a new ptr
+     * object with the new index.  So "p += 3;" will have no effect on q even
+     * if q.p_aggr is p; q still refers to the ptr originally referred to by
+     * p.  So there's really no reason to allow ptrs with another ptr as
+     * p_aggr.
+     */
+    if (isint(k) && isptr(a) && isint(ptrof(a)->p_key))
+    {
+        int     i;
+        
+        i = intof(k)->i_value + intof(ptrof(a)->p_key)->i_value;
+        if ((k = objof(ici_int_new(i))) == NULL)
+            return 1;
+        a = ptrof(a)->p_aggr;
+        o = objof(ici_ptr_new(a, k));
+        ici_decref(k);
+    }
+    else
+    {
+        o = objof(ici_ptr_new(a, k));
+    }
+    if (o == NULL)
         return 1;
     ici_os.a_top[-2] = o;
     ici_decref(o);
