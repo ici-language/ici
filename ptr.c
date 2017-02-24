@@ -7,6 +7,7 @@
 #include "buf.h"
 #include "primes.h"
 #include "cfunc.h"
+#include "str.h"
 
 /*
  * Mark this and referenced unmarked objects, return memory costs.
@@ -58,6 +59,10 @@ hash_ptr(ici_obj_t *o)
 static ici_obj_t *
 fetch_ptr(ici_obj_t *o, ici_obj_t *k)
 {
+    if (k == SSO(aggr))
+        return ptrof(o)->p_aggr;
+    if (k == SSO(key))
+        return ptrof(o)->p_key;
     if (k == objof(ici_zero))
         return ici_fetch(ptrof(o)->p_aggr, ptrof(o)->p_key);
     if (!isint(k) || !isint(ptrof(o)->p_key))

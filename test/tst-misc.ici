@@ -144,6 +144,12 @@ Actually, we don't check for comparing pointers to different objects yet.
 if (error == NULL)
     fail("failed to fail on bad ptr arithmetic");
 */
+r := &q.aggr; // r is a pointer to the "aggr" pseudo-field of q, i.e., "ZXCVBNM"
+if (*r != "ZXCVBNM")
+    fail("failed to retrieve aggr of ptr");
+r := &q.key; // r is a pointer to the "key" pseudo-field of q, i.e., 2
+if (*r != 2)
+    fail("failed to retrieve key of ptr");
 
 error = NULL; try *1 = 2; onerror;
 if (error == NULL)
