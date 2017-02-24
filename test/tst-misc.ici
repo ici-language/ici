@@ -97,6 +97,60 @@ error = NULL; try p@(1)(); onerror;
 if (error == NULL)
     fail("failed to fail on bad ptr call");
 
+foo := &[array 0,1,2][0];
+bar = &foo[2];
+bar[1] = 7;
+if (foo[3] != 7)
+    fail("failed to assign/index pointer");
+
+p := &"ABCDEFG"[0];
+q := &p[2]; // q.aggr is "ABCDEFG"; q.key is 2; q points to 'C'
+if (*q != "C")
+    fail("failed to deref pointer");
+if (p + 2 != q || 2 + p != q)
+    fail("failed pointer plus int");
+if (q - 2 != p)
+    fail("failed pointer minus int");
+if (q - p != 2)
+    fail("failed pointer minus pointer");
+
+// Aggregate of r should be the array pointed to by p, not the pointer q.
+r := &q[2]; // r.aggr is "ABCDEFG"; r.key is 4; r points to 'E'
+if (*r != "E")
+    fail("failed to deref pointer");
+if (p + 4 != r || 4 + p != r)
+    fail("failed pointer plus int");
+if (r - 4 != p)
+    fail("failed pointer minus int");
+if (r - p != 4)
+    fail("failed pointer minus pointer");
+
+p := &struct()["fish"];
+// Can't index a pointer with a non-numeric key
+error = NULL; try x = p + 1; onerror;
+if (error == NULL)
+    fail("failed to fail on bad ptr arithmetic");
+
+// Can compare pointers to the same actual object, however created...
+p := &("ABC"+"DEFG")[2];
+q := &("ABCD"+"EFG")[2];
+if (p != q)
+    fail("failed pointer plus int");
+// ...but cannot compare pointers to different objects.
+q := &"ZXCVBNM"[2];
+error = NULL; try diff := q - p; onerror;
+/*
+Actually, we don't check for comparing pointers to different objects yet.
+if (error == NULL)
+    fail("failed to fail on bad ptr arithmetic");
+*/
+r := &q.aggr; // r is a pointer to the "aggr" pseudo-field of q, i.e., "ZXCVBNM"
+if (*r != "ZXCVBNM")
+    fail("failed to retrieve aggr of ptr");
+r := &q.key; // r is a pointer to the "key" pseudo-field of q, i.e., 2
+if (*r != 2)
+    fail("failed to retrieve key of ptr");
+
 error = NULL; try *1 = 2; onerror;
 if (error == NULL)
     fail("failed to fail on bad ptr assigns");

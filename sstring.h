@@ -78,6 +78,8 @@ SSTRING(result, "result")
 SSTRING(critsect, "critsect")
 SSTRING(raw, "raw")
 SSTRING(path, "path")
+SSTRING(aggr, "aggr")
+SSTRING(key, "key")
 #ifndef NOSIGNALS
 SSTRING(ignore, "ignore")
 #endif
