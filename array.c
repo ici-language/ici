@@ -75,6 +75,7 @@ ici_array_nels(ici_array_t *a)
 {
     if (a->a_top >= a->a_bot)
         return a->a_top - a->a_bot;
+    /* It's a queue which has wrapped. */
     return (a->a_top - a->a_base) + (a->a_limit - a->a_bot);
 }
 
@@ -143,9 +144,11 @@ ici_array_gather(ici_obj_t **b, ici_array_t *a, ptrdiff_t start, ptrdiff_t n)
 }
 
 /*
- * Grow the given array to have a larger allocation. Also ensure that
- * on return there is at least one empty slot after a_top and before
- * a_bot.
+ * Grow the given array to have a larger allocation.  The allocation is
+ * increased by 50%, with a minimum allocation of 8 elements.  The existing
+ * array sequence is placed at the beginning of the new allocation; so the
+ * resulting array is always a stack (a_bot == a_base) even if it was a queue
+ * before.
  */
 static int
 ici_array_grow(ici_array_t *a)
@@ -161,20 +164,21 @@ ici_array_grow(ici_array_t *a)
     if ((e = (ici_obj_t **)ici_nalloc(m * sizeof(ici_obj_t *))) == NULL)
         return 1;
     nel = ici_array_nels(a);
-    ici_array_gather(e + 1, a, 0, nel);
+    ici_array_gather(e, a, 0, nel);
     ici_nfree(a->a_base, n * sizeof(ici_obj_t *));
     a->a_base = e;
     a->a_limit = e + m;
-    a->a_bot = e + 1;
-    a->a_top = e + 1 + nel;
+    a->a_bot = e;
+    a->a_top = e + nel;
     return 0;
 }
 
 /*
- * Push the object 'o' onto the end of the array 'a'. This is the general
- * case that works for any array whether it is a stack or a queue.
- * On return, o_top[-1] is the object pushed. Returns 1 on error, else 0,
- * usual error conventions.
+ * Push the object 'o' onto the end of the array 'a'.  This is the general
+ * case that works for any array whether it is a stack or a queue.  If 'a' is
+ * a stack, then on return, o_top[-1] is the object pushed (much of the
+ * interpreter itself relies on this).  Returns 1 on error, else 0, usual
+ * error conventions.
  *
  * This --func-- forms part of the --ici-api--.
  */
@@ -186,46 +190,28 @@ ici_array_push(ici_array_t *a, ici_obj_t *o)
         ici_error = "attempt to push atomic array";
         return 1;
     }
-    if (a->a_bot <= a->a_top)
+    /* Push the element at the empty slot pointed to by a_top. */
+    if (a->a_bot == a->a_base)
     {
-        /*
-         *   ..........oooooooooooooooooooX............
-         *   ^a_base   ^a_bot             ^a_top       ^a_limit
-         */
-        if (a->a_top == a->a_limit)
-        {
-            /*
-             * The a_top pointer is at the limit of the array. So it has to
-             * wrap to the base. But will there be room after that?
-             */
-            if (a->a_base + 1 >= a->a_bot)
-            {
-                if (ici_array_grow(a))
-                    return 1;
-            }
-            else
-            {
-                a->a_top = a->a_base; /* Wrap from limit to base. */
-                if (a->a_bot == a->a_limit)
-                    a->a_bot = a->a_base; /* a_bot was also at limit. */
-            }
-        }
+        /* 'a' is a stack; if there are no empty slots we must grow it. */
+        if (a->a_top == a->a_limit && ici_array_grow(a))
+            return 1;
+        *a->a_top++ = o;
     }
     else
     {
+        /* 'a' is a queue; if full we must convert it to a larger stack. */
+        if (a->a_top == a->a_bot - 1 && ici_array_grow(a))
+            return 1;
+        *a->a_top++ = o;
         /*
-         *   ooooooooooooooX................ooooooooooo
-         *   ^a_base       ^a_top           ^a_bot     ^a_limit
+         * To meet our invariants for queues (a_bot and a_top strictly less
+         * than a_limit), we must wrap a_top back to a_base if needed.  (a_top
+         * will never be at a_limit if ici_array_grow() executed).
          */
-        if (a->a_top + 1 >= a->a_bot)
-        {
-            if (ici_array_grow(a))
-                return 1;
-        }
+        if (a->a_top == a->a_limit)
+            a->a_top = a->a_base;
     }
-    assert(a->a_base <= a->a_top);
-    assert(a->a_top <= a->a_limit);
-    *a->a_top++ = o;
     return 0;
 }
 
@@ -243,39 +229,30 @@ ici_array_rpush(ici_array_t *a, ici_obj_t *o)
         ici_error = "attempt to rpush atomic array";
         return 1;
     }
-    if (a->a_bot <= a->a_top)
+    if (a->a_bot == a->a_base)
     {
         /*
-         *   ..........oooooooooooooooooooX............
-         *   ^a_base   ^a_bot             ^a_top       ^a_limit
+         * a is a stack, so the new element (and a_bot) will go at
+         * a_limit[-1].  If there are less than 2 empty slots though, we need
+         * to grow the stack first (since the resulting queue needs a_bot >
+         * a_top).
          */
-        if (a->a_bot == a->a_base)
-        {
-            if (a->a_top >= a->a_limit - 1 || a->a_top == a->a_bot)
-            {
-                if (ici_array_grow(a))
-                    return 1;
-            }
-            else
-            {
-                a->a_bot = a->a_limit; /* Wrap from base to limit. */
-            }
-        }
+        if (a->a_top >= a->a_limit - 1 && ici_array_grow(a))
+            return 1;
+        /* There is now enough room; unwrap a_bot to a_limit. */
+        a->a_bot = a->a_limit;
     }
-    else
+    else if (a->a_top == a->a_bot - 1)
     {
         /*
-         *   ooooooooooooooX................ooooooooooo
-         *   ^a_base       ^a_top           ^a_bot     ^a_limit
+         * a is a queue, but is full; convert to a larger stack, then unwrap
+         * a_bot from a_base back to a_limit.
          */
-        if (a->a_top >= a->a_bot - 1)
-        {
-            if (ici_array_grow(a))
-                return 1;
-        }
+        if (ici_array_grow(a))
+            return 1;
+        a->a_bot = a->a_limit;
     }
-    assert(a->a_base <= a->a_bot);
-    assert(a->a_bot <= a->a_limit);
+    /* Push the element at a_bot[-1]. This ensures a_bot < a_limit. */
     *--a->a_bot = o;
     return 0;
 }
@@ -295,30 +272,14 @@ ici_array_pop(ici_array_t *a)
         ici_error = "attempt to pop atomic array";
         return NULL;
     }
-    if (a->a_bot <= a->a_top)
-    {
-        /*
-         *   ..........oooooooooooooooooooX............
-         *   ^a_base   ^a_bot             ^a_top       ^a_limit
-         */
-        if (a->a_bot < a->a_top)
-            return *--a->a_top;
-    }
-    else
-    {
-        /*
-         *   ooooooooooooooX................ooooooooooo
-         *   ^a_base       ^a_top           ^a_bot     ^a_limit
-         */
-        if (a->a_top > a->a_base)
-            return *--a->a_top;
+    if (a->a_top == a->a_bot)
+        /* The array is empty. */
+        return objof(&o_null);
+    /* Pop the element at a_top[-1]. */
+    if (a->a_top == a->a_base)
+        /* a_top was wrapped; unwrap it back to a_limit. */
         a->a_top = a->a_limit;
-        if (a->a_top > a->a_bot)
-            return *--a->a_top;
-    }
-    assert(a->a_base <= a->a_top);
-    assert(a->a_top <= a->a_limit);
-    return objof(&o_null);
+    return *--a->a_top;
 }
 
 /*
@@ -331,35 +292,31 @@ ici_array_pop(ici_array_t *a)
 ici_obj_t *
 ici_array_rpop(ici_array_t *a)
 {
+    ici_obj_t   *o;
+
     if (objof(a)->o_flags & O_ATOM)
     {
         ici_error = "attempt to rpop atomic array";
         return NULL;
     }
-    if (a->a_bot <= a->a_top)
-    {
-        /*
-         *   ..........oooooooooooooooooooX............
-         *   ^a_base   ^a_bot             ^a_top       ^a_limit
-         */
-        if (a->a_bot < a->a_top)
-            return *a->a_bot++;
-    }
-    else
-    {
-        /*
-         *   ooooooooooooooX................ooooooooooo
-         *   ^a_base       ^a_top           ^a_bot     ^a_limit
-         */
-        if (a->a_bot < a->a_limit)
-            return *a->a_bot++;
+    if (a->a_top == a->a_bot)
+        /* The array is empty. */
+        return objof(&o_null);
+    /* Pop the element at a_bot. */
+    o = *a->a_bot++;
+    /*
+     * a_bot != a_base, so 'a' is now a queue by definition.  To meet our
+     * invariants for queues (a_bot and a_top strictly less than a_limit), we
+     * have to wrap a_bot back to a_base if needed.  Interestingly, if 'a' was
+     * a full stack, a_top will also be at a_limit (legal for full stacks) so
+     * we also have to wrap a_top to a_base if needed, which will leave a full
+     * queue (a_bot == a_base + 1 in this case).
+     */
+    if (a->a_bot == a->a_limit)
         a->a_bot = a->a_base;
-        if (a->a_bot < a->a_top)
-            return *a->a_bot++;
-    }
-    assert(a->a_base <= a->a_bot);
-    assert(a->a_bot <= a->a_limit);
-    return objof(&o_null);
+    if (a->a_top == a->a_limit)
+        a->a_top = a->a_base;
+    return o;
 }
 
 /*
@@ -396,11 +353,12 @@ ici_array_find_slot(ici_array_t *a, ptrdiff_t i)
         if (ici_array_push(a, objof(&o_null)))
             return NULL;
     }
-    return &a->a_top[-1];
+    /* If 'a' is a queue that just wrapped, a_top will be at a_base. */
+    return &(a->a_top == a->a_base ? a->a_limit : a->a_top)[-1];
 }
 
 /*
- * Return the element or the array 'a' from index 'i', or 'ici_null' if out of
+ * Return the element of the array 'a' from index 'i', or 'ici_null' if out of
  * range.  No incref is done on the object.
  *
  * This --func-- forms part of the --ici-api--.
