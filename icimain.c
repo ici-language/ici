@@ -270,7 +270,10 @@ ici_main(int argc, char *argv[])
                         goto fail;
                     f->f_name = SS(empty_string);
                     if (ici_parse(f, objwsupof(ici_vs.a_top[-1])) < 0)
+                    {
+                        ici_decref(f);
                         goto fail;
+                    }
                     ici_decref(f);
                     break;
 
@@ -302,8 +305,12 @@ ici_main(int argc, char *argv[])
                         ici_error = buf;
                         goto fail;
                     }
+                    /* ici_parse_file() closes the file on success, but not on failure. */
                     if (ici_parse_file(buf, (char *)stream, &ici_stdio_ftype))
+                    {
+                        fclose(stream);
                         goto fail;
+                    }
                     break;
 
                 case '0': case '1': case '2': case '3': case '4':
@@ -315,8 +322,12 @@ ici_main(int argc, char *argv[])
                         ici_error = buf;
                         goto fail;
                     }
+                    /* ici_parse_file() closes the file on success, but not on failure. */
                     if (ici_parse_file(arg0, (char *)stream, &ici_stdio_ftype))
+                    {
+                        fclose(stream);
                         goto fail;
+                    }
                     continue;
                 }
                 break;
